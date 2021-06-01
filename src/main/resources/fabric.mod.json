@@ -1,37 +1,50 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "apoli",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Apoli",
+  "description": "A library mod which allows entities to be imbued with data-driven powers.",
   "authors": [
-    "Me!"
+    "Apace"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://apace100.github.io/apoli",
+    "sources": "https://github.com/apace100/apoli"
   },
 
-  "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "license": "MIT",
+  "icon": "assets/apoli/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "io.github.apace100.apoli.Apoli"
+    ],
+    "client": [
+      "io.github.apace100.apoli.ApoliClient"
+    ],
+    "server": [
+      "io.github.apace100.apoli.ApoliServer"
+    ],
+    "cardinal-components-entity": [
+      "io.github.apace100.apoli.Apoli"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "apoli.mixins.json"
   ],
+  "custom": {
+    "cardinal-components": [
+      "apoli:powers"
+    ]
+  },
 
   "depends": {
-    "fabricloader": ">=0.7.4",
+    "fabricloader": ">=0.11.3",
     "fabric": "*",
-    "minecraft": "1.16.x"
-  },
-  "suggests": {
-    "another-mod": "*"
+    "minecraft": "1.17.x",
+    "java": ">=16",
+    "calio": "1.x.x"
   }
 }

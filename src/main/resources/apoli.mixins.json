@@ -1,0 +1,51 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.github.apace100.apoli.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "AbstractBlockMixin",
+    "AbstractBlockStateMixin",
+    "ArmorItemMixin",
+    "BlockItemMixin",
+    "ClientAdvancementManagerAccessor",
+    "ClientPlayerInteractionManagerAccessor",
+    "ClientPlayerInteractionManagerMixin",
+    "CraftingInventoryAccessor",
+    "CraftingScreenHandlerAccessor",
+    "CriteriaRegistryInvoker",
+    "ElytraFeatureRendererMixin",
+    "EntityAccessor",
+    "EntityMixin",
+    "ExperienceOrbEntityMixin",
+    "EyeHeightAccess",
+    "HungerManagerMixin",
+    "ItemStackMixin",
+    "LivingEntityMixin",
+    "LoginMixin",
+    "PersistentProjectileEntityMixin",
+    "PlayerEntityMixin",
+    "PlayerEntityRendererMixin",
+    "PlayerScreenHandlerAccessor",
+    "PlayerScreenHandlerMixin",
+    "ServerPlayerEntityMixin",
+    "ServerPlayerInteractionManagerAccessor",
+    "ServerPlayerInteractionManagerMixin",
+    "ServerPlayNetworkHandlerMixin",
+    "TridentEntityMixin",
+    "WeightedListEntryAccessor"
+  ],
+  "client": [
+    "BackgroundRendererMixin",
+    "ClientPlayerEntityMixin",
+    "EntityRenderDispatcherMixin",
+    "GameRendererMixin",
+    "InGameOverlayRendererMixin",
+    "LightmapTextureManagerMixin",
+    "LivingEntityRendererMixin",
+    "OtherClientPlayerEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

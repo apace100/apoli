@@ -1,0 +1,8 @@
+{
+  "commands.apoli.grant.success.single": "Entity %s was granted the power %s.",
+  "commands.apoli.grant.success.multiple": "%s entities were granted the power %s.",
+  "commands.apoli.revoke.success.single": "Entity %s had the power %s revoked.",
+  "commands.apoli.revoke.success.multiple": "%s entities had the power %s revoked.",
+  "commands.apoli.list.pass": "The entity has %s powers: [%s]",
+  "commands.apoli.list.fail": "The entity is not a living entity, thus can't have any powers."
+}
