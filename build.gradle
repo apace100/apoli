@@ -37,7 +37,7 @@ dependencies {
 	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-entity:${project.cca_version}"
 
 	modImplementation "io.github.apace100:calio:${project.calio_version}"
-	include "io.github.apace100:apace-lib:${project.calio_version}"
+	include "io.github.apace100:calio:${project.calio_version}"
 }
 
 processResources {
