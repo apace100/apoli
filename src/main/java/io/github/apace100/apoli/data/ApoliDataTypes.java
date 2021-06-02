@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
+import io.github.apace100.apoli.power.PowerTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.action.ActionType;
 import io.github.apace100.apoli.power.factory.action.ActionTypes;
@@ -29,6 +30,9 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -39,6 +43,44 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.List;
 
 public class ApoliDataTypes {
+
+    public static final SerializableDataType<Identifier> APOLI_IDENTIFIER = new SerializableDataType<>(
+        Identifier.class,
+        PacketByteBuf::writeIdentifier,
+        PacketByteBuf::readIdentifier,
+        (json) -> {
+            String idString = json.getAsString();
+            if(idString.contains(":")) {
+                String[] idSplit = idString.split(":");
+                if(idSplit.length != 2) {
+                    throw new InvalidIdentifierException("Incorrect number of `:` in identifier: \"" + idString + "\".");
+                }
+                if(idSplit[0].contains("*")) {
+                    if(PowerTypes.CURRENT_NAMESPACE != null) {
+                        idSplit[0] = idSplit[0].replace("*", PowerTypes.CURRENT_NAMESPACE);
+                    } else {
+                        throw new InvalidIdentifierException("Identifier may only contain a `*` in the namespace inside of powers.");
+                    }
+                }
+                if(idSplit[1].contains("*")) {
+                    if(PowerTypes.CURRENT_PATH != null) {
+                        idSplit[1] = idSplit[1].replace("*", PowerTypes.CURRENT_PATH);
+                    } else {
+                        throw new InvalidIdentifierException("Identifier may only contain a `*` in the path inside of powers.");
+                    }
+                }
+                idString = idSplit[0] + ":" + idSplit[1];
+            } else {
+                if(idString.contains("*")) {
+                    if(PowerTypes.CURRENT_PATH != null) {
+                        idString = idString.replace("*", PowerTypes.CURRENT_PATH);
+                    } else {
+                        throw new InvalidIdentifierException("Identifier may only contain a `*` in the path inside of powers.");
+                    }
+                }
+            }
+            return Identifier.tryParse(idString);
+        });
 
     public static final SerializableDataType<PowerTypeReference> POWER_TYPE = SerializableDataType.wrap(
         PowerTypeReference.class, SerializableDataTypes.IDENTIFIER,

@@ -4,6 +4,7 @@ import com.google.gson.*;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.apoli.util.NamespaceAlias;
 import io.github.apace100.calio.data.MultiJsonDataLoader;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
@@ -95,7 +96,12 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         }
         Optional<PowerFactory> optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(factoryId);
         if(!optionalFactory.isPresent()) {
-            throw new JsonSyntaxException("Power type \"" + factoryId.toString() + "\" is not defined.");
+            if(NamespaceAlias.isAlias(factoryId)) {
+                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(NamespaceAlias.resolveAlias(factoryId));
+            }
+            if(!optionalFactory.isPresent()) {
+                throw new JsonSyntaxException("Power type \"" + factoryId.toString() + "\" is not defined.");
+            }
         }
         PowerFactory.Instance factoryInstance = optionalFactory.get().read(jo);
         PowerType type = powerTypeFactory.apply(id, factoryInstance);

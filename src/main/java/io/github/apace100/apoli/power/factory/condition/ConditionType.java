@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power.factory.condition;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.apoli.util.NamespaceAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
@@ -40,7 +42,12 @@ public class ConditionType<T> {
             Identifier type = Identifier.tryParse(typeIdentifier);
             Optional<ConditionFactory<T>> optionalCondition = conditionRegistry.getOrEmpty(type);
             if(!optionalCondition.isPresent()) {
-                throw new JsonSyntaxException(conditionTypeName + " json type \"" + type.toString() + "\" is not defined.");
+                if(NamespaceAlias.isAlias(type)) {
+                    optionalCondition = conditionRegistry.getOrEmpty(NamespaceAlias.resolveAlias(type));
+                }
+                if(!optionalCondition.isPresent()) {
+                    throw new JsonSyntaxException(conditionTypeName + " json type \"" + type.toString() + "\" is not defined.");
+                }
             }
             return optionalCondition.get().read(obj);
         }
