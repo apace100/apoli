@@ -3,6 +3,7 @@ package io.github.apace100.apoli;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
+import io.github.apace100.apoli.command.PowerArgument;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
@@ -22,6 +23,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.command.argument.ArgumentTypes;
+import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
@@ -64,6 +67,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		});
 
 		Registry.register(Registry.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
+
+		ArgumentTypes.register(MODID + ":power", PowerArgument.class, new ConstantArgumentSerializer<>(PowerArgument::power));
 
 		PowerFactories.register();
 		EntityConditions.register();

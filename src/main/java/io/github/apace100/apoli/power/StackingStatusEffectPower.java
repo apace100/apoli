@@ -18,10 +18,11 @@ public class StackingStatusEffectPower extends StatusEffectPower {
         this.minStack = minStack;
         this.maxStack = maxStack;
         this.durationPerStack = durationPerStack;
+        this.setTicking(true);
     }
 
     public void tick() {
-        if(isActive()) {
+        if(isActive() && entity.age % 10 == 0) {
             currentStack += 1;
             if(currentStack > maxStack) {
                 currentStack = maxStack;
