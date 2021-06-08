@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.power;
 
-import io.github.apace100.calio.SimpleDamageSource;
+import io.github.apace100.calio.mixin.DamageSourceAccessor;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EquipmentSlot;
@@ -13,9 +13,9 @@ import java.util.Map;
 
 public class DamageOverTimePower extends VariableIntPower {
 
-    public static final DamageSource GENERIC_DAMAGE = new SimpleDamageSource("genericDamageOverTime").setBypassesArmor().setUnblockable();
+    public static final DamageSource GENERIC_DAMAGE = ((DamageSourceAccessor)((DamageSourceAccessor)DamageSourceAccessor.createDamageSource("genericDamageOverTime")).callSetBypassesArmor()).callSetUnblockable();
 
-    private final int damageTickInterval = 20;
+    private final int damageTickInterval;
     private final int beginDamageIn;
     private final float damageAmountEasy;
     private final float damageAmount;
@@ -31,6 +31,7 @@ public class DamageOverTimePower extends VariableIntPower {
         this.beginDamageIn = beginDamageIn;
         this.damageAmount = damageAmount;
         this.damageAmountEasy = damageAmountEasy;
+        this.damageTickInterval = damageInterval;
         this.protectingEnchantment = protectingEnchantment;
         this.protectionEffectiveness = protectionEffectiveness;
         this.setTicking(true);

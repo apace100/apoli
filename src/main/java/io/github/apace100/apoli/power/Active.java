@@ -8,7 +8,7 @@ public interface Active {
 
     class Key {
 
-        public String key = "key.apoli.primary_active";
-        public boolean continuous = false;
+        public String key;
+        public boolean continuous;
     }
 }

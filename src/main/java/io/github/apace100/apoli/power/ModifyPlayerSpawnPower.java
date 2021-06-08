@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import net.minecraft.entity.Dismounting;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
@@ -32,8 +33,7 @@ public class ModifyPlayerSpawnPower extends Power {
     public final StructureFeature structure;
     public final SoundEvent spawnSound;
 
-
-    public ModifyPlayerSpawnPower(PowerType<?> type, LivingEntity entity, RegistryKey<World> dimension, int dimensionDistanceMultiplier, Identifier biomeId, String spawnStrategy, StructureFeature<?> structure, SoundEvent spawnSound) {
+    public ModifyPlayerSpawnPower(PowerType<?> type, LivingEntity entity, RegistryKey<World> dimension, float dimensionDistanceMultiplier, Identifier biomeId, String spawnStrategy, StructureFeature<?> structure, SoundEvent spawnSound) {
         super(type, entity);
         this.dimension = dimension;
         this.dimensionDistanceMultiplier = dimensionDistanceMultiplier;
@@ -43,21 +43,18 @@ public class ModifyPlayerSpawnPower extends Power {
         this.spawnSound = spawnSound;
     }
 
-    @Override
-    public void onGained() {
+    public void teleportToModifiedSpawn() {
         if(entity instanceof ServerPlayerEntity) {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) entity;
             Pair<ServerWorld, BlockPos> spawn = getSpawn(false);
             if(spawn != null) {
-                //if(!isOrbOfOrigin) {
-                    Vec3d tpPos = Dismounting.findRespawnPos(EntityType.PLAYER, spawn.getLeft(), spawn.getRight(), true);
-                    if(tpPos != null) {
-                        serverPlayer.teleport(spawn.getLeft(), tpPos.x, tpPos.y, tpPos.z, entity.getPitch(), entity.getYaw());
-                    } else {
-                        serverPlayer.teleport(spawn.getLeft(), spawn.getRight().getX(), spawn.getRight().getY(), spawn.getRight().getZ(), entity.getPitch(), entity.getYaw());
-                        Apoli.LOGGER.warn("Could not spawn player with `ModifySpawnPower` at the desired location.");
-                    }
-                //}
+                Vec3d tpPos = Dismounting.findRespawnPos(EntityType.PLAYER, spawn.getLeft(), spawn.getRight(), true);
+                if(tpPos != null) {
+                    serverPlayer.teleport(spawn.getLeft(), tpPos.x, tpPos.y, tpPos.z, entity.getPitch(), entity.getYaw());
+                } else {
+                    serverPlayer.teleport(spawn.getLeft(), spawn.getRight().getX(), spawn.getRight().getY(), spawn.getRight().getZ(), entity.getPitch(), entity.getYaw());
+                    Apoli.LOGGER.warn("Could not spawn player with `ModifySpawnPower` at the desired location.");
+                }
             }
         }
     }

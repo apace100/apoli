@@ -1,9 +1,14 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MovingEntity;
+import io.github.apace100.apoli.access.SubmergableEntity;
+import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.calio.Calio;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -18,10 +23,15 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.tag.ServerTagManagerHolder;
 import net.minecraft.tag.Tag;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,7 +45,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin implements MovingEntity {
+public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "isFireImmune", at = @At("HEAD"), cancellable = true)
     private void makeFullyFireImmune(CallbackInfoReturnable<Boolean> cir) {
@@ -59,10 +69,18 @@ public abstract class EntityMixin implements MovingEntity {
     @Shadow
     protected boolean onGround;
 
+    @Shadow @Nullable protected Tag<Fluid> submergedFluidTag;
+
+    @Shadow protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
+
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
         if(PowerHolderComponent.hasPower((Entity)(Object)this, IgnoreWaterPower.class)) {
-            cir.setReturnValue(false);
+            if(this instanceof WaterMovingEntity) {
+                if(((WaterMovingEntity)this).isInMovementPhase()) {
+                    cir.setReturnValue(false);
+                }
+            }
         }
     }
 
@@ -89,10 +107,12 @@ public abstract class EntityMixin implements MovingEntity {
     @Environment(EnvType.CLIENT)
     @Inject(method = "fall", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;fallDistance:F", opcode = Opcodes.PUTFIELD, ordinal = 0))
     private void invokeActionOnSoftLand(double heightDifference, boolean onGround, BlockState landedState, BlockPos landedPosition, CallbackInfo ci) {
-        if(!wasGrounded && (Object)this instanceof LivingEntity) {
-            PowerHolderComponent.getPowers((Entity)(Object)this, ActionOnLandPower.class).forEach(ActionOnLandPower::executeAction);
-            //ClientPlayNetworking.send(ModPackets.PLAYER_LANDED, PacketByteBufs.create());
-            //TODO: readd this networking package ^
+        if(!wasGrounded && (Object)this instanceof ClientPlayerEntity) {
+            List<ActionOnLandPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, ActionOnLandPower.class);
+            powers.forEach(ActionOnLandPower::executeAction);
+            if(powers.size() > 0) {
+                ClientPlayNetworking.send(ModPackets.PLAYER_LANDED, PacketByteBufs.create());
+            }
         }
     }
 
@@ -145,6 +165,33 @@ public abstract class EntityMixin implements MovingEntity {
         if(this.distanceTraveled > this.distanceBefore) {
             this.isMoving = true;
         }
+    }
+
+    @Override
+    public boolean isSubmergedInLoosely(Tag<Fluid> tag) {
+        if(tag == null || submergedFluidTag == null) {
+            return false;
+        }
+        if(tag == submergedFluidTag) {
+            return true;
+        }
+        return Calio.areTagsEqual(Registry.FLUID_KEY, tag, submergedFluidTag);
+    }
+
+    @Override
+    public double getFluidHeightLoosely(Tag<Fluid> tag) {
+        if(tag == null) {
+            return 0;
+        }
+        if(fluidHeight.containsKey(tag)) {
+            return fluidHeight.getDouble(tag);
+        }
+        for(Tag<Fluid> ft : fluidHeight.keySet()) {
+            if(Calio.areTagsEqual(Registry.FLUID_KEY, ft, tag)) {
+                return fluidHeight.getDouble(ft);
+            }
+        }
+        return 0;
     }
 
     @Override

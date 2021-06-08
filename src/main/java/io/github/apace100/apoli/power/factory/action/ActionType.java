@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power.factory.action;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.NamespaceAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
@@ -43,7 +45,12 @@ public class ActionType<T> {
             Identifier type = Identifier.tryParse(typeIdentifier);
             Optional<ActionFactory<T>> optionalAction = actionFactoryRegistry.getOrEmpty(type);
             if(!optionalAction.isPresent()) {
-                throw new JsonSyntaxException(actionTypeName + " json type \"" + type.toString() + "\" is not defined.");
+                if(NamespaceAlias.isAlias(type)) {
+                    optionalAction = actionFactoryRegistry.getOrEmpty(NamespaceAlias.resolveAlias(type));
+                }
+                if(!optionalAction.isPresent()) {
+                    throw new JsonSyntaxException(actionTypeName + " json type \"" + type.toString() + "\" is not defined.");
+                }
             }
             return optionalAction.get().read(obj);
         }

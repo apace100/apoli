@@ -149,14 +149,6 @@ public abstract class LivingEntityMixin extends Entity {
         }
     }
 
-    // WATER_BREATHING
-    /*@Inject(at = @At("HEAD"), method = "canBreatheInWater", cancellable = true)
-    public void doWaterBreathing(CallbackInfoReturnable<Boolean> info) {
-        if(PowerTypes.WATER_BREATHING.isActive(this)) {
-            info.setReturnValue(true);
-        }
-    }*/
-
     // SWIM_SPEED
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;updateVelocity(FLnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
     public void modifyUnderwaterMovementSpeed(LivingEntity livingEntity, float speedMultiplier, Vec3d movementInput) {
@@ -174,29 +166,21 @@ public abstract class LivingEntityMixin extends Entity {
         return PowerHolderComponent.modify(this, ModifySwimSpeedPower.class, original);
     }
 
-    // LIKE_WATER
-    /*@Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;method_26317(DZLnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;"))
-    public Vec3d method_26317Proxy(LivingEntity entity, double d, boolean bl, Vec3d vec3d) {
-        Vec3d oldReturn = entity.method_26317(d, bl, vec3d);
-        if(PowerTypes.LIKE_WATER.isActive(this)) {
-            if (Math.abs(vec3d.y - d / 16.0D) < 0.025D) {
-                return new Vec3d(oldReturn.x, 0, oldReturn.z);
-            }
-        }
-        return entity.method_26317(d, bl, vec3d);
-    }
-
     // SLOW_FALLING
     @ModifyVariable(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getFluidState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/fluid/FluidState;"), method = "travel", name = "d", ordinal = 0)
-    public double doAvianSlowFalling(double in) {
-        if(PowerTypes.SLOW_FALLING.isActive(this)) {
-            this.fallDistance = 0;
+    public double modifyFallingVelocity(double in) {
+        List<ModifyFallingPower> modifyFallingPowers = PowerHolderComponent.getPowers(this, ModifyFallingPower.class);
+        if(modifyFallingPowers.size() > 0) {
+            ModifyFallingPower power = modifyFallingPowers.get(0);
+            if(!power.takeFallDamage) {
+                this.fallDistance = 0;
+            }
             if(this.getVelocity().y <= 0.0D) {
-                return 0.01D;
+                return power.velocity;
             }
         }
         return in;
-    }*/
+    }
 
     @Unique
     private float cachedDamageAmount;

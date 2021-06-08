@@ -13,7 +13,6 @@
     "ClientPlayerInteractionManagerMixin",
     "CraftingInventoryAccessor",
     "CraftingScreenHandlerAccessor",
-    "CriteriaRegistryInvoker",
     "ElytraFeatureRendererMixin",
     "EntityAccessor",
     "EntityMixin",
@@ -37,10 +36,12 @@
   ],
   "client": [
     "BackgroundRendererMixin",
+    "CapeFeatureRendererMixin",
     "ClientPlayerEntityMixin",
     "EntityRenderDispatcherMixin",
     "GameRendererMixin",
     "InGameOverlayRendererMixin",
+    "InGameHudMixin",
     "LightmapTextureManagerMixin",
     "LivingEntityRendererMixin",
     "OtherClientPlayerEntityMixin"

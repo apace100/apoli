@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.ClientAdvancementManagerAccessor;
 import io.github.apace100.apoli.mixin.ClientPlayerInteractionManagerAccessor;
 import io.github.apace100.apoli.mixin.ServerPlayerInteractionManagerAccessor;
@@ -56,7 +57,7 @@ public final class EntityConditionsClient {
             return false;
         }));
         register(new ConditionFactory<>(Apoli.identifier("advancement"), new SerializableData()
-            .add("advancement", SerializableDataTypes.IDENTIFIER), (data, entity) -> {
+            .add("advancement", ApoliDataTypes.APOLI_IDENTIFIER), (data, entity) -> {
             Identifier id = data.getId("advancement");
             if(entity instanceof ServerPlayerEntity) {
                 Advancement advancement = entity.getServer().getAdvancementLoader().get(id);

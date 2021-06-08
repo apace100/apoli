@@ -62,12 +62,17 @@ public class PowerCommand {
 							int i = 0;
 							Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
 							PowerType<?> power = command.getArgument("power", PowerType.class);
-							for(Entity target : targets) {
-								if(target instanceof LivingEntity) {
-									if (revokePower((LivingEntity)target, power)) {
-										i++;
+							try {
+								for (Entity target : targets) {
+									if (target instanceof LivingEntity) {
+										if (revokePower((LivingEntity) target, power)) {
+											i++;
+										}
 									}
 								}
+							}catch (Exception e) {
+								Apoli.LOGGER.error("Exception in command: " + e.getMessage());
+								e.printStackTrace();
 							}
 							if (i == 0) {
 								command.getSource().sendError(new TranslatableText("commands.apoli.revoke.fail"));

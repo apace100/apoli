@@ -29,6 +29,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     void removePower(PowerType<?> powerType, Identifier source);
 
+    int removeAllPowersFromSource(Identifier source);
+
     void addPower(PowerType<?> powerType, Identifier source);
 
     boolean hasPower(PowerType<?> powerType);
@@ -95,7 +97,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 .filter(p -> powerFilter == null || powerFilter.test(p))
                 .flatMap(p -> p.getModifiers().stream()).collect(Collectors.toList());
             if(powerAction != null) {
-                powers.forEach(powerAction);
+                powers.stream().filter(p -> powerFilter == null || powerFilter.test(p)).forEach(powerAction);
             }
             return AttributeUtil.sortAndApplyModifiers(mps, baseValue);
         }

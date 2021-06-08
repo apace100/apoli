@@ -2,7 +2,6 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import com.google.gson.JsonObject;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;

@@ -82,8 +82,11 @@ public class ApoliDataTypes {
             return Identifier.tryParse(idString);
         });
 
+    public static final SerializableDataType<List<Identifier>> APOLI_IDENTIFIERS =
+        SerializableDataType.list(APOLI_IDENTIFIER);
+
     public static final SerializableDataType<PowerTypeReference> POWER_TYPE = SerializableDataType.wrap(
-        PowerTypeReference.class, SerializableDataTypes.IDENTIFIER,
+        PowerTypeReference.class, APOLI_IDENTIFIER,
         PowerType::getIdentifier, PowerTypeReference::new);
 
     public static final SerializableDataType<ConditionFactory<LivingEntity>.Instance> ENTITY_CONDITION =
@@ -211,7 +214,7 @@ public class ApoliDataTypes {
             SerializableData()
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
-            .add("sprite_location", SerializableDataTypes.IDENTIFIER, Apoli.identifier("textures/gui/resource_bar.png"))
+            .add("sprite_location", APOLI_IDENTIFIER, Apoli.identifier("textures/gui/resource_bar.png"))
             .add("condition", ENTITY_CONDITION, null),
         (dataInst) -> new HudRender(
             dataInst.getBoolean("should_render"),

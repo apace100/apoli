@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MovingEntity;
+import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
@@ -125,14 +126,14 @@ public class EntityConditions {
                 return false;
             }));
         register(new ConditionFactory<>(Apoli.identifier("submerged_in"), new SerializableData().add("fluid", SerializableDataTypes.FLUID_TAG),
-            (data, entity) -> entity.isSubmergedIn((Tag<Fluid>)data.get("fluid"))));
+            (data, entity) -> ((SubmergableEntity)entity).isSubmergedInLoosely((Tag<Fluid>)data.get("fluid"))));
         register(new ConditionFactory<>(Apoli.identifier("fluid_height"), new SerializableData()
             .add("fluid", SerializableDataTypes.FLUID_TAG)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.DOUBLE),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.getFluidHeight((Tag<Fluid>)data.get("fluid")), data.getDouble("compare_to"))));
+            (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely((Tag<Fluid>)data.get("fluid")), data.getDouble("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("power"), new SerializableData()
-            .add("power", SerializableDataTypes.IDENTIFIER),
+            .add("power", ApoliDataTypes.APOLI_IDENTIFIER),
             (data, entity) -> {
                 try {
                     PowerType<?> powerType = PowerTypeRegistry.get(data.getId("power"));
@@ -236,7 +237,7 @@ public class EntityConditions {
                 return comparison.compare(count, compareTo);
             }));
         register(new ConditionFactory<>(Apoli.identifier("dimension"), new SerializableData()
-            .add("dimension", SerializableDataTypes.IDENTIFIER),
+            .add("dimension", ApoliDataTypes.APOLI_IDENTIFIER),
             (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.WORLD_KEY, data.getId("dimension"))));
         register(new ConditionFactory<>(Apoli.identifier("xp_levels"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -265,8 +266,8 @@ public class EntityConditions {
             .add("compare_to", SerializableDataTypes.FLOAT),
             (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.getHealth() / entity.getMaxHealth(), data.getFloat("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("biome"), new SerializableData()
-            .add("biome", SerializableDataTypes.IDENTIFIER, null)
-            .add("biomes", SerializableDataTypes.IDENTIFIERS, null)
+            .add("biome", ApoliDataTypes.APOLI_IDENTIFIER, null)
+            .add("biomes", ApoliDataTypes.APOLI_IDENTIFIERS, null)
             .add("condition", ApoliDataTypes.BIOME_CONDITION, null),
             (data, entity) -> {
                 Biome biome = entity.world.getBiome(entity.getBlockPos());
@@ -328,7 +329,7 @@ public class EntityConditions {
                 return false;
             }));
         register(new ConditionFactory<>(Apoli.identifier("predicate"), new SerializableData()
-            .add("predicate", SerializableDataTypes.IDENTIFIER),
+            .add("predicate", ApoliDataTypes.APOLI_IDENTIFIER),
             (data, entity) -> {
                 MinecraftServer server = entity.world.getServer();
                 if (server != null) {

@@ -330,7 +330,7 @@ public class PowerFactories {
                 new SerializableData()
                         .add("dimension", SerializableDataTypes.DIMENSION)
                         .add("dimension_distance_multiplier", SerializableDataTypes.FLOAT, 0F)
-                        .add("biome", SerializableDataTypes.IDENTIFIER, null)
+                        .add("biome", ApoliDataTypes.APOLI_IDENTIFIER, null)
                         .add("spawn_strategy", SerializableDataTypes.STRING, "default")
                         .add("structure", SerializableDataType.registry(ClassUtil.castClass(StructureFeature.class), Registry.STRUCTURE_FEATURE), null)
                         .add("respawn_sound", SerializableDataTypes.SOUND_EVENT, null),
@@ -338,7 +338,7 @@ public class PowerFactories {
                         (type, player) ->
                                 new ModifyPlayerSpawnPower(type, player,
                                         (RegistryKey<World>)data.get("dimension"),
-                                        (int)data.getFloat("dimension_distance_multiplier"),
+                                        data.getFloat("dimension_distance_multiplier"),
                                         data.getId("biome"),
                                         data.getString("spawn_strategy"),
                                         data.isPresent("structure") ? (StructureFeature<?>)data.get("structure") : null,
@@ -668,7 +668,7 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("shader"),
             new SerializableData()
-                .add("shader", SerializableDataTypes.IDENTIFIER),
+                .add("shader", ApoliDataTypes.APOLI_IDENTIFIER),
             data ->
                 (type, player) -> new ShaderPower(type, player, data.getId("shader")))
             .allowCondition());
@@ -881,6 +881,41 @@ public class PowerFactories {
                     (ConditionFactory<ItemStack>.Instance)data.get("item_condition"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action"),
                     (ActionFactory<ItemStack>.Instance)data.get("item_action")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("modify_falling"),
+            new SerializableData()
+                .add("velocity", SerializableDataTypes.DOUBLE)
+                .add("take_fall_damage", SerializableDataTypes.BOOLEAN, true),
+            data ->
+                (type, player) -> new ModifyFallingPower(type, player, data.getDouble("velocity"), data.getBoolean("take_fall_damage")))
+            .allowCondition());
+
+        register(new PowerFactory<>(Apoli.identifier("toggle_night_vision"),
+            new SerializableData()
+                .add("active_by_default", SerializableDataTypes.BOOLEAN, false)
+                .add("strength", SerializableDataTypes.FLOAT, 1.0F)
+                .add("key", ApoliDataTypes.KEY, new Active.Key()),
+            data ->
+                (type, entity) -> {
+                    ToggleNightVisionPower power = new ToggleNightVisionPower(type, entity, data.getFloat("strength"), data.getBoolean("active_by_default"));
+                    power.setKey((Active.Key)data.get("key"));
+                    return power;
+                })
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("burn"),
+            new SerializableData()
+                .add("interval", SerializableDataTypes.INT)
+                .add("burn_duration", SerializableDataTypes.INT),
+            data ->
+                (type, player) ->
+                    new BurnPower(type, player, data.getInt("interval"), data.getInt("burn_duration")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("exhaust"),
+            new SerializableData()
+                .add("interval", SerializableDataTypes.INT)
+                .add("exhaustion", SerializableDataTypes.FLOAT),
+            data ->
+                (type, player) -> new ExhaustOverTimePower(type, player, data.getInt("interval"), data.getFloat("exhaustion")))
             .allowCondition());
     }
 

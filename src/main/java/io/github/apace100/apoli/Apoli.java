@@ -2,6 +2,7 @@ package io.github.apace100.apoli;
 
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
+import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
@@ -12,6 +13,11 @@ import io.github.apace100.apoli.power.factory.action.BlockActions;
 import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.util.NamespaceAlias;
+import io.github.apace100.apoli.util.PowerRestrictedCraftingRecipe;
+import io.github.ladysnake.pal.AbilitySource;
+import io.github.ladysnake.pal.Pal;
+import net.adriantodt.fallflyinglib.FallFlyingLib;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -19,6 +25,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,6 +35,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 	public static final Logger LOGGER = LogManager.getLogger(Apoli.class);
 	public static String VERSION = "";
 	public static int[] SEMVER;
+
+	public static final AbilitySource ELYTRA_FLIGHT_SOURCE = Pal.getAbilitySource(Apoli.identifier("elytra_flight"));
 
 	@Override
 	public void onInitialize() {
@@ -48,9 +57,13 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ModPacketsC2S.register();
 
+		NamespaceAlias.addAlias("origins");
+
 		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
 			PowerCommand.register(dispatcher);
 		});
+
+		Registry.register(Registry.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
 
 		PowerFactories.register();
 		EntityConditions.register();
@@ -73,6 +86,9 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 	@Override
 	public void registerEntityComponentFactories(EntityComponentFactoryRegistry registry) {
-		registry.registerFor(LivingEntity.class, PowerHolderComponent.KEY, PowerHolderComponentImpl::new);
+		registry.beginRegistration(LivingEntity.class, PowerHolderComponent.KEY)
+			.impl(PowerHolderComponentImpl.class)
+			.respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY)
+			.end(PowerHolderComponentImpl::new);
 	}
 }

@@ -43,7 +43,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                     CURRENT_PATH = id.getPath();
                     JsonObject jo = je.getAsJsonObject();
                     Identifier factoryId = Identifier.tryParse(JsonHelper.getString(jo, "type"));
-                    if(MULTIPLE.equals(factoryId)) {
+                    if(isMultiple(factoryId)) {
                         List<Identifier> subPowers = new LinkedList<>();
                         for(Map.Entry<String, JsonElement> entry : jo.entrySet()) {
                             if( entry.getKey().equals("type")
@@ -87,7 +87,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                                 BiFunction<Identifier, PowerFactory.Instance, PowerType> powerTypeFactory) {
         JsonObject jo = je.getAsJsonObject();
         Identifier factoryId = Identifier.tryParse(JsonHelper.getString(jo, "type"));
-        if(MULTIPLE.equals(factoryId)) {
+        if(isMultiple(factoryId)) {
             factoryId = SIMPLE;
             if(isSubPower) {
                 throw new JsonSyntaxException("Power type \"" + MULTIPLE.toString() + "\" may not be used for a sub-power of "
@@ -123,6 +123,16 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
             }
         }
         return type;
+    }
+
+    private boolean isMultiple(Identifier id) {
+        if(MULTIPLE.equals(id)) {
+            return true;
+        }
+        if(NamespaceAlias.isAlias(id)) {
+            return MULTIPLE.equals(NamespaceAlias.resolveAlias(id));
+        }
+        return false;
     }
 
     @Override

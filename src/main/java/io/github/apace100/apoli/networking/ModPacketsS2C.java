@@ -52,14 +52,19 @@ public class ModPacketsS2C {
         for(int i = 0; i < powerCount; i++) {
             Identifier powerId = packetByteBuf.readIdentifier();
             Identifier factoryId = packetByteBuf.readIdentifier();
-            PowerFactory factory = ApoliRegistries.POWER_FACTORY.get(factoryId);
-            PowerFactory.Instance factoryInstance = factory.read(packetByteBuf);
-            PowerType type = new PowerType(powerId, factoryInstance);
-            type.setTranslationKeys(packetByteBuf.readString(), packetByteBuf.readString());
-            if(packetByteBuf.readBoolean()) {
-                type.setHidden();
+            try {
+                PowerFactory factory = ApoliRegistries.POWER_FACTORY.get(factoryId);
+                PowerFactory.Instance factoryInstance = factory.read(packetByteBuf);
+                PowerType type = new PowerType(powerId, factoryInstance);
+                type.setTranslationKeys(packetByteBuf.readString(), packetByteBuf.readString());
+                if (packetByteBuf.readBoolean()) {
+                    type.setHidden();
+                }
+                factories.put(powerId, type);
+            } catch(Exception e) {
+                Apoli.LOGGER.error("Error while receiving \"" + powerId + "\" (factory: \"" + factoryId + "\"): " + e.getMessage());
+                e.printStackTrace();
             }
-            factories.put(powerId, type);
         }
         minecraftClient.execute(() -> {
             PowerTypeRegistry.clear();
