@@ -22,18 +22,20 @@ public class StackingStatusEffectPower extends StatusEffectPower {
     }
 
     public void tick() {
-        if(isActive() && entity.age % 10 == 0) {
-            currentStack += 1;
-            if(currentStack > maxStack) {
-                currentStack = maxStack;
-            }
-            if(currentStack > 0) {
-                applyEffects();
-            }
-        } else {
-            currentStack -= 1;
-            if(currentStack < minStack) {
-                currentStack = minStack;
+        if(entity.age % 10 == 0) {
+            if(isActive()) {
+                currentStack += 1;
+                if(currentStack > maxStack) {
+                    currentStack = maxStack;
+                }
+                if(currentStack > 0) {
+                    applyEffects();
+                }
+            } else {
+                currentStack -= 1;
+                if(currentStack < minStack) {
+                    currentStack = minStack;
+                }
             }
         }
     }
