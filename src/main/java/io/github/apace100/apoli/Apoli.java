@@ -39,7 +39,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 	public static String VERSION = "";
 	public static int[] SEMVER;
 
-	public static final AbilitySource ELYTRA_FLIGHT_SOURCE = Pal.getAbilitySource(Apoli.identifier("elytra_flight"));
+	public static final AbilitySource POWER_SOURCE = Pal.getAbilitySource(Apoli.identifier("power_source"));
 
 	@Override
 	public void onInitialize() {

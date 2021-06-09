@@ -73,6 +73,15 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         return list;
     }
 
+    @Override
+    public List<Identifier> getSources(PowerType<?> powerType) {
+        if(powerSources.containsKey(powerType)) {
+            return List.copyOf(powerSources.get(powerType));
+        } else {
+            return List.of();
+        }
+    }
+
     public void removePower(PowerType<?> powerType, Identifier source) {
         if(powerSources.containsKey(powerType)) {
             List<Identifier> sources = powerSources.get(powerType);
@@ -100,9 +109,15 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         return powersToRemove.size();
     }
 
-    public void addPower(PowerType<?> powerType, Identifier source) {
+    public boolean addPower(PowerType<?> powerType, Identifier source) {
         if(powerSources.containsKey(powerType)) {
-            powerSources.get(powerType).add(source);
+            List<Identifier> sources = powerSources.get(powerType);
+            if(sources.contains(source)) {
+                return false;
+            } else {
+                sources.add(source);
+                return true;
+            }
         } else {
             List<Identifier> sources = new LinkedList<>();
             sources.add(source);
@@ -110,6 +125,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             Power power = powerType.create(owner);
             this.powers.put(powerType, power);
             power.onAdded();
+            return true;
         }
     }
 

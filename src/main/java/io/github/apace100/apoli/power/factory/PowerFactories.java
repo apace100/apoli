@@ -889,6 +889,11 @@ public class PowerFactories {
             data ->
                 (type, player) -> new ModifyFallingPower(type, player, data.getDouble("velocity"), data.getBoolean("take_fall_damage")))
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("creative_flight"),
+            new SerializableData(),
+            data ->
+                (type, player) -> new CreativeFlightPower(type, player))
+            .allowCondition());
 
         register(new PowerFactory<>(Apoli.identifier("toggle_night_vision"),
             new SerializableData()
