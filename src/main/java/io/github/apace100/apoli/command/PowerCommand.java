@@ -3,7 +3,6 @@ package io.github.apace100.apoli.command;
 import com.mojang.brigadier.CommandDispatcher;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.IdentifierArgumentType;
@@ -26,17 +25,18 @@ public class PowerCommand {
 	public static final Identifier COMMAND_POWER_SOURCE = Apoli.identifier("command");
 
 	public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+		// TODO: Clean up this mess.
 		dispatcher.register(
 			literal("power").requires(cs -> cs.hasPermissionLevel(2))
 				.then(literal("grant")
 					.then(argument("targets", EntityArgumentType.entities())
-						.then(argument("power", PowerArgument.power())
+						.then(argument("power", PowerTypeArgumentType.power())
 							.executes((command) -> {
 									int i = 0;
 									try {
 
 										Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-										PowerType<?> power = command.getArgument("power", PowerType.class);
+										PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
 										for(Entity target : targets) {
 											if(target instanceof LivingEntity) {
 												if(grantPower((LivingEntity)target, power)) {
@@ -67,7 +67,7 @@ public class PowerCommand {
 									int i = 0;
 									try {
 										Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-										PowerType<?> power = command.getArgument("power", PowerType.class);
+										PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
 										Identifier source = IdentifierArgumentType.getIdentifier(command, "source");
 										for(Entity target : targets) {
 											if(target instanceof LivingEntity) {
@@ -95,11 +95,11 @@ public class PowerCommand {
 								})))))
 				.then(literal("revoke")
 					.then(argument("targets", EntityArgumentType.entities())
-						.then(argument("power", PowerArgument.power())
+						.then(argument("power", PowerTypeArgumentType.power())
 							.executes((command) -> {
 								int i = 0;
 								Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-								PowerType<?> power = command.getArgument("power", PowerType.class);
+								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
 								try {
 									for (Entity target : targets) {
 										if (target instanceof LivingEntity) {
@@ -129,7 +129,7 @@ public class PowerCommand {
 								.executes((command) -> {
 									int i = 0;
 									Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-									PowerType<?> power = command.getArgument("power", PowerType.class);
+									PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
 									Identifier source = IdentifierArgumentType.getIdentifier(command, "source");
 									try {
 										for (Entity target : targets) {
@@ -208,11 +208,11 @@ public class PowerCommand {
 						})))
 				.then(literal("has")
 					.then(argument("targets", EntityArgumentType.entities())
-						.then(argument("power", PowerArgument.power())
+						.then(argument("power", PowerTypeArgumentType.power())
 							.executes((command) -> {
 								int i = 0;
 								Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-								PowerType<?> power = command.getArgument("power", PowerType.class);
+								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
 								for(Entity target : targets) {
 									if(target instanceof LivingEntity) {
 										if (hasPower((LivingEntity)target, power)) {
@@ -231,11 +231,11 @@ public class PowerCommand {
 							}))))
 				.then(literal("sources")
 					.then(argument("target", EntityArgumentType.entity())
-						.then(argument("power", PowerArgument.power())
+						.then(argument("power", PowerTypeArgumentType.power())
 							.executes((command) -> {
 								int i = 0;
 								Entity target = EntityArgumentType.getEntity(command, "target");
-								PowerType<?> power = command.getArgument("power", PowerType.class);
+								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
 								if(target instanceof LivingEntity) {
 									PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 									StringBuilder sources = new StringBuilder();
@@ -253,11 +253,11 @@ public class PowerCommand {
 							}))))
 				.then(literal("remove")
 					.then(argument("targets", EntityArgumentType.entities())
-						.then(argument("power", PowerArgument.power())
+						.then(argument("power", PowerTypeArgumentType.power())
 							.executes((command) -> {
 								int i = 0;
 								Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-								PowerType<?> power = command.getArgument("power", PowerType.class);
+								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
 								try {
 									for (Entity target : targets) {
 										if (target instanceof LivingEntity) {

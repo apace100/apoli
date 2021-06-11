@@ -7,22 +7,25 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
 import net.minecraft.command.CommandSource;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Identifier;
 
 import java.util.concurrent.CompletableFuture;
 
-public class PowerArgument implements ArgumentType<PowerType<?>> {
+public class PowerTypeArgumentType implements ArgumentType<Identifier> {
 
-    public static PowerArgument power() {
-        return new PowerArgument();
+    public static PowerTypeArgumentType power() {
+        return new PowerTypeArgumentType();
     }
     
-    public PowerType<?> parse(StringReader reader) throws CommandSyntaxException {
-        Identifier id = Identifier.fromCommandInput(reader);
-        return PowerTypeRegistry.get(id);
+    public Identifier parse(StringReader reader) throws CommandSyntaxException {
+        return Identifier.fromCommandInput(reader);
+    }
+
+    public static PowerType<?> getPower(CommandContext<ServerCommandSource> context, String argumentName) {
+        return PowerTypeRegistry.get(context.getArgument(argumentName, Identifier.class));
     }
 
     @Override

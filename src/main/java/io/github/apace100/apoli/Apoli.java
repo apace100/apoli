@@ -3,7 +3,7 @@ package io.github.apace100.apoli;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
-import io.github.apace100.apoli.command.PowerArgument;
+import io.github.apace100.apoli.command.PowerTypeArgumentType;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.PowerOperation;
 import io.github.apace100.apoli.command.ResourceCommand;
@@ -20,7 +20,6 @@ import io.github.apace100.apoli.util.NamespaceAlias;
 import io.github.apace100.apoli.util.PowerRestrictedCraftingRecipe;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
-import net.adriantodt.fallflyinglib.FallFlyingLib;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -71,7 +70,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		Registry.register(Registry.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
 
-		ArgumentTypes.register(MODID + ":power", PowerArgument.class, new ConstantArgumentSerializer<>(PowerArgument::power));
+		ArgumentTypes.register(MODID + ":power", PowerTypeArgumentType.class, new ConstantArgumentSerializer<>(PowerTypeArgumentType::power));
 		ArgumentTypes.register(MODID + ":power_operation", PowerOperation.class, new ConstantArgumentSerializer<>(PowerOperation::operation));
 
 		PowerFactories.register();
