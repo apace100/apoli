@@ -5,6 +5,8 @@ import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.command.PowerArgument;
 import io.github.apace100.apoli.command.PowerCommand;
+import io.github.apace100.apoli.command.PowerOperation;
+import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
@@ -64,11 +66,13 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
 			PowerCommand.register(dispatcher);
+			ResourceCommand.register(dispatcher);
 		});
 
 		Registry.register(Registry.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
 
 		ArgumentTypes.register(MODID + ":power", PowerArgument.class, new ConstantArgumentSerializer<>(PowerArgument::power));
+		ArgumentTypes.register(MODID + ":power_operation", PowerOperation.class, new ConstantArgumentSerializer<>(PowerOperation::operation));
 
 		PowerFactories.register();
 		EntityConditions.register();
