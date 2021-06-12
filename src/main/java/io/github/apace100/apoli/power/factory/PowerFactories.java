@@ -650,8 +650,7 @@ public class PowerFactories {
                 .add("entity_action_removed", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("entity_action_gained", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("entity_action_lost", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("entity_action_added", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("execute_chosen_when_orb", SerializableDataTypes.BOOLEAN, true),
+                .add("entity_action_added", ApoliDataTypes.ENTITY_ACTION, null),
             data ->
                 (type, player) -> new ActionOnCallbackPower(type, player,
                     (ActionFactory<Entity>.Instance)data.get("entity_action_respawned"),
