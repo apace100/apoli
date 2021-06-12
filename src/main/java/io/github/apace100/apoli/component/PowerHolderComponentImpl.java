@@ -148,6 +148,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             powerSources.put(powerType, sources);
             Power power = powerType.create(owner);
             this.powers.put(powerType, power);
+            power.onGained();
             power.onAdded();
             return true;
         }
@@ -207,16 +208,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                     }
                 }
             }
-
-            this.getPowerTypes().forEach(pt -> {
-                if (!this.powers.containsKey(pt)) {
-                    Power power = pt.create(owner);
-                    this.powers.put(pt, power);
-                }
-            });
         } catch(Exception e) {
             Apoli.LOGGER.info("Error while reading data: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

@@ -65,10 +65,11 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("attribute"),
             new SerializableData()
                 .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
-                .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null),
+                .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
+                .add("update_health", SerializableDataTypes.BOOLEAN, true),
             data ->
                 (type, player) -> {
-                    AttributePower ap = new AttributePower(type, player);
+                    AttributePower ap = new AttributePower(type, player, data.getBoolean("update_health"));
                     if(data.isPresent("modifier")) {
                         ap.addModifier((AttributedEntityAttributeModifier)data.get("modifier"));
                     }
