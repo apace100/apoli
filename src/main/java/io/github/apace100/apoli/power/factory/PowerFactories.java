@@ -54,7 +54,7 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("toggle"),
             new SerializableData()
                 .add("active_by_default", SerializableDataTypes.BOOLEAN, true)
-                .add("key", ApoliDataTypes.KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->
                 (type, player) -> {
                     TogglePower power = new TogglePower(type, player, data.getBoolean("active_by_default"));
@@ -124,7 +124,7 @@ public class PowerFactories {
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER)
                 .add("tag", SerializableDataTypes.NBT, null)
-                .add("key", ApoliDataTypes.KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->
                 (type, player) -> {
                     FireProjectilePower power = new FireProjectilePower(type, player,
@@ -145,7 +145,7 @@ public class PowerFactories {
                 .add("name", SerializableDataTypes.STRING, "container.inventory")
                 .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
                 .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("key", ApoliDataTypes.KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->
                 (type, player) -> {
                     InventoryPower power = new InventoryPower(type, player, data.getString("name"), 9,
@@ -178,7 +178,7 @@ public class PowerFactories {
                 .add("speed", SerializableDataTypes.FLOAT)
                 .add("sound", SerializableDataTypes.SOUND_EVENT, null)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER)
-                .add("key", ApoliDataTypes.KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data -> {
                 SoundEvent soundEvent = (SoundEvent)data.get("sound");
                 return (type, player) -> {
@@ -546,7 +546,7 @@ public class PowerFactories {
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION)
                 .add("cooldown", SerializableDataTypes.INT)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER)
-                .add("key", ApoliDataTypes.KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->
                 (type, player) -> {
                     ActiveCooldownPower power = new ActiveCooldownPower(type, player, data.getInt("cooldown"), (HudRender)data.get("hud_render"),
@@ -899,7 +899,7 @@ public class PowerFactories {
             new SerializableData()
                 .add("active_by_default", SerializableDataTypes.BOOLEAN, false)
                 .add("strength", SerializableDataTypes.FLOAT, 1.0F)
-                .add("key", ApoliDataTypes.KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->
                 (type, entity) -> {
                     ToggleNightVisionPower power = new ToggleNightVisionPower(type, entity, data.getFloat("strength"), data.getBoolean("active_by_default"));

@@ -36,15 +36,13 @@ import java.util.List;
 import java.util.Optional;
 
 @SuppressWarnings("rawtypes")
-@Mixin(PlayerManager.class)
+@Mixin(value = PlayerManager.class, priority = 800)
 public abstract class LoginMixin {
 
 	@Shadow public abstract List<ServerPlayerEntity> getPlayerList();
 
 	@Inject(at = @At("TAIL"), method = "Lnet/minecraft/server/PlayerManager;onPlayerConnect(Lnet/minecraft/network/ClientConnection;Lnet/minecraft/server/network/ServerPlayerEntity;)V")
-	private void openOriginsGui(ClientConnection connection, ServerPlayerEntity player, CallbackInfo info) {
-		PowerHolderComponent component = PowerHolderComponent.KEY.get(player);
-
+	private void syncPowerTypes(ClientConnection connection, ServerPlayerEntity player, CallbackInfo info) {
 		PacketByteBuf powerListData = new PacketByteBuf(Unpooled.buffer());
 		powerListData.writeInt(PowerTypeRegistry.size());
 		PowerTypeRegistry.entries().forEach((entry) -> {

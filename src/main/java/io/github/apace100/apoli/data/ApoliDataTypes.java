@@ -210,11 +210,23 @@ public class ApoliDataTypes {
             return data;
         }));
 
+    public static final SerializableDataType<Active.Key> BACKWARDS_COMPATIBLE_KEY = new SerializableDataType<>(Active.Key.class,
+        KEY::send, KEY::receive, jsonElement -> {
+        if(jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+            String keyString = jsonElement.getAsString();
+            Active.Key key = new Active.Key();
+            key.key = keyString;
+            key.continuous = false;
+            return key;
+        }
+        return KEY.read(jsonElement);
+    });
+
     public static final SerializableDataType<HudRender> HUD_RENDER = SerializableDataType.compound(HudRender.class, new
             SerializableData()
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
-            .add("sprite_location", APOLI_IDENTIFIER, Apoli.identifier("textures/gui/resource_bar.png"))
+            .add("sprite_location", APOLI_IDENTIFIER, new Identifier("origins", "textures/gui/resource_bar.png"))
             .add("condition", ENTITY_CONDITION, null),
         (dataInst) -> new HudRender(
             dataInst.getBoolean("should_render"),

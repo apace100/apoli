@@ -8,7 +8,7 @@ public interface Active {
 
     class Key {
 
-        public String key;
-        public boolean continuous;
+        public String key = "none";
+        public boolean continuous = false;
     }
 }

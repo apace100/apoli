@@ -1,8 +1,6 @@
 package io.github.apace100.apoli;
 
-import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsS2C;
 import io.github.apace100.apoli.power.Active;
@@ -18,9 +16,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -28,7 +24,6 @@ import java.util.List;
 
 @Environment(EnvType.CLIENT)
 public class ApoliClient implements ClientModInitializer {
-
 
 	private static HashMap<String, KeyBinding> idToKeyBindingMap = new HashMap<>();
 	private static HashMap<String, Boolean> lastKeyBindingStates = new HashMap<>();
