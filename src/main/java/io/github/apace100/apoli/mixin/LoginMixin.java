@@ -1,13 +1,11 @@
 package io.github.apace100.apoli.mixin;
 
+import com.google.common.collect.ImmutableList;
 import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
-import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -19,6 +17,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.RegistryKey;
@@ -51,6 +50,14 @@ public abstract class LoginMixin {
 			if(factory != null) {
 				powerListData.writeIdentifier(entry.getKey());
 				factory.write(powerListData);
+				if(type instanceof MultiplePowerType) {
+					powerListData.writeBoolean(true);
+					ImmutableList<Identifier> subPowers = ((MultiplePowerType<?>)type).getSubPowers();
+					powerListData.writeVarInt(subPowers.size());
+					subPowers.forEach(powerListData::writeIdentifier);
+				} else {
+					powerListData.writeBoolean(false);
+				}
 				powerListData.writeString(type.getOrCreateNameTranslationKey());
 				powerListData.writeString(type.getOrCreateDescriptionTranslationKey());
 				powerListData.writeBoolean(type.isHidden());

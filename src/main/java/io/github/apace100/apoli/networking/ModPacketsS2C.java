@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.networking;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.MultiplePowerType;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.power.factory.PowerFactory;
@@ -20,7 +21,10 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -55,7 +59,18 @@ public class ModPacketsS2C {
             try {
                 PowerFactory factory = ApoliRegistries.POWER_FACTORY.get(factoryId);
                 PowerFactory.Instance factoryInstance = factory.read(packetByteBuf);
-                PowerType type = new PowerType(powerId, factoryInstance);
+                PowerType type;
+                if(packetByteBuf.readBoolean()) {
+                    type = new MultiplePowerType(powerId, factoryInstance);
+                    int subPowerCount = packetByteBuf.readVarInt();
+                    List<Identifier> subPowers = new ArrayList<>(subPowerCount);
+                    for(int j = 0; j < subPowerCount; j++) {
+                        subPowers.add(packetByteBuf.readIdentifier());
+                    }
+                    ((MultiplePowerType)type).setSubPowers(subPowers);
+                } else {
+                    type = new PowerType(powerId, factoryInstance);
+                }
                 type.setTranslationKeys(packetByteBuf.readString(), packetByteBuf.readString());
                 if (packetByteBuf.readBoolean()) {
                     type.setHidden();
