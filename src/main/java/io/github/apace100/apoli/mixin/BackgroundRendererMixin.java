@@ -138,7 +138,7 @@ public abstract class BackgroundRendererMixin {
         return original;
     }
 
- */ @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 0.25F, ordinal = 0))
+ */ @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 0.25F, ordinal = 1))
     private static float modifyLavaVisibilitySNoPotion(float original, Camera camera) {
         List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
         if(powers.size() > 0) {
@@ -147,7 +147,7 @@ public abstract class BackgroundRendererMixin {
         return original;
     }
 
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 1.0F, ordinal = 1))
+    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 1.0F, ordinal = 0))
     private static float modifyLavaVisibilityVNoPotion(float original, Camera camera) {
         List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
         if(powers.size() > 0) {
