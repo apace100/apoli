@@ -36,7 +36,7 @@ public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
             y -= 8;
         }
         int barWidth = 71;
-        int barHeight = 5;
+        int barHeight = 8;
         int iconSize = 8;
         List<HudRendered> hudPowers = component.getPowers().stream().filter(p -> p instanceof HudRendered).map(p -> (HudRendered)p).sorted(
             Comparator.comparing(hudRenderedA -> hudRenderedA.getRenderSettings().getSpriteLocation())
@@ -51,8 +51,8 @@ public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
                     RenderSystem.setShaderTexture(0, currentLocation);
                     lastLocation = currentLocation;
                 }
-                drawTexture(matrices, x, y, 0, 0, barWidth, barHeight);
-                int v = 10 + render.getBarIndex() * 10;
+                drawTexture(matrices, x, y, 0, 0, barWidth, 5);
+                int v = 8 + render.getBarIndex() * 10;
                 int w = (int)(hudPower.getFill() * barWidth);
                 drawTexture(matrices, x, y, 0, v, w, barHeight);
                 setZOffset(getZOffset() + 1);

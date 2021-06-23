@@ -32,19 +32,20 @@
   "client": [
     "BackgroundRendererMixin",
     "CapeFeatureRendererMixin",
-    "ClientPlayerEntityMixin",
     "ClientAdvancementManagerAccessor",
+    "ClientPlayerEntityMixin",
     "ClientPlayerInteractionManagerAccessor",
     "ClientPlayerInteractionManagerMixin",
-    "EntityRenderDispatcherMixin",
     "ElytraFeatureRendererMixin",
+    "EntityRenderDispatcherMixin",
     "GameRendererMixin",
-    "InGameOverlayRendererMixin",
     "InGameHudMixin",
+    "InGameOverlayRendererMixin",
     "LightmapTextureManagerMixin",
     "LivingEntityRendererMixin",
-    "PlayerEntityRendererMixin",
-    "OtherClientPlayerEntityMixin"
+    "MinecraftClientMixin",
+    "OtherClientPlayerEntityMixin",
+    "PlayerEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

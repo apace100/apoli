@@ -44,11 +44,8 @@ public class DamageOverTimePower extends VariableIntPower {
 
     public int getDamageBegin() {
         int prot = getProtection();
-        if(prot >= 64) {
-            return 20 * 60 * 20;
-        }
-        prot = (int)(prot * 2 * 20 * protectionEffectiveness);
-        return beginDamageIn + prot;
+        int delay = (int)(Math.pow(prot * 2, 1.3) * protectionEffectiveness);
+        return beginDamageIn + delay;
     }
 
     @Override
@@ -88,7 +85,7 @@ public class DamageOverTimePower extends VariableIntPower {
             for (ItemStack itemStack : iterable) {
                 i += EnchantmentHelper.getLevel(protectingEnchantment, itemStack);
             }
-            return i * enchantedItems.size();
+            return i + enchantedItems.size();
         }
     }
 }

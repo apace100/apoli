@@ -12,6 +12,7 @@ import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.ladysnake.pal.VanillaAbilities;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.*;
@@ -331,7 +332,7 @@ public class PowerFactories {
                 new SerializableData()
                         .add("dimension", SerializableDataTypes.DIMENSION)
                         .add("dimension_distance_multiplier", SerializableDataTypes.FLOAT, 0F)
-                        .add("biome", ApoliDataTypes.APOLI_IDENTIFIER, null)
+                        .add("biome", SerializableDataTypes.IDENTIFIER, null)
                         .add("spawn_strategy", SerializableDataTypes.STRING, "default")
                         .add("structure", SerializableDataType.registry(ClassUtil.castClass(StructureFeature.class), Registry.STRUCTURE_FEATURE), null)
                         .add("respawn_sound", SerializableDataTypes.SOUND_EVENT, null),
@@ -668,7 +669,7 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("shader"),
             new SerializableData()
-                .add("shader", ApoliDataTypes.APOLI_IDENTIFIER),
+                .add("shader", SerializableDataTypes.IDENTIFIER),
             data ->
                 (type, player) -> new ShaderPower(type, player, data.getId("shader")))
             .allowCondition());
@@ -892,7 +893,7 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("creative_flight"),
             new SerializableData(),
             data ->
-                (type, player) -> new CreativeFlightPower(type, player))
+                (type, player) -> new PlayerAbilityPower(type, player, VanillaAbilities.ALLOW_FLYING))
             .allowCondition());
 
         register(new PowerFactory<>(Apoli.identifier("toggle_night_vision"),

@@ -14,8 +14,10 @@ public class CreativeFlightPower extends Power {
     @Override
     public void onAdded() {
         if(entity instanceof PlayerEntity) {
-            Apoli.POWER_SOURCE.grantTo((PlayerEntity)entity, VanillaAbilities.ALLOW_FLYING);
-            Apoli.POWER_SOURCE.grantTo((PlayerEntity)entity, VanillaAbilities.FLYING);
+            Apoli.SCHEDULER.queue(server -> {
+                Apoli.POWER_SOURCE.grantTo((PlayerEntity)entity, VanillaAbilities.ALLOW_FLYING);
+                Apoli.POWER_SOURCE.grantTo((PlayerEntity)entity, VanillaAbilities.FLYING);
+            }, 1);
         }
     }
 

@@ -8,6 +8,7 @@ import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -52,10 +53,10 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         return new LinkedList<>(powers.values());
     }
 
-    public Set<PowerType<?>> getPowerTypes() {
+    public Set<PowerType<?>> getPowerTypes(boolean getSubPowerTypes) {
         HashSet<PowerType<?>> powerTypes = new HashSet<>(powers.keySet());
         for (PowerType<?> type : powers.keySet()) {
-            if(type instanceof MultiplePowerType<?>) {
+            if(!getSubPowerTypes && type instanceof MultiplePowerType<?>) {
                 ((MultiplePowerType<?>)type).getSubPowers().stream().map(PowerTypeRegistry::get).forEach(powerTypes::remove);
             }
         }
@@ -111,14 +112,20 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public int removeAllPowersFromSource(Identifier source) {
-        List<PowerType<?>> powersToRemove = new LinkedList<>();
-        for(Map.Entry<PowerType<?>, List<Identifier>> sourceEntry : powerSources.entrySet()) {
-            if(sourceEntry.getValue().contains(source)) {
-                powersToRemove.add(sourceEntry.getKey());
-            }
-        }
+        List<PowerType<?>> powersToRemove = getPowersFromSource(source);
         powersToRemove.forEach(p -> removePower(p, source));
         return powersToRemove.size();
+    }
+
+    @Override
+    public List<PowerType<?>> getPowersFromSource(Identifier source) {
+        List<PowerType<?>> powers = new LinkedList<>();
+        for(Map.Entry<PowerType<?>, List<Identifier>> sourceEntry : powerSources.entrySet()) {
+            if(sourceEntry.getValue().contains(source)) {
+                powers.add(sourceEntry.getKey());
+            }
+        }
+        return powers;
     }
 
     public boolean addPower(PowerType<?> powerType, Identifier source) {
@@ -176,7 +183,6 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 }
             }
             powers.clear();
-
             NbtList powerList = (NbtList) compoundTag.get("Powers");
             if(powerList != null) {
                 for (int i = 0; i < powerList.size(); i++) {

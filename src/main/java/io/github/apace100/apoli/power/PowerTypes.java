@@ -6,6 +6,7 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.NamespaceAlias;
 import io.github.apace100.calio.data.MultiJsonDataLoader;
+import io.github.apace100.calio.data.SerializableData;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
@@ -17,9 +18,6 @@ import java.util.function.BiFunction;
 
 @SuppressWarnings("rawtypes")
 public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResourceReloadListener {
-
-    public static String CURRENT_NAMESPACE = "";
-    public static String CURRENT_PATH = "";
 
     private static final Identifier MULTIPLE = Apoli.identifier("multiple");
     private static final Identifier SIMPLE = Apoli.identifier("simple");
@@ -39,8 +37,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         loader.forEach((id, jel) -> {
             jel.forEach(je -> {
                 try {
-                    CURRENT_NAMESPACE = id.getNamespace();
-                    CURRENT_PATH = id.getPath();
+                    SerializableData.CURRENT_NAMESPACE = id.getNamespace();
+                    SerializableData.CURRENT_PATH = id.getPath();
                     JsonObject jo = je.getAsJsonObject();
                     Identifier factoryId = Identifier.tryParse(JsonHelper.getString(jo, "type"));
                     if(isMultiple(factoryId)) {
@@ -74,8 +72,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
             });
         });
         loadingPriorities.clear();
-        CURRENT_NAMESPACE = null;
-        CURRENT_PATH = null;
+        SerializableData.CURRENT_NAMESPACE = null;
+        SerializableData.CURRENT_PATH = null;
         Apoli.LOGGER.info("Finished loading powers from data files. Registry contains " + PowerTypeRegistry.size() + " powers.");
     }
 
@@ -96,7 +94,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         }
         Optional<PowerFactory> optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(factoryId);
         if(!optionalFactory.isPresent()) {
-            if(NamespaceAlias.isAlias(factoryId)) {
+            if(NamespaceAlias.hasAlias(factoryId)) {
                 optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(NamespaceAlias.resolveAlias(factoryId));
             }
             if(!optionalFactory.isPresent()) {
@@ -129,7 +127,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         if(MULTIPLE.equals(id)) {
             return true;
         }
-        if(NamespaceAlias.isAlias(id)) {
+        if(NamespaceAlias.hasAlias(id)) {
             return MULTIPLE.equals(NamespaceAlias.resolveAlias(id));
         }
         return false;

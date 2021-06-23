@@ -18,6 +18,7 @@ import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.util.NamespaceAlias;
 import io.github.apace100.apoli.util.PowerRestrictedCraftingRecipe;
+import io.github.apace100.apoli.util.Scheduler;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
@@ -35,12 +36,16 @@ import org.apache.logging.log4j.Logger;
 
 public class Apoli implements ModInitializer, EntityComponentInitializer {
 
+	public static final Scheduler SCHEDULER = new Scheduler();
+
 	public static final String MODID = "apoli";
 	public static final Logger LOGGER = LogManager.getLogger(Apoli.class);
 	public static String VERSION = "";
 	public static int[] SEMVER;
 
 	public static final AbilitySource POWER_SOURCE = Pal.getAbilitySource(Apoli.identifier("power_source"));
+
+	public static final boolean PERFORM_VERSION_CHECK = false;
 
 	@Override
 	public void onInitialize() {
@@ -60,8 +65,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		});
 
 		ModPacketsC2S.register();
-
-		NamespaceAlias.addAlias("origins");
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
 			PowerCommand.register(dispatcher);

@@ -37,7 +37,7 @@ public final class EntityConditionsServer {
             return false;
         }));
         register(new ConditionFactory<>(Apoli.identifier("advancement"), new SerializableData()
-            .add("advancement", ApoliDataTypes.APOLI_IDENTIFIER), (data, entity) -> {
+            .add("advancement", SerializableDataTypes.IDENTIFIER), (data, entity) -> {
             Identifier id = data.getId("advancement");
             if(entity instanceof ServerPlayerEntity) {
                 Advancement advancement = entity.getServer().getAdvancementLoader().get(id);

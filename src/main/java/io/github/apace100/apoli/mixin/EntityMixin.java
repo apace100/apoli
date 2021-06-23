@@ -84,18 +84,6 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
-    @Environment(EnvType.CLIENT)
-    @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
-    private void makeEntitiesGlow(CallbackInfoReturnable<Boolean> cir) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        Entity thisEntity = (Entity)(Object)this;
-        if(player != null && player != thisEntity && thisEntity instanceof LivingEntity) {
-            if(PowerHolderComponent.getPowers(player, EntityGlowPower.class).stream().anyMatch(p -> p.doesApply(thisEntity))) {
-                cir.setReturnValue(true);
-            }
-        }
-    }
-
     @Unique
     private boolean wasGrounded = false;
 

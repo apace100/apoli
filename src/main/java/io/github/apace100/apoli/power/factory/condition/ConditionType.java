@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power.factory.condition;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.NamespaceAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
@@ -42,7 +41,7 @@ public class ConditionType<T> {
             Identifier type = Identifier.tryParse(typeIdentifier);
             Optional<ConditionFactory<T>> optionalCondition = conditionRegistry.getOrEmpty(type);
             if(!optionalCondition.isPresent()) {
-                if(NamespaceAlias.isAlias(type)) {
+                if(NamespaceAlias.hasAlias(type)) {
                     optionalCondition = conditionRegistry.getOrEmpty(NamespaceAlias.resolveAlias(type));
                 }
                 if(!optionalCondition.isPresent()) {

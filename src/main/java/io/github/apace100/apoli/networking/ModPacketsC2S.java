@@ -19,10 +19,10 @@ import java.util.Random;
 public class ModPacketsC2S {
 
     public static void register() {
-        //if(Apoli.config.performVersionCheck) { TODO: Introduce config for checking stuff
+        if(Apoli.PERFORM_VERSION_CHECK) {
             ServerLoginConnectionEvents.QUERY_START.register(ModPacketsC2S::handshake);
             ServerLoginNetworking.registerGlobalReceiver(ModPackets.HANDSHAKE, ModPacketsC2S::handleHandshakeReply);
-        //}
+        }
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.USE_ACTIVE_POWERS, ModPacketsC2S::useActivePowers);
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.PLAYER_LANDED, ModPacketsC2S::playerLanded);
     }

@@ -66,7 +66,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
             if(entity instanceof ProjectileEntity) {
                 if(entity instanceof ExplosiveProjectileEntity) {
                     ExplosiveProjectileEntity explosiveProjectileEntity = (ExplosiveProjectileEntity)entity;
-                    explosiveProjectileEntity.setPos(rotationVector.x * speed, rotationVector.y * speed, rotationVector.z * speed);
+                    explosiveProjectileEntity.powerX = rotationVector.x * speed;
+                    explosiveProjectileEntity.powerY = rotationVector.y * speed;
+                    explosiveProjectileEntity.powerZ = rotationVector.z * speed;
                 }
                 ProjectileEntity projectile = (ProjectileEntity)entity;
                 projectile.setOwner(this.entity);

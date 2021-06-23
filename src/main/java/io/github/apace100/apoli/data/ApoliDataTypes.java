@@ -44,49 +44,8 @@ import java.util.List;
 
 public class ApoliDataTypes {
 
-    public static final SerializableDataType<Identifier> APOLI_IDENTIFIER = new SerializableDataType<>(
-        Identifier.class,
-        PacketByteBuf::writeIdentifier,
-        PacketByteBuf::readIdentifier,
-        (json) -> {
-            String idString = json.getAsString();
-            if(idString.contains(":")) {
-                String[] idSplit = idString.split(":");
-                if(idSplit.length != 2) {
-                    throw new InvalidIdentifierException("Incorrect number of `:` in identifier: \"" + idString + "\".");
-                }
-                if(idSplit[0].contains("*")) {
-                    if(PowerTypes.CURRENT_NAMESPACE != null) {
-                        idSplit[0] = idSplit[0].replace("*", PowerTypes.CURRENT_NAMESPACE);
-                    } else {
-                        throw new InvalidIdentifierException("Identifier may only contain a `*` in the namespace inside of powers.");
-                    }
-                }
-                if(idSplit[1].contains("*")) {
-                    if(PowerTypes.CURRENT_PATH != null) {
-                        idSplit[1] = idSplit[1].replace("*", PowerTypes.CURRENT_PATH);
-                    } else {
-                        throw new InvalidIdentifierException("Identifier may only contain a `*` in the path inside of powers.");
-                    }
-                }
-                idString = idSplit[0] + ":" + idSplit[1];
-            } else {
-                if(idString.contains("*")) {
-                    if(PowerTypes.CURRENT_PATH != null) {
-                        idString = idString.replace("*", PowerTypes.CURRENT_PATH);
-                    } else {
-                        throw new InvalidIdentifierException("Identifier may only contain a `*` in the path inside of powers.");
-                    }
-                }
-            }
-            return Identifier.tryParse(idString);
-        });
-
-    public static final SerializableDataType<List<Identifier>> APOLI_IDENTIFIERS =
-        SerializableDataType.list(APOLI_IDENTIFIER);
-
     public static final SerializableDataType<PowerTypeReference> POWER_TYPE = SerializableDataType.wrap(
-        PowerTypeReference.class, APOLI_IDENTIFIER,
+        PowerTypeReference.class, SerializableDataTypes.IDENTIFIER,
         PowerType::getIdentifier, PowerTypeReference::new);
 
     public static final SerializableDataType<ConditionFactory<LivingEntity>.Instance> ENTITY_CONDITION =
@@ -226,7 +185,7 @@ public class ApoliDataTypes {
             SerializableData()
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
-            .add("sprite_location", APOLI_IDENTIFIER, new Identifier("origins", "textures/gui/resource_bar.png"))
+            .add("sprite_location", SerializableDataTypes.IDENTIFIER, new Identifier("origins", "textures/gui/resource_bar.png"))
             .add("condition", ENTITY_CONDITION, null),
         (dataInst) -> new HudRender(
             dataInst.getBoolean("should_render"),

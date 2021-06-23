@@ -133,7 +133,7 @@ public class EntityConditions {
             .add("compare_to", SerializableDataTypes.DOUBLE),
             (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely((Tag<Fluid>)data.get("fluid")), data.getDouble("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("power"), new SerializableData()
-            .add("power", ApoliDataTypes.APOLI_IDENTIFIER),
+            .add("power", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> {
                 try {
                     PowerType<?> powerType = PowerTypeRegistry.get(data.getId("power"));
@@ -237,7 +237,7 @@ public class EntityConditions {
                 return comparison.compare(count, compareTo);
             }));
         register(new ConditionFactory<>(Apoli.identifier("dimension"), new SerializableData()
-            .add("dimension", ApoliDataTypes.APOLI_IDENTIFIER),
+            .add("dimension", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.WORLD_KEY, data.getId("dimension"))));
         register(new ConditionFactory<>(Apoli.identifier("xp_levels"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -266,8 +266,8 @@ public class EntityConditions {
             .add("compare_to", SerializableDataTypes.FLOAT),
             (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.getHealth() / entity.getMaxHealth(), data.getFloat("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("biome"), new SerializableData()
-            .add("biome", ApoliDataTypes.APOLI_IDENTIFIER, null)
-            .add("biomes", ApoliDataTypes.APOLI_IDENTIFIERS, null)
+            .add("biome", SerializableDataTypes.IDENTIFIER, null)
+            .add("biomes", SerializableDataTypes.IDENTIFIERS, null)
             .add("condition", ApoliDataTypes.BIOME_CONDITION, null),
             (data, entity) -> {
                 Biome biome = entity.world.getBiome(entity.getBlockPos());
@@ -329,7 +329,7 @@ public class EntityConditions {
                 return false;
             }));
         register(new ConditionFactory<>(Apoli.identifier("predicate"), new SerializableData()
-            .add("predicate", ApoliDataTypes.APOLI_IDENTIFIER),
+            .add("predicate", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> {
                 MinecraftServer server = entity.world.getServer();
                 if (server != null) {
@@ -360,7 +360,7 @@ public class EntityConditions {
                 Comparison comparison = ((Comparison)data.get("comparison"));
                 int compareTo = data.getInt("compare_to");
                 switch(comparison) {
-                    case EQUAL: case LESS_THAN_OR_EQUAL: case GREATER_THAN:
+                    case EQUAL: case LESS_THAN_OR_EQUAL: case GREATER_THAN: case NOT_EQUAL:
                         stopAt = compareTo + 1;
                         break;
                     case LESS_THAN: case GREATER_THAN_OR_EQUAL:

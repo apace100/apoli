@@ -38,31 +38,35 @@ public class AttributePower extends Power {
 
     @Override
     public void onAdded() {
-        float previousMaxHealth = entity.getMaxHealth();
-        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
-        modifiers.forEach(mod -> {
-            if(entity.getAttributes().hasAttribute(mod.getAttribute())) {
-                entity.getAttributeInstance(mod.getAttribute()).addTemporaryModifier(mod.getModifier());
+        if(!entity.world.isClient) {
+            float previousMaxHealth = entity.getMaxHealth();
+            float previousHealthPercent = entity.getHealth() / previousMaxHealth;
+            modifiers.forEach(mod -> {
+                if(entity.getAttributes().hasAttribute(mod.getAttribute())) {
+                    entity.getAttributeInstance(mod.getAttribute()).addTemporaryModifier(mod.getModifier());
+                }
+            });
+            float afterMaxHealth = entity.getMaxHealth();
+            if(updateHealth && afterMaxHealth != previousMaxHealth) {
+                entity.setHealth(afterMaxHealth * previousHealthPercent);
             }
-        });
-        float afterMaxHealth = entity.getMaxHealth();
-        if(updateHealth && afterMaxHealth != previousMaxHealth) {
-            entity.setHealth(afterMaxHealth * previousHealthPercent);
         }
     }
 
     @Override
     public void onRemoved() {
-        float previousMaxHealth = entity.getMaxHealth();
-        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
-        modifiers.forEach(mod -> {
-            if (entity.getAttributes().hasAttribute(mod.getAttribute())) {
-                entity.getAttributeInstance(mod.getAttribute()).removeModifier(mod.getModifier());
+        if(!entity.world.isClient) {
+            float previousMaxHealth = entity.getMaxHealth();
+            float previousHealthPercent = entity.getHealth() / previousMaxHealth;
+            modifiers.forEach(mod -> {
+                if (entity.getAttributes().hasAttribute(mod.getAttribute())) {
+                    entity.getAttributeInstance(mod.getAttribute()).removeModifier(mod.getModifier());
+                }
+            });
+            float afterMaxHealth = entity.getMaxHealth();
+            if(updateHealth && afterMaxHealth != previousMaxHealth) {
+                entity.setHealth(afterMaxHealth * previousHealthPercent);
             }
-        });
-        float afterMaxHealth = entity.getMaxHealth();
-        if(updateHealth && afterMaxHealth != previousMaxHealth) {
-            entity.setHealth(afterMaxHealth * previousHealthPercent);
         }
     }
 }

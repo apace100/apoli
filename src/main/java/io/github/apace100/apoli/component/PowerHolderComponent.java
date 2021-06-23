@@ -31,6 +31,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     int removeAllPowersFromSource(Identifier source);
 
+    List<PowerType<?>> getPowersFromSource(Identifier source);
+
     boolean addPower(PowerType<?> powerType, Identifier source);
 
     boolean hasPower(PowerType<?> powerType);
@@ -41,7 +43,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     List<Power> getPowers();
 
-    Set<PowerType<?>> getPowerTypes();
+    Set<PowerType<?>> getPowerTypes(boolean getSubPowerTypes);
 
     <T extends Power> List<T> getPowers(Class<T> powerClass);
 
