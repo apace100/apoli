@@ -45,7 +45,7 @@ public class DamageOverTimePower extends VariableIntPower {
     public int getDamageBegin() {
         int prot = getProtection();
         int delay = (int)(Math.pow(prot * 2, 1.3) * protectionEffectiveness);
-        return beginDamageIn + delay;
+        return beginDamageIn + delay * 20;
     }
 
     @Override
