@@ -19,6 +19,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -61,6 +62,7 @@ public abstract class GameRendererMixin {
     private ShaderEffect shader;
     @Shadow
     private boolean shadersEnabled;
+    @Shadow @Final private ResourceManager resourceManager;
     @Unique
     private Identifier currentlyLoadedShader;
 
@@ -68,8 +70,10 @@ public abstract class GameRendererMixin {
     private void loadShaderFromPowerOnCameraEntity(Entity entity, CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
-            loadShader(shaderLoc);
-            currentlyLoadedShader = shaderLoc;
+            if(this.resourceManager.containsResource(shaderLoc)) {
+                loadShader(shaderLoc);
+                currentlyLoadedShader = shaderLoc;
+            }
         });
     }
 
@@ -78,13 +82,17 @@ public abstract class GameRendererMixin {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
             if(currentlyLoadedShader != shaderLoc) {
-                loadShader(shaderLoc);
-                currentlyLoadedShader = shaderLoc;
+                if(this.resourceManager.containsResource(shaderLoc)) {
+                    loadShader(shaderLoc);
+                    currentlyLoadedShader = shaderLoc;
+                }
             }
         });
         if(!PowerHolderComponent.hasPower(client.getCameraEntity(), ShaderPower.class) && currentlyLoadedShader != null) {
-            this.shader.close();
-            this.shader = null;
+            if(this.shader != null) {
+                this.shader.close();
+                this.shader = null;
+            }
             this.shadersEnabled = false;
             currentlyLoadedShader = null;
         }
