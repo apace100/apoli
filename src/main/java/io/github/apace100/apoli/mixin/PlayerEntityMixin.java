@@ -152,9 +152,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         if(component.getPowers(RestrictArmorPower.class).stream().anyMatch(rap -> !rap.canEquip(stack, slot))) {
             info.setReturnValue(false);
         }
-        if(stack.getItem() == Items.ELYTRA && PowerHolderComponent.getPowers(this, ElytraFlightPower.class).size() > 0) {
-            info.setReturnValue(false);
-        }
     }
     /*
     // WATER_BREATHING
