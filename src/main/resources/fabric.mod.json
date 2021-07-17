@@ -41,10 +41,10 @@
   },
 
   "depends": {
+    "java": ">=16",
     "fabricloader": ">=0.11.3",
     "fabric": "*",
     "minecraft": "1.17.x",
-    "java": ">=16",
     "calio": "1.x.x"
   }
 }
