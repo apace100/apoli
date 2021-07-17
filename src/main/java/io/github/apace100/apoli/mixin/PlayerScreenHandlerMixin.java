@@ -31,10 +31,5 @@ public abstract class PlayerScreenHandlerMixin extends Slot {
         if(component.getPowers(RestrictArmorPower.class).stream().anyMatch(rap -> !rap.canEquip(stack, slot))) {
             info.setReturnValue(false);
         }
-        if(PowerHolderComponent.getPowers(player, ElytraFlightPower.class).size() > 0) {
-            if(stack.getItem() == Items.ELYTRA) {
-                info.setReturnValue(false);
-            }
-        }
     }
 }
