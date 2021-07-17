@@ -94,7 +94,7 @@ public class ResourceCommand {
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.add.success.single", i, powerType.getIdentifier(), player.getEntityName(), total), true);
                     return 1;
                 case OPERATION:
-                    ScoreboardPlayerScore score = command.getSource().getMinecraftServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
+                    ScoreboardPlayerScore score = command.getSource().getServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
                     command.getArgument("operation", PowerOperation.Operation.class).apply(vIntPower, score);
                     PowerHolderComponent.sync(player);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), player.getEntityName(), vIntPower.getValue()), true);
@@ -123,7 +123,7 @@ public class ResourceCommand {
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.add.success.single", i, powerType.getIdentifier(), player.getEntityName(), cooldownPower.getRemainingTicks()), true);
                     return 1;
                 case OPERATION:
-                    ScoreboardPlayerScore score = command.getSource().getMinecraftServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
+                    ScoreboardPlayerScore score = command.getSource().getServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
                     command.getArgument("operation", PowerOperation.Operation.class).apply(cooldownPower, score);
                     PowerHolderComponent.sync(player);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), player.getEntityName(), cooldownPower.getRemainingTicks()), true);

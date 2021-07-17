@@ -137,7 +137,7 @@ public class ApoliDataTypes {
         (data) ->  {
             ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
             if(data.isPresent("tag")) {
-                stack.setTag((NbtCompound) data.get("tag"));
+                stack.setNbt((NbtCompound) data.get("tag"));
             }
             return new Pair<>(data.getInt("slot"), stack);
         },
@@ -145,7 +145,7 @@ public class ApoliDataTypes {
             SerializableData.Instance data = serializableData.new Instance();
             data.set("item", positionedStack.getRight().getItem());
             data.set("amount", positionedStack.getRight().getCount());
-            data.set("tag", positionedStack.getRight().hasTag() ? positionedStack.getRight().getTag() : null);
+            data.set("tag", positionedStack.getRight().hasNbt() ? positionedStack.getRight().getNbt() : null);
             data.set("slot", positionedStack.getLeft());
             return data;
         }));
