@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -116,6 +117,31 @@ public abstract class LivingEntityMixin extends Entity {
             return false;
         }
         return livingEntity.isWet();
+    }
+
+    @Unique
+    private boolean prevPowderSnowState = false;
+
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFrozenTicks()I"))
+    private void freezeEntityFromPower(CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower(this, FreezePower.class)) {
+            this.prevPowderSnowState = this.inPowderSnow;
+            this.inPowderSnow = true;
+        }
+    }
+
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;removePowderSnowSlow()V"))
+    private void unfreezeEntityFromPower(CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower(this, FreezePower.class)) {
+            this.inPowderSnow = this.prevPowderSnowState;
+        }
+    }
+
+    @Inject(method = "canFreeze", at = @At("RETURN"), cancellable = true)
+    private void allowFreezingPower(CallbackInfoReturnable<Boolean> cir) {
+        if(PowerHolderComponent.hasPower(this, FreezePower.class)) {
+            cir.setReturnValue(true);
+        }
     }
 
     // SetEntityGroupPower

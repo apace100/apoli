@@ -983,6 +983,9 @@ public class PowerFactories {
                         (ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action"));
                 })
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("freeze"),
+            new SerializableData(), data -> (BiFunction<PowerType<Power>, LivingEntity, Power>) FreezePower::new)
+            .allowCondition());
     }
 
     private static void register(PowerFactory serializer) {
