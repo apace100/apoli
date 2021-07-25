@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -13,6 +14,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.ladysnake.pal.VanillaAbilities;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.*;
@@ -32,12 +34,14 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.tag.Tag;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.gen.feature.StructureFeature;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -895,6 +899,25 @@ public class PowerFactories {
             data ->
                 (type, player) -> new PlayerAbilityPower(type, player, VanillaAbilities.ALLOW_FLYING))
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("action_on_entity_use"),
+            new SerializableData()
+                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION)
+                .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null),
+            data ->
+                (type, player) -> {
+                    return new ActionOnEntityUsePower(type, player,
+                        (ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"),
+                        (ConditionFactory<LivingEntity>.Instance)data.get("target_condition"));
+                })
+            .allowCondition());
+        UseEntityCallback.EVENT.register(((playerEntity, world, hand, entity, entityHitResult) -> {
+            List<ActionOnEntityUsePower> powers = PowerHolderComponent.getPowers(playerEntity, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity)).toList();
+            if(powers.size() > 0) {
+                powers.get(0).executeAction(entity);
+                return ActionResult.SUCCESS;
+            }
+            return ActionResult.PASS;
+        }));
 
         register(new PowerFactory<>(Apoli.identifier("toggle_night_vision"),
             new SerializableData()
@@ -922,6 +945,43 @@ public class PowerFactories {
                 .add("exhaustion", SerializableDataTypes.FLOAT),
             data ->
                 (type, player) -> new ExhaustOverTimePower(type, player, data.getInt("interval"), data.getFloat("exhaustion")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("prevent_game_event"),
+            new SerializableData()
+                .add("event", SerializableDataTypes.GAME_EVENT, null)
+                .add("events", SerializableDataTypes.GAME_EVENTS, null)
+                .add("tag", SerializableDataTypes.GAME_EVENT_TAG, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) -> {
+                    List<GameEvent> eventList = data.isPresent("events") ? (List<GameEvent>)data.get("events") : null;
+                    if(data.isPresent("event")) {
+                        if(eventList == null) {
+                            eventList = new LinkedList<>();
+                        }
+                        eventList.add((GameEvent)data.get("event"));
+                    }
+                    return new PreventGameEventPower(type, player,
+                        (Tag<GameEvent>)data.get("tag"), eventList,
+                        (ActionFactory<Entity>.Instance)data.get("entity_action"));
+                })
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("modify_crafting"),
+            new SerializableData()
+                .add("recipe", SerializableDataTypes.IDENTIFIER, null)
+                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("result", SerializableDataTypes.ITEM_STACK, null)
+                .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("block_action", ApoliDataTypes.BLOCK_ACTION, null),
+            data ->
+                (type, player) -> {
+                    return new ModifyCraftingPower(type, player,
+                        data.getId("recipe"), (ConditionFactory<ItemStack>.Instance)data.get("item_condition"),
+                        (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("item_action"),
+                        (ActionFactory<Entity>.Instance)data.get("entity_action"),
+                        (ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action"));
+                })
             .allowCondition());
     }
 

@@ -31,6 +31,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -139,6 +140,17 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
+    @Inject(method = "emitGameEvent(Lnet/minecraft/world/event/GameEvent;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/BlockPos;)V", at = @At("HEAD"), cancellable = true)
+    private void preventGameEvents(GameEvent event, @Nullable Entity entity, BlockPos pos, CallbackInfo ci) {
+        if(entity != null && entity instanceof LivingEntity) {
+            List<PreventGameEventPower> preventingPowers = PowerHolderComponent.getPowers(entity, PreventGameEventPower.class).stream().filter(p -> p.doesPrevent(event)).toList();
+            if(preventingPowers.size() > 0) {
+                preventingPowers.forEach(p -> p.executeAction(entity));
+                ci.cancel();
+            }
+        }
+    }
+
     private boolean isMoving;
     private float distanceBefore;
 
@@ -150,7 +162,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
     private void checkIsMoving(MovementType type, Vec3d movement, CallbackInfo ci) {
-        if(this.distanceTraveled > this.distanceBefore) {
+        if (this.distanceTraveled > this.distanceBefore) {
             this.isMoving = true;
         }
     }

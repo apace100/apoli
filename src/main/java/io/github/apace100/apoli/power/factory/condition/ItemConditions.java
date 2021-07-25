@@ -12,6 +12,8 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.util.registry.Registry;
 
@@ -71,6 +73,10 @@ public class ItemConditions {
             }));
         register(new ConditionFactory<>(Apoli.identifier("meat"), new SerializableData(),
             (data, stack) -> stack.isFood() && stack.getItem().getFoodComponent().isMeat()));
+        register(new ConditionFactory<>(Apoli.identifier("nbt"), new SerializableData()
+            .add("nbt", SerializableDataTypes.NBT), (data, stack) -> NbtHelper.matches((NbtCompound)data.get("nbt"), stack.getNbt(), true)));
+        register(new ConditionFactory<>(Apoli.identifier("fireproof"), new SerializableData(),
+            (data, stack) -> stack.getItem().isFireproof()));
     }
 
     private static void register(ConditionFactory<ItemStack> conditionFactory) {

@@ -3,27 +3,30 @@ package io.github.apace100.apoli.mixin;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.util.StackPowerUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityGroup;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Mixin(LivingEntity.class)
@@ -45,6 +48,34 @@ public abstract class LivingEntityMixin extends Entity {
 
     public LivingEntityMixin(EntityType<?> type, World world) {
         super(type, world);
+    }
+
+    @Inject(method = "getEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;removeModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void removeEquipmentPowers(CallbackInfoReturnable<Map> cir, Map map, EquipmentSlot var2[], int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack3, ItemStack itemStack4) {
+        List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers(itemStack3, equipmentSlot);
+        if(powers.size() > 0) {
+            Identifier source = new Identifier(Apoli.MODID, equipmentSlot.getName());
+            PowerHolderComponent powerHolder = PowerHolderComponent.KEY.get(this);
+            powers.forEach(sp -> {
+                if(PowerTypeRegistry.contains(sp.powerId)) {
+                    powerHolder.removePower(PowerTypeRegistry.get(sp.powerId), source);
+                }
+            });
+        }
+    }
+
+    @Inject(method = "getEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;addTemporaryModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void addEquipmentPowers(CallbackInfoReturnable<Map> cir, Map map, EquipmentSlot var2[], int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack3, ItemStack itemStack4) {
+        List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers(itemStack4, equipmentSlot);
+        if(powers.size() > 0) {
+            Identifier source = new Identifier(Apoli.MODID, equipmentSlot.getName());
+            PowerHolderComponent powerHolder = PowerHolderComponent.KEY.get(this);
+            powers.forEach(sp -> {
+                if(PowerTypeRegistry.contains(sp.powerId)) {
+                    powerHolder.addPower(PowerTypeRegistry.get(sp.powerId), source);
+                }
+            });
+        }
     }
 
     @Inject(method = "canWalkOnFluid", at = @At("HEAD"), cancellable = true)

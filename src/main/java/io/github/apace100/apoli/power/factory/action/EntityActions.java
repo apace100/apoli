@@ -3,10 +3,7 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.CooldownPower;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.VariableIntPower;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Scheduler;
@@ -37,6 +34,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
+import net.minecraft.world.event.GameEvent;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
 
@@ -360,11 +358,37 @@ public class EntityActions {
                 entity.fallDistance = data.getFloat("fall_distance");
             }));
         register(new ActionFactory<>(Apoli.identifier("give"), new SerializableData()
-            .add("stack", SerializableDataTypes.ITEM_STACK),
+            .add("stack", SerializableDataTypes.ITEM_STACK)
+            .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
+            .add("preferred_slot", SerializableDataTypes.EQUIPMENT_SLOT, null),
             (data, entity) -> {
                 if(!entity.world.isClient()) {
                     ItemStack stack = (ItemStack)data.get("stack");
+                    if(stack.isEmpty()) {
+                        return;
+                    }
                     stack = stack.copy();
+                    if(data.isPresent("item_action")) {
+                        ActionFactory<Pair<World, ItemStack>>.Instance action = (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("item_action");
+                        action.accept(new Pair<>(entity.world, stack));
+                    }
+                    if(data.isPresent("preferred_slot") && entity instanceof LivingEntity) {
+                        LivingEntity living = (LivingEntity)entity;
+                        EquipmentSlot slot = (EquipmentSlot) data.get("preferred_slot");
+                        ItemStack stackInSlot = living.getEquippedStack(slot);
+                        if(stackInSlot.isEmpty()) {
+                            living.equipStack(slot, stack);
+                            return;
+                        } else
+                        if(ItemStack.canCombine(stackInSlot, stack) && stackInSlot.getCount() < stackInSlot.getMaxCount()) {
+                            int fit = Math.min(stackInSlot.getMaxCount() - stackInSlot.getCount(), stack.getCount());
+                            stackInSlot.increment(fit);
+                            stack.decrement(fit);
+                            if(stack.isEmpty()) {
+                                return;
+                            }
+                        }
+                    }
                     if(entity instanceof PlayerEntity) {
                         ((PlayerEntity)entity).getInventory().offerOrDrop(stack);
                     } else {
@@ -378,8 +402,8 @@ public class EntityActions {
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     ItemStack stack = ((LivingEntity)entity).getEquippedStack((EquipmentSlot)data.get("equipment_slot"));
-                    ActionFactory<ItemStack>.Instance action = (ActionFactory<ItemStack>.Instance)data.get("action");
-                    action.accept(stack);
+                    ActionFactory<Pair<World, ItemStack>>.Instance action = (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("action");
+                    action.accept(new Pair<>(entity.world, stack));
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("trigger_cooldown"), new SerializableData()
@@ -393,6 +417,22 @@ public class EntityActions {
                         cp.use();
                     }
                 }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("toggle"), new SerializableData()
+            .add("power", ApoliDataTypes.POWER_TYPE),
+            (data, entity) -> {
+                if(entity instanceof PlayerEntity) {
+                    PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
+                    Power p = component.getPower((PowerType<?>)data.get("power"));
+                    if(p instanceof TogglePower) {
+                        ((TogglePower)p).onUse();
+                    }
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("emit_game_event"), new SerializableData()
+            .add("event", SerializableDataTypes.GAME_EVENT),
+            (data, entity) -> {
+                entity.emitGameEvent((GameEvent)data.get("event"));
             }));
     }
 

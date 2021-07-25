@@ -22,6 +22,8 @@
     "PlayerEntityMixin",
     "PlayerScreenHandlerAccessor",
     "PlayerScreenHandlerMixin",
+    "RecipeManagerAccessor",
+    "RecipeManagerMixin",
     "ServerPlayerEntityMixin",
     "ServerPlayerInteractionManagerAccessor",
     "ServerPlayerInteractionManagerMixin",

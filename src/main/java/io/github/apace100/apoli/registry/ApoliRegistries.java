@@ -30,8 +30,9 @@ public class ApoliRegistries {
     public static final Registry<ConditionFactory<FluidState>> FLUID_CONDITION;
     public static final Registry<ConditionFactory<Biome>> BIOME_CONDITION;
     public static final Registry<ActionFactory<Entity>> ENTITY_ACTION;
-    public static final Registry<ActionFactory<ItemStack>> ITEM_ACTION;
+    public static final Registry<ActionFactory<Pair<World, ItemStack>>> ITEM_ACTION;
     public static final Registry<ActionFactory<Triple<World, BlockPos, Direction>>> BLOCK_ACTION;
+    public static final Registry<ActionFactory<Pair<Entity, Entity>>> BIENTITY_ACTION;
 
     static {
         POWER_FACTORY = FabricRegistryBuilder.createSimple(PowerFactory.class, Apoli.identifier("power_factory")).buildAndRegister();
@@ -42,7 +43,8 @@ public class ApoliRegistries {
         FLUID_CONDITION = FabricRegistryBuilder.createSimple(ClassUtil.<ConditionFactory<FluidState>>castClass(ConditionFactory.class), Apoli.identifier("fluid_condition")).buildAndRegister();
         BIOME_CONDITION = FabricRegistryBuilder.createSimple(ClassUtil.<ConditionFactory<Biome>>castClass(ConditionFactory.class), Apoli.identifier("biome_condition")).buildAndRegister();
         ENTITY_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Entity>>castClass(ActionFactory.class), Apoli.identifier("entity_action")).buildAndRegister();
-        ITEM_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<ItemStack>>castClass(ActionFactory.class), Apoli.identifier("item_action")).buildAndRegister();
+        ITEM_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Pair<World, ItemStack>>>castClass(ActionFactory.class), Apoli.identifier("item_action")).buildAndRegister();
         BLOCK_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Triple<World, BlockPos, Direction>>>castClass(ActionFactory.class), Apoli.identifier("block_action")).buildAndRegister();
+        BIENTITY_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Pair<Entity, Entity>>>castClass(ActionFactory.class), Apoli.identifier("bientity_action")).buildAndRegister();
     }
 }

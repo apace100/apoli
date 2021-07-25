@@ -90,16 +90,22 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<ActionFactory<Entity>.Instance>> ENTITY_ACTIONS =
         SerializableDataType.list(ENTITY_ACTION);
 
+    public static final SerializableDataType<ActionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION =
+        action(ClassUtil.castClass(ActionFactory.Instance.class), ActionTypes.BIENTITY);
+
+    public static final SerializableDataType<List<ActionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS =
+        SerializableDataType.list(BIENTITY_ACTION);
+
     public static final SerializableDataType<ActionFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION =
         action(ClassUtil.castClass(ActionFactory.Instance.class), ActionTypes.BLOCK);
 
     public static final SerializableDataType<List<ActionFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS =
         SerializableDataType.list(BLOCK_ACTION);
 
-    public static final SerializableDataType<ActionFactory<ItemStack>.Instance> ITEM_ACTION =
+    public static final SerializableDataType<ActionFactory<Pair<World, ItemStack>>.Instance> ITEM_ACTION =
         action(ClassUtil.castClass(ActionFactory.Instance.class), ActionTypes.ITEM);
 
-    public static final SerializableDataType<List<ActionFactory<ItemStack>.Instance>> ITEM_ACTIONS =
+    public static final SerializableDataType<List<ActionFactory<Pair<World, ItemStack>>.Instance>> ITEM_ACTIONS =
         SerializableDataType.list(ITEM_ACTION);
 
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
