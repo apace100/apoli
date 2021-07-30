@@ -13,6 +13,7 @@ import net.minecraft.world.biome.Biome;
 public class ConditionTypes {
 
     public static ConditionType<LivingEntity> ENTITY = new ConditionType<>("EntityCondition", ApoliRegistries.ENTITY_CONDITION);
+    public static ConditionType<Pair<LivingEntity, LivingEntity>> BIENTITY = new ConditionType<>("BiEntityCondition", ApoliRegistries.BIENTITY_CONDITION);
     public static ConditionType<ItemStack> ITEM = new ConditionType<>("ItemCondition", ApoliRegistries.ITEM_CONDITION);
     public static ConditionType<CachedBlockPosition> BLOCK = new ConditionType<>("BlockCondition", ApoliRegistries.BLOCK_CONDITION);
     public static ConditionType<Pair<DamageSource, Float>> DAMAGE = new ConditionType<>("DamageCondition", ApoliRegistries.DAMAGE_CONDITION);

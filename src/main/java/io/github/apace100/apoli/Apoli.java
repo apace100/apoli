@@ -80,6 +80,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		PowerFactories.register();
 		EntityConditions.register();
+		BiEntityConditions.register();
 		ItemConditions.register();
 		BlockConditions.register();
 		DamageConditions.register();

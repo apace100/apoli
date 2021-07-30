@@ -773,9 +773,12 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("entity_glow"),
             new SerializableData()
-                .add("entity_condition", ApoliDataTypes.ENTITY_CONDITION, null),
+                .add("entity_condition", ApoliDataTypes.ENTITY_CONDITION, null)
+                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
             data ->
-                (type, player) -> new EntityGlowPower(type, player, (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition")))
+                (type, player) -> new EntityGlowPower(type, player,
+                    (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition"),
+                    (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("climbing"),
             new SerializableData()
@@ -902,12 +905,14 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("action_on_entity_use"),
             new SerializableData()
                 .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION)
-                .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null),
+                .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null)
+                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
             data ->
                 (type, player) -> {
                     return new ActionOnEntityUsePower(type, player,
                         (ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"),
-                        (ConditionFactory<LivingEntity>.Instance)data.get("target_condition"));
+                        (ConditionFactory<LivingEntity>.Instance)data.get("target_condition"),
+                        (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition"));
                 })
             .allowCondition());
         UseEntityCallback.EVENT.register(((playerEntity, world, hand, entity, entityHitResult) -> {
@@ -946,6 +951,7 @@ public class PowerFactories {
             data ->
                 (type, player) -> new ExhaustOverTimePower(type, player, data.getInt("interval"), data.getFloat("exhaustion")))
             .allowCondition());
+
         register(new PowerFactory<>(Apoli.identifier("prevent_game_event"),
             new SerializableData()
                 .add("event", SerializableDataTypes.GAME_EVENT, null)

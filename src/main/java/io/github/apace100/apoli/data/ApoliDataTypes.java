@@ -54,6 +54,12 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<ConditionFactory<LivingEntity>.Instance>> ENTITY_CONDITIONS =
         SerializableDataType.list(ENTITY_CONDITION);
 
+    public static final SerializableDataType<ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance> BIENTITY_CONDITION =
+        condition(ClassUtil.castClass(ConditionFactory.Instance.class), ConditionTypes.BIENTITY);
+
+    public static final SerializableDataType<List<ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance>> BIENTITY_CONDITIONS =
+        SerializableDataType.list(BIENTITY_CONDITION);
+
     public static final SerializableDataType<ConditionFactory<ItemStack>.Instance> ITEM_CONDITION =
         condition(ClassUtil.castClass(ConditionFactory.Instance.class), ConditionTypes.ITEM);
 

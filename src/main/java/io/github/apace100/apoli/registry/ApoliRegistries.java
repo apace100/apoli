@@ -24,6 +24,7 @@ public class ApoliRegistries {
 
     public static final Registry<PowerFactory> POWER_FACTORY;
     public static final Registry<ConditionFactory<LivingEntity>> ENTITY_CONDITION;
+    public static final Registry<ConditionFactory<Pair<LivingEntity, LivingEntity>>> BIENTITY_CONDITION;
     public static final Registry<ConditionFactory<ItemStack>> ITEM_CONDITION;
     public static final Registry<ConditionFactory<CachedBlockPosition>> BLOCK_CONDITION;
     public static final Registry<ConditionFactory<Pair<DamageSource, Float>>> DAMAGE_CONDITION;
@@ -37,6 +38,7 @@ public class ApoliRegistries {
     static {
         POWER_FACTORY = FabricRegistryBuilder.createSimple(PowerFactory.class, Apoli.identifier("power_factory")).buildAndRegister();
         ENTITY_CONDITION = FabricRegistryBuilder.createSimple(ClassUtil.<ConditionFactory<LivingEntity>>castClass(ConditionFactory.class), Apoli.identifier("entity_condition")).buildAndRegister();
+        BIENTITY_CONDITION = FabricRegistryBuilder.createSimple(ClassUtil.<ConditionFactory<Pair<LivingEntity, LivingEntity>>>castClass(ConditionFactory.class), Apoli.identifier("bientity_condition")).buildAndRegister();
         ITEM_CONDITION = FabricRegistryBuilder.createSimple(ClassUtil.<ConditionFactory<ItemStack>>castClass(ConditionFactory.class), Apoli.identifier("item_condition")).buildAndRegister();
         BLOCK_CONDITION = FabricRegistryBuilder.createSimple(ClassUtil.<ConditionFactory<CachedBlockPosition>>castClass(ConditionFactory.class), Apoli.identifier("block_condition")).buildAndRegister();
         DAMAGE_CONDITION = FabricRegistryBuilder.createSimple(ClassUtil.<ConditionFactory<Pair<DamageSource, Float>>>castClass(ConditionFactory.class), Apoli.identifier("damage_condition")).buildAndRegister();
