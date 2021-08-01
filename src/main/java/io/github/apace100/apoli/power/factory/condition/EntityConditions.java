@@ -532,6 +532,7 @@ public class EntityConditions {
                 entity.writeNbt(nbt);
                 return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
             }));
+        register(new ConditionFactory<>(Apoli.identifier("exists"), new SerializableData(), (data, entity) -> entity != null));
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

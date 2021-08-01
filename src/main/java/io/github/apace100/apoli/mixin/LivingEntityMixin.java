@@ -9,7 +9,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
@@ -17,7 +16,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -107,10 +105,16 @@ public abstract class LivingEntityMixin extends Entity {
     @Inject(method = "damage", at = @At("RETURN"))
     private void invokeHitActions(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if(cir.getReturnValue()) {
+            Entity attacker = source.getAttacker();
+            if(attacker != null) {
+                PowerHolderComponent.withPower(this, ActionWhenHitPower.class, p -> true, p -> p.whenHit(attacker, source, amount));
+                PowerHolderComponent.withPower(attacker, ActionOnHitPower.class, p -> true, p -> p.onHit(this, source, amount));
+            }
             PowerHolderComponent.getPowers(this, SelfActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
             PowerHolderComponent.getPowers(this, AttackerActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
             PowerHolderComponent.getPowers(source.getAttacker(), SelfActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
             PowerHolderComponent.getPowers(source.getAttacker(), TargetActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
+
         }
     }
 

@@ -40,7 +40,6 @@ import net.minecraft.tag.Tag;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -1220,6 +1219,43 @@ public class PowerFactories {
                     data.<List<Text>>ifPresent("texts", t -> t.forEach(ttp::addText));
                     return ttp;
                 })
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("action_on_hit"),
+            new SerializableData()
+                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION)
+                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
+                .add("cooldown", SerializableDataTypes.INT, 1)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
+                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
+            data ->
+                (type, player) -> new ActionOnHitPower(type, player, data.getInt("cooldown"),
+                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
+                    (ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"),
+                    (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("action_when_hit"),
+            new SerializableData()
+                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION)
+                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
+                .add("cooldown", SerializableDataTypes.INT, 1)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
+                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
+            data ->
+                (type, player) -> new ActionWhenHitPower(type, player, data.getInt("cooldown"),
+                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
+                    (ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"),
+                    (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("action_when_damage_taken"),
+            new SerializableData()
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION)
+                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
+                .add("cooldown", SerializableDataTypes.INT, 1)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER),
+            data ->
+                (type, player) -> new SelfActionWhenHitPower(type, player, data.getInt("cooldown"),
+                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action")))
             .allowCondition());
     }
 
