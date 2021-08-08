@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.power.ModifyCameraSubmersionTypePower;
 import io.github.apace100.apoli.power.NightVisionPower;
 import io.github.apace100.apoli.power.PhasingPower;
 import io.github.apace100.apoli.power.ShaderPower;
@@ -13,6 +14,7 @@ import net.minecraft.block.FluidBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderEffect;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -130,6 +132,19 @@ public abstract class GameRendererMixin {
             Optional<Float> strength = nvs.stream().filter(NightVisionPower::isActive).map(NightVisionPower::getStrength).max(Float::compareTo);
             strength.ifPresent(info::setReturnValue);
         }
+    }
+
+    @Redirect(method = "getFov", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getSubmersionType()Lnet/minecraft/client/render/CameraSubmersionType;"))
+    private CameraSubmersionType modifySubmersionType(Camera camera) {
+        CameraSubmersionType original = camera.getSubmersionType();
+        if(camera.getFocusedEntity() instanceof LivingEntity) {
+            for(ModifyCameraSubmersionTypePower p : PowerHolderComponent.getPowers(camera.getFocusedEntity(), ModifyCameraSubmersionTypePower.class)) {
+                if(p.doesModify(original)) {
+                    return p.getNewType();
+                }
+            }
+        }
+        return original;
     }
 
     private HashMap<BlockPos, BlockState> savedStates = new HashMap<>();

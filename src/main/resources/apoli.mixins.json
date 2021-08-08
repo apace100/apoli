@@ -34,6 +34,7 @@
   "client": [
     "BackgroundRendererMixin",
     "CapeFeatureRendererMixin",
+    "ChunkRendererRegionMixin",
     "ClientAdvancementManagerAccessor",
     "ClientPlayerEntityMixin",
     "ClientPlayerInteractionManagerAccessor",
@@ -47,7 +48,8 @@
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
     "OtherClientPlayerEntityMixin",
-    "PlayerEntityRendererMixin"
+    "PlayerEntityRendererMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -15,7 +15,9 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.ladysnake.pal.VanillaAbilities;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.minecraft.block.Block;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -24,6 +26,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -48,6 +51,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
@@ -991,6 +995,33 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("freeze"),
             new SerializableData(), data -> (BiFunction<PowerType<Power>, LivingEntity, Power>) FreezePower::new)
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("modify_block_render"),
+            new SerializableData()
+                .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
+                .add("block", SerializableDataTypes.BLOCK),
+            data ->
+                (type, player) -> new ModifyBlockRenderPower(type, player,
+                    (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition"),
+                    ((Block)data.get("block")).getDefaultState())));
+        register(new PowerFactory<>(Apoli.identifier("modify_fluid_render"),
+            new SerializableData()
+                .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
+                .add("fluid_condition", ApoliDataTypes.FLUID_CONDITION, null)
+                .add("fluid", ApoliDataTypes.FLUID),
+            data ->
+                (type, player) -> new ModifyFluidRenderPower(type, player,
+                    (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition"),
+                    (ConditionFactory<FluidState>.Instance)data.get("fluid_condition"),
+                    ((Fluid)data.get("fluid")).getDefaultState())));
+        register(new PowerFactory<>(Apoli.identifier("modify_camera_submersion"),
+            new SerializableData()
+                .add("from", ApoliDataTypes.CAMERA_SUBMERSION_TYPE, null)
+                .add("to", ApoliDataTypes.CAMERA_SUBMERSION_TYPE),
+            data ->
+                (type, player) -> new ModifyCameraSubmersionTypePower(type, player,
+                    data.isPresent("from") ? Optional.of((CameraSubmersionType)data.get("from")) : Optional.empty(),
+                    (CameraSubmersionType)data.get("to")))
             .allowCondition());
     }
 

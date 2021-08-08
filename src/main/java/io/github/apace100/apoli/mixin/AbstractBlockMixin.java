@@ -28,16 +28,4 @@ public abstract class AbstractBlockMixin {
         info.setReturnValue(modified);
     }
 
-    @Inject(at = @At("RETURN"), method = "getOutlineShape", cancellable = true)
-    private void modifyBlockOutline(BlockState state, BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> cir) {
-        if(context instanceof EntityShapeContext) {
-            if(((EntityShapeContext)context).getEntity().isPresent()) {
-                Entity entity = ((EntityShapeContext)context).getEntity().get();
-                if(PowerHolderComponent.getPowers(entity, PreventBlockSelectionPower.class).stream().anyMatch(p -> p.doesPrevent(entity.world, pos))) {
-                    cir.setReturnValue(VoxelShapes.empty());
-                }
-            }
-        }
-
-    }
 }

@@ -25,6 +25,8 @@ import java.util.List;
 @Environment(EnvType.CLIENT)
 public class ApoliClient implements ClientModInitializer {
 
+	public static boolean shouldReloadWorldRenderer = false;
+
 	private static HashMap<String, KeyBinding> idToKeyBindingMap = new HashMap<>();
 	private static HashMap<String, Boolean> lastKeyBindingStates = new HashMap<>();
 	private static boolean initializedKeyBindingMap = false;

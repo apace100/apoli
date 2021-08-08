@@ -3,6 +3,7 @@ package io.github.apace100.apoli.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.LavaVisionPower;
+import io.github.apace100.apoli.power.ModifyCameraSubmersionTypePower;
 import io.github.apace100.apoli.power.NightVisionPower;
 import io.github.apace100.apoli.power.PhasingPower;
 import net.fabricmc.api.EnvType;
@@ -11,6 +12,7 @@ import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
@@ -31,6 +33,30 @@ public abstract class BackgroundRendererMixin {
             return PowerHolderComponent.KEY.get(player).getPowers(NightVisionPower.class).stream().anyMatch(NightVisionPower::isActive);
         }
         return player.hasStatusEffect(effect);
+    }
+
+    @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 0), ordinal = 0)
+    private static CameraSubmersionType modifyCameraSubmersionTypeRender(CameraSubmersionType original, Camera camera) {
+        if(camera.getFocusedEntity() instanceof LivingEntity) {
+            for(ModifyCameraSubmersionTypePower p : PowerHolderComponent.getPowers(camera.getFocusedEntity(), ModifyCameraSubmersionTypePower.class)) {
+                if(p.doesModify(original)) {
+                    return p.getNewType();
+                }
+            }
+        }
+        return original;
+    }
+
+    @ModifyVariable(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 0), ordinal = 0)
+    private static CameraSubmersionType modifyCameraSubmersionTypeFog(CameraSubmersionType original, Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog) {
+        if(camera.getFocusedEntity() instanceof LivingEntity) {
+            for(ModifyCameraSubmersionTypePower p : PowerHolderComponent.getPowers(camera.getFocusedEntity(), ModifyCameraSubmersionTypePower.class)) {
+                if(p.doesModify(original)) {
+                    return p.getNewType();
+                }
+            }
+        }
+        return original;
     }
 
     @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 1), ordinal = 0)

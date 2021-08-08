@@ -38,6 +38,9 @@ public class FluidConditions {
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
             .add("tag", SerializableDataTypes.FLUID_TAG),
             (data, fluid) -> fluid.isIn((Tag<Fluid>)data.get("tag"))));
+        register(new ConditionFactory<>(Apoli.identifier("fluid"), new SerializableData()
+            .add("fluid", ApoliDataTypes.FLUID),
+            (data, fluid) -> fluid.getFluid() == data.get("fluid")));
     }
 
     private static void register(ConditionFactory<FluidState> conditionFactory) {

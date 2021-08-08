@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PhasingPower;
+import io.github.apace100.apoli.power.PreventBlockSelectionPower;
 import net.minecraft.block.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -31,6 +32,18 @@ public abstract class AbstractBlockStateMixin {
 
     @Shadow
     public abstract VoxelShape getOutlineShape(BlockView world, BlockPos pos);
+
+    @Inject(method = "getOutlineShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("HEAD"), cancellable = true)
+    private void preventBlockSelection(BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> cir) {
+        if(context instanceof EntityShapeContext) {
+            if(((EntityShapeContext)context).getEntity().isPresent()) {
+                Entity entity = ((EntityShapeContext)context).getEntity().get();
+                if(PowerHolderComponent.getPowers(entity, PreventBlockSelectionPower.class).stream().anyMatch(p -> p.doesPrevent(entity.world, pos))) {
+                    cir.setReturnValue(VoxelShapes.empty());
+                }
+            }
+        }
+    }
 
     @Inject(at = @At("HEAD"), method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", cancellable = true)
     private void phaseThroughBlocks(BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> info) {
