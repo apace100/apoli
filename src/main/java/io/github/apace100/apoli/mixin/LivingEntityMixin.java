@@ -76,7 +76,11 @@ public abstract class LivingEntityMixin extends Entity {
                     powerHolder.addPower(PowerTypeRegistry.get(sp.powerId), source);
                 }
             });
+            powerHolder.sync();
+        } else if(StackPowerUtil.getPowers(itemStack3, equipmentSlot).size() > 0) {
+            PowerHolderComponent.KEY.get(this).sync();
         }
+
     }
 
     @Inject(method = "canWalkOnFluid", at = @At("HEAD"), cancellable = true)
