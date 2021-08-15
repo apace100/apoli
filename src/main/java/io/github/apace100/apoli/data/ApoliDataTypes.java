@@ -201,18 +201,21 @@ public class ApoliDataTypes {
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
             .add("sprite_location", SerializableDataTypes.IDENTIFIER, new Identifier("origins", "textures/gui/resource_bar.png"))
-            .add("condition", ENTITY_CONDITION, null),
+            .add("condition", ENTITY_CONDITION, null)
+            .add("inverted", SerializableDataTypes.BOOLEAN, false),
         (dataInst) -> new HudRender(
             dataInst.getBoolean("should_render"),
             dataInst.getInt("bar_index"),
             dataInst.getId("sprite_location"),
-            (ConditionFactory<LivingEntity>.Instance)dataInst.get("condition")),
+            (ConditionFactory<LivingEntity>.Instance)dataInst.get("condition"),
+            dataInst.getBoolean("inverted")),
         (data, inst) -> {
             SerializableData.Instance dataInst = data.new Instance();
             dataInst.set("should_render", inst.shouldRender());
             dataInst.set("bar_index", inst.getBarIndex());
             dataInst.set("sprite_location", inst.getSpriteLocation());
             dataInst.set("condition", inst.getCondition());
+            dataInst.set("inverted", inst.getInverted());
             return dataInst;
         });
 

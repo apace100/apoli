@@ -30,7 +30,7 @@ public class CooldownPower extends Power implements HudRendered {
 
     public float getProgress() {
         float time = entity.getEntityWorld().getTime() - lastUseTime;
-        return Math.min(1F, Math.max(time / (float)cooldownDuration, 0F));
+        return (hudRender.getInverted()) ? Math.min(1F, Math.max(1F - (time / (float)cooldownDuration), 0F)) : Math.min(1F, Math.max(time / (float)cooldownDuration, 0F));
     }
 
     public int getRemainingTicks() {

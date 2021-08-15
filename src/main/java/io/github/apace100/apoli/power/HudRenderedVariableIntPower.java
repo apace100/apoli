@@ -20,7 +20,7 @@ public class HudRenderedVariableIntPower extends VariableIntPower implements Hud
 
     @Override
     public float getFill() {
-        return (this.getValue() - this.getMin()) / (float)(this.getMax() - this.getMin());
+        return (hudRender.getInverted()) ? 1.0F - (this.getValue() - this.getMin()) / (float)(this.getMax() - this.getMin()) : (this.getValue() - this.getMin()) / (float)(this.getMax() - this.getMin());
     }
 
     @Override
