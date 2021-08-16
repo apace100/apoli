@@ -114,9 +114,10 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("elytra_flight"),
             new SerializableData()
-                .add("render_elytra", SerializableDataTypes.BOOLEAN),
+                .add("render_elytra", SerializableDataTypes.BOOLEAN)
+                .add("texture_location", SerializableDataTypes.IDENTIFIER, null),
             data ->
-                (type, player) -> new ElytraFlightPower(type, player, data.getBoolean("render_elytra")))
+                (type, player) -> new ElytraFlightPower(type, player, data.getBoolean("render_elytra"), data.getId("texture_location")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("entity_group"),
             new SerializableData()
