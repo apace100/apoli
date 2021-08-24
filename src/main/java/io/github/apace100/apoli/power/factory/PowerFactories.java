@@ -793,6 +793,19 @@ public class PowerFactories {
                     data.getFloat("green"),
                     data.getFloat("blue")))
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("self_glow"),
+                new SerializableData()
+                        .add("use_teams", SerializableDataTypes.BOOLEAN, true)
+                        .add("red", SerializableDataTypes.FLOAT, 1.0F)
+                        .add("green", SerializableDataTypes.FLOAT, 1.0F)
+                        .add("blue", SerializableDataTypes.FLOAT, 1.0F),
+                data ->
+                        (type, player) -> new SelfGlowPower(type, player,
+                                data.getBoolean("use_teams"),
+                                data.getFloat("red"),
+                                data.getFloat("green"),
+                                data.getFloat("blue")))
+                .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("climbing"),
             new SerializableData()
                 .add("allow_holding", SerializableDataTypes.BOOLEAN, true)

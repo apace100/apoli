@@ -3,6 +3,7 @@ package io.github.apace100.apoli.mixin;
 import io.github.apace100.apoli.ApoliClient;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.EntityGlowPower;
+import io.github.apace100.apoli.power.SelfGlowPower;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -61,6 +62,15 @@ public abstract class WorldRendererMixin {
     private void setColors(Args args) {
         for (EntityGlowPower power : PowerHolderComponent.getPowers(client.getCameraEntity(), EntityGlowPower.class)) {
             if (power.doesApply(renderEntity)) {
+                if (!power.usesTeams()) {
+                    args.set(0, (int)(power.getRed() * 255.0F));
+                    args.set(1, (int)(power.getGreen() * 255.0F));
+                    args.set(2, (int)(power.getBlue() * 255.0F));
+                }
+            }
+        }
+        for (SelfGlowPower power : PowerHolderComponent.getPowers(renderEntity, SelfGlowPower.class)) {
+            if (power.isActive()) {
                 if (!power.usesTeams()) {
                     args.set(0, (int)(power.getRed() * 255.0F));
                     args.set(1, (int)(power.getGreen() * 255.0F));
