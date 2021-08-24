@@ -779,11 +779,19 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("entity_glow"),
             new SerializableData()
                 .add("entity_condition", ApoliDataTypes.ENTITY_CONDITION, null)
-                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
+                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+                .add("use_teams", SerializableDataTypes.BOOLEAN, true)
+                .add("red", SerializableDataTypes.FLOAT, 1.0F)
+                .add("green", SerializableDataTypes.FLOAT, 1.0F)
+                .add("blue", SerializableDataTypes.FLOAT, 1.0F),
             data ->
                 (type, player) -> new EntityGlowPower(type, player,
                     (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition"),
-                    (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition")))
+                    (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition"),
+                    data.getBoolean("use_teams"),
+                    data.getFloat("red"),
+                    data.getFloat("green"),
+                    data.getFloat("blue")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("climbing"),
             new SerializableData()
