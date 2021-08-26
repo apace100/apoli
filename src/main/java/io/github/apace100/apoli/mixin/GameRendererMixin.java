@@ -107,16 +107,6 @@ public abstract class GameRendererMixin {
     private void fixHudWithShaderEnabled(float tickDelta, long nanoTime, boolean renderLevel, CallbackInfo info) {
         RenderSystem.enableTexture();
     }
-
-    @Inject(at = @At("HEAD"), method = "toggleShadersEnabled", cancellable = true)
-    private void disableToggle(CallbackInfo ci) {
-        PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
-            Identifier shaderLoc = shaderPower.getShaderLocation();
-            if (!shaderPower.toggleable() && currentlyLoadedShader == shaderLoc && shadersEnabled) {
-                ci.cancel();
-            }
-        });
-    }
 /*
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setCameraEntity(Lnet/minecraft/entity/Entity;)V"))
     private void updateShaderPowers(CallbackInfo ci) {

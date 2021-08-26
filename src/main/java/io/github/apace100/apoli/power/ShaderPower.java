@@ -7,19 +7,13 @@ import net.minecraft.util.Identifier;
 public class ShaderPower extends Power {
 
     private final Identifier shaderLocation;
-    private final boolean toggleable;
 
-    public ShaderPower(PowerType<?> type, LivingEntity entity, Identifier shaderLocation, boolean toggleable) {
+    public ShaderPower(PowerType<?> type, LivingEntity entity, Identifier shaderLocation) {
         super(type, entity);
         this.shaderLocation = shaderLocation;
-        this.toggleable = toggleable;
     }
 
     public Identifier getShaderLocation() {
         return shaderLocation;
-    }
-
-    public boolean toggleable() {
-        return toggleable;
     }
 }

@@ -678,10 +678,9 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("shader"),
             new SerializableData()
-                .add("shader", SerializableDataTypes.IDENTIFIER)
-                .add("toggleable", SerializableDataTypes.BOOLEAN, true),
+                .add("shader", SerializableDataTypes.IDENTIFIER),
             data ->
-                (type, player) -> new ShaderPower(type, player, data.getId("shader"), data.getBoolean("toggleable")))
+                (type, player) -> new ShaderPower(type, player, data.getId("shader")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("shaking"),
             new SerializableData(), data -> (BiFunction<PowerType<Power>, LivingEntity, Power>) ShakingPower::new)
