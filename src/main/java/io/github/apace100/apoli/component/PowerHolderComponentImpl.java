@@ -213,6 +213,25 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                         Apoli.LOGGER.warn("Power data of unregistered power \"" + powerTypeId + "\" found on entity, skipping...");
                     }
                 }
+
+                for(Map.Entry<PowerType<?>, List<Identifier>> entry : powerSources.entrySet()) {
+                    PowerType<?> powerType = entry.getKey();
+                    if(powerType instanceof MultiplePowerType) {
+                        ImmutableList<Identifier> subPowers = ((MultiplePowerType<?>)powerType).getSubPowers();
+                        for(Identifier subPowerId : subPowers) {
+                            try {
+                                PowerType<?> subType = PowerTypeRegistry.get(subPowerId);
+                                for(Identifier source : entry.getValue()) {
+                                    if(!hasPower(subType, source)) {
+                                        addPower(subType, source);
+                                    }
+                                }
+                            } catch (IllegalArgumentException e) {
+                                Apoli.LOGGER.warn("Multiple power type read from data contained unregistered sub-type: \"" + subPowerId + "\".");
+                            }
+                        }
+                    }
+                }
             }
         } catch(Exception e) {
             Apoli.LOGGER.info("Error while reading data: " + e.getMessage());
