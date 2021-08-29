@@ -55,13 +55,6 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
-    @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
-    private void makeEntityGlow(CallbackInfoReturnable<Boolean> cir) {
-        if (PowerHolderComponent.hasPower((Entity)(Object)this, SelfGlowPower.class)) {
-            cir.setReturnValue(true);
-        }
-    }
-
     @Shadow
     public World world;
 
