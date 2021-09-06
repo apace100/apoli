@@ -7,4 +7,5 @@ public interface HudRendered {
     HudRender getRenderSettings();
     float getFill();
     boolean shouldRender();
+
 }

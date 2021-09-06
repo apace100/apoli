@@ -32,7 +32,7 @@ public class HudRender {
         return barIndex;
     }
 
-    public boolean getInverted() {
+    public boolean isInverted() {
         return inverted;
     }
 
