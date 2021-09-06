@@ -454,6 +454,7 @@ public class PowerFactories {
                 .add("min_stacks", SerializableDataTypes.INT)
                 .add("max_stacks", SerializableDataTypes.INT)
                 .add("duration_per_stack", SerializableDataTypes.INT)
+                .add("tick_rate", SerializableDataTypes.INT, 10)
                 .add("effect", SerializableDataTypes.STATUS_EFFECT_INSTANCE, null)
                 .add("effects", SerializableDataTypes.STATUS_EFFECT_INSTANCES, null),
             data ->
@@ -461,7 +462,8 @@ public class PowerFactories {
                     StackingStatusEffectPower power = new StackingStatusEffectPower(type, player,
                         data.getInt("min_stacks"),
                         data.getInt("max_stacks"),
-                        data.getInt("duration_per_stack"));
+                        data.getInt("duration_per_stack"),
+                        data.getInt("tick_rate"));
                     if(data.isPresent("effect")) {
                         power.addEffect((StatusEffectInstance)data.get("effect"));
                     }
