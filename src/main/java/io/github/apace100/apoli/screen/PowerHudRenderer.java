@@ -53,7 +53,11 @@ public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
                 }
                 drawTexture(matrices, x, y, 0, 0, barWidth, 5);
                 int v = 8 + render.getBarIndex() * 10;
-                int w = (int)(hudPower.getFill() * barWidth);
+                float fill = hudPower.getFill();
+                if(render.isInverted()) {
+                    fill = 1f - fill;
+                }
+                int w = (int)(fill * barWidth);
                 drawTexture(matrices, x, y - 2, 0, v, w, barHeight);
                 setZOffset(getZOffset() + 1);
                 drawTexture(matrices, x - iconSize - 2, y - 2, 73, v, iconSize, iconSize);

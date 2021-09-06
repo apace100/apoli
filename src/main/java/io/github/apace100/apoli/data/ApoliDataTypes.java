@@ -1,10 +1,8 @@
 package io.github.apace100.apoli.data;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
-import io.github.apace100.apoli.power.PowerTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.action.ActionType;
 import io.github.apace100.apoli.power.factory.action.ActionTypes;
@@ -32,9 +30,7 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -201,18 +197,21 @@ public class ApoliDataTypes {
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
             .add("sprite_location", SerializableDataTypes.IDENTIFIER, new Identifier("origins", "textures/gui/resource_bar.png"))
-            .add("condition", ENTITY_CONDITION, null),
+            .add("condition", ENTITY_CONDITION, null)
+            .add("inverted", SerializableDataTypes.BOOLEAN, false),
         (dataInst) -> new HudRender(
             dataInst.getBoolean("should_render"),
             dataInst.getInt("bar_index"),
             dataInst.getId("sprite_location"),
-            (ConditionFactory<LivingEntity>.Instance)dataInst.get("condition")),
+            (ConditionFactory<LivingEntity>.Instance)dataInst.get("condition"),
+            dataInst.getBoolean("inverted")),
         (data, inst) -> {
             SerializableData.Instance dataInst = data.new Instance();
             dataInst.set("should_render", inst.shouldRender());
             dataInst.set("bar_index", inst.getBarIndex());
             dataInst.set("sprite_location", inst.getSpriteLocation());
             dataInst.set("condition", inst.getCondition());
+            dataInst.set("inverted", inst.isInverted());
             return dataInst;
         });
 

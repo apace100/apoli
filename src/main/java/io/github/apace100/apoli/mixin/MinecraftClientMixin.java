@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.EntityGlowPower;
+import io.github.apace100.apoli.power.SelfGlowPower;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -29,8 +30,12 @@ public class MinecraftClientMixin {
                         cir.setReturnValue(true);
                     }
                 }
+                if (entity instanceof LivingEntity) {
+                    if (PowerHolderComponent.getPowers(entity, SelfGlowPower.class).stream().anyMatch(p -> p.doesApply(this.player))) {
+                        cir.setReturnValue(true);
+                    }
+                }
             }
-
         }
     }
 }

@@ -114,9 +114,10 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("elytra_flight"),
             new SerializableData()
-                .add("render_elytra", SerializableDataTypes.BOOLEAN),
+                .add("render_elytra", SerializableDataTypes.BOOLEAN)
+                .add("texture_location", SerializableDataTypes.IDENTIFIER, null),
             data ->
-                (type, player) -> new ElytraFlightPower(type, player, data.getBoolean("render_elytra")))
+                (type, player) -> new ElytraFlightPower(type, player, data.getBoolean("render_elytra"), data.getId("texture_location")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("entity_group"),
             new SerializableData()
@@ -679,9 +680,10 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("shader"),
             new SerializableData()
-                .add("shader", SerializableDataTypes.IDENTIFIER),
+                .add("shader", SerializableDataTypes.IDENTIFIER)
+                .add("toggleable", SerializableDataTypes.BOOLEAN, true),
             data ->
-                (type, player) -> new ShaderPower(type, player, data.getId("shader")))
+                (type, player) -> new ShaderPower(type, player, data.getId("shader"), data.getBoolean("toggleable")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("shaking"),
             new SerializableData(), data -> (BiFunction<PowerType<Power>, LivingEntity, Power>) ShakingPower::new)
@@ -780,12 +782,37 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("entity_glow"),
             new SerializableData()
                 .add("entity_condition", ApoliDataTypes.ENTITY_CONDITION, null)
-                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
+                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+                .add("use_teams", SerializableDataTypes.BOOLEAN, true)
+                .add("red", SerializableDataTypes.FLOAT, 1.0F)
+                .add("green", SerializableDataTypes.FLOAT, 1.0F)
+                .add("blue", SerializableDataTypes.FLOAT, 1.0F),
             data ->
                 (type, player) -> new EntityGlowPower(type, player,
                     (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition"),
-                    (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition")))
+                    (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition"),
+                    data.getBoolean("use_teams"),
+                    data.getFloat("red"),
+                    data.getFloat("green"),
+                    data.getFloat("blue")))
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("self_glow"),
+                new SerializableData()
+                        .add("entity_condition", ApoliDataTypes.ENTITY_CONDITION, null)
+                        .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+                        .add("use_teams", SerializableDataTypes.BOOLEAN, true)
+                        .add("red", SerializableDataTypes.FLOAT, 1.0F)
+                        .add("green", SerializableDataTypes.FLOAT, 1.0F)
+                        .add("blue", SerializableDataTypes.FLOAT, 1.0F),
+                data ->
+                        (type, player) -> new SelfGlowPower(type, player,
+                                (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition"),
+                                (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition"),
+                                data.getBoolean("use_teams"),
+                                data.getFloat("red"),
+                                data.getFloat("green"),
+                                data.getFloat("blue")))
+                .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("climbing"),
             new SerializableData()
                 .add("allow_holding", SerializableDataTypes.BOOLEAN, true)

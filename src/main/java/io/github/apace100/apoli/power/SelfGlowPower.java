@@ -6,7 +6,7 @@ import net.minecraft.util.Pair;
 
 import java.util.function.Predicate;
 
-public class EntityGlowPower extends Power {
+public class SelfGlowPower extends Power {
 
     private final Predicate<LivingEntity> entityCondition;
     private final Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition;
@@ -15,7 +15,7 @@ public class EntityGlowPower extends Power {
     private final float green;
     private final float blue;
 
-    public EntityGlowPower(PowerType<?> type, LivingEntity entity, Predicate<LivingEntity> entityCondition, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, boolean useTeams, float red, float green, float blue) {
+    public SelfGlowPower(PowerType<?> type, LivingEntity entity, Predicate<LivingEntity> entityCondition, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, boolean useTeams, float red, float green, float blue) {
         super(type, entity);
         this.entityCondition = entityCondition;
         this.bientityCondition = bientityCondition;
@@ -26,7 +26,7 @@ public class EntityGlowPower extends Power {
     }
 
     public boolean doesApply(Entity e) {
-        return e instanceof LivingEntity && (entityCondition == null || entityCondition.test((LivingEntity)e)) && (bientityCondition == null || bientityCondition.test(new Pair<>(entity, (LivingEntity)e)));
+        return e instanceof LivingEntity && (entityCondition == null || entityCondition.test((LivingEntity)e)) && (bientityCondition == null || bientityCondition.test(new Pair<>((LivingEntity)e, entity)));
     }
 
     public boolean usesTeams() {
