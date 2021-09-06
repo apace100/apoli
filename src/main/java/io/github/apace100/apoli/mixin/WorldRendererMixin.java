@@ -70,12 +70,10 @@ public abstract class WorldRendererMixin {
             }
         }
         for (SelfGlowPower power : PowerHolderComponent.getPowers(renderEntity, SelfGlowPower.class)) {
-            if (power.isActive()) {
-                if (!power.usesTeams()) {
-                    args.set(0, (int)(power.getRed() * 255.0F));
-                    args.set(1, (int)(power.getGreen() * 255.0F));
-                    args.set(2, (int)(power.getBlue() * 255.0F));
-                }
+            if (!power.usesTeams()) {
+                args.set(0, (int)(power.getRed() * 255.0F));
+                args.set(1, (int)(power.getGreen() * 255.0F));
+                args.set(2, (int)(power.getBlue() * 255.0F));
             }
         }
     }
