@@ -923,7 +923,7 @@ public class PowerFactories {
             data ->
                 (type, player) -> new ExhaustOverTimePower(type, player, data.getInt("interval"), data.getFloat("exhaustion")))
             .allowCondition());
-        register(new PowerFactory<>(Apoli.identifier("change_status_bar_texture"),
+        register(new PowerFactory<>(Apoli.identifier("status_bar_texture"),
                 new SerializableData()
                         .add("texture", SerializableDataTypes.IDENTIFIER, null),
                 data ->
