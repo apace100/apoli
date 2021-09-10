@@ -47,7 +47,7 @@
     "LightmapTextureManagerMixin",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
-    "OtherClientPlayerEntityMixin",
+    "EntityParticleMixin",
     "PlayerEntityRendererMixin",
     "WorldRendererMixin"
   ],

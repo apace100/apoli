@@ -365,10 +365,11 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("particle"),
             new SerializableData()
                 .add("particle", SerializableDataTypes.PARTICLE_TYPE)
-                .add("frequency", SerializableDataTypes.INT),
+                .add("frequency", SerializableDataTypes.INT)
+                .add("visible_in_first_person", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) ->
-                    new ParticlePower(type, player, (ParticleEffect)data.get("particle"), data.getInt("frequency")))
+                    new ParticlePower(type, player, (ParticleEffect)data.get("particle"), data.getInt("frequency"), data.getBoolean("visible_in_first_person")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("phasing"),
             new SerializableData()
