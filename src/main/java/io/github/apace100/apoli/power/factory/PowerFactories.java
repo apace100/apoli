@@ -129,6 +129,7 @@ public class PowerFactories {
             new SerializableData()
                 .add("cooldown", SerializableDataTypes.INT)
                 .add("count", SerializableDataTypes.INT, 1)
+                .add("interval", SerializableDataTypes.INT, 1)
                 .add("speed", SerializableDataTypes.FLOAT, 1.5F)
                 .add("divergence", SerializableDataTypes.FLOAT, 1F)
                 .add("sound", SerializableDataTypes.SOUND_EVENT, null)
@@ -143,6 +144,7 @@ public class PowerFactories {
                         (HudRender)data.get("hud_render"),
                         (EntityType)data.get("entity_type"),
                         data.getInt("count"),
+                        data.getInt("interval"),
                         data.getFloat("speed"),
                         data.getFloat("divergence"),
                         (SoundEvent)data.get("sound"),
