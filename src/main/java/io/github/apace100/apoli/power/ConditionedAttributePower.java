@@ -12,11 +12,13 @@ public class ConditionedAttributePower extends Power {
 
     private final List<AttributedEntityAttributeModifier> modifiers = new LinkedList<AttributedEntityAttributeModifier>();
     private final int tickRate;
+    private final boolean updateHealth;
 
-    public ConditionedAttributePower(PowerType<?> type, LivingEntity entity, int tickRate) {
+    public ConditionedAttributePower(PowerType<?> type, LivingEntity entity, int tickRate, boolean updateHealth) {
         super(type, entity);
         this.setTicking(true);
         this.tickRate = tickRate;
+        this.updateHealth = updateHealth;
     }
 
     @Override
@@ -41,6 +43,8 @@ public class ConditionedAttributePower extends Power {
     }
 
     public void addMods() {
+        float previousMaxHealth = entity.getMaxHealth();
+        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
         modifiers.forEach(mod -> {
             if(entity.getAttributes().hasAttribute(mod.getAttribute())) {
                 EntityAttributeInstance instance = entity.getAttributeInstance(mod.getAttribute());
@@ -51,9 +55,15 @@ public class ConditionedAttributePower extends Power {
                 }
             }
         });
+        float afterMaxHealth = entity.getMaxHealth();
+        if(updateHealth && afterMaxHealth != previousMaxHealth) {
+            entity.setHealth(afterMaxHealth * previousHealthPercent);
+        }
     }
 
     public void removeMods() {
+        float previousMaxHealth = entity.getMaxHealth();
+        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
         modifiers.forEach(mod -> {
             if (entity.getAttributes().hasAttribute(mod.getAttribute())) {
                 EntityAttributeInstance instance = entity.getAttributeInstance(mod.getAttribute());
@@ -64,5 +74,9 @@ public class ConditionedAttributePower extends Power {
                 }
             }
         });
+        float afterMaxHealth = entity.getMaxHealth();
+        if(updateHealth && afterMaxHealth != previousMaxHealth) {
+            entity.setHealth(afterMaxHealth * previousHealthPercent);
+        }
     }
 }
