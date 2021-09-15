@@ -35,6 +35,8 @@ import org.apache.logging.log4j.Logger;
 
 public class Apoli implements ModInitializer, EntityComponentInitializer {
 
+	public static ApoliConfig config;
+
 	public static final Scheduler SCHEDULER = new Scheduler();
 
 	public static final String MODID = "apoli";

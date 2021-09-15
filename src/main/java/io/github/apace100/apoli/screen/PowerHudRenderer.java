@@ -1,8 +1,10 @@
 package io.github.apace100.apoli.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.HudRendered;
+import io.github.apace100.apoli.util.ApoliConfigClient;
 import io.github.apace100.apoli.util.HudRender;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -25,9 +27,8 @@ public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
     public void render(MatrixStack matrices, float delta) {
         MinecraftClient client = MinecraftClient.getInstance();
         PowerHolderComponent component = PowerHolderComponent.KEY.get(client.player);
-        // TODO: Reintroduce config for this
-        int x = client.getWindow().getScaledWidth() / 2 + 20;// + OriginsClient.config.xOffset;
-        int y = client.getWindow().getScaledHeight() - 47;// + OriginsClient.config.yOffset;
+        int x = client.getWindow().getScaledWidth() / 2 + 20 + ((ApoliConfigClient)Apoli.config).resourcesAndCooldowns.hudOffsetX;
+        int y = client.getWindow().getScaledHeight() - 47 + ((ApoliConfigClient)Apoli.config).resourcesAndCooldowns.hudOffsetY;
         Entity vehicle = client.player.getVehicle();
         if(vehicle instanceof LivingEntity) {
             y -= 8 * (int)(((LivingEntity)vehicle).getMaxHealth() / 20f);

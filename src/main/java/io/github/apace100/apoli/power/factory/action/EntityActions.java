@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.ApoliServer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
@@ -301,17 +302,16 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("extinguish"), new SerializableData(),
             (data, entity) -> entity.extinguish()));
         register(new ActionFactory<>(Apoli.identifier("execute_command"), new SerializableData()
-            .add("command", SerializableDataTypes.STRING)
-            .add("permission_level", SerializableDataTypes.INT, 4),
+            .add("command", SerializableDataTypes.STRING),
             (data, entity) -> {
                 MinecraftServer server = entity.world.getServer();
                 if(server != null) {
                     ServerCommandSource source = new ServerCommandSource(
-                        CommandOutput.DUMMY,
+                        Apoli.config.executeCommand.showOutput ? entity : CommandOutput.DUMMY,
                         entity.getPos(),
                         entity.getRotationClient(),
                         entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
-                        data.getInt("permission_level"),
+                        Apoli.config.executeCommand.permissionLevel,
                         entity.getName().getString(),
                         entity.getDisplayName(),
                         entity.world.getServer(),

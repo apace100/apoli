@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.ApoliServer;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -83,18 +84,17 @@ public class BlockActions {
                 block.getLeft().setBlockState(block.getMiddle().offset(block.getRight()), ((Block)data.get("block")).getDefaultState());
             }));
         register(new ActionFactory<>(Apoli.identifier("execute_command"), new SerializableData()
-            .add("command", SerializableDataTypes.STRING)
-            .add("permission_level", SerializableDataTypes.INT, 4),
+            .add("command", SerializableDataTypes.STRING),
             (data, block) -> {
                 MinecraftServer server = block.getLeft().getServer();
                 if(server != null) {
                     String blockName = block.getLeft().getBlockState(block.getMiddle()).getBlock().getTranslationKey();
                     ServerCommandSource source = new ServerCommandSource(
-                        CommandOutput.DUMMY,
+                        Apoli.config.executeCommand.showOutput ? server : CommandOutput.DUMMY,
                         new Vec3d(block.getMiddle().getX() + 0.5, block.getMiddle().getY() + 0.5, block.getMiddle().getZ() + 0.5),
                         new Vec2f(0, 0),
                         (ServerWorld)block.getLeft(),
-                        data.getInt("permission_level"),
+                        Apoli.config.executeCommand.permissionLevel,
                         blockName,
                         new TranslatableText(blockName),
                         server,
