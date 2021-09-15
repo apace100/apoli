@@ -15,6 +15,7 @@
     "ExperienceOrbEntityMixin",
     "EyeHeightAccess",
     "HungerManagerMixin",
+    "ItemMixin",
     "ItemStackMixin",
     "LivingEntityMixin",
     "LoginMixin",
@@ -40,6 +41,7 @@
     "ClientPlayerInteractionManagerAccessor",
     "ClientPlayerInteractionManagerMixin",
     "ElytraFeatureRendererMixin",
+    "EntityParticleMixin",
     "EntityRenderDispatcherMixin",
     "GameRendererMixin",
     "InGameHudMixin",
@@ -47,7 +49,6 @@
     "LightmapTextureManagerMixin",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
-    "EntityParticleMixin",
     "PlayerEntityRendererMixin",
     "WorldRendererMixin"
   ],

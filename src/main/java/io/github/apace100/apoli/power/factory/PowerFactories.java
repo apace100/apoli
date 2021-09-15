@@ -1054,6 +1054,22 @@ public class PowerFactories {
                     data.isPresent("from") ? Optional.of((CameraSubmersionType)data.get("from")) : Optional.empty(),
                     (CameraSubmersionType)data.get("to")))
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("item_on_item"),
+            new SerializableData()
+                .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("on_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("result", SerializableDataTypes.ITEM_STACK, null)
+                .add("using_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) -> new ItemOnItemPower(type, player,
+                    (ConditionFactory<ItemStack>.Instance)data.get("using_item_condition"),
+                    (ConditionFactory<ItemStack>.Instance)data.get("on_item_condition"),
+                    (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("using_item_action"),
+                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action")))
+            .allowCondition());
     }
 
     private static void register(PowerFactory serializer) {
