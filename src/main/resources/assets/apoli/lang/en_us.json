@@ -35,5 +35,7 @@
   "commands.apoli.list.fail": "The entity is not a living entity, thus can't have any powers.",
 
   "commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
-  "commands.apoli.sources.fail": "Entity %s is not a living entity or does not have the power %s."
+  "commands.apoli.sources.fail": "Entity %s is not a living entity or does not have the power %s.",
+
+  "commands.apoli.resource.invalid_entity": "The entity is not a living entity, thus can't have any powers."
 }
