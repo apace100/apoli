@@ -365,10 +365,11 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("particle"),
             new SerializableData()
                 .add("particle", SerializableDataTypes.PARTICLE_TYPE)
-                .add("frequency", SerializableDataTypes.INT),
+                .add("frequency", SerializableDataTypes.INT)
+                .add("visible_in_first_person", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) ->
-                    new ParticlePower(type, player, (ParticleEffect)data.get("particle"), data.getInt("frequency")))
+                    new ParticlePower(type, player, (ParticleEffect)data.get("particle"), data.getInt("frequency"), data.getBoolean("visible_in_first_person")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("phasing"),
             new SerializableData()
@@ -541,10 +542,11 @@ public class PowerFactories {
             new SerializableData()
                 .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
                 .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
-                .add("tick_rate", SerializableDataTypes.INT, 20),
+                .add("tick_rate", SerializableDataTypes.INT, 20)
+                .add("update_health", SerializableDataTypes.BOOLEAN, true),
             data ->
                 (type, player) -> {
-                    ConditionedAttributePower ap = new ConditionedAttributePower(type, player, data.getInt("tick_rate"));
+                    ConditionedAttributePower ap = new ConditionedAttributePower(type, player, data.getInt("tick_rate"), data.getBoolean("update_health"));
                     if(data.isPresent("modifier")) {
                         ap.addModifier((AttributedEntityAttributeModifier)data.get("modifier"));
                     }
@@ -1059,6 +1061,22 @@ public class PowerFactories {
                         (type, player) ->
                                 new OverrideHudTexturePower(type, player, data.getId("texture")))
                 .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("item_on_item"),
+            new SerializableData()
+                .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("on_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("result", SerializableDataTypes.ITEM_STACK, null)
+                .add("using_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) -> new ItemOnItemPower(type, player,
+                    (ConditionFactory<ItemStack>.Instance)data.get("using_item_condition"),
+                    (ConditionFactory<ItemStack>.Instance)data.get("on_item_condition"),
+                    (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("using_item_action"),
+                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action")))
+            .allowCondition());
     }
 
     private static void register(PowerFactory serializer) {

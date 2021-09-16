@@ -17,6 +17,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -128,10 +129,17 @@ public class EntityActions {
                 .add("volume", SerializableDataTypes.FLOAT, 1F)
                 .add("pitch", SerializableDataTypes.FLOAT, 1F),
                 (data, entity) -> {
+                    SoundCategory category;
                     if(entity instanceof PlayerEntity) {
-                        entity.world.playSound((PlayerEntity) null, (entity).getX(), (entity).getY(), (entity).getZ(), (SoundEvent)data.get("sound"),
-                        SoundCategory.PLAYERS, data.getFloat("volume"), data.getFloat("pitch"));
+                        category = SoundCategory.PLAYERS;
+                    } else
+                    if(entity instanceof HostileEntity) {
+                        category = SoundCategory.HOSTILE;
+                    } else {
+                        category = SoundCategory.NEUTRAL;
                     }
+                    entity.world.playSound(null, (entity).getX(), (entity).getY(), (entity).getZ(), (SoundEvent)data.get("sound"),
+                        category, data.getFloat("volume"), data.getFloat("pitch"));
                 }));
         register(new ActionFactory<>(Apoli.identifier("exhaust"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT),
@@ -315,18 +323,18 @@ public class EntityActions {
             .add("resource", ApoliDataTypes.POWER_TYPE)
             .add("change", SerializableDataTypes.INT),
             (data, entity) -> {
-                if(entity instanceof PlayerEntity) {
+                if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
                     Power p = component.getPower((PowerType<?>)data.get("resource"));
                     if(p instanceof VariableIntPower) {
                         VariableIntPower vip = (VariableIntPower)p;
                         int newValue = vip.getValue() + data.getInt("change");
                         vip.setValue(newValue);
-                        PowerHolderComponent.sync((PlayerEntity)entity);
+                        PowerHolderComponent.sync(entity);
                     } else if(p instanceof CooldownPower) {
                         CooldownPower cp = (CooldownPower)p;
                         cp.modify(data.getInt("change"));
-                        PowerHolderComponent.sync((PlayerEntity)entity);
+                        PowerHolderComponent.sync(entity);
                     }
                 }
             }));
@@ -409,7 +417,7 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("trigger_cooldown"), new SerializableData()
             .add("power", ApoliDataTypes.POWER_TYPE),
             (data, entity) -> {
-                if(entity instanceof PlayerEntity) {
+                if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
                     Power p = component.getPower((PowerType<?>)data.get("power"));
                     if(p instanceof CooldownPower) {
@@ -421,7 +429,7 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("toggle"), new SerializableData()
             .add("power", ApoliDataTypes.POWER_TYPE),
             (data, entity) -> {
-                if(entity instanceof PlayerEntity) {
+                if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
                     Power p = component.getPower((PowerType<?>)data.get("power"));
                     if(p instanceof TogglePower) {

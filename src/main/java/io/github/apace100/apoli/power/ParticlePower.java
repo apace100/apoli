@@ -8,11 +8,13 @@ public class ParticlePower extends Power {
 
     private final ParticleEffect particleEffect;
     private final int frequency;
+    private final boolean visibleInFirstPerson;
 
-    public ParticlePower(PowerType<?> type, LivingEntity entity, ParticleEffect particle, int frequency) {
+    public ParticlePower(PowerType<?> type, LivingEntity entity, ParticleEffect particle, int frequency, boolean visibleInFirstPerson) {
         super(type, entity);
         this.particleEffect = particle;
         this.frequency = frequency;
+        this.visibleInFirstPerson = visibleInFirstPerson;
     }
 
     public ParticleEffect getParticle() {
@@ -21,5 +23,9 @@ public class ParticlePower extends Power {
 
     public int getFrequency() {
         return frequency;
+    }
+
+    public boolean isVisibleInFirstPerson() {
+        return visibleInFirstPerson;
     }
 }
