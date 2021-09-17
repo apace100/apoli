@@ -60,6 +60,10 @@ public class PowerFactory<P extends Power> {
             }
             return p;
         }
+
+        public SerializableData.Instance getDataInstance() {
+            return dataInstance;
+        }
     }
 
     public Instance read(JsonObject json) {
