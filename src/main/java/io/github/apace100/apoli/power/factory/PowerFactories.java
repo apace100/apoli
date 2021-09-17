@@ -717,7 +717,8 @@ public class PowerFactories {
                 .add("food_modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
                 .add("saturation_modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
                 .add("saturation_modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("always_edible", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) -> {
                     List<EntityAttributeModifier> foodModifiers = new LinkedList<>();
@@ -737,7 +738,7 @@ public class PowerFactories {
                         saturationModifiers.addAll(modifierList);
                     }
                     return new ModifyFoodPower(type, player, data.isPresent("item_condition") ? (ConditionFactory<ItemStack>.Instance)data.get("item_condition") : stack -> true,
-                        foodModifiers, saturationModifiers, (ActionFactory<Entity>.Instance)data.get("entity_action"));
+                        foodModifiers, saturationModifiers, (ActionFactory<Entity>.Instance)data.get("entity_action"), data.getBoolean("always_edible"));
                 }).allowCondition());
         register(new PowerFactory<>(Apoli.identifier("modify_xp_gain"),
             new SerializableData()
