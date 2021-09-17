@@ -16,12 +16,12 @@ import net.minecraft.util.Identifier;
 public interface PostPowerLoadCallback {
 
     Event<PostPowerLoadCallback> EVENT = EventFactory.createArrayBacked(PostPowerLoadCallback.class,
-        (listeners) -> (powerId, factoryId, isSubPower, data, powerType) -> {
+        (listeners) -> (powerId, factoryId, isSubPower, json, powerType) -> {
             for (PostPowerLoadCallback event : listeners) {
-                event.onPostPowerLoad(powerId, factoryId, isSubPower, data, powerType);
+                event.onPostPowerLoad(powerId, factoryId, isSubPower, json, powerType);
             }
         }
     );
 
-    void onPostPowerLoad(Identifier powerId, Identifier factoryId, boolean isSubPower, SerializableData.Instance data, PowerType<?> powerType);
+    void onPostPowerLoad(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonObject json, PowerType<?> powerType);
 }

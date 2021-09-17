@@ -74,6 +74,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                         }
                         MultiplePowerType superPower = (MultiplePowerType) readPower(id, je, false, MultiplePowerType::new);
                         superPower.setSubPowers(subPowers);
+                        handleAdditionalData(id, factoryId, false, jo, superPower);
+                        PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, false, jo, superPower);
                     } else {
                         readPower(id, je, false);
                     }
@@ -125,14 +127,18 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         if(!PowerTypeRegistry.contains(id)) {
             PowerTypeRegistry.register(id, type);
             LOADING_PRIORITIES.put(id, priority);
-            handleAdditionalData(id, factoryId, isSubPower, jo, type);
-            PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, factoryInstance.getDataInstance(), type);
+            if(!(type instanceof MultiplePowerType<?>)) {
+                handleAdditionalData(id, factoryId, isSubPower, jo, type);
+                PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
+            }
         } else {
             if(LOADING_PRIORITIES.get(id) < priority) {
                 PowerTypeRegistry.update(id, type);
                 LOADING_PRIORITIES.put(id, priority);
-                handleAdditionalData(id, factoryId, isSubPower, jo, type);
-                PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, factoryInstance.getDataInstance(), type);
+                if(!(type instanceof MultiplePowerType<?>)) {
+                    handleAdditionalData(id, factoryId, isSubPower, jo, type);
+                    PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
+                }
             }
         }
         return type;
