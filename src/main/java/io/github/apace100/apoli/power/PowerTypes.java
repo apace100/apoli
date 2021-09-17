@@ -4,6 +4,7 @@ import com.google.gson.*;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.AdditionalPowerDataCallback;
 import io.github.apace100.apoli.integration.PostPowerLoadCallback;
+import io.github.apace100.apoli.integration.PowerReloadCallback;
 import io.github.apace100.apoli.integration.PrePowerLoadCallback;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -39,6 +40,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
     protected void apply(Map<Identifier, List<JsonElement>> loader, ResourceManager manager, Profiler profiler) {
         PowerTypeRegistry.reset();
         LOADING_PRIORITIES.clear();
+        PowerReloadCallback.EVENT.invoker().onPowerReload();
         loader.forEach((id, jel) -> {
             for (JsonElement je : jel) {
                 try {
