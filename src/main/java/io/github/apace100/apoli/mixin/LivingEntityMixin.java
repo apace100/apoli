@@ -90,6 +90,19 @@ public abstract class LivingEntityMixin extends Entity {
         }
     }
 
+    @ModifyVariable(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvulnerableTo(Lnet/minecraft/entity/damage/DamageSource;)Z"), ordinal = 0)
+    private float modifyDamageTaken(float originalValue, DamageSource source) {
+        return PowerHolderComponent.modify(this, ModifyDamageTakenPower.class,
+            originalValue, p -> p.doesApply(source, originalValue), p -> p.executeActions(source.getAttacker()));
+    }
+
+    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"), cancellable = true)
+    private void preventHitIfDamageIsZero(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if(amount == 0.0F) {
+            cir.setReturnValue(false);
+        }
+    }
+
     @Inject(method = "damage", at = @At("RETURN"))
     private void invokeHitActions(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if(cir.getReturnValue()) {
