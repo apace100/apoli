@@ -442,6 +442,41 @@ public class EntityActions {
             (data, entity) -> {
                 entity.emitGameEvent((GameEvent)data.get("event"));
             }));
+        register(new ActionFactory<>(Apoli.identifier("set_resource"), new SerializableData()
+            .add("resource", ApoliDataTypes.POWER_TYPE)
+            .add("value", SerializableDataTypes.INT),
+            (data, entity) -> {
+                if(entity instanceof LivingEntity) {
+                    PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
+                    Power p = component.getPower((PowerType<?>)data.get("resource"));
+                    int value = data.getInt("value");
+                    if(p instanceof VariableIntPower) {
+                        VariableIntPower vip = (VariableIntPower)p;
+                        vip.setValue(value);
+                        PowerHolderComponent.sync(entity);
+                    } else if(p instanceof CooldownPower) {
+                        CooldownPower cp = (CooldownPower)p;
+                        cp.setCooldown(value);
+                        PowerHolderComponent.sync(entity);
+                    }
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("grant_power"), new SerializableData()
+            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("source", SerializableDataTypes.IDENTIFIER),
+            (data, entity) -> {
+                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
+                    component.addPower((PowerType<?>)data.get("power"), data.getId("source"));
+                });
+            }));
+        register(new ActionFactory<>(Apoli.identifier("revoke_power"), new SerializableData()
+            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("source", SerializableDataTypes.IDENTIFIER),
+            (data, entity) -> {
+                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
+                    component.removePower((PowerType<?>)data.get("power"), data.getId("source"));
+                });
+            }));
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
