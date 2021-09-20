@@ -10,6 +10,7 @@ import net.minecraft.entity.projectile.ExplosiveProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtLong;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
@@ -63,10 +64,15 @@ public class FireProjectilePower extends ActiveCooldownPower {
 
     @Override
     public void fromTag(NbtElement tag) {
-        lastUseTime = ((NbtCompound)tag).getLong("lastUseTime");
-        shotProjectiles = ((NbtCompound)tag).getInt("shotProjectiles");
-        finishedStartDelay = ((NbtCompound)tag).getByte("finishedStartDelay");
-        isFiringProjectiles = ((NbtCompound)tag).getByte("isFiringProjectiles");
+        if(tag instanceof NbtLong) {
+            lastUseTime = ((NbtLong)tag).longValue();
+        }
+        else {
+            lastUseTime = ((NbtCompound)tag).getLong("lastUseTime");
+            shotProjectiles = ((NbtCompound)tag).getInt("shotProjectiles");
+            finishedStartDelay = ((NbtCompound)tag).getByte("finishedStartDelay");
+            isFiringProjectiles = ((NbtCompound)tag).getByte("isFiringProjectiles");
+        }
     }
 
     public void tick() {
