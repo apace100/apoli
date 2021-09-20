@@ -19,19 +19,22 @@ public class FireProjectilePower extends ActiveCooldownPower {
     private final EntityType entityType;
     private final int projectileCount;
     private final int interval;
+    private final int startDelay;
     private final float speed;
     private final float divergence;
     private final SoundEvent soundEvent;
     private final NbtCompound tag;
 
     private boolean isFiringProjectiles = false;
-    private int projectiles;
+    private boolean finishedStartDelay = false;
+    private int shotProjectiles;
 
-    public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType entityType, int projectileCount, int interval, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag) {
+    public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag) {
         super(type, entity, cooldownDuration, hudRender, null);
         this.entityType = entityType;
         this.projectileCount = projectileCount;
         this.interval = interval;
+        this.startDelay = startDelay;
         this.speed = speed;
         this.divergence = divergence;
         this.soundEvent = soundEvent;
@@ -49,9 +52,10 @@ public class FireProjectilePower extends ActiveCooldownPower {
 
     public void tick() {
         if(isFiringProjectiles) {
-            if(entity.age % interval == 0) {
-                projectiles += 1;
-                if(projectiles <= projectileCount) {
+            if((entity.getEntityWorld().getTime() - lastUseTime) % startDelay == 0 && !finishedStartDelay) {
+                finishedStartDelay = true;
+                shotProjectiles += 1;
+                if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
                         entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
                     }
@@ -60,25 +64,29 @@ public class FireProjectilePower extends ActiveCooldownPower {
                     }
                 }
                 else {
-                    projectiles = 0;
+                    shotProjectiles = 0;
+                    finishedStartDelay = false;
+                    isFiringProjectiles = false;
+                }
+            }
+            else if ((entity.getEntityWorld().getTime() - lastUseTime) % interval == 0 && finishedStartDelay) {
+                shotProjectiles += 1;
+                if(shotProjectiles <= projectileCount) {
+                    if(soundEvent != null) {
+                        entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                    }
+                    if(!entity.world.isClient) {
+                        fireProjectile();
+                    }
+                }
+                else {
+                    shotProjectiles = 0;
+                    finishedStartDelay = false;
                     isFiringProjectiles = false;
                 }
             }
         }
     }
-
-    /*
-    private void fireProjectiles() {
-        if(soundEvent != null) {
-            entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
-        }
-        if (!entity.world.isClient) {
-            for(int i = 0; i < projectileCount; i++) {
-                fireProjectile();
-            }
-        }
-    }
-     */
 
     private void fireProjectile() {
         if(entityType != null) {

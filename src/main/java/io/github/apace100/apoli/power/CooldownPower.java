@@ -8,7 +8,7 @@ import net.minecraft.nbt.NbtLong;
 
 public class CooldownPower extends Power implements HudRendered {
 
-    private long lastUseTime;
+    protected long lastUseTime;
 
     public final int cooldownDuration;
     private final HudRender hudRender;
