@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ExplosiveProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
@@ -25,8 +26,8 @@ public class FireProjectilePower extends ActiveCooldownPower {
     private final SoundEvent soundEvent;
     private final NbtCompound tag;
 
-    private boolean isFiringProjectiles = false;
-    private boolean finishedStartDelay = false;
+    private byte isFiringProjectiles;
+    private byte finishedStartDelay;
     private int shotProjectiles;
 
     public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag) {
@@ -45,15 +46,33 @@ public class FireProjectilePower extends ActiveCooldownPower {
     @Override
     public void onUse() {
         if(canUse()) {
-            isFiringProjectiles = true;
+            isFiringProjectiles = 1;
             use();
         }
     }
 
+    @Override
+    public NbtElement toTag() {
+        NbtCompound Obj = new NbtCompound();
+        Obj.putLong("lastUseTime", lastUseTime);
+        Obj.putInt("shotProjectiles", shotProjectiles);
+        Obj.putByte("finishedStartDelay", finishedStartDelay);
+        Obj.putByte("isFiringProjectiles", isFiringProjectiles);
+        return Obj;
+    }
+
+    @Override
+    public void fromTag(NbtElement tag) {
+        lastUseTime = ((NbtCompound)tag).getLong("lastUseTime");
+        shotProjectiles = ((NbtCompound)tag).getInt("shotProjectiles");
+        finishedStartDelay = ((NbtCompound)tag).getByte("finishedStartDelay");
+        isFiringProjectiles = ((NbtCompound)tag).getByte("isFiringProjectiles");
+    }
+
     public void tick() {
-        if(isFiringProjectiles) {
-            if((entity.getEntityWorld().getTime() - lastUseTime) % startDelay == 0 && !finishedStartDelay) {
-                finishedStartDelay = true;
+        if(isFiringProjectiles == 1) {
+            if((entity.getEntityWorld().getTime() - lastUseTime) % startDelay == 0 && finishedStartDelay == 0) {
+                finishedStartDelay = 1;
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
@@ -65,11 +84,11 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 }
                 else {
                     shotProjectiles = 0;
-                    finishedStartDelay = false;
-                    isFiringProjectiles = false;
+                    finishedStartDelay = 0;
+                    isFiringProjectiles = 0;
                 }
             }
-            else if ((entity.getEntityWorld().getTime() - lastUseTime) % interval == 0 && finishedStartDelay) {
+            else if ((entity.getEntityWorld().getTime() - lastUseTime) % interval == 0 && finishedStartDelay == 1) {
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
@@ -81,8 +100,8 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 }
                 else {
                     shotProjectiles = 0;
-                    finishedStartDelay = false;
-                    isFiringProjectiles = false;
+                    finishedStartDelay = 0;
+                    isFiringProjectiles = 0;
                 }
             }
         }
