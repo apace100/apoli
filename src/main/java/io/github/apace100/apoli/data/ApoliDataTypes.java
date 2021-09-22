@@ -13,6 +13,7 @@ import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.HudRender;
 import io.github.apace100.apoli.util.Space;
+import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
@@ -115,6 +116,8 @@ public class ApoliDataTypes {
         SerializableDataType.list(ITEM_ACTION);
 
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
+
+    public static final SerializableDataType<ResourceOperation> RESOURCE_OPERATION = SerializableDataType.enumValue(ResourceOperation.class);
 
     public static final SerializableDataType<AttributedEntityAttributeModifier> ATTRIBUTED_ATTRIBUTE_MODIFIER = SerializableDataType.compound(
         AttributedEntityAttributeModifier.class,
