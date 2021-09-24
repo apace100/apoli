@@ -28,6 +28,9 @@ repositories {
 	maven {
 		url "https://maven.shedaniel.me/"
 	}
+	maven {
+		url "https://api.modrinth.com/maven"
+	}
 }
 
 dependencies {
@@ -58,6 +61,8 @@ dependencies {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 	include "me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}"
+
+	modImplementation "maven.modrinth:modmenu:${project.modmenu_version}"
 }
 
 processResources {

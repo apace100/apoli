@@ -5,7 +5,7 @@ import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
 public class ApoliConfig implements ConfigData {
 
-    @ConfigEntry.Gui.TransitiveObject
+    @ConfigEntry.Gui.CollapsibleObject
     public ExecuteCommand executeCommand = new ExecuteCommand();
 
     public static class ExecuteCommand {
