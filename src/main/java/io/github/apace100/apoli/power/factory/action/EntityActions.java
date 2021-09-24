@@ -14,12 +14,16 @@ import io.github.apace100.calio.FilterableWeightedList;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.potion.PotionUtil;
@@ -35,14 +39,19 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
+import net.minecraft.world.explosion.Explosion;
+import net.minecraft.world.explosion.ExplosionBehavior;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.function.Predicate;
 
 public class EntityActions {
 
@@ -476,6 +485,43 @@ public class EntityActions {
                 PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
                     component.removePower((PowerType<?>)data.get("power"), data.getId("source"));
                 });
+            }));
+        register(new ActionFactory<>(Apoli.identifier("explode"), new SerializableData()
+            .add("power", SerializableDataTypes.FLOAT)
+            .add("destruction_type", SerializableDataType.enumValue(Explosion.DestructionType.class), Explosion.DestructionType.BREAK)
+            .add("damage_self", SerializableDataTypes.BOOLEAN, true)
+            .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
+            .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)
+            .add("create_fire", SerializableDataTypes.BOOLEAN, false),
+            (data, entity) -> {
+                if(entity.world.isClient) {
+                    return;
+                }
+                if(data.isPresent("indestructible")) {
+                    Predicate<CachedBlockPosition> blockCondition = (Predicate<CachedBlockPosition>)data.get("indestructible");
+                    ExplosionBehavior eb = new ExplosionBehavior() {
+                        @Override
+                        public Optional<Float> getBlastResistance(Explosion explosion, BlockView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
+                            Optional<Float> def = super.getBlastResistance(explosion, world, pos, blockState, fluidState);
+                            Optional<Float> ovr = blockCondition.test(
+                                new CachedBlockPosition(entity.world, pos, true)) ?
+                                Optional.of(Blocks.WATER.getBlastResistance()) : Optional.empty();
+                            return ovr.isPresent() ? def.isPresent() ? def.get() > ovr.get() ? def : ovr : ovr : def;
+                        }
+                    };
+                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
+                        entity instanceof LivingEntity ?
+                            DamageSource.explosion((LivingEntity)entity) :
+                            DamageSource.explosion((LivingEntity) null),
+                        eb, entity.getX(), entity.getY(), entity.getZ(),
+                        data.getFloat("power"), data.getBoolean("create_fire"),
+                        (Explosion.DestructionType) data.get("destruction_type"));
+                } else {
+                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
+                        entity.getX(), entity.getY(), entity.getZ(),
+                        data.getFloat("power"), data.getBoolean("create_fire"),
+                        (Explosion.DestructionType) data.get("destruction_type"));
+                }
             }));
     }
 
