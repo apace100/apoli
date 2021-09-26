@@ -62,6 +62,7 @@ public abstract class LivingEntityMixin extends Entity {
                     powerHolder.removePower(PowerTypeRegistry.get(sp.powerId), source);
                 }
             });
+            powerHolder.sync();
         }
     }
 
