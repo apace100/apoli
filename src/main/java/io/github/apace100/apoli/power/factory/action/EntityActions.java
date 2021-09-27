@@ -523,6 +523,8 @@ public class EntityActions {
                         (Explosion.DestructionType) data.get("destruction_type"));
                 }
             }));
+        register(new ActionFactory<>(Apoli.identifier("dismount"), new SerializableData(),
+            (data, entity) -> entity.stopRiding()));
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {

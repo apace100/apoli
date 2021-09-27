@@ -16,10 +16,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.EntityGroup;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.effect.StatusEffect;
@@ -42,6 +39,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.registry.Registry;
@@ -435,6 +433,22 @@ public class EntityConditions {
                         break;
                 }
                 return ((Comparison)data.get("comparison")).compare(value, data.getInt("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("riding"), new SerializableData()
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
+            (data, entity) -> {
+                if(entity.hasVehicle()) {
+                    if(data.isPresent("bientity_condition")) {
+                        Predicate<Pair<LivingEntity, LivingEntity>> condition = (Predicate<Pair<LivingEntity, LivingEntity>>) data.get("bientity_condition");
+                        Entity vehicle = entity.getVehicle();
+                        if(vehicle instanceof LivingEntity target) {
+                            return condition.test(new Pair<>(entity, target));
+                        }
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
             }));
     }
 
