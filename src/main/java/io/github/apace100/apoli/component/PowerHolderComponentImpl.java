@@ -6,14 +6,14 @@ import io.github.apace100.apoli.power.MultiplePowerType;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
-import net.minecraft.entity.Entity;
+import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
 import java.util.*;
@@ -157,6 +157,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             this.powers.put(powerType, power);
             power.onGained();
             power.onAdded();
+            if(owner instanceof ServerPlayerEntity spe) {
+                GainedPowerCriterion.INSTANCE.trigger(spe, powerType);
+            }
             return true;
         }
     }
