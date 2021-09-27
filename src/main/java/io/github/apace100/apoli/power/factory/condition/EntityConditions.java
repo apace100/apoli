@@ -58,12 +58,12 @@ public class EntityConditions {
             (data, entity) -> data.getBoolean("value")));
         register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
             .add("conditions", ApoliDataTypes.ENTITY_CONDITIONS),
-            (data, entity) -> ((List<ConditionFactory<LivingEntity>.Instance>)data.get("conditions")).stream().allMatch(
+            (data, entity) -> ((List<ConditionFactory<Entity>.Instance>)data.get("conditions")).stream().allMatch(
                 condition -> condition.test(entity)
             )));
         register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
             .add("conditions", ApoliDataTypes.ENTITY_CONDITIONS),
-            (data, entity) -> ((List<ConditionFactory<LivingEntity>.Instance>)data.get("conditions")).stream().anyMatch(
+            (data, entity) -> ((List<ConditionFactory<Entity>.Instance>)data.get("conditions")).stream().anyMatch(
                 condition -> condition.test(entity)
             )));
         register(new ConditionFactory<>(Apoli.identifier("block_collision"), new SerializableData()
@@ -85,7 +85,7 @@ public class EntityConditions {
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT), (data, entity) ->
             ((Comparison)data.get("comparison")).compare(entity.world.getTimeOfDay() % 24000L, data.getInt("compare_to"))));
-        register(new ConditionFactory<>(Apoli.identifier("fall_flying"), new SerializableData(), (data, entity) -> entity.isFallFlying()));
+        register(new ConditionFactory<>(Apoli.identifier("fall_flying"), new SerializableData(), (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()));
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sun"), new SerializableData(), (data, entity) -> {
             if (entity.world.isDay() && !((EntityAccessor) entity).callIsBeingRainedOn()) {
                 float f = entity.getBrightnessAtEyes();
@@ -113,13 +113,12 @@ public class EntityConditions {
             .add("max_duration", SerializableDataTypes.INT, Integer.MAX_VALUE),
             (data, entity) -> {
                 StatusEffect effect = (StatusEffect)data.get("effect");
-                if(effect == null) {
-                    return false;
-                }
-                if(entity.hasStatusEffect(effect)) {
-                    StatusEffectInstance instance = entity.getStatusEffect(effect);
-                    return instance.getDuration() <= data.getInt("max_duration") && instance.getDuration() >= data.getInt("min_duration")
-                        && instance.getAmplifier() <= data.getInt("max_amplifier") && instance.getAmplifier() >= data.getInt("min_amplifier");
+                if(entity instanceof LivingEntity living) {
+                    if (living.hasStatusEffect(effect)) {
+                        StatusEffectInstance instance = living.getStatusEffect(effect);
+                        return instance.getDuration() <= data.getInt("max_duration") && instance.getDuration() >= data.getInt("min_duration")
+                            && instance.getAmplifier() <= data.getInt("max_amplifier") && instance.getAmplifier() >= data.getInt("min_amplifier");
+                    }
                 }
                 return false;
             }));
@@ -166,17 +165,19 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("equipped_item"), new SerializableData()
             .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
             .add("item_condition", ApoliDataTypes.ITEM_CONDITION),
-            (data, entity) -> ((ConditionFactory<ItemStack>.Instance)data.get("item_condition")).test(
-                entity.getEquippedStack((EquipmentSlot)data.get("equipment_slot")))));
+            (data, entity) -> entity instanceof LivingEntity && ((ConditionFactory<ItemStack>.Instance) data.get("item_condition")).test(
+                ((LivingEntity) entity).getEquippedStack((EquipmentSlot) data.get("equipment_slot")))));
         register(new ConditionFactory<>(Apoli.identifier("attribute"), new SerializableData()
             .add("attribute", SerializableDataTypes.ATTRIBUTE)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.DOUBLE),
             (data, entity) -> {
                 double attrValue = 0F;
-                EntityAttributeInstance attributeInstance = entity.getAttributeInstance((EntityAttribute) data.get("attribute"));
-                if(attributeInstance != null) {
-                    attrValue = attributeInstance.getValue();
+                if(entity instanceof LivingEntity living) {
+                    EntityAttributeInstance attributeInstance = living.getAttributeInstance((EntityAttribute) data.get("attribute"));
+                    if(attributeInstance != null) {
+                        attrValue = attributeInstance.getValue();
+                    }
                 }
                 return ((Comparison)data.get("comparison")).compare(attrValue, data.getDouble("compare_to"));
             }));
@@ -258,11 +259,17 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("health"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.getHealth(), data.getFloat("compare_to"))));
+            (data, entity) -> ((Comparison)data.get("comparison")).compare(entity instanceof LivingEntity ? ((LivingEntity)entity).getHealth() : 0f, data.getFloat("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("relative_health"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.getHealth() / entity.getMaxHealth(), data.getFloat("compare_to"))));
+            (data, entity) -> {
+                float health = 0f;
+                if(entity instanceof LivingEntity living) {
+                    health = living.getHealth() / living.getMaxHealth();
+                }
+                return ((Comparison)data.get("comparison")).compare(health, data.getFloat("compare_to"));
+            }));
         register(new ConditionFactory<>(Apoli.identifier("biome"), new SerializableData()
             .add("biome", SerializableDataTypes.IDENTIFIER, null)
             .add("biomes", SerializableDataTypes.IDENTIFIERS, null)
@@ -383,11 +390,11 @@ public class EntityConditions {
                 return comparison.compare(count, compareTo);}));
         register(new ConditionFactory<>(Apoli.identifier("entity_group"), new SerializableData()
             .add("group", SerializableDataTypes.ENTITY_GROUP),
-            (data, entity) -> entity.getGroup() == (EntityGroup)data.get("group")));
+            (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
             .add("tag", SerializableDataTypes.ENTITY_TAG),
             (data, entity) -> ((Tag<EntityType<?>>)data.get("tag")).contains(entity.getType())));
-        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(), (data, entity) -> entity.isClimbing()));
+        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(), (data, entity) -> entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()));
         register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
             if(entity instanceof TameableEntity) {
                 return ((TameableEntity)entity).isTamed();
@@ -396,14 +403,16 @@ public class EntityConditions {
         }));
         register(new ConditionFactory<>(Apoli.identifier("using_item"), new SerializableData()
             .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null), (data, entity) -> {
-            if(entity.isUsingItem()) {
-                ConditionFactory<ItemStack>.Instance condition = (ConditionFactory<ItemStack>.Instance)data.get("item_condition");
-                if(condition != null) {
-                    Hand activeHand = entity.getActiveHand();
-                    ItemStack handStack = entity.getStackInHand(activeHand);
-                    return condition.test(handStack);
-                } else {
-                    return true;
+            if(entity instanceof LivingEntity living) {
+                if (living.isUsingItem()) {
+                    ConditionFactory<ItemStack>.Instance condition = (ConditionFactory<ItemStack>.Instance) data.get("item_condition");
+                    if (condition != null) {
+                        Hand activeHand = living.getActiveHand();
+                        ItemStack handStack = living.getStackInHand(activeHand);
+                        return condition.test(handStack);
+                    } else {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -417,20 +426,22 @@ public class EntityConditions {
             .add("calculation", SerializableDataTypes.STRING, "sum"),
             (data, entity) -> {
                 int value = 0;
-                Enchantment enchantment = (Enchantment)data.get("enchantment");
-                String calculation = data.getString("calculation");
-                switch(calculation) {
-                    case "sum":
-                        for(ItemStack stack : enchantment.getEquipment(entity).values()) {
-                            value += EnchantmentHelper.getLevel(enchantment, stack);
-                        }
-                        break;
-                    case "max":
-                        value = EnchantmentHelper.getEquipmentLevel(enchantment, entity);
-                        break;
-                    default:
-                        Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");
-                        break;
+                if(entity instanceof LivingEntity le) {
+                    Enchantment enchantment = (Enchantment)data.get("enchantment");
+                    String calculation = data.getString("calculation");
+                    switch(calculation) {
+                        case "sum":
+                            for(ItemStack stack : enchantment.getEquipment(le).values()) {
+                                value += EnchantmentHelper.getLevel(enchantment, stack);
+                            }
+                            break;
+                        case "max":
+                            value = EnchantmentHelper.getEquipmentLevel(enchantment, le);
+                            break;
+                        default:
+                            Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");
+                            break;
+                    }
                 }
                 return ((Comparison)data.get("comparison")).compare(value, data.getInt("compare_to"));
             }));
@@ -439,12 +450,9 @@ public class EntityConditions {
             (data, entity) -> {
                 if(entity.hasVehicle()) {
                     if(data.isPresent("bientity_condition")) {
-                        Predicate<Pair<LivingEntity, LivingEntity>> condition = (Predicate<Pair<LivingEntity, LivingEntity>>) data.get("bientity_condition");
+                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
                         Entity vehicle = entity.getVehicle();
-                        if(vehicle instanceof LivingEntity target) {
-                            return condition.test(new Pair<>(entity, target));
-                        }
-                        return false;
+                        return condition.test(new Pair<>(entity, vehicle));
                     }
                     return true;
                 }
@@ -452,7 +460,7 @@ public class EntityConditions {
             }));
     }
 
-    private static void register(ConditionFactory<LivingEntity> conditionFactory) {
+    private static void register(ConditionFactory<Entity> conditionFactory) {
         Registry.register(ApoliRegistries.ENTITY_CONDITION, conditionFactory.getSerializerId(), conditionFactory);
     }
 }

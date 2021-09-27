@@ -61,53 +61,53 @@ public class BiEntityConditions {
             (data, pair) -> data.getBoolean("value")));
         register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
             .add("conditions", ApoliDataTypes.BIENTITY_CONDITIONS),
-            (data, pair) -> ((List<ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance>)data.get("conditions")).stream().allMatch(
+            (data, pair) -> ((List<ConditionFactory<Pair<Entity, Entity>>.Instance>)data.get("conditions")).stream().allMatch(
                 condition -> condition.test(pair)
             )));
         register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
             .add("conditions", ApoliDataTypes.BIENTITY_CONDITIONS),
-            (data, pair) -> ((List<ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance>)data.get("conditions")).stream().anyMatch(
+            (data, pair) -> ((List<ConditionFactory<Pair<Entity, Entity>>.Instance>)data.get("conditions")).stream().anyMatch(
                 condition -> condition.test(pair)
             )));
         register(new ConditionFactory<>(Apoli.identifier("invert"), new SerializableData()
             .add("condition", ApoliDataTypes.BIENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Pair<LivingEntity, LivingEntity>> cond = ((ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("condition"));
+                Predicate<Pair<Entity, Entity>> cond = ((ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("condition"));
                 return cond.test(new Pair<>(pair.getRight(), pair.getLeft()));
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("actor_condition"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<LivingEntity> cond = ((ConditionFactory<LivingEntity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
                 return cond.test(pair.getLeft());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("target_condition"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<LivingEntity> cond = ((ConditionFactory<LivingEntity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
                 return cond.test(pair.getRight());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("either"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<LivingEntity> cond = ((ConditionFactory<LivingEntity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
                 return cond.test(pair.getLeft()) || cond.test(pair.getRight());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("both"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<LivingEntity> cond = ((ConditionFactory<LivingEntity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
                 return cond.test(pair.getLeft()) && cond.test(pair.getRight());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("undirected"), new SerializableData()
             .add("condition", ApoliDataTypes.BIENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Pair<LivingEntity, LivingEntity>> cond = ((ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("condition"));
+                Predicate<Pair<Entity, Entity>> cond = ((ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("condition"));
                 return cond.test(pair) || cond.test(new Pair<>(pair.getRight(), pair.getLeft()));
             }
             ));
@@ -123,7 +123,7 @@ public class BiEntityConditions {
             }
             ));
         register(new ConditionFactory<>(Apoli.identifier("can_see"), new SerializableData(),
-            (data, pair) -> pair.getLeft().canSee(pair.getRight())
+            (data, pair) -> pair.getLeft() instanceof LivingEntity && ((LivingEntity)pair.getLeft()).canSee(pair.getRight())
         ));
         register(new ConditionFactory<>(Apoli.identifier("owner"), new SerializableData(),
             (data, pair) -> {
@@ -163,11 +163,16 @@ public class BiEntityConditions {
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("attacker"), new SerializableData(),
-            (data, pair) -> pair.getRight().getAttacker() == pair.getLeft()
+            (data, pair) -> {
+                if(pair.getRight() instanceof LivingEntity living) {
+                    return living.getAttacker() == pair.getLeft();
+                }
+                return false;
+            }
         ));
     }
 
-    private static void register(ConditionFactory<Pair<LivingEntity, LivingEntity>> conditionFactory) {
+    private static void register(ConditionFactory<Pair<Entity, Entity>> conditionFactory) {
         Registry.register(ApoliRegistries.BIENTITY_CONDITION, conditionFactory.getSerializerId(), conditionFactory);
     }
 }
