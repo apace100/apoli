@@ -51,13 +51,13 @@ public final class StackPowerUtil {
     }
 
     public static List<StackPower> getPowers(ItemStack stack, EquipmentSlot slot) {
-        NbtCompound nbt = stack.getOrCreateNbt();
+        NbtCompound nbt = stack.getNbt();
         NbtList list;
         List<StackPower> powers = new LinkedList<>();
         if(stack.getItem() instanceof PowerGrantingItem pgi) {
             powers.addAll(pgi.getPowers(stack, slot));
         }
-        if(nbt.contains("Powers")) {
+        if(nbt != null && nbt.contains("Powers")) {
             NbtElement elem = nbt.get("Powers");
             if(elem.getType() != NbtType.LIST) {
                 return List.of();
