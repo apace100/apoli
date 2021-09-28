@@ -1062,6 +1062,7 @@ public class PowerFactories {
                 .add("result", SerializableDataTypes.ITEM_STACK, null)
                 .add("using_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
             data ->
                 (type, player) -> new ItemOnItemPower(type, player,
@@ -1069,6 +1070,7 @@ public class PowerFactories {
                     (ConditionFactory<ItemStack>.Instance)data.get("on_item_condition"),
                     (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("using_item_action"),
                     (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
+                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("result_item_action"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action")))
             .allowCondition());
     }

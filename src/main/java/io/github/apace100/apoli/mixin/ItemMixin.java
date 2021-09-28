@@ -46,7 +46,7 @@ public class ItemMixin {
         List<ItemOnItemPower> powers = PowerHolderComponent.getPowers(player, ItemOnItemPower.class).stream().filter(p -> p.doesApply(otherStack, stack)).collect(Collectors.toList());
         for (ItemOnItemPower p :
             powers) {
-            p.execute(otherStack, stack, slot.id);
+            p.execute(otherStack, stack, slot);
         }
         if(powers.size() > 0) {
             cir.setReturnValue(true);
