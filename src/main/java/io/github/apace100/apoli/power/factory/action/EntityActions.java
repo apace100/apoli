@@ -30,6 +30,7 @@ import net.minecraft.potion.PotionUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -315,8 +316,9 @@ public class EntityActions {
             (data, entity) -> {
                 MinecraftServer server = entity.world.getServer();
                 if(server != null) {
+                    boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
                     ServerCommandSource source = new ServerCommandSource(
-                        Apoli.config.executeCommand.showOutput ? entity : CommandOutput.DUMMY,
+                        Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
                         entity.getPos(),
                         entity.getRotationClient(),
                         entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
