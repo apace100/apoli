@@ -47,7 +47,9 @@ public class ItemOnItemPower extends Power {
         ItemStack stack;
         if(newStack != null) {
             stack = newStack.copy();
-            resultItemAction.accept(new Pair<>(entity.world, stack));
+            if(resultItemAction != null) {
+                resultItemAction.accept(new Pair<>(entity.world, stack));
+            }
         } else {
             stack = on;
         }
