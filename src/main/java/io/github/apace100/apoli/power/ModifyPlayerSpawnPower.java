@@ -63,7 +63,7 @@ public class ModifyPlayerSpawnPower extends Power {
     public void onRemoved() {
         if(entity instanceof ServerPlayerEntity) {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) entity;
-            if(serverPlayer.getSpawnPointPosition() != null && serverPlayer.isSpawnPointSet()) {
+            if(!serverPlayer.isDisconnected() && serverPlayer.getSpawnPointPosition() != null && serverPlayer.isSpawnPointSet()) {
                 serverPlayer.setSpawnPoint(World.OVERWORLD, null, 0F, false, false);
             }
         }
