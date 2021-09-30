@@ -115,6 +115,8 @@ public class ItemConditions {
                 }
                 return false;
             }));
+        register(new ConditionFactory<>(Apoli.identifier("empty"), new SerializableData(),
+            (data, stack) -> stack.isEmpty()));
     }
 
     private static void register(ConditionFactory<ItemStack> conditionFactory) {

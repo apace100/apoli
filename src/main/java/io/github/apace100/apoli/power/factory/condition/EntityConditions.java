@@ -458,6 +458,71 @@ public class EntityConditions {
                 }
                 return false;
             }));
+        register(new ConditionFactory<>(Apoli.identifier("riding_root"), new SerializableData()
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
+            (data, entity) -> {
+                if(entity.hasVehicle()) {
+                    if(data.isPresent("bientity_condition")) {
+                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                        Entity vehicle = entity.getRootVehicle();
+                        return condition.test(new Pair<>(entity, vehicle));
+                    }
+                    return true;
+                }
+                return false;
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("riding_recursive"), new SerializableData()
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+            .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN_OR_EQUAL)
+            .add("compare_to", SerializableDataTypes.INT, 1),
+            (data, entity) -> {
+                int count = 0;
+                if(entity.hasVehicle()) {
+                    Predicate<Pair<Entity, Entity>> cond = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                    Entity vehicle = entity.getVehicle();
+                    while(vehicle != null) {
+                        if(cond == null || cond.test(new Pair<>(entity, vehicle))) {
+                            count++;
+                        }
+                        vehicle = vehicle.getVehicle();
+                    }
+                }
+                return ((Comparison)data.get("comparison")).compare(count, data.getInt("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("living"), new SerializableData(), (data, entity) -> entity instanceof LivingEntity));
+        register(new ConditionFactory<>(Apoli.identifier("passenger"), new SerializableData()
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+            .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN_OR_EQUAL)
+            .add("compare_to", SerializableDataTypes.INT, 1),
+            (data, entity) -> {
+                int count = 0;
+                if(entity.hasPassengers()) {
+                    if(data.isPresent("bientity_condition")) {
+                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                        count = (int)entity.getPassengerList().stream().filter(e -> condition.test(new Pair<>(e, entity))).count();
+                    } else {
+                        count = entity.getPassengerList().size();
+                    }
+                }
+                return ((Comparison)data.get("comparison")).compare(count, data.getInt("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("passenger_recursive"), new SerializableData()
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+            .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN_OR_EQUAL)
+            .add("compare_to", SerializableDataTypes.INT, 1),
+            (data, entity) -> {
+                int count = 0;
+                if(entity.hasPassengers()) {
+                    if(data.isPresent("bientity_condition")) {
+                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                        List<Entity> passengers = entity.getPassengerList();
+                        count = (int)passengers.stream().flatMap(Entity::streamSelfAndPassengers).filter(e -> condition.test(new Pair<>(e, entity))).count();
+                    } else {
+                        count = (int)entity.getPassengerList().stream().flatMap(Entity::streamSelfAndPassengers).count();
+                    }
+                }
+                return ((Comparison)data.get("comparison")).compare(count, data.getInt("compare_to"));
+            }));
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

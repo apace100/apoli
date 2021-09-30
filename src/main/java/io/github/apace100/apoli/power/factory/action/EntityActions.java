@@ -52,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class EntityActions {
@@ -529,6 +530,67 @@ public class EntityActions {
             }));
         register(new ActionFactory<>(Apoli.identifier("dismount"), new SerializableData(),
             (data, entity) -> entity.stopRiding()));
+        register(new ActionFactory<>(Apoli.identifier("passenger_action"), new SerializableData()
+            .add("action", ApoliDataTypes.ENTITY_ACTION, null)
+            .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null)
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+            .add("recursive", SerializableDataTypes.BOOLEAN, false),
+            (data, entity) -> {
+                Consumer<Entity> entityAction = (Consumer<Entity>) data.get("action");
+                Consumer<Pair<Entity, Entity>> bientityAction = (Consumer<Pair<Entity, Entity>>) data.get("bientity_action");
+                Predicate<Pair<Entity, Entity>> cond = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                if(!entity.hasPassengers() || (entityAction == null && bientityAction == null)) {
+                    return;
+                }
+                Iterable<Entity> passengers = data.getBoolean("recursive") ? entity.getPassengersDeep() : entity.getPassengerList();
+                for(Entity passenger : passengers) {
+                    if(cond == null || cond.test(new Pair<>(passenger, entity))) {
+                        if (entityAction != null) {
+                            entityAction.accept(passenger);
+                        }
+                        if (bientityAction != null) {
+                            bientityAction.accept(new Pair<>(passenger, entity));
+                        }
+                    }
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("riding_action"), new SerializableData()
+            .add("action", ApoliDataTypes.ENTITY_ACTION, null)
+            .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null)
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+            .add("recursive", SerializableDataTypes.BOOLEAN, false),
+            (data, entity) -> {
+                Consumer<Entity> entityAction = (Consumer<Entity>) data.get("action");
+                Consumer<Pair<Entity, Entity>> bientityAction = (Consumer<Pair<Entity, Entity>>) data.get("bientity_action");
+                Predicate<Pair<Entity, Entity>> cond = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                if(!entity.hasVehicle() || (entityAction == null && bientityAction == null)) {
+                    return;
+                }
+                if(data.getBoolean("recursive")) {
+                    Entity vehicle = entity.getVehicle();
+                    while(vehicle != null) {
+                        if(cond == null || cond.test(new Pair<>(entity, vehicle))) {
+                            if(entityAction != null) {
+                                entityAction.accept(vehicle);
+                            }
+                            if(bientityAction != null) {
+                                bientityAction.accept(new Pair<>(entity, vehicle));
+                            }
+                        }
+                        vehicle = vehicle.getVehicle();
+                    }
+                } else {
+                    Entity vehicle = entity.getVehicle();
+                    if(cond == null || cond.test(new Pair<>(entity, vehicle))) {
+                        if(entityAction != null) {
+                            entityAction.accept(vehicle);
+                        }
+                        if(bientityAction != null) {
+                            bientityAction.accept(new Pair<>(entity, vehicle));
+                        }
+                    }
+                }
+            }));
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
