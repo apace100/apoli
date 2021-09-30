@@ -155,13 +155,13 @@ public class PowerFactories {
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("inventory"),
             new SerializableData()
-                .add("name", SerializableDataTypes.STRING, "container.inventory")
+                .add("title", SerializableDataTypes.STRING, "container.inventory")
                 .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
                 .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->
                 (type, player) -> {
-                    InventoryPower power = new InventoryPower(type, player, data.getString("name"), 9,
+                    InventoryPower power = new InventoryPower(type, player, data.getString("title"), 9,
                         data.getBoolean("drop_on_death"),
                         data.isPresent("drop_on_death_filter") ? (ConditionFactory<ItemStack>.Instance) data.get("drop_on_death_filter") :
                             itemStack -> true);

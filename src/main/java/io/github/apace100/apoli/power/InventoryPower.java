@@ -38,6 +38,9 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void onUse() {
+        if(!isActive()) {
+            return;
+        }
         if(!entity.world.isClient && entity instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity)entity;
             player.openHandledScreen(new SimpleNamedScreenHandlerFactory(factory, containerName));
