@@ -30,6 +30,8 @@ import net.minecraft.loot.condition.LootCondition;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.MinecraftServer;
@@ -522,6 +524,13 @@ public class EntityConditions {
                     }
                 }
                 return ((Comparison)data.get("comparison")).compare(count, data.getInt("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("nbt"), new SerializableData()
+            .add("nbt", SerializableDataTypes.NBT),
+            (data, entity) -> {
+                NbtCompound nbt = new NbtCompound();
+                entity.writeNbt(nbt);
+                return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
             }));
     }
 
