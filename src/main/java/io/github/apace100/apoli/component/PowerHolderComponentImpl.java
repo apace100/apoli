@@ -237,7 +237,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 }
             }
         } catch(Exception e) {
-            Apoli.LOGGER.info("Error while reading data: " + e.getMessage());
+            Apoli.LOGGER.error("Error while reading power holder data: " + e.getMessage());
         }
     }
 

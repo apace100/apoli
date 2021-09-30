@@ -38,6 +38,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -1072,6 +1073,29 @@ public class PowerFactories {
                     (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
                     (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("result_item_action"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("overlay"),
+            new SerializableData()
+                .add("texture", SerializableDataTypes.IDENTIFIER, new Identifier("textures/misc/nausea.png"))
+                .add("strength", SerializableDataTypes.FLOAT, 1.0F)
+                .add("red", SerializableDataTypes.FLOAT, 1.0F)
+                .add("green", SerializableDataTypes.FLOAT, 1.0F)
+                .add("blue", SerializableDataTypes.FLOAT, 1.0F)
+                .add("draw_mode", SerializableDataType.enumValue(OverlayPower.DrawMode.class))
+                .add("draw_phase", SerializableDataType.enumValue(OverlayPower.DrawPhase.class))
+                .add("hide_with_hud", SerializableDataTypes.BOOLEAN, true)
+                .add("visible_in_third_person", SerializableDataTypes.BOOLEAN, false),
+            data ->
+                (type, player) -> new OverlayPower(type, player,
+                    data.getId("texture"),
+                    data.getFloat("strength"),
+                    data.getFloat("red"),
+                    data.getFloat("green"),
+                    data.getFloat("blue"),
+                    (OverlayPower.DrawMode) data.get("draw_mode"),
+                    (OverlayPower.DrawPhase) data.get("draw_phase"),
+                    data.getBoolean("hide_with_hud"),
+                    data.getBoolean("visible_in_third_person")))
             .allowCondition());
     }
 
