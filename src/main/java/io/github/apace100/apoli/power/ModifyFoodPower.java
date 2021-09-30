@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 
 import java.util.List;
@@ -16,13 +15,15 @@ public class ModifyFoodPower extends Power {
     private final List<EntityAttributeModifier> foodModifiers;
     private final List<EntityAttributeModifier> saturationModifiers;
     private final Consumer<Entity> entityActionWhenEaten;
+    private final boolean makeAlwaysEdible;
 
-    public ModifyFoodPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> applicableFood, List<EntityAttributeModifier> foodModifiers, List<EntityAttributeModifier> saturationModifiers, Consumer<Entity> entityActionWhenEaten) {
+    public ModifyFoodPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> applicableFood, List<EntityAttributeModifier> foodModifiers, List<EntityAttributeModifier> saturationModifiers, Consumer<Entity> entityActionWhenEaten, boolean makeAlwaysEdible) {
         super(type, entity);
         this.applicableFood = applicableFood;
         this.foodModifiers = foodModifiers;
         this.saturationModifiers = saturationModifiers;
         this.entityActionWhenEaten = entityActionWhenEaten;
+        this.makeAlwaysEdible = makeAlwaysEdible;
     }
 
     public boolean doesApply(ItemStack stack) {
@@ -41,5 +42,9 @@ public class ModifyFoodPower extends Power {
 
     public List<EntityAttributeModifier> getSaturationModifiers() {
         return saturationModifiers;
+    }
+
+    public boolean doesMakeAlwaysEdible() {
+        return makeAlwaysEdible;
     }
 }

@@ -11,10 +11,10 @@ import java.util.function.Predicate;
 public class ActionOnEntityUsePower extends Power {
 
     private final Consumer<Pair<Entity, Entity>> biEntityAction;
-    private final Predicate<LivingEntity> otherCondition;
-    private final Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition;
+    private final Predicate<Entity> otherCondition;
+    private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
-    public ActionOnEntityUsePower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<LivingEntity> otherCondition, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition) {
+    public ActionOnEntityUsePower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Entity> otherCondition, Predicate<Pair<Entity, Entity>> bientityCondition) {
         super(type, entity);
         this.biEntityAction = biEntityAction;
         this.otherCondition = otherCondition;
@@ -22,14 +22,12 @@ public class ActionOnEntityUsePower extends Power {
     }
 
     public boolean shouldExecute(Entity other) {
-        return !(other instanceof LivingEntity)
-            || ((otherCondition == null || otherCondition.test((LivingEntity) other)
-            && (bientityCondition == null || bientityCondition.test(new Pair<>(entity, (LivingEntity) other)))
-        ));
+        return (otherCondition == null || otherCondition.test( other))
+            && (bientityCondition == null || bientityCondition.test(new Pair<>(entity,other)));
     }
 
     public ActionResult executeAction(Entity other) {
-        if (!(other instanceof LivingEntity) || (otherCondition == null || otherCondition.test((LivingEntity) other))) {
+        if (otherCondition == null || otherCondition.test(other)) {
             biEntityAction.accept(new Pair<>(entity, other));
             return ActionResult.SUCCESS;
         }

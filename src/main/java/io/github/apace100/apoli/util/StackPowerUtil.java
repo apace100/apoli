@@ -12,6 +12,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.util.Identifier;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -50,25 +51,28 @@ public final class StackPowerUtil {
     }
 
     public static List<StackPower> getPowers(ItemStack stack, EquipmentSlot slot) {
-        NbtCompound nbt = stack.getOrCreateNbt();
+        NbtCompound nbt = stack.getNbt();
         NbtList list;
-        if(!nbt.contains("Powers")) {
-            return List.of();
-        } else {
+        List<StackPower> powers = new LinkedList<>();
+        if(stack.getItem() instanceof PowerGrantingItem pgi) {
+            powers.addAll(pgi.getPowers(stack, slot));
+        }
+        if(nbt != null && nbt.contains("Powers")) {
             NbtElement elem = nbt.get("Powers");
             if(elem.getType() != NbtType.LIST) {
                 return List.of();
             }
             list = (NbtList)elem;
+            list.stream().map(p -> {
+                if(p.getType() == NbtType.COMPOUND) {
+                    return StackPower.fromNbt((NbtCompound)p);
+                } else {
+                    Apoli.LOGGER.warn("Invalid power format on stack nbt, stack = " + stack + ", nbt = " + p);
+                }
+                return null;
+            }).filter(sp -> sp != null && sp.slot == slot).forEach(powers::add);
         }
-        return list.stream().map(elem -> {
-            if(elem.getType() == NbtType.COMPOUND) {
-                return StackPower.fromNbt((NbtCompound)elem);
-            } else {
-                Apoli.LOGGER.warn("Invalid power format on stack nbt, stack = " + stack.toString() + ", nbt = " + elem.toString());
-            }
-            return null;
-        }).filter(sp -> sp != null && sp.slot == slot).toList();
+        return powers;
     }
 
     public static class StackPower {

@@ -29,6 +29,9 @@
     ],
     "cardinal-components-entity": [
       "io.github.apace100.apoli.Apoli"
+    ],
+    "modmenu": [
+      "io.github.apace100.apoli.integration.ModMenuIntegration"
     ]
   },
   "mixins": [
@@ -37,7 +40,10 @@
   "custom": {
     "cardinal-components": [
       "apoli:powers"
-    ]
+    ],
+    "modmenu": {
+      "badges": ["library"]
+    }
   },
 
   "depends": {

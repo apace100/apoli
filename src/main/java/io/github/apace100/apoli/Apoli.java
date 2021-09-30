@@ -18,6 +18,7 @@ import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
@@ -34,6 +35,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Apoli implements ModInitializer, EntityComponentInitializer {
+
+	public static ApoliConfig config;
 
 	public static final Scheduler SCHEDULER = new Scheduler();
 
@@ -91,6 +94,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		BlockActions.register();
 		BiEntityActions.register();
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new PowerTypes());
+
+		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
 
 		LOGGER.info("Apoli " + VERSION + " has initialized. Ready to power up your game!");
 	}

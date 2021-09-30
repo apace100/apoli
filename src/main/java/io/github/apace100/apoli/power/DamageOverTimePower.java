@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.calio.mixin.DamageSourceAccessor;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -7,11 +8,13 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.world.Difficulty;
 
 import java.util.Map;
 
-public class DamageOverTimePower extends VariableIntPower {
+public class DamageOverTimePower extends Power {
 
     public static final DamageSource GENERIC_DAMAGE = ((DamageSourceAccessor)((DamageSourceAccessor)DamageSourceAccessor.createDamageSource("genericDamageOverTime")).callSetBypassesArmor()).callSetUnblockable();
 
@@ -24,9 +27,10 @@ public class DamageOverTimePower extends VariableIntPower {
     private final float protectionEffectiveness;
 
     private int outOfDamageTicks;
+    private int inDamageTicks;
 
     public DamageOverTimePower(PowerType<?> type, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, DamageSource damageSource, Enchantment protectingEnchantment, float protectionEffectiveness) {
-        super(type, entity, beginDamageIn, 0, Math.max(damageInterval, beginDamageIn));
+        super(type, entity);
         this.damageSource = damageSource;
         this.beginDamageIn = beginDamageIn;
         this.damageAmount = damageAmount;
@@ -35,11 +39,6 @@ public class DamageOverTimePower extends VariableIntPower {
         this.protectingEnchantment = protectingEnchantment;
         this.protectionEffectiveness = protectionEffectiveness;
         this.setTicking(true);
-    }
-
-    @Override
-    public int getMax() {
-        return Math.max(super.getMax(), getDamageBegin());
     }
 
     public int getDamageBegin() {
@@ -59,20 +58,26 @@ public class DamageOverTimePower extends VariableIntPower {
 
     public void doDamage() {
         outOfDamageTicks = 0;
-        if(getValue() <= 0) {
-            setValue(damageTickInterval);
-            entity.damage(damageSource, entity.world.getDifficulty() == Difficulty.EASY ? damageAmountEasy : damageAmount);
-        } else {
-            decrement();
+        if(inDamageTicks - getDamageBegin() >= 0) {
+            if((inDamageTicks - getDamageBegin()) % damageTickInterval == 0) {
+                entity.damage(damageSource, entity.world.getDifficulty() == Difficulty.EASY ? damageAmountEasy : damageAmount);
+            }
         }
+        inDamageTicks++;
     }
 
     public void resetDamage() {
         if(outOfDamageTicks >= 20) {
-            this.setValue(getDamageBegin());
+            inDamageTicks = 0;
         } else {
             outOfDamageTicks++;
         }
+    }
+
+    @Override
+    public void onRespawn() {
+        inDamageTicks = 0;
+        outOfDamageTicks = 0;
     }
 
     private int getProtection() {
@@ -82,10 +87,30 @@ public class DamageOverTimePower extends VariableIntPower {
             Map<EquipmentSlot, ItemStack> enchantedItems = protectingEnchantment.getEquipment(entity);
             Iterable<ItemStack> iterable = enchantedItems.values();
             int i = 0;
+            int items = 0;
             for (ItemStack itemStack : iterable) {
-                i += EnchantmentHelper.getLevel(protectingEnchantment, itemStack);
+                int enchLevel = EnchantmentHelper.getLevel(protectingEnchantment, itemStack);
+                i += enchLevel;
+                if(enchLevel > 0)
+                    items++;
             }
-            return i + enchantedItems.size();
+            return i + items;
+        }
+    }
+
+    @Override
+    public NbtElement toTag() {
+        NbtCompound nbt = new NbtCompound();
+        nbt.putInt("InDamage", inDamageTicks);
+        nbt.putInt("OutDamage", outOfDamageTicks);
+        return nbt;
+    }
+
+    @Override
+    public void fromTag(NbtElement tag) {
+        if(tag instanceof NbtCompound nbt) {
+            inDamageTicks = nbt.getInt("InDamage");
+            outOfDamageTicks = nbt.getInt("OutDamage");
         }
     }
 }

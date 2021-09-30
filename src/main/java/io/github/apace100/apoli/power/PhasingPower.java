@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -12,13 +13,13 @@ public class PhasingPower extends Power {
     private final Predicate<CachedBlockPosition> blocks;
     private final boolean isBlacklist;
 
-    private final Predicate<PlayerEntity> phaseDownCondition;
+    private final Predicate<Entity> phaseDownCondition;
 
     private final RenderType renderType;
     private final float viewDistance;
 
     public PhasingPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blocks, boolean isBlacklist,
-                        RenderType renderType, float viewDistance, Predicate<PlayerEntity> phaseDownCondition) {
+                        RenderType renderType, float viewDistance, Predicate<Entity> phaseDownCondition) {
         super(type, entity);
         this.blocks = blocks;
         this.isBlacklist = isBlacklist;
@@ -31,8 +32,8 @@ public class PhasingPower extends Power {
         return isBlacklist != blocks.test(new CachedBlockPosition(entity.world, pos, true));
     }
 
-    public boolean shouldPhaseDown(PlayerEntity playerEntity) {
-        return phaseDownCondition == null ? playerEntity.isSneaking() : phaseDownCondition.test(playerEntity);
+    public boolean shouldPhaseDown(Entity entity) {
+        return phaseDownCondition == null ? entity.isSneaking() : phaseDownCondition.test(entity);
     }
 
     public RenderType getRenderType() {

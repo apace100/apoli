@@ -256,7 +256,7 @@ public class PowerFactories {
                 (type, player) -> {
                     ModifyDamageDealtPower power = new ModifyDamageDealtPower(type, player,
                         data.isPresent("damage_condition") ? (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition") : dmg -> true,
-                        (ConditionFactory<LivingEntity>.Instance)data.get("target_condition"));
+                        (ConditionFactory<Entity>.Instance)data.get("target_condition"));
                     if(data.isPresent("modifier")) {
                         power.addModifier(data.getModifier("modifier"));
                     }
@@ -264,10 +264,10 @@ public class PowerFactories {
                         ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
                     }
                     if(data.isPresent("self_action")) {
-                        power.setSelfAction((ActionFactory<LivingEntity>.Instance)data.get("self_action"));
+                        power.setSelfAction((ActionFactory<Entity>.Instance)data.get("self_action"));
                     }
                     if(data.isPresent("target_action")) {
-                        power.setTargetAction((ActionFactory<LivingEntity>.Instance)data.get("target_action"));
+                        power.setTargetAction((ActionFactory<Entity>.Instance)data.get("target_action"));
                     }
                     return power;
                 })
@@ -290,10 +290,10 @@ public class PowerFactories {
                         ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
                     }
                     if(data.isPresent("self_action")) {
-                        power.setSelfAction((ActionFactory<LivingEntity>.Instance)data.get("self_action"));
+                        power.setSelfAction((ActionFactory<Entity>.Instance)data.get("self_action"));
                     }
                     if(data.isPresent("attacker_action")) {
-                        power.setAttackerAction((ActionFactory<LivingEntity>.Instance)data.get("attacker_action"));
+                        power.setAttackerAction((ActionFactory<Entity>.Instance)data.get("attacker_action"));
                     }
                     return power;
                 })
@@ -369,10 +369,11 @@ public class PowerFactories {
         register(new PowerFactory<>(Apoli.identifier("particle"),
             new SerializableData()
                 .add("particle", SerializableDataTypes.PARTICLE_TYPE)
-                .add("frequency", SerializableDataTypes.INT),
+                .add("frequency", SerializableDataTypes.INT)
+                .add("visible_in_first_person", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) ->
-                    new ParticlePower(type, player, (ParticleEffect)data.get("particle"), data.getInt("frequency")))
+                    new ParticlePower(type, player, (ParticleEffect)data.get("particle"), data.getInt("frequency"), data.getBoolean("visible_in_first_person")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("phasing"),
             new SerializableData()
@@ -385,7 +386,7 @@ public class PowerFactories {
                 (type, player) ->
                     new PhasingPower(type, player, data.isPresent("block_condition") ? (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition") : cbp -> true,
                         data.getBoolean("blacklist"), (PhasingPower.RenderType)data.get("render_type"), data.getFloat("view_distance"),
-                        (ConditionFactory<PlayerEntity>.Instance)data.get("phase_down_condition")))
+                        (ConditionFactory<Entity>.Instance)data.get("phase_down_condition")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("prevent_item_use"),
             new SerializableData()
@@ -545,10 +546,11 @@ public class PowerFactories {
             new SerializableData()
                 .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
                 .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
-                .add("tick_rate", SerializableDataTypes.INT, 20),
+                .add("tick_rate", SerializableDataTypes.INT, 20)
+                .add("update_health", SerializableDataTypes.BOOLEAN, true),
             data ->
                 (type, player) -> {
-                    ConditionedAttributePower ap = new ConditionedAttributePower(type, player, data.getInt("tick_rate"));
+                    ConditionedAttributePower ap = new ConditionedAttributePower(type, player, data.getInt("tick_rate"), data.getBoolean("update_health"));
                     if(data.isPresent("modifier")) {
                         ap.addModifier((AttributedEntityAttributeModifier)data.get("modifier"));
                     }
@@ -615,7 +617,7 @@ public class PowerFactories {
                 (type, player) -> new SelfActionOnHitPower(type, player, data.getInt("cooldown"),
                     (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action"),
-                    (ConditionFactory<LivingEntity>.Instance)data.get("target_condition")))
+                    (ConditionFactory<Entity>.Instance)data.get("target_condition")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("target_action_on_hit"),
             new SerializableData()
@@ -628,7 +630,7 @@ public class PowerFactories {
                 (type, player) -> new TargetActionOnHitPower(type, player, data.getInt("cooldown"),
                     (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action"),
-                    (ConditionFactory<LivingEntity>.Instance)data.get("target_condition")))
+                    (ConditionFactory<Entity>.Instance)data.get("target_condition")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("starting_equipment"),
             new SerializableData()
@@ -719,7 +721,8 @@ public class PowerFactories {
                 .add("food_modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
                 .add("saturation_modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
                 .add("saturation_modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("always_edible", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) -> {
                     List<EntityAttributeModifier> foodModifiers = new LinkedList<>();
@@ -739,7 +742,7 @@ public class PowerFactories {
                         saturationModifiers.addAll(modifierList);
                     }
                     return new ModifyFoodPower(type, player, data.isPresent("item_condition") ? (ConditionFactory<ItemStack>.Instance)data.get("item_condition") : stack -> true,
-                        foodModifiers, saturationModifiers, (ActionFactory<Entity>.Instance)data.get("entity_action"));
+                        foodModifiers, saturationModifiers, (ActionFactory<Entity>.Instance)data.get("entity_action"), data.getBoolean("always_edible"));
                 }).allowCondition());
         register(new PowerFactory<>(Apoli.identifier("modify_xp_gain"),
             new SerializableData()
@@ -781,7 +784,7 @@ public class PowerFactories {
             new SerializableData()
                 .add("entity_condition", ApoliDataTypes.ENTITY_CONDITION, null),
             data ->
-                (type, player) -> new PreventEntityRenderPower(type, player, (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition")))
+                (type, player) -> new PreventEntityRenderPower(type, player, (ConditionFactory<Entity>.Instance)data.get("entity_condition")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("entity_glow"),
             new SerializableData()
@@ -793,8 +796,8 @@ public class PowerFactories {
                 .add("blue", SerializableDataTypes.FLOAT, 1.0F),
             data ->
                 (type, player) -> new EntityGlowPower(type, player,
-                    (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition"),
-                    (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition"),
+                    (ConditionFactory<Entity>.Instance)data.get("entity_condition"),
+                    (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition"),
                     data.getBoolean("use_teams"),
                     data.getFloat("red"),
                     data.getFloat("green"),
@@ -810,8 +813,8 @@ public class PowerFactories {
                         .add("blue", SerializableDataTypes.FLOAT, 1.0F),
                 data ->
                         (type, player) -> new SelfGlowPower(type, player,
-                                (ConditionFactory<LivingEntity>.Instance)data.get("entity_condition"),
-                                (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition"),
+                                (ConditionFactory<Entity>.Instance)data.get("entity_condition"),
+                                (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition"),
                                 data.getBoolean("use_teams"),
                                 data.getFloat("red"),
                                 data.getFloat("green"),
@@ -823,7 +826,7 @@ public class PowerFactories {
                 .add("hold_condition", ApoliDataTypes.ENTITY_CONDITION, null),
             data ->
                 (type, player) -> {
-                    Predicate<LivingEntity> holdCondition = (ConditionFactory<LivingEntity>.Instance)data.get("hold_condition");
+                    Predicate<Entity> holdCondition = (ConditionFactory<Entity>.Instance)data.get("hold_condition");
                     return new ClimbingPower(type, player, data.getBoolean("allow_holding"), holdCondition);
                 })
             .allowCondition());
@@ -845,7 +848,7 @@ public class PowerFactories {
                 (type, player) -> new SelfActionOnKillPower(type, player, data.getInt("cooldown"),
                     (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action"),
-                    (ConditionFactory<LivingEntity>.Instance)data.get("target_condition")))
+                    (ConditionFactory<Entity>.Instance)data.get("target_condition")))
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("recipe"),
             new SerializableData()
@@ -873,7 +876,7 @@ public class PowerFactories {
                 (type, player) -> {
                     ModifyProjectileDamagePower power = new ModifyProjectileDamagePower(type, player,
                         data.isPresent("damage_condition") ? (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition") : dmg -> true,
-                        (ConditionFactory<LivingEntity>.Instance)data.get("target_condition"));
+                        (ConditionFactory<Entity>.Instance)data.get("target_condition"));
                     if(data.isPresent("modifier")) {
                         power.addModifier(data.getModifier("modifier"));
                     }
@@ -881,10 +884,10 @@ public class PowerFactories {
                         ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
                     }
                     if(data.isPresent("self_action")) {
-                        power.setSelfAction((ActionFactory<LivingEntity>.Instance)data.get("self_action"));
+                        power.setSelfAction((ActionFactory<Entity>.Instance)data.get("self_action"));
                     }
                     if(data.isPresent("target_action")) {
-                        power.setTargetAction((ActionFactory<LivingEntity>.Instance)data.get("target_action"));
+                        power.setTargetAction((ActionFactory<Entity>.Instance)data.get("target_action"));
                     }
                     return power;
                 })
@@ -948,8 +951,8 @@ public class PowerFactories {
                 (type, player) -> {
                     return new ActionOnEntityUsePower(type, player,
                         (ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"),
-                        (ConditionFactory<LivingEntity>.Instance)data.get("target_condition"),
-                        (ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance)data.get("bientity_condition"));
+                        (ConditionFactory<Entity>.Instance)data.get("target_condition"),
+                        (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition"));
                 })
             .allowCondition());
         UseEntityCallback.EVENT.register(((playerEntity, world, hand, entity, entityHitResult) -> {
@@ -1055,6 +1058,24 @@ public class PowerFactories {
                 (type, player) -> new ModifyCameraSubmersionTypePower(type, player,
                     data.isPresent("from") ? Optional.of((CameraSubmersionType)data.get("from")) : Optional.empty(),
                     (CameraSubmersionType)data.get("to")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("item_on_item"),
+            new SerializableData()
+                .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("on_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("result", SerializableDataTypes.ITEM_STACK, null)
+                .add("using_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) -> new ItemOnItemPower(type, player,
+                    (ConditionFactory<ItemStack>.Instance)data.get("using_item_condition"),
+                    (ConditionFactory<ItemStack>.Instance)data.get("on_item_condition"),
+                    (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("using_item_action"),
+                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
+                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("result_item_action"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action")))
             .allowCondition());
     }
 

@@ -13,8 +13,8 @@ public class ModifyDamageTakenPower extends ValueModifyingPower {
 
     private final Predicate<Pair<DamageSource, Float>> condition;
 
-    private Consumer<LivingEntity> attackerAction;
-    private Consumer<LivingEntity> selfAction;
+    private Consumer<Entity> attackerAction;
+    private Consumer<Entity> selfAction;
 
     public ModifyDamageTakenPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<DamageSource, Float>> condition) {
         super(type, entity);
@@ -25,11 +25,11 @@ public class ModifyDamageTakenPower extends ValueModifyingPower {
         return condition.test(new Pair(source, damageAmount));
     }
 
-    public void setAttackerAction(Consumer<LivingEntity> attackerAction) {
+    public void setAttackerAction(Consumer<Entity> attackerAction) {
         this.attackerAction = attackerAction;
     }
 
-    public void setSelfAction(Consumer<LivingEntity> selfAction) {
+    public void setSelfAction(Consumer<Entity> selfAction) {
         this.selfAction = selfAction;
     }
 
@@ -37,8 +37,8 @@ public class ModifyDamageTakenPower extends ValueModifyingPower {
         if(selfAction != null) {
             selfAction.accept(entity);
         }
-        if(attackerAction != null && attacker instanceof LivingEntity) {
-            attackerAction.accept((LivingEntity)attacker);
+        if(attackerAction != null) {
+            attackerAction.accept(attacker);
         }
     }
 }

@@ -6,6 +6,7 @@ import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
@@ -56,9 +57,13 @@ public class PowerFactory<P extends Power> {
             BiFunction<PowerType<P>, LivingEntity, P> powerFactory = factoryConstructor.apply(dataInstance);
             P p = powerFactory.apply(pPowerType, livingEntity);
             if(hasConditions && dataInstance.isPresent("condition")) {
-                p.addCondition((ConditionFactory<LivingEntity>.Instance) dataInstance.get("condition"));
+                p.addCondition((ConditionFactory<Entity>.Instance) dataInstance.get("condition"));
             }
             return p;
+        }
+
+        public SerializableData.Instance getDataInstance() {
+            return dataInstance;
         }
     }
 

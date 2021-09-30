@@ -8,14 +8,14 @@ import java.util.function.Predicate;
 
 public class PreventEntityRenderPower extends Power {
 
-    private final Predicate<LivingEntity> entityCondition;
+    private final Predicate<Entity> entityCondition;
 
-    public PreventEntityRenderPower(PowerType<?> type, LivingEntity entity, Predicate<LivingEntity> entityCondition) {
+    public PreventEntityRenderPower(PowerType<?> type, LivingEntity entity, Predicate<Entity> entityCondition) {
         super(type, entity);
         this.entityCondition = entityCondition;
     }
 
     public boolean doesApply(Entity e) {
-        return e instanceof LivingEntity && (entityCondition == null || entityCondition.test((LivingEntity)e));
+        return (entityCondition == null || entityCondition.test(e));
     }
 }
