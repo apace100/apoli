@@ -39,6 +39,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.EnumSet;
 import java.util.List;
 
 public class ApoliDataTypes {
@@ -217,10 +218,6 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
-
-    public static final SerializableDataType<Fluid> FLUID = SerializableDataType.registry(Fluid.class, Registry.FLUID);
-
-    public static final SerializableDataType<CameraSubmersionType> CAMERA_SUBMERSION_TYPE = SerializableDataType.enumValue(CameraSubmersionType.class);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

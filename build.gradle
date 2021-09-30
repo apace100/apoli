@@ -29,7 +29,7 @@ repositories {
 		url "https://maven.shedaniel.me/"
 	}
 	maven {
-		url "https://api.modrinth.com/maven"
+		url "https://maven.terraformersmc.com/"
 	}
 }
 
@@ -62,7 +62,7 @@ dependencies {
 	}
 	include "me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}"
 
-	modImplementation "maven.modrinth:modmenu:${project.modmenu_version}"
+	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 processResources {

@@ -122,6 +122,8 @@ public class EntityActions {
                 ActionFactory<Entity>.Instance action = (ActionFactory<Entity>.Instance)data.get("action");
                 scheduler.queue(s -> action.accept(entity), data.getInt("ticks"));
             }));
+        register(new ActionFactory<>(Apoli.identifier("nothing"), new SerializableData(),
+            (data, entity) -> {}));
 
 
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
