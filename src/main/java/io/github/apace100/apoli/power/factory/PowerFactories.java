@@ -37,6 +37,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.tag.Tag;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
@@ -1205,6 +1206,20 @@ public class PowerFactories {
                     (OverlayPower.DrawPhase) data.get("draw_phase"),
                     data.getBoolean("hide_with_hud"),
                     data.getBoolean("visible_in_third_person")))
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("tooltip"),
+            new SerializableData()
+                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("text", SerializableDataTypes.TEXT, null)
+                .add("texts", SerializableDataType.list(SerializableDataTypes.TEXT), null),
+            data ->
+                (type, player) -> {
+                    TooltipPower ttp = new TooltipPower(type, player,
+                        data.isPresent("item_condition") ? (Predicate<ItemStack>)data.get("item_condition") : null);
+                    data.ifPresent("text", ttp::addText);
+                    data.<List<Text>>ifPresent("texts", t -> t.forEach(ttp::addText));
+                    return ttp;
+                })
             .allowCondition());
     }
 
