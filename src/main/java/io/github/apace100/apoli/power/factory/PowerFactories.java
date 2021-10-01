@@ -1166,6 +1166,13 @@ public class PowerFactories {
                     data.isPresent("from") ? Optional.of((CameraSubmersionType)data.get("from")) : Optional.empty(),
                     (CameraSubmersionType)data.get("to")))
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("status_bar_texture"),
+                new SerializableData()
+                        .add("texture", SerializableDataTypes.IDENTIFIER, null),
+                data ->
+                        (type, player) ->
+                                new OverrideHudTexturePower(type, player, data.getId("texture")))
+                .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("item_on_item"),
             new SerializableData()
                 .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
