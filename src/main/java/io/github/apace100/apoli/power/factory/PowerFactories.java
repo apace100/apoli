@@ -131,13 +131,13 @@ public class PowerFactories {
             new SerializableData()
                 .add("cooldown", SerializableDataTypes.INT)
                 .add("count", SerializableDataTypes.INT, 1)
-                .add("interval", SerializableDataTypes.INT, 1)
-                .add("start_delay", SerializableDataTypes.INT, 1)
+                .add("interval", SerializableDataTypes.INT, 0)
+                .add("start_delay", SerializableDataTypes.INT, 0)
                 .add("speed", SerializableDataTypes.FLOAT, 1.5F)
                 .add("divergence", SerializableDataTypes.FLOAT, 1F)
                 .add("sound", SerializableDataTypes.SOUND_EVENT, null)
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
-                .add("hud_render", ApoliDataTypes.HUD_RENDER)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("tag", SerializableDataTypes.NBT, null)
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->

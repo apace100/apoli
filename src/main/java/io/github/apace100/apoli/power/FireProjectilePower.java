@@ -27,8 +27,8 @@ public class FireProjectilePower extends ActiveCooldownPower {
     private final SoundEvent soundEvent;
     private final NbtCompound tag;
 
-    private byte isFiringProjectiles;
-    private byte finishedStartDelay;
+    private boolean isFiringProjectiles;
+    private boolean finishedStartDelay;
     private int shotProjectiles;
 
     public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag) {
@@ -47,19 +47,19 @@ public class FireProjectilePower extends ActiveCooldownPower {
     @Override
     public void onUse() {
         if(canUse()) {
-            isFiringProjectiles = 1;
+            isFiringProjectiles = true;
             use();
         }
     }
 
     @Override
     public NbtElement toTag() {
-        NbtCompound Obj = new NbtCompound();
-        Obj.putLong("lastUseTime", lastUseTime);
-        Obj.putInt("shotProjectiles", shotProjectiles);
-        Obj.putByte("finishedStartDelay", finishedStartDelay);
-        Obj.putByte("isFiringProjectiles", isFiringProjectiles);
-        return Obj;
+        NbtCompound nbt = new NbtCompound();
+        nbt.putLong("LastUseTime", lastUseTime);
+        nbt.putInt("ShotProjectiles", shotProjectiles);
+        nbt.putBoolean("FinishedStartDelay", finishedStartDelay);
+        nbt.putBoolean("IsFiringProjectiles", isFiringProjectiles);
+        return nbt;
     }
 
     @Override
@@ -68,17 +68,20 @@ public class FireProjectilePower extends ActiveCooldownPower {
             lastUseTime = ((NbtLong)tag).longValue();
         }
         else {
-            lastUseTime = ((NbtCompound)tag).getLong("lastUseTime");
-            shotProjectiles = ((NbtCompound)tag).getInt("shotProjectiles");
-            finishedStartDelay = ((NbtCompound)tag).getByte("finishedStartDelay");
-            isFiringProjectiles = ((NbtCompound)tag).getByte("isFiringProjectiles");
+            lastUseTime = ((NbtCompound)tag).getLong("LastUseTime");
+            shotProjectiles = ((NbtCompound)tag).getInt("ShotProjectiles");
+            finishedStartDelay = ((NbtCompound)tag).getBoolean("FinishedStartDelay");
+            isFiringProjectiles = ((NbtCompound)tag).getBoolean("IsFiringProjectiles");
         }
     }
 
     public void tick() {
-        if(isFiringProjectiles == 1) {
-            if((entity.getEntityWorld().getTime() - lastUseTime) % startDelay == 0 && finishedStartDelay == 0) {
-                finishedStartDelay = 1;
+        if(isFiringProjectiles) {
+            if(!finishedStartDelay && startDelay == 0) {
+                finishedStartDelay = true;
+            }
+            if(!finishedStartDelay && (entity.getEntityWorld().getTime() - lastUseTime) % startDelay == 0) {
+                finishedStartDelay = true;
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
@@ -90,11 +93,24 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 }
                 else {
                     shotProjectiles = 0;
-                    finishedStartDelay = 0;
-                    isFiringProjectiles = 0;
+                    finishedStartDelay = false;
+                    isFiringProjectiles = false;
                 }
             }
-            else if ((entity.getEntityWorld().getTime() - lastUseTime) % interval == 0 && finishedStartDelay == 1) {
+            else if(interval == 0 && finishedStartDelay) {
+                if(soundEvent != null) {
+                    entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                }
+                if(!entity.world.isClient) {
+                    for(; shotProjectiles < projectileCount; shotProjectiles++) {
+                        fireProjectile();
+                    }
+                }
+                shotProjectiles = 0;
+                finishedStartDelay = false;
+                isFiringProjectiles = false;
+            }
+            else if (finishedStartDelay && (entity.getEntityWorld().getTime() - lastUseTime) % interval == 0) {
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
@@ -106,8 +122,8 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 }
                 else {
                     shotProjectiles = 0;
-                    finishedStartDelay = 0;
-                    isFiringProjectiles = 0;
+                    finishedStartDelay = false;
+                    isFiringProjectiles = false;
                 }
             }
         }
