@@ -9,6 +9,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ExplosiveProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtLong;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
@@ -18,36 +20,95 @@ public class FireProjectilePower extends ActiveCooldownPower {
 
     private final EntityType entityType;
     private final int projectileCount;
+    private final int interval;
+    private final int startDelay;
     private final float speed;
     private final float divergence;
     private final SoundEvent soundEvent;
     private final NbtCompound tag;
 
-    public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType entityType, int projectileCount, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag) {
+    private byte isFiringProjectiles;
+    private byte finishedStartDelay;
+    private int shotProjectiles;
+
+    public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag) {
         super(type, entity, cooldownDuration, hudRender, null);
         this.entityType = entityType;
         this.projectileCount = projectileCount;
+        this.interval = interval;
+        this.startDelay = startDelay;
         this.speed = speed;
         this.divergence = divergence;
         this.soundEvent = soundEvent;
         this.tag = tag;
+        this.setTicking(true);
     }
 
     @Override
     public void onUse() {
         if(canUse()) {
-            fireProjectiles();
+            isFiringProjectiles = 1;
             use();
         }
     }
 
-    private void fireProjectiles() {
-        if(soundEvent != null) {
-            entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+    @Override
+    public NbtElement toTag() {
+        NbtCompound Obj = new NbtCompound();
+        Obj.putLong("lastUseTime", lastUseTime);
+        Obj.putInt("shotProjectiles", shotProjectiles);
+        Obj.putByte("finishedStartDelay", finishedStartDelay);
+        Obj.putByte("isFiringProjectiles", isFiringProjectiles);
+        return Obj;
+    }
+
+    @Override
+    public void fromTag(NbtElement tag) {
+        if(tag instanceof NbtLong) {
+            lastUseTime = ((NbtLong)tag).longValue();
         }
-        if (!entity.world.isClient) {
-            for(int i = 0; i < projectileCount; i++) {
-                fireProjectile();
+        else {
+            lastUseTime = ((NbtCompound)tag).getLong("lastUseTime");
+            shotProjectiles = ((NbtCompound)tag).getInt("shotProjectiles");
+            finishedStartDelay = ((NbtCompound)tag).getByte("finishedStartDelay");
+            isFiringProjectiles = ((NbtCompound)tag).getByte("isFiringProjectiles");
+        }
+    }
+
+    public void tick() {
+        if(isFiringProjectiles == 1) {
+            if((entity.getEntityWorld().getTime() - lastUseTime) % startDelay == 0 && finishedStartDelay == 0) {
+                finishedStartDelay = 1;
+                shotProjectiles += 1;
+                if(shotProjectiles <= projectileCount) {
+                    if(soundEvent != null) {
+                        entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                    }
+                    if(!entity.world.isClient) {
+                        fireProjectile();
+                    }
+                }
+                else {
+                    shotProjectiles = 0;
+                    finishedStartDelay = 0;
+                    isFiringProjectiles = 0;
+                }
+            }
+            else if ((entity.getEntityWorld().getTime() - lastUseTime) % interval == 0 && finishedStartDelay == 1) {
+                shotProjectiles += 1;
+                if(shotProjectiles <= projectileCount) {
+                    if(soundEvent != null) {
+                        entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                    }
+                    if(!entity.world.isClient) {
+                        fireProjectile();
+                    }
+                }
+                else {
+                    shotProjectiles = 0;
+                    finishedStartDelay = 0;
+                    isFiringProjectiles = 0;
+                }
             }
         }
     }
