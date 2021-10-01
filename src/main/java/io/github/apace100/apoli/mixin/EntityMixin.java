@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
@@ -14,24 +13,18 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.ServerTagManagerHolder;
 import net.minecraft.tag.Tag;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -70,7 +63,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow
     protected boolean onGround;
 
-    @Shadow @Nullable protected Tag<Fluid> submergedFluidTag;
+    @Shadow @Nullable protected Tag<Fluid> field_25599;
 
     @Shadow protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
 
@@ -140,17 +133,6 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
-    @Inject(method = "emitGameEvent(Lnet/minecraft/world/event/GameEvent;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/BlockPos;)V", at = @At("HEAD"), cancellable = true)
-    private void preventGameEvents(GameEvent event, @Nullable Entity entity, BlockPos pos, CallbackInfo ci) {
-        if(entity != null && entity instanceof LivingEntity) {
-            List<PreventGameEventPower> preventingPowers = PowerHolderComponent.getPowers(entity, PreventGameEventPower.class).stream().filter(p -> p.doesPrevent(event)).toList();
-            if(preventingPowers.size() > 0) {
-                preventingPowers.forEach(p -> p.executeAction(entity));
-                ci.cancel();
-            }
-        }
-    }
-
     private boolean isMoving;
     private float distanceBefore;
 
@@ -169,13 +151,13 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Override
     public boolean isSubmergedInLoosely(Tag<Fluid> tag) {
-        if(tag == null || submergedFluidTag == null) {
+        if(tag == null || field_25599 == null) {
             return false;
         }
-        if(tag == submergedFluidTag) {
+        if(tag == field_25599) {
             return true;
         }
-        return Calio.areTagsEqual(Registry.FLUID_KEY, tag, submergedFluidTag);
+        return Calio.areTagsEqual(Registry.FLUID_KEY, tag, field_25599);
     }
 
     @Override

@@ -10,13 +10,12 @@ import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.VariableIntPower;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.command.argument.ObjectiveArgumentType;
 import net.minecraft.command.argument.ScoreHolderArgumentType;
-import net.minecraft.command.argument.ScoreboardObjectiveArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.TranslatableText;
 
 import java.util.Optional;
@@ -56,7 +55,7 @@ public class ResourceCommand {
                         .then(argument("power", PowerTypeArgumentType.power())
                             .then(argument("operation", PowerOperation.operation())
                                 .then(argument("entity", ScoreHolderArgumentType.scoreHolder())
-                                    .then(argument("objective", ScoreboardObjectiveArgumentType.scoreboardObjective())
+                                    .then(argument("objective", ObjectiveArgumentType.objective())
                                         .executes((command) -> resource(command, SubCommand.OPERATION)))))))
                 )
         );
@@ -75,7 +74,7 @@ public class ResourceCommand {
         }
         PowerType<?> powerType = PowerTypeArgumentType.getPower(command, "power");
         Optional<PowerHolderComponent> phc = PowerHolderComponent.KEY.maybeGet(player);
-        if(phc.isEmpty()) {
+        if(!phc.isPresent()) {
             command.getSource().sendError(new TranslatableText("commands.apoli.resource.invalid_entity"));
             return 0;
         }
@@ -105,7 +104,7 @@ public class ResourceCommand {
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.add.success.single", i, powerType.getIdentifier(), player.getEntityName(), total), true);
                     return 1;
                 case OPERATION:
-                    ScoreboardPlayerScore score = command.getSource().getServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
+                    ScoreboardPlayerScore score = command.getSource().getMinecraftServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ObjectiveArgumentType.getObjective(command, "objective"));
                     command.getArgument("operation", PowerOperation.Operation.class).apply(vIntPower, score);
                     PowerHolderComponent.sync(player);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), player.getEntityName(), vIntPower.getValue()), true);
@@ -134,7 +133,7 @@ public class ResourceCommand {
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.add.success.single", i, powerType.getIdentifier(), player.getEntityName(), cooldownPower.getRemainingTicks()), true);
                     return 1;
                 case OPERATION:
-                    ScoreboardPlayerScore score = command.getSource().getServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
+                    ScoreboardPlayerScore score = command.getSource().getMinecraftServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ObjectiveArgumentType.getObjective(command, "objective"));
                     command.getArgument("operation", PowerOperation.Operation.class).apply(cooldownPower, score);
                     PowerHolderComponent.sync(player);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), player.getEntityName(), cooldownPower.getRemainingTicks()), true);

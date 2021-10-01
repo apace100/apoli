@@ -17,7 +17,6 @@ import io.github.ladysnake.pal.VanillaAbilities;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.block.Block;
 import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -30,7 +29,7 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.recipe.Recipe;
@@ -47,7 +46,6 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.gen.feature.StructureFeature;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -152,7 +150,7 @@ public class PowerFactories {
                         data.getFloat("speed"),
                         data.getFloat("divergence"),
                         (SoundEvent)data.get("sound"),
-                        (NbtCompound)data.get("tag"));
+                        (CompoundTag)data.get("tag"));
                     power.setKey((Active.Key)data.get("key"));
                     return power;
                 })
@@ -1050,7 +1048,7 @@ public class PowerFactories {
                 }
             }
             ActionResult result = ActionResult.PASS;
-            List<ActionOnEntityUsePower> powers = PowerHolderComponent.getPowers(playerEntity, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack)).toList();
+            List<ActionOnEntityUsePower> powers = PowerHolderComponent.getPowers(playerEntity, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack)).collect(Collectors.toList());
             for (ActionOnEntityUsePower aoip : powers) {
                 ActionResult ar = aoip.executeAction(entity, hand);
                 if(ar.isAccepted() && !result.isAccepted()) {
@@ -1103,26 +1101,6 @@ public class PowerFactories {
                 (type, player) -> new ExhaustOverTimePower(type, player, data.getInt("interval"), data.getFloat("exhaustion")))
             .allowCondition());
 
-        register(new PowerFactory<>(Apoli.identifier("prevent_game_event"),
-            new SerializableData()
-                .add("event", SerializableDataTypes.GAME_EVENT, null)
-                .add("events", SerializableDataTypes.GAME_EVENTS, null)
-                .add("tag", SerializableDataTypes.GAME_EVENT_TAG, null)
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            data ->
-                (type, player) -> {
-                    List<GameEvent> eventList = data.isPresent("events") ? (List<GameEvent>)data.get("events") : null;
-                    if(data.isPresent("event")) {
-                        if(eventList == null) {
-                            eventList = new LinkedList<>();
-                        }
-                        eventList.add((GameEvent)data.get("event"));
-                    }
-                    return new PreventGameEventPower(type, player,
-                        (Tag<GameEvent>)data.get("tag"), eventList,
-                        (ActionFactory<Entity>.Instance)data.get("entity_action"));
-                })
-            .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("modify_crafting"),
             new SerializableData()
                 .add("recipe", SerializableDataTypes.IDENTIFIER, null)
@@ -1139,9 +1117,6 @@ public class PowerFactories {
                         (ActionFactory<Entity>.Instance)data.get("entity_action"),
                         (ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action"));
                 })
-            .allowCondition());
-        register(new PowerFactory<>(Apoli.identifier("freeze"),
-            new SerializableData(), data -> (BiFunction<PowerType<Power>, LivingEntity, Power>) FreezePower::new)
             .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("modify_block_render"),
             new SerializableData()
@@ -1161,15 +1136,6 @@ public class PowerFactories {
                     (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition"),
                     (ConditionFactory<FluidState>.Instance)data.get("fluid_condition"),
                     ((Fluid)data.get("fluid")).getDefaultState())));
-        register(new PowerFactory<>(Apoli.identifier("modify_camera_submersion"),
-            new SerializableData()
-                .add("from", SerializableDataTypes.CAMERA_SUBMERSION_TYPE, null)
-                .add("to", SerializableDataTypes.CAMERA_SUBMERSION_TYPE),
-            data ->
-                (type, player) -> new ModifyCameraSubmersionTypePower(type, player,
-                    data.isPresent("from") ? Optional.of((CameraSubmersionType)data.get("from")) : Optional.empty(),
-                    (CameraSubmersionType)data.get("to")))
-            .allowCondition());
         register(new PowerFactory<>(Apoli.identifier("status_bar_texture"),
                 new SerializableData()
                         .add("texture", SerializableDataTypes.IDENTIFIER, null),

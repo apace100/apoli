@@ -6,7 +6,6 @@ import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -14,7 +13,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.util.Identifier;
@@ -77,7 +76,7 @@ public class ItemConditions {
         register(new ConditionFactory<>(Apoli.identifier("meat"), new SerializableData(),
             (data, stack) -> stack.isFood() && stack.getItem().getFoodComponent().isMeat()));
         register(new ConditionFactory<>(Apoli.identifier("nbt"), new SerializableData()
-            .add("nbt", SerializableDataTypes.NBT), (data, stack) -> NbtHelper.matches((NbtCompound)data.get("nbt"), stack.getNbt(), true)));
+            .add("nbt", SerializableDataTypes.NBT), (data, stack) -> NbtHelper.matches((CompoundTag)data.get("nbt"), stack.getTag(), true)));
         register(new ConditionFactory<>(Apoli.identifier("fireproof"), new SerializableData(),
             (data, stack) -> stack.getItem().isFireproof()));
         register(new ConditionFactory<>(Apoli.identifier("enchantable"), new SerializableData(),

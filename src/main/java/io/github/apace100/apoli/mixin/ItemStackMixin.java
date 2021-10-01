@@ -1,17 +1,12 @@
 package io.github.apace100.apoli.mixin;
 
-import com.google.common.collect.EnumHashBiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableMap;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -28,17 +23,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin {
-
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;hasNbt()Z", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
     private void addEquipmentPowerTooltips(PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, List<Text> list) {
         for(EquipmentSlot slot : EquipmentSlot.values()) {
             List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers((ItemStack)(Object)this, slot)
                 .stream()
                 .filter(sp -> !sp.isHidden)
-                .toList();
+                .collect(Collectors.toList());();
             if(powers.size() > 0) {
                 list.add(LiteralText.EMPTY);
                 list.add((new TranslatableText("item.modifiers." + slot.getName())).formatted(Formatting.GRAY));

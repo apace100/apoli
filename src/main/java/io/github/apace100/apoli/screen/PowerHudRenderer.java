@@ -43,13 +43,13 @@ public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
             Comparator.comparing(hudRenderedA -> hudRenderedA.getRenderSettings().getSpriteLocation())
         ).collect(Collectors.toList());
         Identifier lastLocation = null;
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        RenderSystem.color4f(1f, 1f, 1f, 1f);
         for (HudRendered hudPower : hudPowers) {
             HudRender render = hudPower.getRenderSettings();
             if(render.shouldRender(client.player) && hudPower.shouldRender()) {
                 Identifier currentLocation = render.getSpriteLocation();
                 if(currentLocation != lastLocation) {
-                    RenderSystem.setShaderTexture(0, currentLocation);
+                    client.getTextureManager().bindTexture(currentLocation);
                     lastLocation = currentLocation;
                 }
                 drawTexture(matrices, x, y, 0, 0, barWidth, 5);

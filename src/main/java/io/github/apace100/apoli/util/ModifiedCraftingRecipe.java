@@ -5,9 +5,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.CraftingInventoryAccessor;
 import io.github.apace100.apoli.mixin.CraftingScreenHandlerAccessor;
 import io.github.apace100.apoli.mixin.PlayerScreenHandlerAccessor;
-import io.github.apace100.apoli.mixin.RecipeManagerAccessor;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
-import io.github.apace100.apoli.power.RecipePower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
@@ -19,9 +17,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
@@ -34,10 +30,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
     @Override
     public boolean matches(CraftingInventory inv, World world) {
         Optional<CraftingRecipe> original = getOriginalMatch(inv);
-        if(original.isEmpty()) {
-            return false;
-        }
-        return getRecipes(inv).stream().anyMatch(r -> r.doesApply(inv, original.get()));
+        return original.filter(craftingRecipe -> getRecipes(inv).stream().anyMatch(r -> r.doesApply(inv, craftingRecipe))).isPresent();
     }
 
     @Override

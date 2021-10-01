@@ -3,7 +3,6 @@ package io.github.apace100.apoli.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.LavaVisionPower;
-import io.github.apace100.apoli.power.ModifyCameraSubmersionTypePower;
 import io.github.apace100.apoli.power.NightVisionPower;
 import io.github.apace100.apoli.power.PhasingPower;
 import net.fabricmc.api.EnvType;
@@ -12,7 +11,6 @@ import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
@@ -33,30 +31,6 @@ public abstract class BackgroundRendererMixin {
             return PowerHolderComponent.KEY.get(player).getPowers(NightVisionPower.class).stream().anyMatch(NightVisionPower::isActive);
         }
         return player.hasStatusEffect(effect);
-    }
-
-    @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 0), ordinal = 0)
-    private static CameraSubmersionType modifyCameraSubmersionTypeRender(CameraSubmersionType original, Camera camera) {
-        if(camera.getFocusedEntity() instanceof LivingEntity) {
-            for(ModifyCameraSubmersionTypePower p : PowerHolderComponent.getPowers(camera.getFocusedEntity(), ModifyCameraSubmersionTypePower.class)) {
-                if(p.doesModify(original)) {
-                    return p.getNewType();
-                }
-            }
-        }
-        return original;
-    }
-
-    @ModifyVariable(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 0), ordinal = 0)
-    private static CameraSubmersionType modifyCameraSubmersionTypeFog(CameraSubmersionType original, Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog) {
-        if(camera.getFocusedEntity() instanceof LivingEntity) {
-            for(ModifyCameraSubmersionTypePower p : PowerHolderComponent.getPowers(camera.getFocusedEntity(), ModifyCameraSubmersionTypePower.class)) {
-                if(p.doesModify(original)) {
-                    return p.getNewType();
-                }
-            }
-        }
-        return original;
     }
 
     @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 1), ordinal = 0)
@@ -89,7 +63,7 @@ public abstract class BackgroundRendererMixin {
         return original;
     }*/
 
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V"))
+    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;fogStart(F)V"))
     private static void redirectFogStart(float start, Camera camera, BackgroundRenderer.FogType fogType) {
         if(camera.getFocusedEntity() instanceof LivingEntity) {
             List<PhasingPower> phasings = PowerHolderComponent.getPowers(camera.getFocusedEntity(), PhasingPower.class);
@@ -102,15 +76,15 @@ public abstract class BackgroundRendererMixin {
                     } else {
                         s = Math.min(view * 0.25F, start);
                     }
-                    RenderSystem.setShaderFogStart(s);
+                    RenderSystem.fogStart(s);
                     return;
                 }
             }
         }
-        RenderSystem.setShaderFogStart(start);
+        RenderSystem.fogStart(start);
     }
 
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V"))
+    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;fogEnd(F)V"))
     private static void redirectFogEnd(float end, Camera camera, BackgroundRenderer.FogType fogType) {
         if(camera.getFocusedEntity() instanceof LivingEntity) {
             List<PhasingPower> phasings = PowerHolderComponent.getPowers(camera.getFocusedEntity(), PhasingPower.class);
@@ -123,12 +97,12 @@ public abstract class BackgroundRendererMixin {
                     } else {
                         v = Math.min(view, end);
                     }
-                    RenderSystem.setShaderFogEnd(v);
+                    RenderSystem.fogEnd(v);
                     return;
                 }
             }
         }
-        RenderSystem.setShaderFogEnd(end);
+        RenderSystem.fogEnd(end);
     }
 
     private static BlockState getInWallBlockState(LivingEntity playerEntity) {

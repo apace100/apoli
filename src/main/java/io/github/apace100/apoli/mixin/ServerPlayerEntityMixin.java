@@ -68,7 +68,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
         PowerHolderComponent.getPowers(this, PreventSleepPower.class).forEach(p -> {
                 if(p.doesPrevent(world, pos)) {
                     if(p.doesAllowSpawnPoint()) {
-                        ((ServerPlayerEntity)(Object)this).setSpawnPoint(this.world.getRegistryKey(), pos, this.getYaw(), false, true);
+                        ((ServerPlayerEntity)(Object)this).setSpawnPoint(this.world.getRegistryKey(), pos, this.yaw, false, true);
                     }
                     info.setReturnValue(Either.left(null));
                     this.sendMessage(new TranslatableText(p.getMessage()), true);

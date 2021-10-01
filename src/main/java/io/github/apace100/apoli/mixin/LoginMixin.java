@@ -16,6 +16,7 @@ import net.minecraft.network.ClientConnection;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -91,7 +92,7 @@ public abstract class LoginMixin {
 		Optional<Vec3d> original = PlayerEntity.findRespawnPosition(world, pos, f, bl, bl2);
 		if(!original.isPresent()) {
 			if(PowerHolderComponent.hasPower(player, ModifyPlayerSpawnPower.class)) {
-				return Optional.ofNullable(Dismounting.findRespawnPos(EntityType.PLAYER, world, pos, bl));
+				return Optional.ofNullable(Dismounting.method_30769(EntityType.PLAYER, world, pos, bl));
 			}
 		}
 		return original;
@@ -104,7 +105,7 @@ public abstract class LoginMixin {
 	}
 
 	@Inject(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;onSpawn()V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void invokePowerRespawnCallback(ServerPlayerEntity player, boolean alive, CallbackInfoReturnable<ServerPlayerEntity> cir, BlockPos blockPos, float f, boolean bl, ServerWorld serverWorld, Optional optional2, ServerWorld serverWorld2, ServerPlayerEntity serverPlayerEntity, boolean b) {
+	private void invokePowerRespawnCallback(ServerPlayerEntity player, boolean alive, CallbackInfoReturnable<ServerPlayerEntity> cir, BlockPos blockPos, float f, boolean bl, ServerWorld serverWorld, Optional optional2, ServerPlayerInteractionManager serverPlayerInteractionManager2, ServerWorld serverWorld2, ServerPlayerEntity serverPlayerEntity) {
 		if(!alive) {
 			List<Power> powers = PowerHolderComponent.KEY.get(serverPlayerEntity).getPowers();
 			powers.forEach(Power::onRespawn);

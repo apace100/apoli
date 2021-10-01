@@ -1,11 +1,9 @@
 package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.ServerPlayerInteractionManagerAccessor;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.entity.Entity;
@@ -24,7 +22,7 @@ public final class EntityConditionsServer {
                 if(entity instanceof ServerPlayerEntity) {
                     ServerPlayerInteractionManagerAccessor interactionMngr = ((ServerPlayerInteractionManagerAccessor)((ServerPlayerEntity)entity).interactionManager);
                     if(interactionMngr.getMining()) {
-                        return ((PlayerEntity)entity).canHarvest(entity.world.getBlockState(interactionMngr.getMiningPos()));
+                        return ((PlayerEntity)entity).isUsingEffectiveTool(entity.world.getBlockState(interactionMngr.getMiningPos()));
                     }
                 }
                 return false;

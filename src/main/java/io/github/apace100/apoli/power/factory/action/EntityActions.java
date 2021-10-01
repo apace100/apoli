@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.ApoliServer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
@@ -18,6 +17,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
@@ -26,7 +26,7 @@ import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
@@ -39,11 +39,9 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
 import org.apache.commons.lang3.tuple.Triple;
@@ -202,7 +200,7 @@ public class EntityActions {
             .add("set", SerializableDataTypes.BOOLEAN, false),
             (data, entity) -> {
                 Space space = (Space)data.get("space");
-                Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
+                Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 Vec3d vel;
                 Vec3d velH;
                 TriConsumer<Float, Float, Float> method = entity::addVelocity;
@@ -259,11 +257,11 @@ public class EntityActions {
             (data, entity) -> {
                 Entity e = ((EntityType<?>)data.get("entity_type")).create(entity.world);
                 if(e != null) {
-                    e.refreshPositionAndAngles(entity.getPos().x, entity.getPos().y, entity.getPos().z, entity.getYaw(), entity.getPitch());
+                    e.refreshPositionAndAngles(entity.getPos().x, entity.getPos().y, entity.getPos().z, entity.yaw, entity.pitch);
                     if(data.isPresent("tag")) {
-                        NbtCompound mergedTag = e.writeNbt(new NbtCompound());
-                        mergedTag.copyFrom((NbtCompound)data.get("tag"));
-                        e.readNbt(mergedTag);
+                        CompoundTag mergedTag = e.toTag(new CompoundTag());
+                        mergedTag.copyFrom((CompoundTag) data.get("tag"));
+                        e.fromTag(mergedTag);
                     }
 
                     entity.world.spawnEntity(e);
@@ -414,7 +412,7 @@ public class EntityActions {
                             living.equipStack(slot, stack);
                             return;
                         } else
-                        if(ItemStack.canCombine(stackInSlot, stack) && stackInSlot.getCount() < stackInSlot.getMaxCount()) {
+                        if(ItemStack.areEqual(stackInSlot, stack) && stackInSlot.getCount() < stackInSlot.getMaxCount()) {
                             int fit = Math.min(stackInSlot.getMaxCount() - stackInSlot.getCount(), stack.getCount());
                             stackInSlot.increment(fit);
                             stack.decrement(fit);
@@ -424,7 +422,7 @@ public class EntityActions {
                         }
                     }
                     if(entity instanceof PlayerEntity) {
-                        ((PlayerEntity)entity).getInventory().offerOrDrop(stack);
+                        ((PlayerEntity)entity).inventory.offerOrDrop(entity.world, stack);
                     } else {
                         entity.world.spawnEntity(new ItemEntity(entity.world, entity.getX(), entity.getY(), entity.getZ(), stack));
                     }
@@ -462,11 +460,6 @@ public class EntityActions {
                         ((TogglePower)p).onUse();
                     }
                 }
-            }));
-        register(new ActionFactory<>(Apoli.identifier("emit_game_event"), new SerializableData()
-            .add("event", SerializableDataTypes.GAME_EVENT),
-            (data, entity) -> {
-                entity.emitGameEvent((GameEvent)data.get("event"));
             }));
         register(new ActionFactory<>(Apoli.identifier("set_resource"), new SerializableData()
             .add("resource", ApoliDataTypes.POWER_TYPE)

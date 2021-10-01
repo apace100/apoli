@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.ClientAdvancementManagerAccessor;
 import io.github.apace100.apoli.mixin.ClientPlayerInteractionManagerAccessor;
 import io.github.apace100.apoli.mixin.ServerPlayerInteractionManagerAccessor;
@@ -34,13 +33,13 @@ public final class EntityConditionsClient {
                 if(entity instanceof ServerPlayerEntity) {
                     ServerPlayerInteractionManagerAccessor interactionMngr = ((ServerPlayerInteractionManagerAccessor)((ServerPlayerEntity)entity).interactionManager);
                     if(interactionMngr.getMining()) {
-                        return ((PlayerEntity)entity).canHarvest(entity.world.getBlockState(interactionMngr.getMiningPos()));
+                        return ((PlayerEntity)entity).isUsingEffectiveTool(entity.world.getBlockState(interactionMngr.getMiningPos()));
                     }
                 } else
                 if(entity instanceof ClientPlayerEntity) {
                     ClientPlayerInteractionManagerAccessor interactionMngr = (ClientPlayerInteractionManagerAccessor) MinecraftClient.getInstance().interactionManager;
                     if(interactionMngr.getBreakingBlock()) {
-                        return ((PlayerEntity)entity).canHarvest(entity.world.getBlockState(interactionMngr.getCurrentBreakingPos()));
+                        return ((PlayerEntity)entity).isUsingEffectiveTool(entity.world.getBlockState(interactionMngr.getCurrentBreakingPos()));
                     }
                 }
                 return false;

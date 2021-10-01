@@ -4,12 +4,12 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ItemOnItemPower;
 import io.github.apace100.apoli.power.ModifyFoodPower;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.StackReference;
+// import net.minecraft.inventory.StackReference;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.ClickType;
+// import net.minecraft.util.ClickType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
@@ -35,21 +35,21 @@ public class ItemMixin {
         return foodComponent.isAlwaysEdible();
     }
 
-    @Inject(method = "onClicked", at = @At("RETURN"), cancellable = true)
-    private void forgeItem(ItemStack stack, ItemStack otherStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
-        if(cir.getReturnValue()) {
-            return;
-        }
-        if (clickType != ClickType.RIGHT) {
-            return;
-        }
-        List<ItemOnItemPower> powers = PowerHolderComponent.getPowers(player, ItemOnItemPower.class).stream().filter(p -> p.doesApply(otherStack, stack)).collect(Collectors.toList());
-        for (ItemOnItemPower p :
-            powers) {
-            p.execute(otherStack, stack, slot);
-        }
-        if(powers.size() > 0) {
-            cir.setReturnValue(true);
-        }
-    }
+//    @Inject(method = "onClicked", at = @At("RETURN"), cancellable = true)
+//    private void forgeItem(ItemStack stack, ItemStack otherStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
+//        if(cir.getReturnValue()) {
+//            return;
+//        }
+//        if (clickType != ClickType.RIGHT) {
+//            return;
+//        }
+//        List<ItemOnItemPower> powers = PowerHolderComponent.getPowers(player, ItemOnItemPower.class).stream().filter(p -> p.doesApply(otherStack, stack)).collect(Collectors.toList());
+//        for (ItemOnItemPower p :
+//            powers) {
+//            p.execute(otherStack, stack, slot);
+//        }
+//        if(powers.size() > 0) {
+//            cir.setReturnValue(true);
+//        }
+//    }
 }

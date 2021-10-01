@@ -2,7 +2,6 @@
   "required": true,
   "minVersion": "0.8",
   "package": "io.github.apace100.apoli.mixin",
-  "compatibilityLevel": "JAVA_16",
   "mixins": [
     "AbstractBlockMixin",
     "AbstractBlockStateMixin",
@@ -12,6 +11,7 @@
     "CraftingScreenHandlerAccessor",
     "EntityAccessor",
     "EntityMixin",
+    "EntityShapeContextMixin",
     "ExperienceOrbEntityMixin",
     "EyeHeightAccess",
     "HungerManagerMixin",
@@ -25,6 +25,7 @@
     "PlayerScreenHandlerMixin",
     "RecipeManagerAccessor",
     "RecipeManagerMixin",
+    "ScreenHandlerMixin",
     "ServerPlayerEntityMixin",
     "ServerPlayerInteractionManagerAccessor",
     "ServerPlayerInteractionManagerMixin",

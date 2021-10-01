@@ -9,13 +9,13 @@ import io.github.apace100.calio.FilterableWeightedList;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.util.TriConsumer;
 
@@ -86,7 +86,7 @@ public class BiEntityActions {
             .add("z", SerializableDataTypes.FLOAT, 0F)
             .add("set", SerializableDataTypes.BOOLEAN, false),
             (data, entities) -> {
-                Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
+                Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 Vec3d delta = entities.getRight().getPos().subtract(entities.getLeft().getPos()).normalize();
                 TriConsumer<Float, Float, Float> method = entities.getRight()::addVelocity;
                 if(data.getBoolean("set")) {

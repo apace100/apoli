@@ -8,10 +8,10 @@ import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -83,9 +83,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     @Override
     public List<Identifier> getSources(PowerType<?> powerType) {
         if(powerSources.containsKey(powerType)) {
-            return List.copyOf(powerSources.get(powerType));
+            List<Identifier> powerSourceIdentifiers = new ArrayList<>();
+            Collections.copy(powerSources.get(powerType), powerSourceIdentifiers);
+            return powerSourceIdentifiers;
         } else {
-            return List.of();
+            return new ArrayList<>();
         }
     }
 
@@ -157,7 +159,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             this.powers.put(powerType, power);
             power.onGained();
             power.onAdded();
-            if(owner instanceof ServerPlayerEntity spe) {
+            if(owner instanceof ServerPlayerEntity) {
+                ServerPlayerEntity spe = (ServerPlayerEntity) owner;
                 GainedPowerCriterion.INSTANCE.trigger(spe, powerType);
             }
             return true;
@@ -170,11 +173,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void readFromNbt(NbtCompound compoundTag) {
+    public void readFromNbt(CompoundTag compoundTag) {
         this.fromTag(compoundTag, true);
     }
 
-    private void fromTag(NbtCompound compoundTag, boolean callPowerOnAdd) {
+    private void fromTag(CompoundTag compoundTag, boolean callPowerOnAdd) {
         try {
             if (owner == null) {
                 Apoli.LOGGER.error("Owner was null in PowerHolderComponent#fromTag!");
@@ -186,12 +189,12 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 }
             }
             powers.clear();
-            NbtList powerList = (NbtList) compoundTag.get("Powers");
+            ListTag powerList = (ListTag) compoundTag.get("Powers");
             if(powerList != null) {
                 for (int i = 0; i < powerList.size(); i++) {
-                    NbtCompound powerTag = powerList.getCompound(i);
+                    CompoundTag powerTag = powerList.getCompound(i);
                     Identifier powerTypeId = Identifier.tryParse(powerTag.getString("Type"));
-                    NbtList sources = (NbtList) powerTag.get("Sources");
+                    ListTag sources = (ListTag) powerTag.get("Sources");
                     List<Identifier> list = new LinkedList<>();
                     if(sources != null) {
                         sources.forEach(nbtElement -> list.add(Identifier.tryParse(nbtElement.asString())));
@@ -199,7 +202,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                     PowerType<?> type = PowerTypeRegistry.get(powerTypeId);
                     powerSources.put(type, list);
                     try {
-                        NbtElement data = powerTag.get("Data");
+                        Tag data = powerTag.get("Data");
                         Power power = type.create(owner);
                         try {
                             power.fromTag(data);
@@ -242,14 +245,14 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void writeToNbt(NbtCompound compoundTag) {
-        NbtList powerList = new NbtList();
+    public void writeToNbt(CompoundTag compoundTag) {
+        ListTag powerList = new ListTag();
         for(Map.Entry<PowerType<?>, Power> powerEntry : powers.entrySet()) {
-            NbtCompound powerTag = new NbtCompound();
+            CompoundTag powerTag = new CompoundTag();
             powerTag.putString("Type", PowerTypeRegistry.getId(powerEntry.getKey()).toString());
             powerTag.put("Data", powerEntry.getValue().toTag());
-            NbtList sources = new NbtList();
-            powerSources.get(powerEntry.getKey()).forEach(id -> sources.add(NbtString.of(id.toString())));
+            ListTag sources = new ListTag();
+            powerSources.get(powerEntry.getKey()).forEach(id -> sources.add(StringTag.of(id.toString())));
             powerTag.put("Sources", sources);
             powerList.add(powerTag);
         }
@@ -258,7 +261,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void applySyncPacket(PacketByteBuf buf) {
-        NbtCompound compoundTag = buf.readNbt();
+        CompoundTag compoundTag = buf.readCompoundTag();
         if(compoundTag != null) {
             this.fromTag(compoundTag, false);
         }

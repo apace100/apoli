@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.power;
 
-import io.github.apace100.apoli.Apoli;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -48,7 +47,7 @@ public class StartingEquipmentPower extends Power {
         slottedStacks.forEach((slot, stack) -> {
             if(entity instanceof PlayerEntity) {
                 PlayerEntity player = (PlayerEntity)entity;
-                PlayerInventory inventory = player.getInventory();
+                PlayerInventory inventory = player.inventory;
                 if(inventory.getStack(slot).isEmpty()) {
                     inventory.setStack(slot, stack);
                 } else {

@@ -5,8 +5,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.screen.Generic3x3ContainerScreenHandler;
 import net.minecraft.screen.ScreenHandlerFactory;
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
@@ -48,15 +48,15 @@ public class InventoryPower extends Power implements Active, Inventory {
     }
 
     @Override
-    public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-        Inventories.writeNbt(tag, inventory);
+    public Tag toTag() {
+        CompoundTag tag = new CompoundTag();
+        Inventories.toTag(tag, inventory);
         return tag;
     }
 
     @Override
-    public void fromTag(NbtElement tag) {
-        Inventories.readNbt((NbtCompound)tag, inventory);
+    public void fromTag(Tag tag) {
+        Inventories.fromTag((CompoundTag) tag, inventory);
     }
 
     @Override

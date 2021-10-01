@@ -4,7 +4,6 @@ import io.github.apace100.apoli.Apoli;
 import net.minecraft.entity.Dismounting;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
@@ -48,11 +47,11 @@ public class ModifyPlayerSpawnPower extends Power {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) entity;
             Pair<ServerWorld, BlockPos> spawn = getSpawn(false);
             if(spawn != null) {
-                Vec3d tpPos = Dismounting.findRespawnPos(EntityType.PLAYER, spawn.getLeft(), spawn.getRight(), true);
+                Vec3d tpPos = Dismounting.method_30769(EntityType.PLAYER, spawn.getLeft(), spawn.getRight(), true);
                 if(tpPos != null) {
-                    serverPlayer.teleport(spawn.getLeft(), tpPos.x, tpPos.y, tpPos.z, entity.getPitch(), entity.getYaw());
+                    serverPlayer.teleport(spawn.getLeft(), tpPos.x, tpPos.y, tpPos.z, entity.pitch, entity.yaw);
                 } else {
-                    serverPlayer.teleport(spawn.getLeft(), spawn.getRight().getX(), spawn.getRight().getY(), spawn.getRight().getZ(), entity.getPitch(), entity.getYaw());
+                    serverPlayer.teleport(spawn.getLeft(), spawn.getRight().getX(), spawn.getRight().getY(), spawn.getRight().getZ(), entity.pitch, entity.yaw);
                     Apoli.LOGGER.warn("Could not spawn player with `ModifySpawnPower` at the desired location.");
                 }
             }
@@ -75,8 +74,8 @@ public class ModifyPlayerSpawnPower extends Power {
             ServerWorld world = serverPlayer.getServerWorld().getServer().getWorld(dimension);
             BlockPos regularSpawn = serverPlayer.getServerWorld().getServer().getWorld(World.OVERWORLD).getSpawnPos();
             BlockPos spawnToDimPos;
-            int iterations = (world.getLogicalHeight() / 2) - 8;
-            int center = world.getLogicalHeight() / 2;
+            int iterations = (world.getDimensionHeight() / 2) - 8;
+            int center = world.getDimensionHeight() / 2;
             BlockPos.Mutable mutable;
             Vec3d tpPos;
             int range = 64;
@@ -128,7 +127,7 @@ public class ModifyPlayerSpawnPower extends Power {
                 }
                 structureChunkPos = new ChunkPos(structurePos.getX() >> 4, structurePos.getZ() >> 4);
                 StructureStart structureStart = world.getStructureAccessor().getStructureStart(ChunkSectionPos.from(structureChunkPos, 0), structure, world.getChunk(structurePos));
-                BlockPos structureCenter = new BlockPos(structureStart.setBoundingBoxFromChildren().getCenter());
+                BlockPos structureCenter = new BlockPos(structureStart.getBoundingBox().getCenter());
                 tpPos = getValidSpawn(structureCenter, range, world);
             }
 
@@ -177,7 +176,7 @@ public class ModifyPlayerSpawnPower extends Power {
         int i = 0;
         // Decrease y check
         int d = 0;
-        while(i < world.getLogicalHeight() || d > 0) {
+        while(i < world.getDimensionHeight() || d > 0) {
             for (int coordinateCount = 0; coordinateCount < range; ++coordinateCount) {
                 // make a step, add 'direction' vector (di, dj) to current position (i, j)
                 x += dx;
@@ -185,12 +184,12 @@ public class ModifyPlayerSpawnPower extends Power {
                 ++segmentPassed;mutable.setX(x);
                 mutable.setZ(z);
                 mutable.setY(center + i);
-                tpPos = Dismounting.findRespawnPos(EntityType.PLAYER, world, mutable, true);
+                tpPos = Dismounting.method_30769(EntityType.PLAYER, world, mutable, true);
                 if (tpPos != null) {
                     return(tpPos);
                 } else {
                     mutable.setY(center + d);
-                    tpPos = Dismounting.findRespawnPos(EntityType.PLAYER, world, mutable, true);
+                    tpPos = Dismounting.method_30769(EntityType.PLAYER, world, mutable, true);
                     if (tpPos != null) {
                         return(tpPos);
                     }
@@ -217,4 +216,3 @@ public class ModifyPlayerSpawnPower extends Power {
         return(null);
     }
 }
-

@@ -2,8 +2,8 @@ package io.github.apace100.apoli.power;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtInt;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.Tag;
 
 public class StackingStatusEffectPower extends StatusEffectPower {
 
@@ -54,12 +54,12 @@ public class StackingStatusEffectPower extends StatusEffectPower {
     }
 
     @Override
-    public NbtElement toTag() {
-        return NbtInt.of(currentStack);
+    public Tag toTag() {
+        return IntTag.of(currentStack);
     }
 
     @Override
-    public void fromTag(NbtElement tag) {
-        currentStack = ((NbtInt)tag).intValue();
+    public void fromTag(Tag tag) {
+        currentStack = ((IntTag)tag).getInt();
     }
 }

@@ -64,7 +64,7 @@ public class ItemOnItemPower extends Power {
             if(slot.getStack().isEmpty()) {
                 slot.setStack(stack);
             } else {
-                player.getInventory().offerOrDrop(stack);
+                player.inventory.offerOrDrop(player.world, stack);
             }
         }
         if(entityAction != null) {

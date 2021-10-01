@@ -20,7 +20,6 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -30,7 +29,7 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -152,7 +151,7 @@ public class ApoliDataTypes {
         (data) ->  {
             ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
             if(data.isPresent("tag")) {
-                stack.setNbt((NbtCompound) data.get("tag"));
+                stack.setTag((CompoundTag) data.get("tag"));
             }
             return new Pair<>(data.getInt("slot"), stack);
         },
@@ -160,7 +159,7 @@ public class ApoliDataTypes {
             SerializableData.Instance data = serializableData.new Instance();
             data.set("item", positionedStack.getRight().getItem());
             data.set("amount", positionedStack.getRight().getCount());
-            data.set("tag", positionedStack.getRight().hasNbt() ? positionedStack.getRight().getNbt() : null);
+            data.set("tag", positionedStack.getRight().hasTag() ? positionedStack.getRight().getTag() : null);
             data.set("slot", positionedStack.getLeft());
             return data;
         }));

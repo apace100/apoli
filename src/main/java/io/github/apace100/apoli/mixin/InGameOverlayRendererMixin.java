@@ -18,8 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class InGameOverlayRendererMixin {
 
     @Inject(method = "renderInWallOverlay", at = @At("HEAD"), cancellable = true)
-    private static void preventInWallOverlayRendering(Sprite sprite, MatrixStack matrixStack, CallbackInfo ci) {
-        MinecraftClient minecraftClient = MinecraftClient.getInstance();
+    private static void preventInWallOverlayRendering(MinecraftClient minecraftClient, Sprite sprite, MatrixStack matrixStack, CallbackInfo ci) {
         if(minecraftClient.cameraEntity != null) {
             if(PowerHolderComponent.getPowers(minecraftClient.cameraEntity, PhasingPower.class).size() > 0) {
                 ci.cancel();

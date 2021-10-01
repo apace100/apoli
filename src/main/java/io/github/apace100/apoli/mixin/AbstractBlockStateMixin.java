@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.access.EntityShapeContextAccess;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PhasingPower;
 import io.github.apace100.apoli.power.PreventBlockSelectionPower;
@@ -36,8 +37,8 @@ public abstract class AbstractBlockStateMixin {
     @Inject(method = "getOutlineShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("HEAD"), cancellable = true)
     private void preventBlockSelection(BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> cir) {
         if(context instanceof EntityShapeContext) {
-            if(((EntityShapeContext)context).getEntity().isPresent()) {
-                Entity entity = ((EntityShapeContext)context).getEntity().get();
+            if(((EntityShapeContextAccess)context).getEntity() != null) {
+                Entity entity = ((EntityShapeContextAccess)context).getEntity();
                 if(PowerHolderComponent.getPowers(entity, PreventBlockSelectionPower.class).stream().anyMatch(p -> p.doesPrevent(entity.world, pos))) {
                     cir.setReturnValue(VoxelShapes.empty());
                 }
@@ -49,9 +50,9 @@ public abstract class AbstractBlockStateMixin {
     private void phaseThroughBlocks(BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> info) {
         VoxelShape blockShape = getBlock().getCollisionShape(asBlockState(), world, pos, context);
         if(!blockShape.isEmpty() && context instanceof EntityShapeContext) {
-            EntityShapeContext esc = (EntityShapeContext)context;
-            if(esc.getEntity().isPresent()) {
-                Entity entity = esc.getEntity().get();
+            EntityShapeContextAccess esc = (EntityShapeContextAccess)context;
+            if(esc.getEntity() != null) {
+                Entity entity = esc.getEntity();
                 boolean isAbove = isAbove(entity, blockShape, pos, false);
                 for (PhasingPower phasingPower : PowerHolderComponent.getPowers(entity, PhasingPower.class)) {
                     if(!isAbove || phasingPower.shouldPhaseDown(entity)) {

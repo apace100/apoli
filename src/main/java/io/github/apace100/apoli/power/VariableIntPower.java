@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.power;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtInt;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.Tag;
 
 public class VariableIntPower extends Power {
 
@@ -49,12 +49,12 @@ public class VariableIntPower extends Power {
     }
 
     @Override
-    public NbtElement toTag() {
-        return NbtInt.of(currentValue);
+    public Tag toTag() {
+        return IntTag.of(currentValue);
     }
 
     @Override
-    public void fromTag(NbtElement tag) {
-        currentValue = ((NbtInt)tag).intValue();
+    public void fromTag(Tag tag) {
+        currentValue = ((IntTag)tag).getInt();
     }
 }

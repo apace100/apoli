@@ -2,7 +2,6 @@ package io.github.apace100.apoli;
 
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
-import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.command.PowerTypeArgumentType;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.PowerOperation;
@@ -21,6 +20,7 @@ import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
+import nerdhub.cardinal.components.api.util.RespawnCopyStrategy;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;

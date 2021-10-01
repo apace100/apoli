@@ -2,8 +2,8 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.NbtByte;
-import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.ByteTag;
+import net.minecraft.nbt.Tag;
 
 public class TogglePower extends Power implements Active {
 
@@ -29,13 +29,13 @@ public class TogglePower extends Power implements Active {
     }
 
     @Override
-    public NbtElement toTag() {
-        return NbtByte.of(isActive);
+    public Tag toTag() {
+        return ByteTag.of(isActive);
     }
 
     @Override
-    public void fromTag(NbtElement tag) {
-        isActive = ((NbtByte)tag).byteValue() > 0;
+    public void fromTag(Tag tag) {
+        isActive = ((ByteTag)tag).getByte() > 0;
     }
 
     private Key key;

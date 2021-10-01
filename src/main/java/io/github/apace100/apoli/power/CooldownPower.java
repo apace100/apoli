@@ -3,8 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.util.HudRender;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtLong;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.LongTag;
 
 public class CooldownPower extends Power implements HudRendered {
 
@@ -51,13 +51,13 @@ public class CooldownPower extends Power implements HudRendered {
     }
 
     @Override
-    public NbtElement toTag() {
-        return NbtLong.of(lastUseTime);
+    public Tag toTag() {
+        return LongTag.of(lastUseTime);
     }
 
     @Override
-    public void fromTag(NbtElement tag) {
-        lastUseTime = ((NbtLong)tag).longValue();
+    public void fromTag(Tag tag) {
+        lastUseTime = ((LongTag)tag).getLong();
     }
 
     @Override

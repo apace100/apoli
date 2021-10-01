@@ -239,7 +239,7 @@ public class EntityConditions {
             }));
         register(new ConditionFactory<>(Apoli.identifier("dimension"), new SerializableData()
             .add("dimension", SerializableDataTypes.IDENTIFIER),
-            (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.WORLD_KEY, data.getId("dimension"))));
+            (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.DIMENSION, data.getId("dimension"))));
         register(new ConditionFactory<>(Apoli.identifier("xp_levels"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),

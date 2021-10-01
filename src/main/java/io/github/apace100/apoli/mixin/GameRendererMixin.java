@@ -11,7 +11,6 @@ import net.minecraft.block.FluidBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderEffect;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -61,7 +60,7 @@ public abstract class GameRendererMixin {
     private ShaderEffect shader;
     @Shadow
     private boolean shadersEnabled;
-    @Shadow @Final private ResourceManager resourceManager;
+    @Shadow @Final private ResourceManager resourceContainer;
     @Unique
     private Identifier currentlyLoadedShader;
 
@@ -69,7 +68,7 @@ public abstract class GameRendererMixin {
     private void loadShaderFromPowerOnCameraEntity(Entity entity, CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
-            if(this.resourceManager.containsResource(shaderLoc)) {
+            if(this.resourceContainer.containsResource(shaderLoc)) {
                 loadShader(shaderLoc);
                 currentlyLoadedShader = shaderLoc;
             }
@@ -81,7 +80,7 @@ public abstract class GameRendererMixin {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
             if(currentlyLoadedShader != shaderLoc) {
-                if(this.resourceManager.containsResource(shaderLoc)) {
+                if(this.resourceContainer.containsResource(shaderLoc)) {
                     loadShader(shaderLoc);
                     currentlyLoadedShader = shaderLoc;
                 }
@@ -157,19 +156,6 @@ public abstract class GameRendererMixin {
             Optional<Float> strength = nvs.stream().filter(NightVisionPower::isActive).map(NightVisionPower::getStrength).max(Float::compareTo);
             strength.ifPresent(info::setReturnValue);
         }
-    }
-
-    @Redirect(method = "getFov", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getSubmersionType()Lnet/minecraft/client/render/CameraSubmersionType;"))
-    private CameraSubmersionType modifySubmersionType(Camera camera) {
-        CameraSubmersionType original = camera.getSubmersionType();
-        if(camera.getFocusedEntity() instanceof LivingEntity) {
-            for(ModifyCameraSubmersionTypePower p : PowerHolderComponent.getPowers(camera.getFocusedEntity(), ModifyCameraSubmersionTypePower.class)) {
-                if(p.doesModify(original)) {
-                    return p.getNewType();
-                }
-            }
-        }
-        return original;
     }
 
     private HashMap<BlockPos, BlockState> savedStates = new HashMap<>();
