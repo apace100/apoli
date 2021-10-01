@@ -6,6 +6,7 @@ import dev.onyxstudios.cca.api.v3.component.ComponentRegistry;
 import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import dev.onyxstudios.cca.api.v3.component.tick.ServerTickingComponent;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.integration.ModifyValueCallback;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.ValueModifyingPower;
@@ -13,7 +14,6 @@ import io.github.apace100.apoli.util.AttributeUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
@@ -103,6 +103,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             if(powerAction != null) {
                 powers.stream().filter(p -> powerFilter == null || powerFilter.test(p)).forEach(powerAction);
             }
+            ModifyValueCallback.EVENT.invoker().collectModifiers(powerClass, baseValue, mps);
             return AttributeUtil.sortAndApplyModifiers(mps, baseValue);
         }
         return baseValue;

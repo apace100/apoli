@@ -1257,6 +1257,20 @@ public class PowerFactories {
                     (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action")))
             .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("modify_air_speed"),
+            new SerializableData()
+                .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
+                .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null),
+            data ->
+                (type, player) -> {
+                    ModifyAirSpeedPower power = new ModifyAirSpeedPower(type, player);
+                    data.ifPresent("modifier", power::addModifier);
+                    data.<List<EntityAttributeModifier>>ifPresent("modifiers",
+                        mods -> mods.forEach(power::addModifier)
+                    );
+                    return power;
+                })
+            .allowCondition());
     }
 
     private static void register(PowerFactory serializer) {

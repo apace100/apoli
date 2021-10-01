@@ -533,6 +533,9 @@ public class EntityConditions {
                 return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
             }));
         register(new ConditionFactory<>(Apoli.identifier("exists"), new SerializableData(), (data, entity) -> entity != null));
+        register(new ConditionFactory<>(Apoli.identifier("creative_flying"), new SerializableData(),
+            (data, entity) -> entity instanceof PlayerEntity && ((PlayerEntity)entity).getAbilities().flying));
+
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

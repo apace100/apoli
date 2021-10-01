@@ -278,4 +278,12 @@ public abstract class LivingEntityMixin extends Entity {
             cir.setReturnValue(true);
         }
     }
+
+    @Shadow public float flyingSpeed;
+
+    @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
+    private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){
+        if (!onGround)
+            cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, flyingSpeed));
+    }
 }
