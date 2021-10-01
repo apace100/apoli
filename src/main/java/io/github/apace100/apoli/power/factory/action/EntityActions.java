@@ -7,6 +7,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Scheduler;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.ClassUtil;
@@ -335,19 +336,30 @@ public class EntityActions {
             }));
         register(new ActionFactory<>(Apoli.identifier("change_resource"), new SerializableData()
             .add("resource", ApoliDataTypes.POWER_TYPE)
-            .add("change", SerializableDataTypes.INT),
+            .add("change", SerializableDataTypes.INT)
+            .add("operation", ApoliDataTypes.RESOURCE_OPERATION, ResourceOperation.ADD),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
                     Power p = component.getPower((PowerType<?>)data.get("resource"));
+                    ResourceOperation operation = (ResourceOperation) data.get("operation");
+                    int change = data.getInt("change");
                     if(p instanceof VariableIntPower) {
                         VariableIntPower vip = (VariableIntPower)p;
-                        int newValue = vip.getValue() + data.getInt("change");
-                        vip.setValue(newValue);
+                        if (operation == ResourceOperation.ADD) {
+                            int newValue = vip.getValue() + change;
+                            vip.setValue(newValue);
+                        } else if (operation == ResourceOperation.SET) {
+                            vip.setValue(change);
+                        }
                         PowerHolderComponent.sync(entity);
                     } else if(p instanceof CooldownPower) {
                         CooldownPower cp = (CooldownPower)p;
-                        cp.modify(data.getInt("change"));
+                        if (operation == ResourceOperation.ADD) {
+                            cp.modify(change);
+                        } else if (operation == ResourceOperation.SET) {
+                            cp.setCooldown(change);
+                        }
                         PowerHolderComponent.sync(entity);
                     }
                 }
