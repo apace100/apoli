@@ -6,7 +6,6 @@ import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -117,6 +116,10 @@ public class ItemConditions {
             }));
         register(new ConditionFactory<>(Apoli.identifier("empty"), new SerializableData(),
             (data, stack) -> stack.isEmpty()));
+        register(new ConditionFactory<>(Apoli.identifier("amount"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.INT),
+            (data, stack) -> ((Comparison)data.get("comparison")).compare(stack.getCount(), data.getInt("compare_to"))));
     }
 
     private static void register(ConditionFactory<ItemStack> conditionFactory) {
