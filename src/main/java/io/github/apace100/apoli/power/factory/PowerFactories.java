@@ -20,6 +20,7 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.*;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
@@ -1270,6 +1271,17 @@ public class PowerFactories {
                     );
                     return power;
                 })
+            .allowCondition());
+        register(new PowerFactory<>(Apoli.identifier("attribute_modify_transfer"),
+            new SerializableData()
+                .add("class", SerializableDataTypes.CLASS)
+                .add("attribute", SerializableDataTypes.ATTRIBUTE)
+                .add("multiplier", SerializableDataTypes.DOUBLE, 1.0),
+            data ->
+                (type, player) -> new AttributeModifyTransferPower(type, player,
+                    (Class<?>)data.get("class"),
+                    (EntityAttribute)data.get("attribute"),
+                    data.getDouble("multiplier")))
             .allowCondition());
     }
 
