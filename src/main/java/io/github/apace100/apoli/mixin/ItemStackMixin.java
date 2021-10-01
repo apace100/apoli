@@ -1,16 +1,17 @@
 package io.github.apace100.apoli.mixin;
 
+import com.google.common.collect.EnumHashBiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ActionOnItemUsePower;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
-import io.github.apace100.apoli.power.PreventItemUsePower;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -58,6 +59,7 @@ public class ItemStackMixin {
                 });
             }
         }
+        PowerHolderComponent.withPower(player, TooltipPower.class, ttp -> ttp.doesApply((ItemStack) (Object)this), t -> t.addToTooltip(list));
     }
 
     @Inject(at = @At("HEAD"), method = "use", cancellable = true)

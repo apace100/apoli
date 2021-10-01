@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.power;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -16,7 +17,7 @@ public class Power {
     private boolean shouldTick = false;
     private boolean shouldTickWhenInactive = false;
 
-    private List<Predicate<LivingEntity>> conditions;
+    private List<Predicate<Entity>> conditions;
 
     public Power(PowerType<?> type, LivingEntity entity) {
         this.type = type;
@@ -24,7 +25,7 @@ public class Power {
         this.conditions = new LinkedList<>();
     }
 
-    public Power addCondition(Predicate<LivingEntity> condition) {
+    public Power addCondition(Predicate<Entity> condition) {
         this.conditions.add(condition);
         return this;
     }

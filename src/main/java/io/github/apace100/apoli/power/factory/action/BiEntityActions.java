@@ -59,6 +59,8 @@ public class BiEntityActions {
             (data, entities) -> {
                 ((ActionFactory<Entity>.Instance)data.get("action")).accept(entities.getRight());
             }));
+        register(new ActionFactory<>(Apoli.identifier("nothing"), new SerializableData(),
+            (data, entities) -> {}));
 
         register(new ActionFactory<>(Apoli.identifier("mount"), new SerializableData(),
             (data, entities) -> {

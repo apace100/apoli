@@ -29,6 +29,9 @@
     ],
     "cardinal-components-entity": [
       "io.github.apace100.apoli.Apoli"
+    ],
+    "modmenu": [
+      "io.github.apace100.apoli.integration.ModMenuIntegration"
     ]
   },
   "mixins": [
@@ -37,7 +40,10 @@
   "custom": {
     "cardinal-components": [
       "apoli:powers"
-    ]
+    ],
+    "modmenu": {
+      "badges": ["library"]
+    }
   },
 
   "depends": {
@@ -45,6 +51,6 @@
     "fabricloader": ">=0.11.3",
     "fabric": "*",
     "minecraft": "1.17.x",
-    "calio": "1.x.x"
+    "calio": ">=1.0.3"
   }
 }

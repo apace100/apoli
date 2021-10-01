@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.ApoliServer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
@@ -13,18 +14,23 @@ import io.github.apace100.calio.FilterableWeightedList;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -34,14 +40,20 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
+import net.minecraft.world.explosion.Explosion;
+import net.minecraft.world.explosion.ExplosionBehavior;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class EntityActions {
 
@@ -111,6 +123,8 @@ public class EntityActions {
                 ActionFactory<Entity>.Instance action = (ActionFactory<Entity>.Instance)data.get("action");
                 scheduler.queue(s -> action.accept(entity), data.getInt("ticks"));
             }));
+        register(new ActionFactory<>(Apoli.identifier("nothing"), new SerializableData(),
+            (data, entity) -> {}));
 
 
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
@@ -301,17 +315,17 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("extinguish"), new SerializableData(),
             (data, entity) -> entity.extinguish()));
         register(new ActionFactory<>(Apoli.identifier("execute_command"), new SerializableData()
-            .add("command", SerializableDataTypes.STRING)
-            .add("permission_level", SerializableDataTypes.INT, 4),
+            .add("command", SerializableDataTypes.STRING),
             (data, entity) -> {
                 MinecraftServer server = entity.world.getServer();
                 if(server != null) {
+                    boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
                     ServerCommandSource source = new ServerCommandSource(
-                        CommandOutput.DUMMY,
+                        Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
                         entity.getPos(),
                         entity.getRotationClient(),
                         entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
-                        data.getInt("permission_level"),
+                        Apoli.config.executeCommand.permissionLevel,
                         entity.getName().getString(),
                         entity.getDisplayName(),
                         entity.world.getServer(),
@@ -441,6 +455,141 @@ public class EntityActions {
             .add("event", SerializableDataTypes.GAME_EVENT),
             (data, entity) -> {
                 entity.emitGameEvent((GameEvent)data.get("event"));
+            }));
+        register(new ActionFactory<>(Apoli.identifier("set_resource"), new SerializableData()
+            .add("resource", ApoliDataTypes.POWER_TYPE)
+            .add("value", SerializableDataTypes.INT),
+            (data, entity) -> {
+                if(entity instanceof LivingEntity) {
+                    PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
+                    Power p = component.getPower((PowerType<?>)data.get("resource"));
+                    int value = data.getInt("value");
+                    if(p instanceof VariableIntPower) {
+                        VariableIntPower vip = (VariableIntPower)p;
+                        vip.setValue(value);
+                        PowerHolderComponent.sync(entity);
+                    } else if(p instanceof CooldownPower) {
+                        CooldownPower cp = (CooldownPower)p;
+                        cp.setCooldown(value);
+                        PowerHolderComponent.sync(entity);
+                    }
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("grant_power"), new SerializableData()
+            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("source", SerializableDataTypes.IDENTIFIER),
+            (data, entity) -> {
+                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
+                    component.addPower((PowerType<?>)data.get("power"), data.getId("source"));
+                });
+            }));
+        register(new ActionFactory<>(Apoli.identifier("revoke_power"), new SerializableData()
+            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("source", SerializableDataTypes.IDENTIFIER),
+            (data, entity) -> {
+                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
+                    component.removePower((PowerType<?>)data.get("power"), data.getId("source"));
+                });
+            }));
+        register(new ActionFactory<>(Apoli.identifier("explode"), new SerializableData()
+            .add("power", SerializableDataTypes.FLOAT)
+            .add("destruction_type", SerializableDataType.enumValue(Explosion.DestructionType.class), Explosion.DestructionType.BREAK)
+            .add("damage_self", SerializableDataTypes.BOOLEAN, true)
+            .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
+            .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)
+            .add("create_fire", SerializableDataTypes.BOOLEAN, false),
+            (data, entity) -> {
+                if(entity.world.isClient) {
+                    return;
+                }
+                if(data.isPresent("indestructible")) {
+                    Predicate<CachedBlockPosition> blockCondition = (Predicate<CachedBlockPosition>)data.get("indestructible");
+                    ExplosionBehavior eb = new ExplosionBehavior() {
+                        @Override
+                        public Optional<Float> getBlastResistance(Explosion explosion, BlockView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
+                            Optional<Float> def = super.getBlastResistance(explosion, world, pos, blockState, fluidState);
+                            Optional<Float> ovr = blockCondition.test(
+                                new CachedBlockPosition(entity.world, pos, true)) ?
+                                Optional.of(Blocks.WATER.getBlastResistance()) : Optional.empty();
+                            return ovr.isPresent() ? def.isPresent() ? def.get() > ovr.get() ? def : ovr : ovr : def;
+                        }
+                    };
+                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
+                        entity instanceof LivingEntity ?
+                            DamageSource.explosion((LivingEntity)entity) :
+                            DamageSource.explosion((LivingEntity) null),
+                        eb, entity.getX(), entity.getY(), entity.getZ(),
+                        data.getFloat("power"), data.getBoolean("create_fire"),
+                        (Explosion.DestructionType) data.get("destruction_type"));
+                } else {
+                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
+                        entity.getX(), entity.getY(), entity.getZ(),
+                        data.getFloat("power"), data.getBoolean("create_fire"),
+                        (Explosion.DestructionType) data.get("destruction_type"));
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("dismount"), new SerializableData(),
+            (data, entity) -> entity.stopRiding()));
+        register(new ActionFactory<>(Apoli.identifier("passenger_action"), new SerializableData()
+            .add("action", ApoliDataTypes.ENTITY_ACTION, null)
+            .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null)
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+            .add("recursive", SerializableDataTypes.BOOLEAN, false),
+            (data, entity) -> {
+                Consumer<Entity> entityAction = (Consumer<Entity>) data.get("action");
+                Consumer<Pair<Entity, Entity>> bientityAction = (Consumer<Pair<Entity, Entity>>) data.get("bientity_action");
+                Predicate<Pair<Entity, Entity>> cond = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                if(!entity.hasPassengers() || (entityAction == null && bientityAction == null)) {
+                    return;
+                }
+                Iterable<Entity> passengers = data.getBoolean("recursive") ? entity.getPassengersDeep() : entity.getPassengerList();
+                for(Entity passenger : passengers) {
+                    if(cond == null || cond.test(new Pair<>(passenger, entity))) {
+                        if (entityAction != null) {
+                            entityAction.accept(passenger);
+                        }
+                        if (bientityAction != null) {
+                            bientityAction.accept(new Pair<>(passenger, entity));
+                        }
+                    }
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("riding_action"), new SerializableData()
+            .add("action", ApoliDataTypes.ENTITY_ACTION, null)
+            .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null)
+            .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
+            .add("recursive", SerializableDataTypes.BOOLEAN, false),
+            (data, entity) -> {
+                Consumer<Entity> entityAction = (Consumer<Entity>) data.get("action");
+                Consumer<Pair<Entity, Entity>> bientityAction = (Consumer<Pair<Entity, Entity>>) data.get("bientity_action");
+                Predicate<Pair<Entity, Entity>> cond = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                if(!entity.hasVehicle() || (entityAction == null && bientityAction == null)) {
+                    return;
+                }
+                if(data.getBoolean("recursive")) {
+                    Entity vehicle = entity.getVehicle();
+                    while(vehicle != null) {
+                        if(cond == null || cond.test(new Pair<>(entity, vehicle))) {
+                            if(entityAction != null) {
+                                entityAction.accept(vehicle);
+                            }
+                            if(bientityAction != null) {
+                                bientityAction.accept(new Pair<>(entity, vehicle));
+                            }
+                        }
+                        vehicle = vehicle.getVehicle();
+                    }
+                } else {
+                    Entity vehicle = entity.getVehicle();
+                    if(cond == null || cond.test(new Pair<>(entity, vehicle))) {
+                        if(entityAction != null) {
+                            entityAction.accept(vehicle);
+                        }
+                        if(bientityAction != null) {
+                            bientityAction.accept(new Pair<>(entity, vehicle));
+                        }
+                    }
+                }
             }));
     }
 

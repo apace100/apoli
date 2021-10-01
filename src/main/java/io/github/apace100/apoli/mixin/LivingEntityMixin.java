@@ -9,7 +9,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
@@ -17,7 +16,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -62,6 +60,7 @@ public abstract class LivingEntityMixin extends Entity {
                     powerHolder.removePower(PowerTypeRegistry.get(sp.powerId), source);
                 }
             });
+            powerHolder.sync();
         }
     }
 
@@ -90,13 +89,32 @@ public abstract class LivingEntityMixin extends Entity {
         }
     }
 
+    @ModifyVariable(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvulnerableTo(Lnet/minecraft/entity/damage/DamageSource;)Z"), ordinal = 0)
+    private float modifyDamageTaken(float originalValue, DamageSource source) {
+        return PowerHolderComponent.modify(this, ModifyDamageTakenPower.class,
+            originalValue, p -> p.doesApply(source, originalValue), p -> p.executeActions(source.getAttacker()));
+    }
+
+    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"), cancellable = true)
+    private void preventHitIfDamageIsZero(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if(amount == 0.0F) {
+            cir.setReturnValue(false);
+        }
+    }
+
     @Inject(method = "damage", at = @At("RETURN"))
     private void invokeHitActions(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if(cir.getReturnValue()) {
+            Entity attacker = source.getAttacker();
+            if(attacker != null) {
+                PowerHolderComponent.withPower(this, ActionWhenHitPower.class, p -> true, p -> p.whenHit(attacker, source, amount));
+                PowerHolderComponent.withPower(attacker, ActionOnHitPower.class, p -> true, p -> p.onHit(this, source, amount));
+            }
             PowerHolderComponent.getPowers(this, SelfActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
             PowerHolderComponent.getPowers(this, AttackerActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
             PowerHolderComponent.getPowers(source.getAttacker(), SelfActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
             PowerHolderComponent.getPowers(source.getAttacker(), TargetActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
+
         }
     }
 
@@ -259,5 +277,13 @@ public abstract class LivingEntityMixin extends Entity {
             preventDeathPower.get().executeAction();
             cir.setReturnValue(true);
         }
+    }
+
+    @Shadow public float flyingSpeed;
+
+    @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
+    private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){
+        if (!onGround)
+            cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, flyingSpeed));
     }
 }

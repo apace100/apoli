@@ -3,6 +3,7 @@ package io.github.apace100.apoli.mixin;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.OverrideHudTexturePower;
 import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.OverlayPower;
 import io.github.apace100.apoli.screen.GameHudRender;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -26,8 +27,23 @@ public class InGameHudMixin {
 
     @Shadow @Final private MinecraftClient client;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;getCurrentGameMode()Lnet/minecraft/world/GameMode;"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;getCurrentGameMode()Lnet/minecraft/world/GameMode;", ordinal = 0))
     private void renderOnHud(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+        boolean hudHidden = client.options.hudHidden;
+        boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
+        PowerHolderComponent.withPower(client.getCameraEntity(), OverlayPower.class, p -> {
+            if(p.getDrawPhase() != OverlayPower.DrawPhase.BELOW_HUD) {
+                return false;
+            }
+            if(hudHidden && p.doesHideWithHud()) {
+                return false;
+            }
+            if(thirdPerson && !p.shouldBeVisibleInThirdPerson()) {
+                return false;
+            }
+            return true;
+        }, OverlayPower::render);
+
         for(GameHudRender hudRender : GameHudRender.HUD_RENDERS) {
             hudRender.render(matrices, tickDelta);
         }
@@ -39,7 +55,7 @@ public class InGameHudMixin {
             index = 1
     )
     public Identifier changeStatusBarTextures(Identifier original) {
-        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().filter(Power::isActive).findFirst();
+        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
         if (power.isPresent()) {
             return power.get().getStatusBarTexture();
         }

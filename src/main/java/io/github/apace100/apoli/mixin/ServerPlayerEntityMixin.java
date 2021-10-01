@@ -62,11 +62,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
         super(world, pos, yaw, profile);
     }
 
-    @ModifyArg(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;damage(Lnet/minecraft/entity/damage/DamageSource;F)Z"))
-    private float modifyDamageAmount(DamageSource source, float originalAmount) {
-        return PowerHolderComponent.modify(this, ModifyDamageTakenPower.class, originalAmount, p -> p.doesApply(source, originalAmount), p -> p.executeActions(source.getAttacker()));
-    }
-
     // FRESH_AIR
     @Inject(method = "trySleep", at = @At(value = "INVOKE",target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/util/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"), cancellable = true)
     public void preventAvianSleep(BlockPos pos, CallbackInfoReturnable<Either<SleepFailureReason, Unit>> info) {

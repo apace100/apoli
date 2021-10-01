@@ -2,10 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyCameraSubmersionTypePower;
-import io.github.apace100.apoli.power.NightVisionPower;
-import io.github.apace100.apoli.power.PhasingPower;
-import io.github.apace100.apoli.power.ShaderPower;
+import io.github.apace100.apoli.power.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
@@ -98,6 +95,24 @@ public abstract class GameRendererMixin {
             this.shadersEnabled = false;
             currentlyLoadedShader = null;
         }
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
+    private void renderOverlayPowers(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+        boolean hudHidden = this.client.options.hudHidden;
+        boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
+        PowerHolderComponent.withPower(client.getCameraEntity(), OverlayPower.class, p -> {
+            if(p.getDrawPhase() != OverlayPower.DrawPhase.ABOVE_HUD) {
+                return false;
+            }
+            if(hudHidden && p.doesHideWithHud()) {
+                return false;
+            }
+            if(thirdPerson && !p.shouldBeVisibleInThirdPerson()) {
+                return false;
+            }
+            return true;
+        }, OverlayPower::render);
     }
 
     @Inject(

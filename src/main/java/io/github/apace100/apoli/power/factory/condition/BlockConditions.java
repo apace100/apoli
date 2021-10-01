@@ -12,6 +12,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.FluidFillable;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.state.property.Property;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
@@ -147,6 +149,17 @@ public class BlockConditions {
                     }
                 }
                 return false;
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("block_entity"), new SerializableData(),
+            (data, block) -> block.getBlockEntity() != null));
+        register(new ConditionFactory<>(Apoli.identifier("nbt"), new SerializableData()
+            .add("nbt", SerializableDataTypes.NBT),
+            (data, block) -> {
+                NbtCompound nbt = new NbtCompound();
+                if(block.getBlockEntity() != null) {
+                    nbt = block.getBlockEntity().writeNbt(nbt);
+                }
+                return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
             }));
     }
 

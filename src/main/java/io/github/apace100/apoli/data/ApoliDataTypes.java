@@ -39,6 +39,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.EnumSet;
 import java.util.List;
 
 public class ApoliDataTypes {
@@ -47,16 +48,16 @@ public class ApoliDataTypes {
         PowerTypeReference.class, SerializableDataTypes.IDENTIFIER,
         PowerType::getIdentifier, PowerTypeReference::new);
 
-    public static final SerializableDataType<ConditionFactory<LivingEntity>.Instance> ENTITY_CONDITION =
+    public static final SerializableDataType<ConditionFactory<Entity>.Instance> ENTITY_CONDITION =
         condition(ClassUtil.castClass(ConditionFactory.Instance.class), ConditionTypes.ENTITY);
 
-    public static final SerializableDataType<List<ConditionFactory<LivingEntity>.Instance>> ENTITY_CONDITIONS =
+    public static final SerializableDataType<List<ConditionFactory<Entity>.Instance>> ENTITY_CONDITIONS =
         SerializableDataType.list(ENTITY_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance> BIENTITY_CONDITION =
+    public static final SerializableDataType<ConditionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION =
         condition(ClassUtil.castClass(ConditionFactory.Instance.class), ConditionTypes.BIENTITY);
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<LivingEntity, LivingEntity>>.Instance>> BIENTITY_CONDITIONS =
+    public static final SerializableDataType<List<ConditionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS =
         SerializableDataType.list(BIENTITY_CONDITION);
 
     public static final SerializableDataType<ConditionFactory<ItemStack>.Instance> ITEM_CONDITION =
@@ -217,10 +218,6 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
-
-    public static final SerializableDataType<Fluid> FLUID = SerializableDataType.registry(Fluid.class, Registry.FLUID);
-
-    public static final SerializableDataType<CameraSubmersionType> CAMERA_SUBMERSION_TYPE = SerializableDataType.enumValue(CameraSubmersionType.class);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

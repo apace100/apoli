@@ -12,10 +12,10 @@ import java.util.function.Predicate;
 public class TargetActionOnHitPower extends CooldownPower {
 
     private final Predicate<Pair<DamageSource, Float>> damageCondition;
-    private final Predicate<LivingEntity> targetCondition;
+    private final Predicate<Entity> targetCondition;
     private final Consumer<Entity> entityAction;
 
-    public TargetActionOnHitPower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Entity> entityAction, Predicate<LivingEntity> targetCondition) {
+    public TargetActionOnHitPower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Entity> entityAction, Predicate<Entity> targetCondition) {
         super(type, entity, cooldownDuration, hudRender);
         this.damageCondition = damageCondition;
         this.entityAction = entityAction;
