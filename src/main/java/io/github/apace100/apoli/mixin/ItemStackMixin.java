@@ -33,7 +33,7 @@ public class ItemStackMixin {
             List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers((ItemStack)(Object)this, slot)
                 .stream()
                 .filter(sp -> !sp.isHidden)
-                .collect(Collectors.toList());();
+                .collect(Collectors.toList());
             if(powers.size() > 0) {
                 list.add(LiteralText.EMPTY);
                 list.add((new TranslatableText("item.modifiers." + slot.getName())).formatted(Formatting.GRAY));
