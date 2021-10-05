@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.ApoliServer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
@@ -493,6 +492,7 @@ public class EntityActions {
             (data, entity) -> {
                 PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
                     component.addPower((PowerType<?>)data.get("power"), data.getId("source"));
+                    component.sync();
                 });
             }));
         register(new ActionFactory<>(Apoli.identifier("revoke_power"), new SerializableData()
@@ -501,6 +501,7 @@ public class EntityActions {
             (data, entity) -> {
                 PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
                     component.removePower((PowerType<?>)data.get("power"), data.getId("source"));
+                    component.sync();
                 });
             }));
         register(new ActionFactory<>(Apoli.identifier("explode"), new SerializableData()

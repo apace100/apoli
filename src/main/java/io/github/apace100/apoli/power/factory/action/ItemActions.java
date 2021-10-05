@@ -4,13 +4,9 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.advancement.criterion.Criteria;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
@@ -19,7 +15,6 @@ import net.minecraft.loot.function.LootFunction;
 import net.minecraft.loot.function.LootFunctionManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.stat.Stats;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
@@ -38,9 +33,12 @@ public class ItemActions {
         register(new ActionFactory<>(Apoli.identifier("modify"), new SerializableData()
             .add("modifier", SerializableDataTypes.IDENTIFIER),
             (data, worldAndStack) -> {
-                if(!worldAndStack.getLeft().isClient) {
+                //Apoli.LOGGER.info("test^0");
+                //if(!worldAndStack.getLeft().isClient) {
+                    Apoli.LOGGER.info("test^1");
                     MinecraftServer server = worldAndStack.getLeft().getServer();
                     if(server != null) {
+                        Apoli.LOGGER.info("test^2");
                         Identifier id = data.getId("modifier");
                         LootFunctionManager lootFunctionManager = server.getItemModifierManager();
                         LootFunction lootFunction = lootFunctionManager.get(id);
@@ -48,11 +46,13 @@ public class ItemActions {
                             Apoli.LOGGER.info("Unknown item modifier used in `modify` action: " + id);
                             return;
                         }
+                        Apoli.LOGGER.info("test^3");
                         ServerWorld serverWorld = server.getOverworld();
                         LootContext.Builder builder = (new LootContext.Builder(serverWorld)).parameter(LootContextParameters.ORIGIN, new Vec3d(0, 0, 0));
                         lootFunction.apply(worldAndStack.getRight(), builder.build(LootContextTypes.COMMAND));
+                        Apoli.LOGGER.info("test^4");
                     }
-                }
+                //}
             }));
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1)

@@ -1,13 +1,12 @@
 package io.github.apace100.apoli.util;
 
 import com.google.common.collect.Lists;
+import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.CraftingInventoryAccessor;
 import io.github.apace100.apoli.mixin.CraftingScreenHandlerAccessor;
 import io.github.apace100.apoli.mixin.PlayerScreenHandlerAccessor;
-import io.github.apace100.apoli.mixin.RecipeManagerAccessor;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
-import io.github.apace100.apoli.power.RecipePower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
@@ -16,12 +15,11 @@ import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
@@ -48,7 +46,9 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
             if(original.isPresent()) {
                 Optional<ModifyCraftingPower> optional = getRecipes(inv).stream().filter(r -> r.doesApply(inv, original.get())).findFirst();
                 if(optional.isPresent()) {
-                    return optional.get().getNewResult(inv, original.get());
+                    ItemStack result = optional.get().getNewResult(inv, original.get());
+                    ((PowerCraftingInventory)inv).setPower(optional.get());
+                    return result;
                 }
             }
         }
@@ -65,9 +65,17 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
         return SERIALIZER;
     }
 
-    private PlayerEntity getPlayerFromInventory(CraftingInventory inv) {
+    public static PlayerEntity getPlayerFromInventory(CraftingInventory inv) {
         ScreenHandler handler = ((CraftingInventoryAccessor)inv).getHandler();
         return getPlayerFromHandler(handler);
+    }
+
+    public static Optional<BlockPos> getBlockFromInventory(CraftingInventory inv) {
+        ScreenHandler handler = ((CraftingInventoryAccessor)inv).getHandler();
+        if(handler instanceof CraftingScreenHandler) {
+            return ((CraftingScreenHandlerAccessor)handler).getContext().get((world, blockPos) -> blockPos);
+        }
+        return Optional.empty();
     }
 
     private List<ModifyCraftingPower> getRecipes(CraftingInventory inv) {
@@ -92,7 +100,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
         return Optional.empty();
     }
 
-    private PlayerEntity getPlayerFromHandler(ScreenHandler screenHandler) {
+    private static PlayerEntity getPlayerFromHandler(ScreenHandler screenHandler) {
         if(screenHandler instanceof CraftingScreenHandler) {
             return ((CraftingScreenHandlerAccessor)screenHandler).getPlayer();
         }

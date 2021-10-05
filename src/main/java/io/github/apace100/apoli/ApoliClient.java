@@ -3,30 +3,30 @@ package io.github.apace100.apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsS2C;
-import io.github.apace100.apoli.power.Active;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.condition.EntityConditionsClient;
 import io.github.apace100.apoli.screen.GameHudRender;
 import io.github.apace100.apoli.screen.PowerHudRenderer;
 import io.github.apace100.apoli.util.ApoliConfigClient;
-import io.github.apace100.apoli.util.ApoliConfigServer;
 import io.netty.buffer.Unpooled;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
-import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
-import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Jankson;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.ActionResult;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
 public class ApoliClient implements ClientModInitializer {
@@ -73,6 +73,55 @@ public class ApoliClient implements ClientModInitializer {
 				}
 			}
 		});
+
+		UseEntityCallback.EVENT.register(((playerEntity, world, hand, entity, entityHitResult) -> {
+			if(playerEntity.isSpectator()) {
+				return ActionResult.PASS;
+			}
+			ItemStack stack = playerEntity.getStackInHand(hand);
+			for(PreventEntityUsePower peup : PowerHolderComponent.getPowers(playerEntity, PreventEntityUsePower.class)) {
+				if(peup.doesApply(entity, hand, stack)) {
+					PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+					buf.writeInt(entity.getId());
+					buf.writeInt(hand.ordinal());
+					ClientPlayNetworking.send(ModPackets.PREVENTED_ENTITY_USE, buf);
+					return peup.executeAction(entity, hand);
+				}
+			}
+			for(PreventBeingUsedPower pbup : PowerHolderComponent.getPowers(entity, PreventBeingUsedPower.class)) {
+				if(pbup.doesApply(playerEntity, hand, stack)) {
+					PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+					buf.writeInt(entity.getId());
+					buf.writeInt(hand.ordinal());
+					ClientPlayNetworking.send(ModPackets.PREVENTED_ENTITY_USE, buf);
+					return pbup.executeAction(playerEntity, hand);
+				}
+			}
+			ActionResult result = ActionResult.PASS;
+			List<ActionOnEntityUsePower> powers = PowerHolderComponent.getPowers(playerEntity, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack)).toList();
+			for (ActionOnEntityUsePower aoip : powers) {
+				ActionResult ar = aoip.executeAction(entity, hand);
+				if(ar.isAccepted() && !result.isAccepted()) {
+					result = ar;
+				} else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
+					result = ar;
+				}
+			}
+			List<ActionOnBeingUsedPower> otherPowers = PowerHolderComponent.getPowers(entity, ActionOnBeingUsedPower.class).stream()
+				.filter(p -> p.shouldExecute(playerEntity, hand, stack)).collect(Collectors.toList());
+			for(ActionOnBeingUsedPower awip : otherPowers) {
+				ActionResult ar = awip.executeAction(playerEntity, hand);
+				if(ar.isAccepted() && !result.isAccepted()) {
+					result = ar;
+				} else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
+					result = ar;
+				}
+			}
+			if(powers.size() > 0 || otherPowers.size() > 0) {
+				return result;
+			}
+			return ActionResult.PASS;
+		}));
 
 		GameHudRender.HUD_RENDERS.add(new PowerHudRenderer());
 

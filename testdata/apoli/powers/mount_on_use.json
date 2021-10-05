@@ -1,0 +1,6 @@
+{
+  "type": "apoli:action_on_entity_use",
+  "bientity_action": {
+    "type": "apoli:mount"
+  }
+}

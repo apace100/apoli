@@ -24,7 +24,6 @@ public class PreventEntityUsePower extends InteractionPower {
         this.bientityCondition = bientityCondition;
     }
 
-
     public boolean doesApply(Entity other, Hand hand, ItemStack heldStack) {
         if(!shouldExecute(hand, heldStack)) {
             return false;

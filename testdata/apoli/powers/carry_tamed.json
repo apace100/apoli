@@ -1,0 +1,56 @@
+{
+  "type": "apoli:multiple",
+  "pickup": {
+    "type": "apoli:action_on_entity_use",
+    "bientity_condition": {
+      "type": "apoli:owner"
+    },
+    "bientity_action": {
+      "type": "apoli:invert",
+      "action": {
+        "type": "apoli:mount"
+      }
+    },
+    "condition": {
+      "type": "apoli:and",
+      "conditions": [
+        {
+          "type": "apoli:sneaking"
+        },
+        {
+          "type": "apoli:passenger",
+          "inverted": true
+        },
+        {
+          "type": "apoli:equipped_item",
+          "equipment_slot": "mainhand",
+          "item_condition": {
+            "type": "apoli:empty"
+          }
+        }
+      ]
+    }
+  },
+  "drop": {
+    "type": "apoli:active_self",
+    "cooldown": 1,
+    "hud_render": {
+      "should_render": false
+    },
+    "entity_action": {
+      "type": "apoli:passenger_action",
+      "bientity_condition": {
+        "type": "apoli:invert",
+        "condition": {
+          "type": "apoli:owner"
+        }
+      },
+      "action": {
+        "type": "apoli:dismount"
+      }
+    },
+    "key": {
+      "key": "key.sneak"
+    }
+  }
+}

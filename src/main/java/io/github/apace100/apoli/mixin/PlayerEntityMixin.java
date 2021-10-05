@@ -1,22 +1,20 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
-import net.minecraft.block.BlockState;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.command.CommandOutput;
-import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.Tag;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Nameable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -25,7 +23,9 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -53,6 +53,16 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
+    }
+
+
+    @Inject(method = "dismountVehicle", at = @At("HEAD"))
+    private void sendPlayerDismountPacket(CallbackInfo ci) {
+        if(!world.isClient && getVehicle() instanceof PlayerEntity) {
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeInt(getId());
+            ServerPlayNetworking.send((ServerPlayerEntity) getVehicle(), ModPackets.PLAYER_DISMOUNT, buf);
+        }
     }
 
     @Inject(method = "updateSwimming", at = @At("TAIL"))
@@ -100,32 +110,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         return PowerHolderComponent.modify(this, ModifyDamageDealtPower.class, f, p -> p.doesApply(source, f, target instanceof LivingEntity ? (LivingEntity)target : null), p -> p.executeActions(target));
     }
 
-    // NO_COBWEB_SLOWDOWN
-    /*@Inject(at = @At("HEAD"), method = "slowMovement", cancellable = true)
-    public void slowMovement(BlockState state, Vec3d multiplier, CallbackInfo info) {
-        if (PowerTypes.NO_COBWEB_SLOWDOWN.isActive(this) || PowerTypes.MASTER_OF_WEBS_NO_SLOWDOWN.isActive(this)) {
-            info.cancel();
-        }
-    }
-
-    // AQUA_AFFINITY
-    @ModifyConstant(method = "getBlockBreakingSpeed", constant = @Constant(ordinal = 0, floatValue = 5.0F))
-    private float modifyWaterBlockBreakingSpeed(float in) {
-        if(PowerTypes.AQUA_AFFINITY.isActive(this)) {
-            return 1F;
-        }
-        return in;
-    }
-
-    // AQUA_AFFINITY
-    @ModifyConstant(method = "getBlockBreakingSpeed", constant = @Constant(ordinal = 1, floatValue = 5.0F))
-    private float modifyUngroundedBlockBreakingSpeed(float in) {
-        if(this.isInsideWaterOrBubbleColumn() && PowerTypes.AQUA_AFFINITY.isActive(this)) {
-            return 1F;
-        }
-        return in;
-    }*/
-
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V"))
     private void dropAdditionalInventory(CallbackInfo ci) {
         PowerHolderComponent.getPowers(this, InventoryPower.class).forEach(inventory -> {
@@ -153,62 +137,4 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             info.setReturnValue(false);
         }
     }
-    /*
-    // WATER_BREATHING
-    @Inject(at = @At("TAIL"), method = "tick")
-    private void tick(CallbackInfo info) {
-        if(PowerTypes.WATER_BREATHING.isActive(this)) {
-            if(!this.isSubmergedIn(FluidTags.WATER) && !this.hasStatusEffect(StatusEffects.WATER_BREATHING) && !this.hasStatusEffect(StatusEffects.CONDUIT_POWER)) {
-                if(!this.isRainingAtPlayerPosition()) {
-                    int landGain = this.getNextAirOnLand(0);
-                    this.setAir(this.getNextAirUnderwater(this.getAir()) - landGain);
-                    if (this.getAir() == -20) {
-                        this.setAir(0);
-
-                        for(int i = 0; i < 8; ++i) {
-                            double f = this.random.nextDouble() - this.random.nextDouble();
-                            double g = this.random.nextDouble() - this.random.nextDouble();
-                            double h = this.random.nextDouble() - this.random.nextDouble();
-                            this.world.addParticle(ParticleTypes.BUBBLE, this.getParticleX(0.5), this.getEyeY() + this.random.nextGaussian() * 0.08D, this.getParticleZ(0.5), f * 0.5F, g * 0.5F + 0.25F, h * 0.5F);
-                        }
-
-                        this.damage(ModDamageSources.NO_WATER_FOR_GILLS, 2.0F);
-                    }
-                } else {
-                    int landGain = this.getNextAirOnLand(0);
-                    this.setAir(this.getAir() - landGain);
-                }
-            } else if(this.getAir() < this.getMaxAir()){
-                this.setAir(this.getNextAirOnLand(this.getAir()));
-            }
-        }
-    }
-
-
-    // WATER_BREATHING
-    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/tag/Tag;)Z"), method = "updateTurtleHelmet")
-    public boolean isSubmergedInProxy(PlayerEntity player, Tag<Fluid> fluidTag) {
-        boolean submerged = this.isSubmergedIn(fluidTag);
-        if(PowerTypes.WATER_BREATHING.isActive(this)) {
-            return !submerged;
-        }
-        return submerged;
-    }*/
-/*
-    // WEBBING
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;onAttacking(Lnet/minecraft/entity/Entity;)V"), method = "attack")
-    public void cobwebOnMeleeAttack(Entity target, CallbackInfo info) {
-        if(target instanceof LivingEntity) {
-            if(PowerTypes.WEBBING.isActive(this) && !this.isSneaking()) {
-                CooldownPower power = PowerTypes.WEBBING.get(this);
-                if(power.canUse()) {
-                    BlockPos targetPos = target.getBlockPos();
-                    if(world.isAir(targetPos) || world.getBlockState(targetPos).getMaterial().isReplaceable()) {
-                        world.setBlockState(targetPos, ModBlocks.TEMPORARY_COBWEB.getDefaultState());
-                        power.use();
-                    }
-                }
-            }
-        }
-    }*/
 }

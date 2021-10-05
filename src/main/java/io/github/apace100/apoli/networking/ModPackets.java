@@ -11,4 +11,9 @@ public class ModPackets {
     public static final Identifier POWER_LIST = Apoli.identifier("power_list");
 
     public static final Identifier PLAYER_LANDED = Apoli.identifier("player_landed");
+
+    public static final Identifier PLAYER_MOUNT = Apoli.identifier("player_mount");
+    public static final Identifier PLAYER_DISMOUNT = Apoli.identifier("player_dismount");
+
+    public static final Identifier PREVENTED_ENTITY_USE = Apoli.identifier("prevented_entity_use");
 }

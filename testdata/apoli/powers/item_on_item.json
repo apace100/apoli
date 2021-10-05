@@ -1,0 +1,22 @@
+{
+  "type": "apoli:item_on_item",
+  "on_item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:leather_helmet"
+    }
+  },
+  "using_item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:spider_eye"
+    }
+  },
+  "on_item_action": {
+    "type": "apoli:modify",
+    "modifier": "apoli:add_power"
+  },
+  "using_item_action": {
+    "type": "apoli:consume"
+  }
+}

@@ -18,12 +18,13 @@ import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -35,6 +36,8 @@ public class ModPacketsS2C {
         ClientLoginNetworking.registerGlobalReceiver(ModPackets.HANDSHAKE, ModPacketsS2C::handleHandshake);
         ClientPlayConnectionEvents.INIT.register(((clientPlayNetworkHandler, minecraftClient) -> {
             ClientPlayNetworking.registerReceiver(ModPackets.POWER_LIST, ModPacketsS2C::receivePowerList);
+            ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_MOUNT, ModPacketsS2C::onPlayerMount);
+            ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_DISMOUNT, ModPacketsS2C::onPlayerDismount);
         }));
     }
 
@@ -84,6 +87,43 @@ public class ModPacketsS2C {
         minecraftClient.execute(() -> {
             PowerTypeRegistry.clear();
             factories.forEach(PowerTypeRegistry::register);
+        });
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static void onPlayerMount(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {
+        int mountingPlayerId = packetByteBuf.readInt();
+        int mountedPlayerId = packetByteBuf.readInt();
+        minecraftClient.execute(() -> {
+            Entity mountingPlayer = clientPlayNetworkHandler.getWorld().getEntityById(mountingPlayerId);
+            Entity mountedPlayer = clientPlayNetworkHandler.getWorld().getEntityById(mountedPlayerId);
+            if (mountedPlayer == null) {
+                Apoli.LOGGER.warn("Received passenger for unknown player");
+            } else if(mountingPlayer == null) {
+                Apoli.LOGGER.warn("Received unknown passenger for player");
+            } else {
+                boolean result = mountingPlayer.startRiding(mountedPlayer, true);
+                if(result) {
+                    Apoli.LOGGER.info(mountingPlayer.getDisplayName().asString() + " started riding " + mountedPlayer.getDisplayName().asString());
+                } else {
+                    Apoli.LOGGER.warn(mountingPlayer.getDisplayName().asString() + " failed to start riding " + mountedPlayer.getDisplayName().asString());
+                }
+            }
+        });
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static void onPlayerDismount(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {
+        int dismountingPlayerId = packetByteBuf.readInt();
+        minecraftClient.execute(() -> {
+            Entity dismountingPlayer = clientPlayNetworkHandler.getWorld().getEntityById(dismountingPlayerId);
+            if (dismountingPlayer == null) {
+                Apoli.LOGGER.warn("Unknown player tried to dismount");
+            } else {
+                if(dismountingPlayer.getVehicle() instanceof PlayerEntity) {
+                    dismountingPlayer.dismountVehicle();
+                }
+            }
         });
     }
 }

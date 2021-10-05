@@ -4,7 +4,6 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 
@@ -41,7 +40,7 @@ public class PowerType<T extends Power> {
     }
 
     public T create(LivingEntity entity) {
-        return factory.apply(this, entity);
+        return getFactory().apply(this, entity);
     }
 
     public boolean isHidden() {

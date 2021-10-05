@@ -1,0 +1,7 @@
+[
+  {
+    "function": "apoli:add_power",
+    "power": "apoli:overlay",
+    "slot": "head"
+  }
+]

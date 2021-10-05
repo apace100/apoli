@@ -3,16 +3,21 @@ package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.FilterableWeightedList;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
@@ -65,6 +70,12 @@ public class BiEntityActions {
         register(new ActionFactory<>(Apoli.identifier("mount"), new SerializableData(),
             (data, entities) -> {
                 entities.getLeft().startRiding(entities.getRight(), true);
+                if(!entities.getLeft().world.isClient && entities.getRight() instanceof PlayerEntity) {
+                    PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+                    buf.writeInt(entities.getLeft().getId());
+                    buf.writeInt(entities.getRight().getId());
+                    ServerPlayNetworking.send((ServerPlayerEntity) entities.getRight(), ModPackets.PLAYER_MOUNT, buf);
+                }
             }));
         register(new ActionFactory<>(Apoli.identifier("set_in_love"), new SerializableData(),
             (data, entities) -> {

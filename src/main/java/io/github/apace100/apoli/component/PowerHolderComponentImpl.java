@@ -2,10 +2,7 @@ package io.github.apace100.apoli.component;
 
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.MultiplePowerType;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -90,6 +87,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     public void removePower(PowerType<?> powerType, Identifier source) {
+        if(powerType instanceof PowerTypeReference<?>) {
+            powerType = ((PowerTypeReference<?>)powerType).getReferencedPowerType();
+        }
         if(powerSources.containsKey(powerType)) {
             List<Identifier> sources = powerSources.get(powerType);
             sources.remove(source);
@@ -129,6 +129,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     public boolean addPower(PowerType<?> powerType, Identifier source) {
+        if(powerType instanceof PowerTypeReference<?>) {
+            powerType = ((PowerTypeReference<?>)powerType).getReferencedPowerType();
+        }
         if(powerSources.containsKey(powerType)) {
             List<Identifier> sources = powerSources.get(powerType);
             if(sources.contains(source)) {

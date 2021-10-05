@@ -12,6 +12,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -62,9 +63,9 @@ public class ModifyCraftingPower extends ValueModifyingPower {
         return stack;
     }
 
-    public void executeActions(BlockPos craftingBlock) {
-        if(craftingBlock != null && blockAction != null) {
-            blockAction.accept(Triple.of(entity.world, craftingBlock, Direction.UP));
+    public void executeActions(Optional<BlockPos> craftingBlockPos) {
+        if(craftingBlockPos.isPresent() && blockAction != null) {
+            blockAction.accept(Triple.of(entity.world, craftingBlockPos.get(), Direction.UP));
         }
         if(entityAction != null) {
             entityAction.accept(entity);

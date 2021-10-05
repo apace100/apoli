@@ -1,0 +1,27 @@
+{
+  "type": "apoli:active_self",
+  "cooldown": 1,
+  "entity_action": {
+    "type": "apoli:if_else",
+    "condition": {
+      "type": "apoli:power",
+      "power": "apoli:modify_renders"
+    },
+    "if_action": {
+      "type": "apoli:revoke_power",
+      "power": "apoli:modify_renders",
+      "source": "apoli:grant_test"
+    },
+    "else_action": {
+      "type": "apoli:grant_power",
+      "power": "apoli:ocean_view",
+      "source": "apoli:grant_test"
+    }
+  },
+  "hud_render": {
+    "should_render": false
+  },
+  "key": {
+    "key": "key.attack"
+  }
+}

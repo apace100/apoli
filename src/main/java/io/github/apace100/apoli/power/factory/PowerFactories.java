@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power.factory;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -14,7 +13,6 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.ladysnake.pal.VanillaAbilities;
-import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.block.Block;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.client.render.CameraSubmersionType;
@@ -55,7 +53,6 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class PowerFactories {
 
@@ -1003,7 +1000,7 @@ public class PowerFactories {
                 (type, player) -> {
                     return new PreventEntityUsePower(type, player,
                         (EnumSet<Hand>)data.get("hands"),
-                        ActionResult.CONSUME,
+                        ActionResult.FAIL,
                         (Predicate<ItemStack>)data.get("item_condition"),
                         (Consumer<Pair<World, ItemStack>>)data.get("held_item_action"),
                         (ItemStack)data.get("result_stack"),
@@ -1025,7 +1022,7 @@ public class PowerFactories {
                 (type, player) -> {
                     return new PreventBeingUsedPower(type, player,
                         (EnumSet<Hand>)data.get("hands"),
-                        ActionResult.CONSUME,
+                        ActionResult.FAIL,
                         (Predicate<ItemStack>)data.get("item_condition"),
                         (Consumer<Pair<World, ItemStack>>)data.get("held_item_action"),
                         (ItemStack)data.get("result_stack"),
@@ -1034,46 +1031,6 @@ public class PowerFactories {
                         (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition"));
                 })
             .allowCondition());
-        UseEntityCallback.EVENT.register(((playerEntity, world, hand, entity, entityHitResult) -> {
-            if(playerEntity.isSpectator()) {
-                return ActionResult.PASS;
-            }
-            ItemStack stack = playerEntity.getStackInHand(hand);
-            for(PreventEntityUsePower peup : PowerHolderComponent.getPowers(playerEntity, PreventEntityUsePower.class)) {
-                if(peup.doesApply(entity, hand, stack)) {
-                    return peup.executeAction(entity, hand);
-                }
-            }
-            for(PreventBeingUsedPower pbup : PowerHolderComponent.getPowers(entity, PreventBeingUsedPower.class)) {
-                if(pbup.doesApply(playerEntity, hand, stack)) {
-                    return pbup.executeAction(playerEntity, hand);
-                }
-            }
-            ActionResult result = ActionResult.PASS;
-            List<ActionOnEntityUsePower> powers = PowerHolderComponent.getPowers(playerEntity, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack)).toList();
-            for (ActionOnEntityUsePower aoip : powers) {
-                ActionResult ar = aoip.executeAction(entity, hand);
-                if(ar.isAccepted() && !result.isAccepted()) {
-                    result = ar;
-                } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
-                    result = ar;
-                }
-            }
-            List<ActionOnBeingUsedPower> otherPowers = PowerHolderComponent.getPowers(entity, ActionOnBeingUsedPower.class).stream()
-                .filter(p -> p.shouldExecute(playerEntity, hand, stack)).collect(Collectors.toList());
-            for(ActionOnBeingUsedPower awip : otherPowers) {
-                ActionResult ar = awip.executeAction(playerEntity, hand);
-                if(ar.isAccepted() && !result.isAccepted()) {
-                    result = ar;
-                } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
-                    result = ar;
-                }
-            }
-            if(powers.size() > 0 || otherPowers.size() > 0) {
-                return result;
-            }
-            return ActionResult.PASS;
-        }));
 
         register(new PowerFactory<>(Apoli.identifier("toggle_night_vision"),
             new SerializableData()

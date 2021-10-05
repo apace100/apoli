@@ -1,0 +1,37 @@
+{
+  "type": "apoli:action_over_time",
+  "interval": 20,
+  "entity_action": {
+    "type": "apoli:if_else",
+    "condition": {
+      "type": "apoli:equipped_item",
+      "equipment_slot": "mainhand",
+      "item_condition": {
+        "type": "apoli:and",
+        "conditions": [
+          {
+            "type": "apoli:ingredient",
+            "ingredient": {
+              "item": "minecraft:leather_helmet"
+            }
+          },
+          {
+            "type": "apoli:has_power",
+            "slot": "head",
+            "power": "apoli:overlay",
+            "inverted": true
+          }
+        ]
+      }
+    },
+    "if_action": {
+      "type": "apoli:equipped_item_action",
+      "equipment_slot": "mainhand",
+      "action": {
+        "type": "apoli:modify",
+        "modifier": "apoli:add_power"
+      }
+    }
+
+  }
+}
