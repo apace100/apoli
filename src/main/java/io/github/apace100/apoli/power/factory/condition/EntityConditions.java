@@ -16,7 +16,10 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.effect.StatusEffect;
@@ -37,6 +40,7 @@ import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Hand;
@@ -314,18 +318,18 @@ public class EntityConditions {
             }));
         register(new ConditionFactory<>(Apoli.identifier("command"), new SerializableData()
             .add("command", SerializableDataTypes.STRING)
-            .add("permission_level", SerializableDataTypes.INT, 4)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
             (data, entity) -> {
                 MinecraftServer server = entity.world.getServer();
                 if(server != null) {
+                    boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
                     ServerCommandSource source = new ServerCommandSource(
-                        CommandOutput.DUMMY,
+                        Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
                         entity.getPos(),
                         entity.getRotationClient(),
                         entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
-                        data.getInt("permission_level"),
+                        Apoli.config.executeCommand.permissionLevel,
                         entity.getName().getString(),
                         entity.getDisplayName(),
                         server,
