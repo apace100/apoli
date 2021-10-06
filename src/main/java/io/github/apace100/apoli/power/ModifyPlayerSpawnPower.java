@@ -1,10 +1,14 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.ClassUtil;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Dismounting;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
@@ -215,6 +219,27 @@ public class ModifyPlayerSpawnPower extends Power {
             d--;
         }
         return(null);
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("modify_player_spawn"),
+            new SerializableData()
+                .add("dimension", SerializableDataTypes.DIMENSION)
+                .add("dimension_distance_multiplier", SerializableDataTypes.FLOAT, 0F)
+                .add("biome", SerializableDataTypes.IDENTIFIER, null)
+                .add("spawn_strategy", SerializableDataTypes.STRING, "default")
+                .add("structure", SerializableDataType.registry(ClassUtil.castClass(StructureFeature.class), Registry.STRUCTURE_FEATURE), null)
+                .add("respawn_sound", SerializableDataTypes.SOUND_EVENT, null),
+            data ->
+                (type, player) ->
+                    new ModifyPlayerSpawnPower(type, player,
+                        (RegistryKey<World>)data.get("dimension"),
+                        data.getFloat("dimension_distance_multiplier"),
+                        data.getId("biome"),
+                        data.getString("spawn_strategy"),
+                        data.isPresent("structure") ? (StructureFeature<?>)data.get("structure") : null,
+                        (SoundEvent)data.get("respawn_sound")))
+            .allowCondition();
     }
 }
 

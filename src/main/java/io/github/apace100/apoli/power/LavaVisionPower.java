@@ -1,7 +1,10 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 
 public class LavaVisionPower extends Power {
 
@@ -20,5 +23,16 @@ public class LavaVisionPower extends Power {
 
     public float getV() {
         return v;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("lava_vision"),
+            new SerializableData()
+                .add("s", SerializableDataTypes.FLOAT)
+                .add("v", SerializableDataTypes.FLOAT),
+            data ->
+                (type, player) ->
+                    new LavaVisionPower(type, player, data.getFloat("s"), data.getFloat("v")))
+            .allowCondition();
     }
 }

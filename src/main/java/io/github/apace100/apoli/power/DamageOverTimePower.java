@@ -1,6 +1,9 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.mixin.DamageSourceAccessor;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -112,5 +115,27 @@ public class DamageOverTimePower extends Power {
             inDamageTicks = nbt.getInt("InDamage");
             outOfDamageTicks = nbt.getInt("OutDamage");
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("damage_over_time"),
+            new SerializableData()
+                .add("interval", SerializableDataTypes.INT)
+                .addFunctionedDefault("onset_delay", SerializableDataTypes.INT, data -> data.getInt("interval"))
+                .add("damage", SerializableDataTypes.FLOAT)
+                .addFunctionedDefault("damage_easy", SerializableDataTypes.FLOAT, data -> data.getFloat("damage"))
+                .add("damage_source", SerializableDataTypes.DAMAGE_SOURCE, DamageOverTimePower.GENERIC_DAMAGE)
+                .add("protection_enchantment", SerializableDataTypes.ENCHANTMENT, null)
+                .add("protection_effectiveness", SerializableDataTypes.FLOAT, 1.0F),
+            data ->
+                (type, player) -> new DamageOverTimePower(type, player,
+                    data.getInt("onset_delay"),
+                    data.getInt("interval"),
+                    data.getFloat("damage_easy"),
+                    data.getFloat("damage"),
+                    (DamageSource)data.get("damage_source"),
+                    (Enchantment)data.get("protection_enchantment"),
+                    data.getFloat("protection_effectiveness")))
+            .allowCondition();
     }
 }

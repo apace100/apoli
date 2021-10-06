@@ -1,9 +1,15 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
+
+import java.util.List;
 
 public class StackingStatusEffectPower extends StatusEffectPower {
 
@@ -61,5 +67,32 @@ public class StackingStatusEffectPower extends StatusEffectPower {
     @Override
     public void fromTag(NbtElement tag) {
         currentStack = ((NbtInt)tag).intValue();
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("stacking_status_effect"),
+            new SerializableData()
+                .add("min_stacks", SerializableDataTypes.INT)
+                .add("max_stacks", SerializableDataTypes.INT)
+                .add("duration_per_stack", SerializableDataTypes.INT)
+                .add("tick_rate", SerializableDataTypes.INT, 10)
+                .add("effect", SerializableDataTypes.STATUS_EFFECT_INSTANCE, null)
+                .add("effects", SerializableDataTypes.STATUS_EFFECT_INSTANCES, null),
+            data ->
+                (type, player) -> {
+                    StackingStatusEffectPower power = new StackingStatusEffectPower(type, player,
+                        data.getInt("min_stacks"),
+                        data.getInt("max_stacks"),
+                        data.getInt("duration_per_stack"),
+                        data.getInt("tick_rate"));
+                    if(data.isPresent("effect")) {
+                        power.addEffect((StatusEffectInstance)data.get("effect"));
+                    }
+                    if(data.isPresent("effects")) {
+                        ((List<StatusEffectInstance>)data.get("effects")).forEach(power::addEffect);
+                    }
+                    return power;
+                })
+            .allowCondition();
     }
 }

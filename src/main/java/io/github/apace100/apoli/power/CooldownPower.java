@@ -1,7 +1,12 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.HudRender;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtLong;
@@ -73,5 +78,16 @@ public class CooldownPower extends Power implements HudRendered {
     @Override
     public boolean shouldRender() {
         return (entity.getEntityWorld().getTime() - lastUseTime) <= cooldownDuration;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("cooldown"),
+            new SerializableData()
+                .add("cooldown", SerializableDataTypes.INT)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER),
+            data ->
+                (type, player) ->
+                    new CooldownPower(type, player, data.getInt("cooldown"), (HudRender)data.get("hud_render")))
+            .allowCondition();
     }
 }

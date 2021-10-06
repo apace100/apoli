@@ -1,7 +1,10 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.function.Function;
 
@@ -24,5 +27,15 @@ public class NightVisionPower extends Power {
 
     public float getStrength() {
         return strengthFunction.apply(this.entity);
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("night_vision"),
+            new SerializableData()
+                .add("strength", SerializableDataTypes.FLOAT, 1.0F),
+            data ->
+                (type, player) ->
+                    new NightVisionPower(type, player, data.getFloat("strength")))
+            .allowCondition();
     }
 }

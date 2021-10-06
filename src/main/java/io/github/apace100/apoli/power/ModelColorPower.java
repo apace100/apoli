@@ -1,7 +1,10 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 
 public class ModelColorPower extends Power {
 
@@ -38,5 +41,18 @@ public class ModelColorPower extends Power {
 
     public boolean isTranslucent() {
         return isTranslucent;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("model_color"),
+            new SerializableData()
+                .add("red", SerializableDataTypes.FLOAT, 1.0F)
+                .add("green", SerializableDataTypes.FLOAT, 1.0F)
+                .add("blue", SerializableDataTypes.FLOAT, 1.0F)
+                .add("alpha", SerializableDataTypes.FLOAT, 1.0F),
+            data ->
+                (type, player) ->
+                    new ModelColorPower(type, player, data.getFloat("red"), data.getFloat("green"), data.getFloat("blue"), data.getFloat("alpha")))
+            .allowCondition();
     }
 }

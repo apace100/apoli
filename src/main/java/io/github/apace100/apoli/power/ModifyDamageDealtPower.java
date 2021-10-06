@@ -1,11 +1,19 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Pair;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -42,5 +50,36 @@ public class ModifyDamageDealtPower extends ValueModifyingPower {
         if(targetAction != null && target instanceof LivingEntity) {
             targetAction.accept((LivingEntity)target);
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("modify_damage_dealt"),
+            new SerializableData()
+                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
+                .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
+                .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
+                .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null)
+                .add("self_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("target_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) -> {
+                    ModifyDamageDealtPower power = new ModifyDamageDealtPower(type, player,
+                        data.isPresent("damage_condition") ? (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition") : dmg -> true,
+                        (ConditionFactory<Entity>.Instance)data.get("target_condition"));
+                    if(data.isPresent("modifier")) {
+                        power.addModifier(data.getModifier("modifier"));
+                    }
+                    if(data.isPresent("modifiers")) {
+                        ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
+                    }
+                    if(data.isPresent("self_action")) {
+                        power.setSelfAction((ActionFactory<Entity>.Instance)data.get("self_action"));
+                    }
+                    if(data.isPresent("target_action")) {
+                        power.setTargetAction((ActionFactory<Entity>.Instance)data.get("target_action"));
+                    }
+                    return power;
+                })
+            .allowCondition();
     }
 }

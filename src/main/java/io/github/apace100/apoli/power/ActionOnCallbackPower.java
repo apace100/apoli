@@ -1,5 +1,10 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 
@@ -55,5 +60,23 @@ public class ActionOnCallbackPower extends Power {
         if(entityActionAdded != null) {
             entityActionAdded.accept(entity);
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("action_on_callback"),
+            new SerializableData()
+                .add("entity_action_respawned", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("entity_action_removed", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("entity_action_gained", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("entity_action_lost", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("entity_action_added", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) -> new ActionOnCallbackPower(type, player,
+                    (ActionFactory<Entity>.Instance)data.get("entity_action_respawned"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action_removed"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action_gained"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action_lost"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action_added")))
+            .allowCondition();
     }
 }

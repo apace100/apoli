@@ -1,7 +1,9 @@
 package io.github.apace100.apoli.power;
 
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 
 public class BurnPower extends Power {
@@ -20,5 +22,16 @@ public class BurnPower extends Power {
         if(entity.age % refreshInterval == 0) {
             entity.setOnFireFor(burnDuration);
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("burn"),
+            new SerializableData()
+                .add("interval", SerializableDataTypes.INT)
+                .add("burn_duration", SerializableDataTypes.INT),
+            data ->
+                (type, player) ->
+                    new BurnPower(type, player, data.getInt("interval"), data.getInt("burn_duration")))
+            .allowCondition();
     }
 }

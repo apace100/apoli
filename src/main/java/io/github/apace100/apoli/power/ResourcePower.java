@@ -1,9 +1,14 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.util.HudRender;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.function.Consumer;
 
@@ -31,5 +36,26 @@ public class ResourcePower extends HudRenderedVariableIntPower {
             }
         }
         return actualNewValue;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("resource"),
+            new SerializableData()
+                .add("min", SerializableDataTypes.INT)
+                .add("max", SerializableDataTypes.INT)
+                .addFunctionedDefault("start_value", SerializableDataTypes.INT, data -> data.getInt("min"))
+                .add("hud_render", ApoliDataTypes.HUD_RENDER)
+                .add("min_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("max_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) ->
+                    new ResourcePower(type, player,
+                        (HudRender)data.get("hud_render"),
+                        data.getInt("start_value"),
+                        data.getInt("min"),
+                        data.getInt("max"),
+                        (ActionFactory<Entity>.Instance)data.get("min_action"),
+                        (ActionFactory<Entity>.Instance)data.get("max_action")))
+            .allowCondition();
     }
 }

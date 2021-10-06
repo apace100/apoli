@@ -1,5 +1,12 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -44,5 +51,21 @@ public class ActionOnBlockBreakPower extends Power {
                 entityAction.accept(entity);
             }
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("action_on_block_break"),
+            new SerializableData()
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("block_action", ApoliDataTypes.BLOCK_ACTION, null)
+                .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
+                .add("only_when_harvested", SerializableDataTypes.BOOLEAN, true),
+            data ->
+                (type, player) -> new ActionOnBlockBreakPower(type, player,
+                    (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action"),
+                    (ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action"),
+                    data.getBoolean("only_when_harvested")))
+            .allowCondition();
     }
 }

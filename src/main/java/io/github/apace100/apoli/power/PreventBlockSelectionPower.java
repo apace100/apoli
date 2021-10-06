@@ -1,8 +1,12 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldView;
 
@@ -20,5 +24,15 @@ public class PreventBlockSelectionPower extends Power {
     public boolean doesPrevent(WorldView world, BlockPos pos) {
         CachedBlockPosition cbp = new CachedBlockPosition(world, pos, true);
         return predicate == null || predicate.test(cbp);
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("prevent_block_selection"),
+            new SerializableData()
+                .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null),
+            data ->
+                (type, player) -> new PreventBlockSelectionPower(type, player,
+                    (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")))
+            .allowCondition();
     }
 }

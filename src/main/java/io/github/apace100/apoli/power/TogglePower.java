@@ -1,6 +1,11 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtElement;
@@ -48,5 +53,19 @@ public class TogglePower extends Power implements Active {
     @Override
     public void setKey(Key key) {
         this.key = key;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<TogglePower>(Apoli.identifier("toggle"),
+            new SerializableData()
+                .add("active_by_default", SerializableDataTypes.BOOLEAN, true)
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
+            data ->
+                (type, player) -> {
+                    TogglePower power = new TogglePower(type, player, data.getBoolean("active_by_default"));
+                    power.setKey((Active.Key)data.get("key"));
+                    return power;
+                })
+            .allowCondition();
     }
 }

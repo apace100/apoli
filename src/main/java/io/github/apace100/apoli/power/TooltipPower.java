@@ -1,5 +1,11 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -28,5 +34,22 @@ public class TooltipPower extends Power {
 
     public boolean doesApply(ItemStack stack) {
         return itemCondition == null || itemCondition.test(stack);
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("tooltip"),
+            new SerializableData()
+                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("text", SerializableDataTypes.TEXT, null)
+                .add("texts", SerializableDataType.list(SerializableDataTypes.TEXT), null),
+            data ->
+                (type, player) -> {
+                    TooltipPower ttp = new TooltipPower(type, player,
+                        data.isPresent("item_condition") ? (Predicate<ItemStack>)data.get("item_condition") : null);
+                    data.ifPresent("text", ttp::addText);
+                    data.<List<Text>>ifPresent("texts", t -> t.forEach(ttp::addText));
+                    return ttp;
+                })
+            .allowCondition();
     }
 }

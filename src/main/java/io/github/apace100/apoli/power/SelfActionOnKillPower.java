@@ -1,6 +1,13 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.HudRender;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -31,5 +38,21 @@ public class SelfActionOnKillPower extends CooldownPower {
                 }
             }
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("self_action_on_kill"),
+            new SerializableData()
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION)
+                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
+                .add("cooldown", SerializableDataTypes.INT)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
+                .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null),
+            data ->
+                (type, player) -> new SelfActionOnKillPower(type, player, data.getInt("cooldown"),
+                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action"),
+                    (ConditionFactory<Entity>.Instance)data.get("target_condition")))
+            .allowCondition();
     }
 }

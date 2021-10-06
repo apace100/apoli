@@ -1,12 +1,16 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.util.Identifier;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 public class Power {
@@ -85,5 +89,10 @@ public class Power {
 
     public PowerType<?> getType() {
         return type;
+    }
+
+    public static PowerFactory createSimpleFactory(BiFunction<PowerType, LivingEntity, Power> powerConstructor, Identifier identifier) {
+        return new PowerFactory<>(identifier,
+            new SerializableData(), data -> powerConstructor::apply).allowCondition();
     }
 }

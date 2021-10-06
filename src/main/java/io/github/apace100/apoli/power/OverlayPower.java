@@ -2,6 +2,11 @@ package io.github.apace100.apoli.power;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -115,5 +120,31 @@ public class OverlayPower extends Power {
         RenderSystem.disableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("overlay"),
+            new SerializableData()
+                .add("texture", SerializableDataTypes.IDENTIFIER)
+                .add("strength", SerializableDataTypes.FLOAT, 1.0F)
+                .add("red", SerializableDataTypes.FLOAT, 1.0F)
+                .add("green", SerializableDataTypes.FLOAT, 1.0F)
+                .add("blue", SerializableDataTypes.FLOAT, 1.0F)
+                .add("draw_mode", SerializableDataType.enumValue(OverlayPower.DrawMode.class))
+                .add("draw_phase", SerializableDataType.enumValue(OverlayPower.DrawPhase.class))
+                .add("hide_with_hud", SerializableDataTypes.BOOLEAN, true)
+                .add("visible_in_third_person", SerializableDataTypes.BOOLEAN, false),
+            data ->
+                (type, player) -> new OverlayPower(type, player,
+                    data.getId("texture"),
+                    data.getFloat("strength"),
+                    data.getFloat("red"),
+                    data.getFloat("green"),
+                    data.getFloat("blue"),
+                    (OverlayPower.DrawMode) data.get("draw_mode"),
+                    (OverlayPower.DrawPhase) data.get("draw_phase"),
+                    data.getBoolean("hide_with_hud"),
+                    data.getBoolean("visible_in_third_person")))
+            .allowCondition();
     }
 }

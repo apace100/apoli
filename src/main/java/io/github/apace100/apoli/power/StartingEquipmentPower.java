@@ -1,10 +1,15 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Pair;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -67,5 +72,39 @@ public class StartingEquipmentPower extends Power {
                 entity.dropStack(copy);
             }
         });
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("starting_equipment"),
+            new SerializableData()
+                .add("stack", ApoliDataTypes.POSITIONED_ITEM_STACK, null)
+                .add("stacks", ApoliDataTypes.POSITIONED_ITEM_STACKS, null)
+                .add("recurrent", SerializableDataTypes.BOOLEAN, false),
+            data ->
+                (type, player) -> {
+                    StartingEquipmentPower power = new StartingEquipmentPower(type, player);
+                    if(data.isPresent("stack")) {
+                        Pair<Integer, ItemStack> stack = (Pair<Integer, ItemStack>)data.get("stack");
+                        int slot = stack.getLeft();
+                        if(slot > Integer.MIN_VALUE) {
+                            power.addStack(stack.getLeft(), stack.getRight());
+                        } else {
+                            power.addStack(stack.getRight());
+                        }
+                    }
+                    if(data.isPresent("stacks")) {
+                        ((List<Pair<Integer, ItemStack>>)data.get("stacks"))
+                            .forEach(integerItemStackPair -> {
+                                int slot = integerItemStackPair.getLeft();
+                                if(slot > Integer.MIN_VALUE) {
+                                    power.addStack(integerItemStackPair.getLeft(), integerItemStackPair.getRight());
+                                } else {
+                                    power.addStack(integerItemStackPair.getRight());
+                                }
+                            });
+                    }
+                    power.setRecurrent(data.getBoolean("recurrent"));
+                    return power;
+                });
     }
 }

@@ -1,5 +1,12 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -71,5 +78,26 @@ public class ItemOnItemPower extends Power {
             entityAction.accept(entity);
         }
         return stack;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("item_on_item"),
+            new SerializableData()
+                .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("on_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("result", SerializableDataTypes.ITEM_STACK, null)
+                .add("using_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data ->
+                (type, player) -> new ItemOnItemPower(type, player,
+                    (ConditionFactory<ItemStack>.Instance)data.get("using_item_condition"),
+                    (ConditionFactory<ItemStack>.Instance)data.get("on_item_condition"),
+                    (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("using_item_action"),
+                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
+                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("result_item_action"),
+                    (ActionFactory<Entity>.Instance)data.get("entity_action")))
+            .allowCondition();
     }
 }

@@ -1,5 +1,12 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.CraftingInventory;
@@ -70,5 +77,25 @@ public class ModifyCraftingPower extends ValueModifyingPower {
         if(entityAction != null) {
             entityAction.accept(entity);
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("modify_crafting"),
+            new SerializableData()
+                .add("recipe", SerializableDataTypes.IDENTIFIER, null)
+                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("result", SerializableDataTypes.ITEM_STACK, null)
+                .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("block_action", ApoliDataTypes.BLOCK_ACTION, null),
+            data ->
+                (type, player) -> {
+                    return new ModifyCraftingPower(type, player,
+                        data.getId("recipe"), (ConditionFactory<ItemStack>.Instance)data.get("item_condition"),
+                        (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("item_action"),
+                        (ActionFactory<Entity>.Instance)data.get("entity_action"),
+                        (ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action"));
+                })
+            .allowCondition();
     }
 }

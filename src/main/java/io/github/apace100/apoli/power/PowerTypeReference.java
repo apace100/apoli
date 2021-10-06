@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
@@ -51,7 +52,7 @@ public class PowerTypeReference<T extends Power> extends PowerType<T> {
                 referencedPowerType = PowerTypeRegistry.get(getIdentifier());
             } catch(IllegalArgumentException e) {
                 cooldown = 600;
-                //Origins.LOGGER.warn("Invalid PowerTypeReference: no power type exists with id \"" + getIdentifier() + "\"");
+                Apoli.LOGGER.warn("Invalid PowerTypeReference: no power type exists with id \"" + getIdentifier() + "\"");
             }
         }
         return referencedPowerType;

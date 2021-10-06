@@ -1,11 +1,14 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -68,5 +71,25 @@ public class AttributePower extends Power {
                 entity.setHealth(afterMaxHealth * previousHealthPercent);
             }
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("attribute"),
+            new SerializableData()
+                .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
+                .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
+                .add("update_health", SerializableDataTypes.BOOLEAN, true),
+            data ->
+                (type, player) -> {
+                    AttributePower ap = new AttributePower(type, player, data.getBoolean("update_health"));
+                    if(data.isPresent("modifier")) {
+                        ap.addModifier((AttributedEntityAttributeModifier)data.get("modifier"));
+                    }
+                    if(data.isPresent("modifiers")) {
+                        List<AttributedEntityAttributeModifier> modifierList = (List<AttributedEntityAttributeModifier>)data.get("modifiers");
+                        modifierList.forEach(ap::addModifier);
+                    }
+                    return ap;
+                });
     }
 }

@@ -1,7 +1,12 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EyeHeightAccess;
+import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.HudRender;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -166,5 +171,38 @@ public class FireProjectilePower extends ActiveCooldownPower {
             }
             this.entity.world.spawnEntity(entity);
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("fire_projectile"),
+            new SerializableData()
+                .add("cooldown", SerializableDataTypes.INT)
+                .add("count", SerializableDataTypes.INT, 1)
+                .add("interval", SerializableDataTypes.INT, 0)
+                .add("start_delay", SerializableDataTypes.INT, 0)
+                .add("speed", SerializableDataTypes.FLOAT, 1.5F)
+                .add("divergence", SerializableDataTypes.FLOAT, 1F)
+                .add("sound", SerializableDataTypes.SOUND_EVENT, null)
+                .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
+                .add("tag", SerializableDataTypes.NBT, null)
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
+            data ->
+                (type, player) -> {
+                    FireProjectilePower power = new FireProjectilePower(type, player,
+                        data.getInt("cooldown"),
+                        (HudRender)data.get("hud_render"),
+                        (EntityType)data.get("entity_type"),
+                        data.getInt("count"),
+                        data.getInt("interval"),
+                        data.getInt("start_delay"),
+                        data.getFloat("speed"),
+                        data.getFloat("divergence"),
+                        (SoundEvent)data.get("sound"),
+                        (NbtCompound)data.get("tag"));
+                    power.setKey((Active.Key)data.get("key"));
+                    return power;
+                })
+            .allowCondition();
     }
 }

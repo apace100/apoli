@@ -1,9 +1,14 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Pair;
 
 import java.util.function.Consumer;
@@ -28,5 +33,17 @@ public class PreventDeathPower extends Power {
         if(entityAction != null) {
             entityAction.accept(entity);
         }
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("prevent_death"),
+            new SerializableData()
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null),
+            data ->
+                (type, player) -> new PreventDeathPower(type, player,
+                    (ActionFactory<Entity>.Instance)data.get("entity_action"),
+                    (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition")))
+            .allowCondition();
     }
 }

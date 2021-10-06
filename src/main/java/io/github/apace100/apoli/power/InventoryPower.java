@@ -1,5 +1,11 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
@@ -126,5 +132,24 @@ public class InventoryPower extends Power implements Active, Inventory {
     @Override
     public void setKey(Key key) {
         this.key = key;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("inventory"),
+            new SerializableData()
+                .add("title", SerializableDataTypes.STRING, "container.inventory")
+                .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
+                .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
+            data ->
+                (type, player) -> {
+                    InventoryPower power = new InventoryPower(type, player, data.getString("title"), 9,
+                        data.getBoolean("drop_on_death"),
+                        data.isPresent("drop_on_death_filter") ? (ConditionFactory<ItemStack>.Instance) data.get("drop_on_death_filter") :
+                            itemStack -> true);
+                    power.setKey((Active.Key)data.get("key"));
+                    return power;
+                })
+            .allowCondition();
     }
 }

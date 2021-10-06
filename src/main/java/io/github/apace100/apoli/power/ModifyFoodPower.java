@@ -1,10 +1,18 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.item.ItemStack;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -46,5 +54,38 @@ public class ModifyFoodPower extends Power {
 
     public boolean doesMakeAlwaysEdible() {
         return makeAlwaysEdible;
+    }
+
+    public static PowerFactory createFactory() {
+        return new PowerFactory<>(Apoli.identifier("modify_food"),
+            new SerializableData()
+                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("food_modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
+                .add("food_modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
+                .add("saturation_modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
+                .add("saturation_modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("always_edible", SerializableDataTypes.BOOLEAN, false),
+            data ->
+                (type, player) -> {
+                    List<EntityAttributeModifier> foodModifiers = new LinkedList<>();
+                    List<EntityAttributeModifier> saturationModifiers = new LinkedList<>();
+                    if(data.isPresent("food_modifier")) {
+                        foodModifiers.add((EntityAttributeModifier)data.get("food_modifier"));
+                    }
+                    if(data.isPresent("food_modifiers")) {
+                        List<EntityAttributeModifier> modifierList = (List<EntityAttributeModifier>)data.get("food_modifiers");
+                        foodModifiers.addAll(modifierList);
+                    }
+                    if(data.isPresent("saturation_modifier")) {
+                        saturationModifiers.add((EntityAttributeModifier)data.get("saturation_modifier"));
+                    }
+                    if(data.isPresent("saturation_modifiers")) {
+                        List<EntityAttributeModifier> modifierList = (List<EntityAttributeModifier>)data.get("saturation_modifiers");
+                        saturationModifiers.addAll(modifierList);
+                    }
+                    return new ModifyFoodPower(type, player, data.isPresent("item_condition") ? (ConditionFactory<ItemStack>.Instance)data.get("item_condition") : stack -> true,
+                        foodModifiers, saturationModifiers, (ActionFactory<Entity>.Instance)data.get("entity_action"), data.getBoolean("always_edible"));
+                }).allowCondition();
     }
 }

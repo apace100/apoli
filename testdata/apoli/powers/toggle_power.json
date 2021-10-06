@@ -14,7 +14,7 @@
     },
     "else_action": {
       "type": "apoli:grant_power",
-      "power": "apoli:ocean_view",
+      "power": "apoli:modify_renders",
       "source": "apoli:grant_test"
     }
   },

@@ -1,10 +1,12 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableData;
 import io.github.ladysnake.pal.PlayerAbility;
-import io.github.ladysnake.pal.VanillaAbilities;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Identifier;
 
 public class PlayerAbilityPower extends Power {
 
@@ -50,13 +52,18 @@ public class PlayerAbilityPower extends Power {
     }
 
     public void grantAbility() {
-        //Apoli.SCHEDULER.queue(server -> {
-            Apoli.POWER_SOURCE.grantTo((PlayerEntity)entity, ability);
-         //   Apoli.POWER_SOURCE.grantTo((PlayerEntity)entity, VanillaAbilities.FLYING);
-        //}, 1);
+        Apoli.POWER_SOURCE.grantTo((PlayerEntity)entity, ability);
     }
 
     public void revokeAbility() {
         Apoli.POWER_SOURCE.revokeFrom((PlayerEntity)entity, ability);
+    }
+
+    public static PowerFactory createAbilityFactory(Identifier identifier, PlayerAbility ability) {
+        return new PowerFactory<>(identifier,
+            new SerializableData(),
+            data ->
+                (type, player) -> new PlayerAbilityPower(type, player, ability))
+            .allowCondition();
     }
 }
