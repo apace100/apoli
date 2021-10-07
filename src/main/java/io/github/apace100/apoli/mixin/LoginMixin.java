@@ -67,7 +67,10 @@ public abstract class LoginMixin {
 		ServerPlayNetworking.send(player, ModPackets.POWER_LIST, powerListData);
 
 		List<ServerPlayerEntity> playerList = getPlayerList();
-		playerList.forEach(spe -> PowerHolderComponent.KEY.syncWith(spe, ComponentProvider.fromEntity(player)));
+		playerList.forEach(spe -> {
+			PowerHolderComponent.KEY.syncWith(spe, ComponentProvider.fromEntity(player));
+			PowerHolderComponent.KEY.syncWith(player, ComponentProvider.fromEntity(spe));
+		});
 		PowerHolderComponent.sync(player);
 	}
 
