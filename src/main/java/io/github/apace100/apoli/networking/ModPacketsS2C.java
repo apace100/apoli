@@ -19,6 +19,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
@@ -38,7 +39,36 @@ public class ModPacketsS2C {
             ClientPlayNetworking.registerReceiver(ModPackets.POWER_LIST, ModPacketsS2C::receivePowerList);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_MOUNT, ModPacketsS2C::onPlayerMount);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_DISMOUNT, ModPacketsS2C::onPlayerDismount);
+            ClientPlayNetworking.registerReceiver(ModPackets.SET_ATTACKER, ModPacketsS2C::onSetAttacker);
         }));
+    }
+
+    private static void onSetAttacker(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {
+        int targetId = packetByteBuf.readInt();
+        boolean hasAttacker = packetByteBuf.readBoolean();
+        int attackerId = 0;
+        if(hasAttacker) {
+            attackerId = packetByteBuf.readInt();
+        }
+        int finalAttackerId = attackerId;
+        minecraftClient.execute(() -> {
+            Entity target = clientPlayNetworkHandler.getWorld().getEntityById(targetId);
+            Entity attacker = null;
+            if(hasAttacker) {
+                attacker = clientPlayNetworkHandler.getWorld().getEntityById(finalAttackerId);
+            }
+            if (!(target instanceof LivingEntity)) {
+                Apoli.LOGGER.warn("Received unknown target");
+            } else if(hasAttacker && !(attacker instanceof LivingEntity)) {
+                Apoli.LOGGER.warn("Received unknown attacker");
+            } else {
+                if(hasAttacker) {
+                    ((LivingEntity)target).setAttacker((LivingEntity)attacker);
+                } else {
+                    ((LivingEntity)target).setAttacker(null);
+                }
+            }
+        });
     }
 
 

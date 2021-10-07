@@ -2,20 +2,27 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.StackPowerUtil;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -47,6 +54,23 @@ public abstract class LivingEntityMixin extends Entity {
 
     public LivingEntityMixin(EntityType<?> type, World world) {
         super(type, world);
+    }
+
+    @Inject(method = "setAttacker", at = @At("TAIL"))
+    private void syncAttacker(LivingEntity attacker, CallbackInfo ci) {
+        if(!world.isClient) {
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeInt(getId());
+            if(this.attacker == null) {
+                buf.writeBoolean(false);
+            } else {
+                buf.writeBoolean(true);
+                buf.writeInt(this.attacker.getId());
+            }
+            for (ServerPlayerEntity player : PlayerLookup.tracking(this)) {
+                ServerPlayNetworking.send(player, ModPackets.SET_ATTACKER, buf);
+            }
+        }
     }
 
     @Inject(method = "getEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;removeModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
@@ -280,6 +304,8 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     @Shadow public float flyingSpeed;
+
+    @Shadow @Nullable private LivingEntity attacker;
 
     @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){

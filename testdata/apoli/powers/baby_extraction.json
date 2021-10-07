@@ -1,0 +1,26 @@
+{
+  "type": "apoli:action_on_entity_use",
+  "bientity_action": {
+    "type": "apoli:actor_action",
+    "action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:give",
+          "stack": {
+            "item": "minecraft:chicken_spawn_egg"
+          }
+        }
+      ]
+    }
+  },
+  "bientity_condition": {
+    "type": "apoli:target_condition",
+    "condition": {
+      "type": "apoli:living",
+      "command": "execute if data entity @s IsBaby",
+      "comparison": ">=",
+      "compare_to": 1
+    }
+  }
+}

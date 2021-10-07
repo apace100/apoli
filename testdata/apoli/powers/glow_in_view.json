@@ -1,0 +1,6 @@
+{
+  "type": "apoli:entity_glow",
+  "bientity_condition": {
+    "type": "apoli:can_see"
+  }
+}

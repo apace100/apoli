@@ -1,0 +1,32 @@
+{
+  "type": "apoli:multiple",
+  "death": {
+    "type": "apoli:action_on_entity_use",
+    "bientity_condition": {
+      "type": "apoli:attacker"
+    },
+    "bientity_action": {
+      "type": "apoli:target_action",
+      "action": {
+        "type": "apoli:damage",
+        "amount": 40,
+        "source": {
+          "name": "void",
+          "magic": true,
+          "unblockable": true
+        }
+      }
+    },
+    "hands": "main_hand"
+  },
+  "mark": {
+    "type": "apoli:entity_glow",
+    "use_teams": false,
+    "red": 0.8,
+    "green": 0.1,
+    "blue": 0.1,
+    "bientity_condition": {
+      "type": "apoli:attacker"
+    }
+  }
+}

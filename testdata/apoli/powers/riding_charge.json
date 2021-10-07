@@ -1,0 +1,20 @@
+{
+  "type": "apoli:active_self",
+  "cooldown": 1,
+  "hud_render": {
+    "should_render": false
+  },
+  "entity_action": {
+    "type": "apoli:riding_action",
+    "bientity_action": {
+      "type": "apoli:add_velocity",
+      "z": 2
+    }
+  },
+  "condition": {
+    "type": "apoli:riding"
+  },
+  "key": {
+    "key": "key.attack"
+  }
+}
