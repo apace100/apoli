@@ -81,19 +81,23 @@ public class ApoliClient implements ClientModInitializer {
 			ItemStack stack = playerEntity.getStackInHand(hand);
 			for(PreventEntityUsePower peup : PowerHolderComponent.getPowers(playerEntity, PreventEntityUsePower.class)) {
 				if(peup.doesApply(entity, hand, stack)) {
-					PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-					buf.writeInt(entity.getId());
-					buf.writeInt(hand.ordinal());
-					ClientPlayNetworking.send(ModPackets.PREVENTED_ENTITY_USE, buf);
+					if(playerEntity.world.isClient) {
+						PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+						buf.writeInt(entity.getId());
+						buf.writeInt(hand.ordinal());
+						ClientPlayNetworking.send(ModPackets.PREVENTED_ENTITY_USE, buf);
+					}
 					return peup.executeAction(entity, hand);
 				}
 			}
 			for(PreventBeingUsedPower pbup : PowerHolderComponent.getPowers(entity, PreventBeingUsedPower.class)) {
 				if(pbup.doesApply(playerEntity, hand, stack)) {
-					PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-					buf.writeInt(entity.getId());
-					buf.writeInt(hand.ordinal());
-					ClientPlayNetworking.send(ModPackets.PREVENTED_ENTITY_USE, buf);
+					if(playerEntity.world.isClient) {
+						PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+						buf.writeInt(entity.getId());
+						buf.writeInt(hand.ordinal());
+						ClientPlayNetworking.send(ModPackets.PREVENTED_ENTITY_USE, buf);
+					}
 					return pbup.executeAction(playerEntity, hand);
 				}
 			}
