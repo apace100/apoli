@@ -387,7 +387,7 @@ public class EntityConditions {
                     for(int j = blockPos.getY(); j <= blockPos2.getY() && count < stopAt; ++j) {
                         for(int k = blockPos.getZ(); k <= blockPos2.getZ() && count < stopAt; ++k) {
                             mutable.set(i, j, k);
-                            if(blockCondition.test(new CachedBlockPosition(entity.world, mutable, false))) {
+                            if(blockCondition.test(new CachedBlockPosition(entity.world, mutable, true))) {
                                 count++;
                             }
                         }
