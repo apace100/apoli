@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.data;
 
 import io.github.apace100.apoli.power.Active;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -16,13 +17,11 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,12 +30,10 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.tuple.Triple;
 
-import java.util.EnumSet;
 import java.util.List;
 
 public class ApoliDataTypes {
@@ -215,6 +212,34 @@ public class ApoliDataTypes {
             return dataInst;
         });
 
+    public static final SerializableDataType<Class<? extends Power>> POWER_CLASS =
+        SerializableDataType.wrap(ClassUtil.castClass(Class.class), SerializableDataTypes.STRING,
+        Class::getName, str -> {
+                StringBuilder failedClasses = new StringBuilder();
+                try {
+                    return (Class<? extends Power>)Class.forName(str);
+                } catch(Exception e0) {
+                    failedClasses.append(str);
+                }
+                for(String pkg : PowerPackageRegistry.getPackages()) {
+                    String full = pkg + "." + str;
+                    try {
+                        return (Class<? extends Power>)Class.forName(full);
+                    } catch(Exception e1) {
+                        failedClasses.append(", ");
+                        failedClasses.append(full);
+                    }
+                    full = pkg + "." + PowerPackageRegistry.transformJsonToClass(str);
+                    try {
+                        return (Class<? extends Power>)Class.forName(full);
+                    } catch(Exception e2) {
+                        failedClasses.append(", ");
+                        failedClasses.append(full);
+                    }
+                }
+                throw new RuntimeException("Specified class does not exist: \"" + str + "\". Looked at [" + failedClasses + "]");
+            });
+
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
 
@@ -225,5 +250,4 @@ public class ApoliDataTypes {
     public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Class<ActionFactory<T>.Instance> dataClass, ActionType<T> actionType) {
         return new SerializableDataType<>(dataClass, actionType::write, actionType::read, actionType::read);
     }
-
 }

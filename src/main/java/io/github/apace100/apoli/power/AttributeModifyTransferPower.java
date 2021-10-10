@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -44,7 +45,7 @@ public class AttributeModifyTransferPower extends Power {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("attribute_modify_transfer"),
             new SerializableData()
-                .add("class", SerializableDataTypes.CLASS)
+                .add("class", ApoliDataTypes.POWER_CLASS)
                 .add("attribute", SerializableDataTypes.ATTRIBUTE)
                 .add("multiplier", SerializableDataTypes.DOUBLE, 1.0),
             data ->

@@ -3,9 +3,9 @@ package io.github.apace100.apoli;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
-import io.github.apace100.apoli.command.PowerTypeArgumentType;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.PowerOperation;
+import io.github.apace100.apoli.command.PowerTypeArgumentType;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
@@ -80,6 +80,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ArgumentTypes.register(MODID + ":power", PowerTypeArgumentType.class, new ConstantArgumentSerializer<>(PowerTypeArgumentType::power));
 		ArgumentTypes.register(MODID + ":power_operation", PowerOperation.class, new ConstantArgumentSerializer<>(PowerOperation::operation));
+
+		PowerPackageRegistry.register("io.github.apace100.apoli.power");
 
 		PowerFactories.register();
 		EntityConditions.register();
