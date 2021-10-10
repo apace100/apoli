@@ -30,7 +30,7 @@ public class CooldownPower extends Power implements HudRendered {
 
     public void use() {
         lastUseTime = entity.getEntityWorld().getTime();
-        PowerHolderComponent.sync(entity);
+        PowerHolderComponent.syncPower(entity, this.type);
     }
 
     public float getProgress() {

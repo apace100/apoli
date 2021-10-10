@@ -340,7 +340,8 @@ public class EntityActions {
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType<?>)data.get("resource"));
+                    PowerType<?> powerType = (PowerType<?>)data.get("resource");
+                    Power p = component.getPower(powerType);
                     ResourceOperation operation = (ResourceOperation) data.get("operation");
                     int change = data.getInt("change");
                     if(p instanceof VariableIntPower) {
@@ -351,7 +352,7 @@ public class EntityActions {
                         } else if (operation == ResourceOperation.SET) {
                             vip.setValue(change);
                         }
-                        PowerHolderComponent.sync(entity);
+                        PowerHolderComponent.syncPower(entity, powerType);
                     } else if(p instanceof CooldownPower) {
                         CooldownPower cp = (CooldownPower)p;
                         if (operation == ResourceOperation.ADD) {
@@ -359,7 +360,7 @@ public class EntityActions {
                         } else if (operation == ResourceOperation.SET) {
                             cp.setCooldown(change);
                         }
-                        PowerHolderComponent.sync(entity);
+                        PowerHolderComponent.syncPower(entity, powerType);
                     }
                 }
             }));
@@ -473,16 +474,17 @@ public class EntityActions {
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType<?>)data.get("resource"));
+                    PowerType<?> powerType = (PowerType<?>)data.get("resource");
+                    Power p = component.getPower(powerType);
                     int value = data.getInt("value");
                     if(p instanceof VariableIntPower) {
                         VariableIntPower vip = (VariableIntPower)p;
                         vip.setValue(value);
-                        PowerHolderComponent.sync(entity);
+                        PowerHolderComponent.syncPower(entity, powerType);
                     } else if(p instanceof CooldownPower) {
                         CooldownPower cp = (CooldownPower)p;
                         cp.setCooldown(value);
-                        PowerHolderComponent.sync(entity);
+                        PowerHolderComponent.syncPower(entity, powerType);
                     }
                 }
             }));

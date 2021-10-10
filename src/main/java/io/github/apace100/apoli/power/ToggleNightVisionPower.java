@@ -26,7 +26,7 @@ public class ToggleNightVisionPower extends NightVisionPower implements Active {
     @Override
     public void onUse() {
         this.isActive = !this.isActive;
-        PowerHolderComponent.sync(entity);
+        PowerHolderComponent.syncPower(entity, this.type);
     }
 
     public boolean isActive() {

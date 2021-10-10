@@ -9,6 +9,7 @@ public class ModPackets {
 
     public static final Identifier USE_ACTIVE_POWERS = Apoli.identifier("use_active_powers");
     public static final Identifier POWER_LIST = Apoli.identifier("power_list");
+    public static final Identifier SYNC_POWER = Apoli.identifier("sync_power");
 
     public static final Identifier PLAYER_LANDED = Apoli.identifier("player_landed");
 

@@ -1,7 +1,9 @@
 package io.github.apace100.apoli.networking;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.MultiplePowerType;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.power.factory.PowerFactory;
@@ -21,6 +23,8 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
@@ -37,6 +41,7 @@ public class ModPacketsS2C {
         ClientLoginNetworking.registerGlobalReceiver(ModPackets.HANDSHAKE, ModPacketsS2C::handleHandshake);
         ClientPlayConnectionEvents.INIT.register(((clientPlayNetworkHandler, minecraftClient) -> {
             ClientPlayNetworking.registerReceiver(ModPackets.POWER_LIST, ModPacketsS2C::receivePowerList);
+            ClientPlayNetworking.registerReceiver(ModPackets.SYNC_POWER, ModPacketsS2C::onPowerSync);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_MOUNT, ModPacketsS2C::onPlayerMount);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_DISMOUNT, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(ModPackets.SET_ATTACKER, ModPacketsS2C::onSetAttacker);
@@ -154,6 +159,30 @@ public class ModPacketsS2C {
                     dismountingPlayer.dismountVehicle();
                 }
             }
+        });
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static void onPowerSync(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {
+        int entityId = packetByteBuf.readInt();
+        Identifier powerId = packetByteBuf.readIdentifier();
+        NbtCompound powerNbtContainer = packetByteBuf.readNbt();
+        NbtElement powerNbt = powerNbtContainer.get("Data");
+        minecraftClient.execute(() -> {
+            if(!PowerTypeRegistry.contains(powerId)) {
+                Apoli.LOGGER.warn("Received sync packet for unknown power type: " + powerId);
+                return;
+            }
+            Entity entity = clientPlayNetworkHandler.getWorld().getEntityById(entityId);
+            if (entity == null) {
+                Apoli.LOGGER.warn("Received sync packet for unknown power holder.");
+                return;
+            }
+            PowerType<?> powerType = PowerTypeRegistry.get(powerId);
+            PowerHolderComponent.KEY.maybeGet(entity).ifPresentOrElse(phc -> {
+                Power power = phc.getPower(powerType);
+                power.fromTag(powerNbt);
+            }, () -> Apoli.LOGGER.warn("Received sync packet for entity without power holder."));
         });
     }
 }

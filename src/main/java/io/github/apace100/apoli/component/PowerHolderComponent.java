@@ -7,14 +7,22 @@ import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import dev.onyxstudios.cca.api.v3.component.tick.ServerTickingComponent;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.ModifyValueCallback;
+import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.AttributeModifyTransferPower;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.ValueModifyingPower;
 import io.github.apace100.apoli.util.AttributeUtil;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
@@ -56,6 +64,28 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static void sync(Entity entity) {
         KEY.sync(entity);
+    }
+
+    static void syncPower(Entity entity, PowerType<?> powerType) {
+        if(entity == null || entity.world.isClient) {
+            return;
+        }
+        KEY.maybeGet(entity).ifPresent(phc -> {
+            Power power = phc.getPower(powerType);
+            NbtElement elem = power.toTag();
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeInt(entity.getId());
+            buf.writeIdentifier(powerType.getIdentifier());
+            NbtCompound compound = new NbtCompound();
+            compound.put("Data", elem);
+            buf.writeNbt(compound);
+            for(ServerPlayerEntity player : PlayerLookup.tracking(entity)) {
+                ServerPlayNetworking.send(player, ModPackets.SYNC_POWER, buf);
+            }
+            if(entity instanceof ServerPlayerEntity self) {
+                ServerPlayNetworking.send(self, ModPackets.SYNC_POWER, buf);
+            }
+        });
     }
 
     static <T extends Power> void withPower(Entity entity, Class<T> powerClass, Predicate<T> power, Consumer<T> with) {

@@ -16,7 +16,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.TranslatableText;
 
 import java.util.Optional;
@@ -94,20 +93,20 @@ public class ResourceCommand {
                 case SET:
                     i = IntegerArgumentType.getInteger(command, "value");
                     vIntPower.setValue(i);
-                    PowerHolderComponent.sync(player);
+                    PowerHolderComponent.syncPower(player, powerType);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.set.success.single", powerType.getIdentifier(), player.getEntityName(), i), true);
                     return 1;
                 case CHANGE:
                     i = IntegerArgumentType.getInteger(command, "value");
                     int total = vIntPower.getValue()+i;
                     vIntPower.setValue(total);
-                    PowerHolderComponent.sync(player);
+                    PowerHolderComponent.syncPower(player, powerType);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.add.success.single", i, powerType.getIdentifier(), player.getEntityName(), total), true);
                     return 1;
                 case OPERATION:
                     ScoreboardPlayerScore score = command.getSource().getServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
                     command.getArgument("operation", PowerOperation.Operation.class).apply(vIntPower, score);
-                    PowerHolderComponent.sync(player);
+                    PowerHolderComponent.syncPower(player, powerType);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), player.getEntityName(), vIntPower.getValue()), true);
                     return 1;
             }
@@ -124,19 +123,19 @@ public class ResourceCommand {
                 case SET:
                     i = IntegerArgumentType.getInteger(command, "value");
                     cooldownPower.setCooldown(i);
-                    PowerHolderComponent.sync(player);
+                    PowerHolderComponent.syncPower(player, powerType);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.set.success.single", powerType.getIdentifier(), player.getEntityName(), i), true);
                     return 1;
                 case CHANGE:
                     i = IntegerArgumentType.getInteger(command, "value");
                     cooldownPower.modify(i);
-                    PowerHolderComponent.sync(player);
+                    PowerHolderComponent.syncPower(player, powerType);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.add.success.single", i, powerType.getIdentifier(), player.getEntityName(), cooldownPower.getRemainingTicks()), true);
                     return 1;
                 case OPERATION:
                     ScoreboardPlayerScore score = command.getSource().getServer().getScoreboard().getPlayerScore(ScoreHolderArgumentType.getScoreHolder(command, "entity"), ScoreboardObjectiveArgumentType.getObjective(command, "objective"));
                     command.getArgument("operation", PowerOperation.Operation.class).apply(cooldownPower, score);
-                    PowerHolderComponent.sync(player);
+                    PowerHolderComponent.syncPower(player, powerType);
                     command.getSource().sendFeedback(new TranslatableText("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), player.getEntityName(), cooldownPower.getRemainingTicks()), true);
                     return 1;
             }
