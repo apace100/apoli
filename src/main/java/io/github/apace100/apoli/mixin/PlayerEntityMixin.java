@@ -23,9 +23,7 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -55,6 +53,10 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         super(entityType, world);
     }
 
+    @ModifyArg(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"), index = 1)
+    private double adjustVerticalSwimSpeed(double original) {
+        return PowerHolderComponent.modify(this, ModifySwimSpeedPower.class, original);
+    }
 
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
     private void sendPlayerDismountPacket(CallbackInfo ci) {

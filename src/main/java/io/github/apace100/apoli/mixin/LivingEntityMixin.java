@@ -18,6 +18,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -259,7 +260,10 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     @ModifyConstant(method = "swimUpward", constant = @Constant(doubleValue = 0.03999999910593033D))
-    public double modifyUpwardSwimming(double original) {
+    public double modifyUpwardSwimming(double original, Tag<Fluid> fluid) {
+        if(fluid == FluidTags.LAVA) {
+            return original;
+        }
         return PowerHolderComponent.modify(this, ModifySwimSpeedPower.class, original);
     }
 
