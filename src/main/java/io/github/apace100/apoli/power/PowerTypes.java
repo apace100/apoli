@@ -2,10 +2,7 @@ package io.github.apace100.apoli.power;
 
 import com.google.gson.*;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.integration.AdditionalPowerDataCallback;
-import io.github.apace100.apoli.integration.PostPowerLoadCallback;
-import io.github.apace100.apoli.integration.PowerReloadCallback;
-import io.github.apace100.apoli.integration.PrePowerLoadCallback;
+import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.NamespaceAlias;
@@ -41,6 +38,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         PowerTypeRegistry.reset();
         LOADING_PRIORITIES.clear();
         PowerReloadCallback.EVENT.invoker().onPowerReload();
+        PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
         loader.forEach((id, jel) -> {
             for (JsonElement je : jel) {
                 try {
@@ -84,6 +82,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                 }
             }
         });
+        PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
         LOADING_PRIORITIES.clear();
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;

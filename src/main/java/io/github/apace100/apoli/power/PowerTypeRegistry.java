@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.integration.PowerClearCallback;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
@@ -58,6 +59,7 @@ public class PowerTypeRegistry {
     }
 
     public static void clear() {
+        PowerClearCallback.EVENT.invoker().onPowerClear();
         idToPower.clear();
     }
 
