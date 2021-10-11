@@ -19,6 +19,8 @@ import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
+import io.github.ladysnake.pal.AbilitySource;
+import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -42,6 +44,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 	public static final Logger LOGGER = LogManager.getLogger(Apoli.class);
 	public static String VERSION = "";
 	public static int[] SEMVER;
+
+	public static final AbilitySource LEGACY_POWER_SOURCE = Pal.getAbilitySource(Apoli.identifier("power_source"));
 
 	public static final boolean PERFORM_VERSION_CHECK = false;
 

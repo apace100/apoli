@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.ladysnake.pal.AbilitySource;
@@ -38,8 +39,15 @@ public class PlayerAbilityPower extends Power {
 
     @Override
     public void onGained() {
-        if(!entity.world.isClient && isActive() && !hasAbility()) {
+        if(entity instanceof PlayerEntity && !entity.world.isClient && isActive() && !hasAbility()) {
             grantAbility();
+        }
+    }
+
+    @Override
+    public void onAdded() {
+        if(entity instanceof PlayerEntity && Apoli.LEGACY_POWER_SOURCE.grants((PlayerEntity)entity, ability)) {
+            Apoli.LEGACY_POWER_SOURCE.revokeFrom((PlayerEntity) entity, ability);
         }
     }
 
