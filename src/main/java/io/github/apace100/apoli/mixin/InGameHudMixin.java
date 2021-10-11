@@ -61,4 +61,17 @@ public class InGameHudMixin {
         }
         return original;
     }
+    @ModifyArg(
+            method = "renderExperienceBar",
+            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderTexture(ILnet/minecraft/util/Identifier;)V"),
+            index = 1
+    )
+    public Identifier changeXpBarTextures(Identifier original) {
+        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
+        if (power.isPresent()) {
+            return power.get().getStatusBarTexture();
+        }
+        return original;
+    }
+
 }
