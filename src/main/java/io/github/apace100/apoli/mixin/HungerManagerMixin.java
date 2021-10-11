@@ -9,7 +9,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,17 +25,27 @@ import java.util.stream.Collectors;
 @Mixin(HungerManager.class)
 public class HungerManagerMixin {
 
+    @Shadow private int foodLevel;
+    @Shadow private float foodSaturationLevel;
     @Unique
     private PlayerEntity player;
 
+    @Unique
+    private boolean apoli$ShouldUpdateManually = false;
+
     @Redirect(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FoodComponent;getHunger()I"))
     private int modifyHunger(FoodComponent foodComponent, Item item, ItemStack stack) {
+        apoli$ShouldUpdateManually = false;
         if(player != null) {
             double baseValue = foodComponent.getHunger();
         List<EntityAttributeModifier> modifiers = PowerHolderComponent.KEY.get(player).getPowers(ModifyFoodPower.class).stream()
             .filter(p -> p.doesApply(stack))
             .flatMap(p -> p.getFoodModifiers().stream()).collect(Collectors.toList());
-            return (int) AttributeUtil.sortAndApplyModifiers(modifiers, baseValue);
+            int newFood = (int) AttributeUtil.sortAndApplyModifiers(modifiers, baseValue);
+            if(newFood != (int)baseValue && newFood == 0) {
+                apoli$ShouldUpdateManually = true;
+            }
+            return newFood;
         }
         return foodComponent.getHunger();
     }
@@ -44,7 +57,11 @@ public class HungerManagerMixin {
             List<EntityAttributeModifier> modifiers = PowerHolderComponent.KEY.get(player).getPowers(ModifyFoodPower.class).stream()
                 .filter(p -> p.doesApply(stack))
                 .flatMap(p -> p.getSaturationModifiers().stream()).collect(Collectors.toList());
-            return (float) AttributeUtil.sortAndApplyModifiers(modifiers, baseValue);
+            float newSaturation = (float) AttributeUtil.sortAndApplyModifiers(modifiers, baseValue);
+            if(newSaturation != baseValue && newSaturation == 0) {
+                apoli$ShouldUpdateManually = true;
+            }
+            return newSaturation;
         }
         return foodComponent.getSaturationModifier();
     }
@@ -53,6 +70,9 @@ public class HungerManagerMixin {
     private void executeAdditionalEatAction(Item item, ItemStack stack, CallbackInfo ci) {
         if(player != null) {
             PowerHolderComponent.KEY.get(player).getPowers(ModifyFoodPower.class).stream().filter(p -> p.doesApply(stack)).forEach(ModifyFoodPower::eat);
+            if(apoli$ShouldUpdateManually && !player.world.isClient) {
+                ((ServerPlayerEntity)player).networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), foodLevel, foodSaturationLevel));
+            }
         }
     }
 
