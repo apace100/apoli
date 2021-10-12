@@ -13,6 +13,7 @@ import io.github.apace100.apoli.util.Shape;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -136,10 +137,14 @@ public class EntityConditions {
             .add("compare_to", SerializableDataTypes.DOUBLE),
             (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely((Tag<Fluid>)data.get("fluid")), data.getDouble("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("power"), new SerializableData()
-            .add("power", SerializableDataTypes.IDENTIFIER),
+            .add("power", SerializableDataTypes.IDENTIFIER)
+            .add("source", SerializableDataTypes.IDENTIFIER, null),
             (data, entity) -> {
                 try {
                     PowerType<?> powerType = PowerTypeRegistry.get(data.getId("power"));
+                    if(data.isPresent("source")) {
+                        return PowerHolderComponent.KEY.get(entity).hasPower(powerType, data.getId("source"));
+                    }
                     return PowerHolderComponent.KEY.get(entity).hasPower(powerType);
                 } catch(IllegalArgumentException e) {
                     return false;
@@ -539,7 +544,21 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("exists"), new SerializableData(), (data, entity) -> entity != null));
         register(new ConditionFactory<>(Apoli.identifier("creative_flying"), new SerializableData(),
             (data, entity) -> entity instanceof PlayerEntity && ((PlayerEntity)entity).getAbilities().flying));
-
+        register(new ConditionFactory<>(Apoli.identifier("power_type"), new SerializableData()
+            .add("power_type", ApoliDataTypes.POWER_TYPE),
+            (data, entity) -> {
+                PowerTypeReference powerTypeReference = (PowerTypeReference) data.get("power_type");
+                PowerType<?> powerType = powerTypeReference.getReferencedPowerType();
+                return PowerHolderComponent.KEY.maybeGet(entity).map(phc -> phc.getPowerTypes(true).contains(powerType)).orElse(false);
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("ability"), new SerializableData()
+            .add("ability", ApoliDataTypes.PLAYER_ABILITY),
+            (data, entity) -> {
+                if(entity instanceof PlayerEntity && !entity.world.isClient) {
+                    return ((PlayerAbility) data.get("ability")).isEnabledFor((PlayerEntity) entity);
+                }
+                return false;
+            }));
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
