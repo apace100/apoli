@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.data;
 
 import io.github.apace100.apoli.power.Active;
-import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -213,34 +212,6 @@ public class ApoliDataTypes {
             dataInst.set("inverted", inst.isInverted());
             return dataInst;
         });
-
-    public static final SerializableDataType<Class<? extends Power>> POWER_CLASS =
-        SerializableDataType.wrap(ClassUtil.castClass(Class.class), SerializableDataTypes.STRING,
-        Class::getName, str -> {
-                StringBuilder failedClasses = new StringBuilder();
-                try {
-                    return (Class<? extends Power>)Class.forName(str);
-                } catch(Exception e0) {
-                    failedClasses.append(str);
-                }
-                for(String pkg : PowerPackageRegistry.getPackages()) {
-                    String full = pkg + "." + str;
-                    try {
-                        return (Class<? extends Power>)Class.forName(full);
-                    } catch(Exception e1) {
-                        failedClasses.append(", ");
-                        failedClasses.append(full);
-                    }
-                    full = pkg + "." + PowerPackageRegistry.transformJsonToClass(str);
-                    try {
-                        return (Class<? extends Power>)Class.forName(full);
-                    } catch(Exception e2) {
-                        failedClasses.append(", ");
-                        failedClasses.append(full);
-                    }
-                }
-                throw new RuntimeException("Specified class does not exist: \"" + str + "\". Looked at [" + failedClasses + "]");
-            });
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));

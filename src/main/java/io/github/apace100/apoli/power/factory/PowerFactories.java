@@ -106,6 +106,7 @@ public class PowerFactories {
         register(() -> ValueModifyingPower.createValueModifyingFactory(
             ModifyAirSpeedPower::new, Apoli.identifier("modify_air_speed")));
         register(AttributeModifyTransferPower::createFactory);
+        register(PreventFeatureRenderPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

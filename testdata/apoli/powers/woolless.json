@@ -1,0 +1,20 @@
+{
+  "type": "apoli:multiple",
+  "visibility": {
+    "type": "apoli:prevent_feature_render",
+    "feature": "sheep_wool"
+  },
+  "functionality": {
+    "type": "apoli:prevent_being_used",
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:shears"
+      }
+    },
+    "condition": {
+      "type": "apoli:entity_type",
+      "entity_type": "minecraft:sheep"
+    }
+  }
+}
