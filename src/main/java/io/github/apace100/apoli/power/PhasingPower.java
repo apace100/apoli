@@ -51,7 +51,7 @@ public class PhasingPower extends Power {
     }
 
     public enum RenderType {
-        BLINDNESS, REMOVE_BLOCKS
+        BLINDNESS, REMOVE_BLOCKS, NONE
     }
 
     public static PowerFactory createFactory() {
