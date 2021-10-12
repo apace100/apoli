@@ -15,6 +15,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Nameable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -23,9 +25,15 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput {
@@ -56,6 +64,52 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @ModifyArg(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"), index = 1)
     private double adjustVerticalSwimSpeed(double original) {
         return PowerHolderComponent.modify(this, ModifySwimSpeedPower.class, original);
+    }
+
+    @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
+    private void preventEntityInteraction(Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+        if(this.isSpectator()) {
+            return;
+        }
+        ItemStack stack = this.getStackInHand(hand);
+        for(PreventEntityUsePower peup : PowerHolderComponent.getPowers(this, PreventEntityUsePower.class)) {
+            if(peup.doesApply(entity, hand, stack)) {
+                cir.setReturnValue(peup.executeAction(entity, hand));
+                cir.cancel();
+                return;
+            }
+        }
+        for(PreventBeingUsedPower pbup : PowerHolderComponent.getPowers(entity, PreventBeingUsedPower.class)) {
+            if(pbup.doesApply((PlayerEntity) (Object) this, hand, stack)) {
+                cir.setReturnValue(pbup.executeAction((PlayerEntity) (Object) this, hand));
+                cir.cancel();
+                return;
+            }
+        }
+        ActionResult result = ActionResult.PASS;
+        List<ActionOnEntityUsePower> powers = PowerHolderComponent.getPowers(this, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack)).toList();
+        for (ActionOnEntityUsePower aoip : powers) {
+            ActionResult ar = aoip.executeAction(entity, hand);
+            if(ar.isAccepted() && !result.isAccepted()) {
+                result = ar;
+            } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
+                result = ar;
+            }
+        }
+        List<ActionOnBeingUsedPower> otherPowers = PowerHolderComponent.getPowers(entity, ActionOnBeingUsedPower.class).stream()
+            .filter(p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack)).collect(Collectors.toList());
+        for(ActionOnBeingUsedPower awip : otherPowers) {
+            ActionResult ar = awip.executeAction((PlayerEntity) (Object) this, hand);
+            if(ar.isAccepted() && !result.isAccepted()) {
+                result = ar;
+            } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
+                result = ar;
+            }
+        }
+        if(powers.size() > 0 || otherPowers.size() > 0) {
+            cir.setReturnValue(result);
+            cir.cancel();
+        }
     }
 
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
