@@ -105,13 +105,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         return PowerHolderComponent.modify(this, ModifyExhaustionPower.class, exhaustionIn);
     }
 
-    // ModifyDamageDealt
-    @ModifyVariable(method = "attack", at = @At(value = "STORE", ordinal = 0), name = "f", ordinal = 0)
-    public float modifyDamage(float f, Entity target) {
-        DamageSource source = DamageSource.player((PlayerEntity)(Object)this);
-        return PowerHolderComponent.modify(this, ModifyDamageDealtPower.class, f, p -> p.doesApply(source, f, target instanceof LivingEntity ? (LivingEntity)target : null), p -> p.executeActions(target));
-    }
-
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V"))
     private void dropAdditionalInventory(CallbackInfo ci) {
         PowerHolderComponent.getPowers(this, InventoryPower.class).forEach(inventory -> {

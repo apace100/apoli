@@ -45,7 +45,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 	public static String VERSION = "";
 	public static int[] SEMVER;
 
-	public static final AbilitySource POWER_SOURCE = Pal.getAbilitySource(Apoli.identifier("power_source"));
+	public static final AbilitySource LEGACY_POWER_SOURCE = Pal.getAbilitySource(Apoli.identifier("power_source"));
 
 	public static final boolean PERFORM_VERSION_CHECK = false;
 
