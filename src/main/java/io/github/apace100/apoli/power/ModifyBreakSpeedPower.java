@@ -25,6 +25,9 @@ public class ModifyBreakSpeedPower extends ValueModifyingPower {
     }
 
     public boolean doesApply(WorldView world, BlockPos pos) {
+        if(predicate == null) {
+            return true;
+        }
         CachedBlockPosition cbp = new CachedBlockPosition(world, pos, true);
         return predicate.test(cbp);
     }
