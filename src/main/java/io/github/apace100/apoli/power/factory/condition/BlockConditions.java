@@ -161,6 +161,27 @@ public class BlockConditions {
                 }
                 return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
             }));
+        register(new ConditionFactory<>(Apoli.identifier("slipperiness"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.FLOAT),
+            (data, block) -> {
+                BlockState state = block.getBlockState();
+                return ((Comparison)data.get("comparison")).compare(state.getBlock().getSlipperiness(), data.getFloat("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("blast_resistance"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.FLOAT),
+            (data, block) -> {
+                BlockState state = block.getBlockState();
+                return ((Comparison)data.get("comparison")).compare(state.getBlock().getBlastResistance(), data.getFloat("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("hardness"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.FLOAT),
+            (data, block) -> {
+                BlockState state = block.getBlockState();
+                return ((Comparison)data.get("comparison")).compare(state.getBlock().getHardness(), data.getFloat("compare_to"));
+            }));
     }
 
     private static void register(ConditionFactory<CachedBlockPosition> conditionFactory) {
