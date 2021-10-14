@@ -103,8 +103,14 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static <T extends Power> boolean hasPower(Entity entity, Class<T> powerClass) {
+        return hasPower(entity, powerClass, null);
+    }
+
+    static <T extends Power> boolean hasPower(Entity entity, Class<T> powerClass, Predicate<T> powerFilter) {
         if(entity instanceof LivingEntity) {
-            return KEY.get(entity).getPowers().stream().anyMatch(p -> powerClass.isAssignableFrom(p.getClass()) && p.isActive());
+            return KEY.get(entity).getPowers().stream()
+                .anyMatch(p -> powerClass.isAssignableFrom(p.getClass()) && p.isActive() &&
+                    (powerFilter == null || powerFilter.test((T)p)));
         }
         return false;
     }

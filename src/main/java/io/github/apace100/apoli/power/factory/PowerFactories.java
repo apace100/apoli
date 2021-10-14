@@ -108,6 +108,7 @@ public class PowerFactories {
         register(AttributeModifyTransferPower::createFactory);
         register(PreventFeatureRenderPower::createFactory);
         register(ModifySlipperinessPower::createFactory);
+        register(PreventEntityCollisionPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

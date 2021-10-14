@@ -309,6 +309,14 @@ public abstract class LivingEntityMixin extends Entity {
         return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(world, getVelocityAffectingPos()));
     }
 
+    @Inject(method = "pushAway", at = @At("HEAD"), cancellable = true)
+    private void preventPushing(Entity entity, CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower(this, PreventEntityCollisionPower.class, p -> p.doesApply(entity))
+            || PowerHolderComponent.hasPower(entity, PreventEntityCollisionPower.class, p -> p.doesApply(this))) {
+            ci.cancel();
+        }
+    }
+
     @Unique
     private float cachedDamageAmount;
 
