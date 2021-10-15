@@ -109,6 +109,7 @@ public class PowerFactories {
         register(PreventFeatureRenderPower::createFactory);
         register(ModifySlipperinessPower::createFactory);
         register(PreventEntityCollisionPower::createFactory);
+        register(ActionOnBlockUsePower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

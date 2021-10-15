@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ActionOnBlockBreakPower;
+import io.github.apace100.apoli.power.ActionOnBlockUsePower;
 import io.github.apace100.apoli.power.ModifyHarvestPower;
 import io.github.apace100.apoli.power.PreventBlockUsePower;
 import io.github.apace100.apoli.util.SavedBlockPosition;
@@ -61,5 +62,12 @@ public class ServerPlayerInteractionManagerMixin {
         if(PowerHolderComponent.getPowers(player, PreventBlockUsePower.class).stream().anyMatch(p -> p.doesPrevent(world, hitResult.getBlockPos()))) {
             cir.setReturnValue(ActionResult.FAIL);
         }
+    }
+
+    @Inject(method = "interactBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;"), cancellable = true)
+    private void executeBlockUseActions(ServerPlayerEntity player, World world, ItemStack stack, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
+        PowerHolderComponent.getPowers(player, ActionOnBlockUsePower.class).stream()
+            .filter(p -> p.shouldExecute(hitResult.getBlockPos(), hitResult.getSide(), hand, stack))
+            .forEach(p -> p.executeAction(hitResult.getBlockPos(), hitResult.getSide(), hand));
     }
 }
