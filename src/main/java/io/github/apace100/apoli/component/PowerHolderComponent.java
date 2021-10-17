@@ -90,9 +90,6 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 if(entity instanceof ServerPlayerEntity self) {
                     ServerPlayNetworking.send(self, ModPackets.SYNC_POWER, buf);
                 }
-            } else {
-                Apoli.LOGGER.warn("Tried to synchronize a power which was not present on the holder: "
-                    + entity + ", power: " + finalPowerType.getIdentifier());
             }
         });
     }
