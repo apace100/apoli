@@ -37,7 +37,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.BlockView;
@@ -202,53 +201,12 @@ public class EntityActions {
             (data, entity) -> {
                 Space space = (Space)data.get("space");
                 Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
-                Vec3d vel;
-                Vec3d velH;
                 TriConsumer<Float, Float, Float> method = entity::addVelocity;
                 if(data.getBoolean("set")) {
                     method = entity::setVelocity;
                 }
-                switch(space) {
-                    case WORLD:
-                        method.accept(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
-                        break;
-                    case LOCAL:
-                        Space.rotateVectorToBase(entity.getRotationVector(), vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case LOCAL_HORIZONTAL:
-                        vel = entity.getRotationVector();
-                        velH = new Vec3d(vel.x, 0, vel.z);
-                        if(velH.lengthSquared() > 0.00005) {
-                            velH = velH.normalize();
-                            Space.rotateVectorToBase(velH, vec);
-                            method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        }
-                        break;
-                    case VELOCITY:
-                        Space.rotateVectorToBase(entity.getVelocity(), vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case VELOCITY_NORMALIZED:
-                        Space.rotateVectorToBase(entity.getVelocity().normalize(), vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case VELOCITY_HORIZONTAL:
-                        vel = entity.getVelocity();
-                        velH = new Vec3d(vel.x, 0, vel.z);
-                        Space.rotateVectorToBase(velH, vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case VELOCITY_HORIZONTAL_NORMALIZED:
-                        vel = entity.getVelocity();
-                        velH = new Vec3d(vel.x, 0, vel.z);
-                        if(velH.lengthSquared() > 0.00005) {
-                            velH = velH.normalize();
-                            Space.rotateVectorToBase(velH, vec);
-                            method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        }
-                        break;
-                }
+                space.toGlobal(vec, entity);
+                method.accept(vec.getX(), vec.getY(), vec.getZ());
                 entity.velocityModified = true;
             }));
         register(new ActionFactory<>(Apoli.identifier("spawn_entity"), new SerializableData()
