@@ -94,9 +94,15 @@ public class BiEntityActions {
             .add("x", SerializableDataTypes.FLOAT, 0F)
             .add("y", SerializableDataTypes.FLOAT, 0F)
             .add("z", SerializableDataTypes.FLOAT, 0F)
+            .add("client", SerializableDataTypes.BOOLEAN, true)
+            .add("server", SerializableDataTypes.BOOLEAN, true)
             .add("set", SerializableDataTypes.BOOLEAN, false),
             (data, entities) -> {
                 Entity actor = entities.getLeft(), target = entities.getRight();
+                if (target instanceof PlayerEntity
+                    && (target.world.isClient ?
+                        !data.getBoolean("client") : !data.getBoolean("server")))
+                    return;
                 Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 TriConsumer<Float, Float, Float> method = target::addVelocity;
                 if(data.getBoolean("set"))

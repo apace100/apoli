@@ -197,8 +197,14 @@ public class EntityActions {
             .add("y", SerializableDataTypes.FLOAT, 0F)
             .add("z", SerializableDataTypes.FLOAT, 0F)
             .add("space", ApoliDataTypes.SPACE, Space.WORLD)
+            .add("client", SerializableDataTypes.BOOLEAN, true)
+            .add("server", SerializableDataTypes.BOOLEAN, true)
             .add("set", SerializableDataTypes.BOOLEAN, false),
             (data, entity) -> {
+                if (entity instanceof PlayerEntity
+                    && (entity.world.isClient ?
+                    !data.getBoolean("client") : !data.getBoolean("server")))
+                    return;
                 Space space = (Space)data.get("space");
                 Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 TriConsumer<Float, Float, Float> method = entity::addVelocity;
