@@ -241,6 +241,7 @@ public class EntityConditions {
                 }
                 return comparison.compare(count, compareTo);
             }));
+        DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("dimension"), new SerializableData()
             .add("dimension", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.WORLD_KEY, data.getId("dimension"))));
