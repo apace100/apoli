@@ -1,0 +1,100 @@
+{
+	"type": "apoli:multiple",
+
+	"towards_top_of_head_client": {
+
+		"comment": "The preferable solution in most cases",
+
+		"type": "apoli:active_self",
+		"entity_action": {
+			"type": "apoli:add_velocity",
+			"space": "local",
+			"set": true,
+			"server": false,
+			"y": 1
+		},
+		"key": {
+			"key": "key.attack"
+		}
+	},
+
+	"towards_top_of_head_server": {
+
+		"comment": "Has a little bit of a delay due to communication between the server and client, as with 'launch', and won't work with velocity spaces",
+
+		"type": "apoli:active_self",
+		"entity_action": {
+			"type": "apoli:add_velocity",
+			"space": "local",
+			"set": true,
+			"client": false,
+			"y": 1
+		},
+		"key": {
+			"key": "key.use"
+		}
+	},
+
+	"towards_top_of_head_mixed": {
+
+		"comment": "The legacy behavior of add_velocity, somewhat glitchy due to both sides potentially triggering, and server shenanigans described above and below",
+
+		"type": "apoli:active_self",
+		"entity_action": {
+			"type": "apoli:add_velocity",
+			"space": "local",
+			"set": true,
+			"y": 1
+		},
+		"key": {
+			"key": "key.pickItem"
+		}
+	},
+
+	"towards_left_of_velocity": {
+
+		"comment": "Make 'set' true for a more square-like movement when mashing the key",
+		"comment_": "Remove the line preventing the action from executing on the server...",
+		"comment__": "... and watch it destroy the velocity evaluation completely in some cases, e.g. some cases of walking, of jumping, and of creative flight",
+
+		"type": "apoli:active_self",
+		"entity_action": {
+			"type": "apoli:add_velocity",
+			"space": "velocity_normalized",
+			"server": false, "comment___" : "← this line",
+			"x": 1
+		},
+		"key": {
+			"key": "key.playerlist"
+		}
+	},
+
+	"strafe_on_hit": {
+
+		"type": "apoli:action_on_hit",
+		"bientity_action": {
+			"type": "apoli:invert",
+			"action": {
+				"type": "apoli:choice",
+				"actions": [
+					{
+						"element": {
+							"type": "apoli:add_velocity",
+							"set": true,
+							"x": -1
+						},
+						"weight": 1
+					},
+					{
+						"element": {
+							"type": "apoli:add_velocity",
+							"set": true,
+							"x": 1
+						},
+						"weight": 1
+					}
+				]
+			}
+		}
+	}
+}
