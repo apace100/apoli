@@ -1,0 +1,13 @@
+{
+  "type": "apoli:model_color",
+  "red": 0,
+  "green": 0,
+  "blue": 0,
+  "condition": {
+    "type": "apoli:on_block",
+    "block_condition": {
+      "type": "apoli:block",
+      "block": "minecraft:soul_sand"
+    }
+  }
+}
