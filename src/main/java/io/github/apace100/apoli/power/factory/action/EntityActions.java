@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.action.entity.SwingHandAction;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ResourceOperation;
@@ -606,6 +607,7 @@ public class EntityActions {
                     }
                 }
             }));
+        register(SwingHandAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
