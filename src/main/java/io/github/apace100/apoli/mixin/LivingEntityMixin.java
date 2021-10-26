@@ -5,6 +5,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.StackPowerUtil;
+import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -55,6 +56,26 @@ public abstract class LivingEntityMixin extends Entity {
 
     public LivingEntityMixin(EntityType<?> type, World world) {
         super(type, world);
+    }
+
+    @Inject(method = "onStatusEffectApplied", at = @At("TAIL"))
+    private void updateStatusEffectWhenRemoved(StatusEffectInstance effectInstance, Entity source, CallbackInfo ci) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
+    }
+
+    @Inject(method = "onStatusEffectUpgraded", at = @At("TAIL"))
+    private void updateStatusEffectWhenRemoved(StatusEffectInstance effectInstance, boolean reapplyEffect, Entity source, CallbackInfo ci) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
+    }
+
+    @Inject(method = "onStatusEffectRemoved", at = @At("RETURN"))
+    private void updateStatusEffectWhenRemoved(StatusEffectInstance effectInstance, CallbackInfo ci) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
+    }
+
+    @Inject(method = "clearStatusEffects", at = @At("RETURN"))
+    private void updateStatusEffectWhenRemoved(CallbackInfoReturnable<Boolean> cir) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
     }
 
     @Inject(method = "setAttacker", at = @At("TAIL"))
