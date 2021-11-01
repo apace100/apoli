@@ -22,15 +22,19 @@ import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -45,7 +49,29 @@ public class ModPacketsS2C {
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_MOUNT, ModPacketsS2C::onPlayerMount);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_DISMOUNT, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(ModPackets.SET_ATTACKER, ModPacketsS2C::onSetAttacker);
+            ClientPlayNetworking.registerReceiver(ModPackets.SYNC_STATUS_EFFECT, ModPacketsS2C::onStatusEffectSync);
         }));
+    }
+
+    private static void onStatusEffectSync(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {
+        int targetId = packetByteBuf.readInt();
+        int effectListSize = packetByteBuf.readInt();
+        Map<StatusEffect, StatusEffectInstance> newMap = new HashMap<>();
+        for (int i = 0; i < effectListSize; ++i) {
+            int statusEffectId = packetByteBuf.readInt();
+            NbtCompound nbt = packetByteBuf.readNbt();
+            if (nbt == null) return;
+            newMap.put(Registry.STATUS_EFFECT.get(statusEffectId), StatusEffectInstance.fromNbt(nbt));
+        }
+        minecraftClient.execute(() -> {
+            Entity target = clientPlayNetworkHandler.getWorld().getEntityById(targetId);
+            if (!(target instanceof LivingEntity)) {
+                Apoli.LOGGER.warn("Received unknown target");
+            } else {
+                ((LivingEntity)target).getActiveStatusEffects().clear();
+                ((LivingEntity)target).getActiveStatusEffects().putAll(newMap);
+            }
+        });
     }
 
     private static void onSetAttacker(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {

@@ -19,4 +19,6 @@ public class ModPackets {
     public static final Identifier PREVENTED_ENTITY_USE = Apoli.identifier("prevented_entity_use");
 
     public static final Identifier SET_ATTACKER = Apoli.identifier("set_attacker");
+
+    public static final Identifier SYNC_STATUS_EFFECT = Apoli.identifier("sync_status_effect");
 }
