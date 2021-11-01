@@ -8,6 +8,8 @@ import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
+import io.github.apace100.calio.SerializationHelper;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.fabricmc.api.EnvType;
@@ -22,19 +24,16 @@ import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -55,21 +54,22 @@ public class ModPacketsS2C {
 
     private static void onStatusEffectSync(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {
         int targetId = packetByteBuf.readInt();
-        int effectListSize = packetByteBuf.readInt();
-        Map<StatusEffect, StatusEffectInstance> newMap = new HashMap<>();
-        for (int i = 0; i < effectListSize; ++i) {
-            int statusEffectId = packetByteBuf.readInt();
-            NbtCompound nbt = packetByteBuf.readNbt();
-            if (nbt == null) return;
-            newMap.put(Registry.STATUS_EFFECT.get(statusEffectId), StatusEffectInstance.fromNbt(nbt));
+        SyncStatusEffectsUtil.UpdateType updateType = SyncStatusEffectsUtil.UpdateType.values()[packetByteBuf.readByte()];
+        StatusEffectInstance instance = null;
+        if(updateType != SyncStatusEffectsUtil.UpdateType.CLEAR) {
+            instance = SerializationHelper.readStatusEffect(packetByteBuf);
         }
+        StatusEffectInstance finalInstance = instance;
         minecraftClient.execute(() -> {
             Entity target = clientPlayNetworkHandler.getWorld().getEntityById(targetId);
-            if (!(target instanceof LivingEntity)) {
-                Apoli.LOGGER.warn("Received unknown target");
+            if (!(target instanceof LivingEntity living)) {
+                Apoli.LOGGER.warn("Received unknown target for status effect synchronization");
             } else {
-                ((LivingEntity)target).getActiveStatusEffects().clear();
-                ((LivingEntity)target).getActiveStatusEffects().putAll(newMap);
+                switch(updateType) {
+                    case CLEAR -> living.getActiveStatusEffects().clear();
+                    case APPLY, UPGRADE -> living.getActiveStatusEffects().put(finalInstance.getEffectType(), finalInstance);
+                    case REMOVE -> living.getActiveStatusEffects().remove(finalInstance.getEffectType());
+                }
             }
         });
     }

@@ -1,0 +1,7 @@
+{
+  "type": "apoli:entity_glow",
+  "entity_condition": {
+    "type": "apoli:status_effect",
+    "effect": "minecraft:invisibility"
+  }
+}

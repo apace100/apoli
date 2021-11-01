@@ -59,23 +59,23 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     @Inject(method = "onStatusEffectApplied", at = @At("TAIL"))
-    private void updateStatusEffectWheApplied(StatusEffectInstance effectInstance, Entity source, CallbackInfo ci) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
+    private void updateStatusEffectWhenApplied(StatusEffectInstance effectInstance, Entity source, CallbackInfo ci) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.APPLY, effectInstance);
     }
 
     @Inject(method = "onStatusEffectUpgraded", at = @At("TAIL"))
     private void updateStatusEffectWhenUpgraded(StatusEffectInstance effectInstance, boolean reapplyEffect, Entity source, CallbackInfo ci) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.UPGRADE, effectInstance);
     }
 
     @Inject(method = "onStatusEffectRemoved", at = @At("TAIL"))
     private void updateStatusEffectWhenRemoved(StatusEffectInstance effectInstance, CallbackInfo ci) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.REMOVE, effectInstance);
     }
 
     @Inject(method = "clearStatusEffects", at = @At("RETURN"))
     private void updateStatusEffectWhenCleared(CallbackInfoReturnable<Boolean> cir) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this);
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.CLEAR, null);
     }
 
     @Inject(method = "setAttacker", at = @At("TAIL"))
