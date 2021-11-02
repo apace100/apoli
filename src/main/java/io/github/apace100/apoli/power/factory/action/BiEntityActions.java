@@ -19,7 +19,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.util.TriConsumer;
@@ -95,16 +94,22 @@ public class BiEntityActions {
             .add("x", SerializableDataTypes.FLOAT, 0F)
             .add("y", SerializableDataTypes.FLOAT, 0F)
             .add("z", SerializableDataTypes.FLOAT, 0F)
+            .add("client", SerializableDataTypes.BOOLEAN, true)
+            .add("server", SerializableDataTypes.BOOLEAN, true)
             .add("set", SerializableDataTypes.BOOLEAN, false),
             (data, entities) -> {
+                Entity actor = entities.getLeft(), target = entities.getRight();
+                if (target instanceof PlayerEntity
+                    && (target.world.isClient ?
+                        !data.getBoolean("client") : !data.getBoolean("server")))
+                    return;
                 Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
-                Vec3d delta = entities.getRight().getPos().subtract(entities.getLeft().getPos()).normalize();
-                TriConsumer<Float, Float, Float> method = entities.getRight()::addVelocity;
-                if(data.getBoolean("set")) {
-                    method = entities.getRight()::setVelocity;
-                }
-                Space.rotateVectorToBase(delta, vec);
+                TriConsumer<Float, Float, Float> method = target::addVelocity;
+                if(data.getBoolean("set"))
+                    method = target::setVelocity;
+                Space.transformVectorToBase(target.getPos().subtract(actor.getPos()), vec, actor.getYaw(), true); // vector normalized by method
                 method.accept(vec.getX(), vec.getY(), vec.getZ());
+                target.velocityModified = true;
             }));
     }
 
