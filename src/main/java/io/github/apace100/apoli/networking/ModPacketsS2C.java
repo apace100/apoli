@@ -8,6 +8,8 @@ import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
+import io.github.apace100.calio.SerializationHelper;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.fabricmc.api.EnvType;
@@ -22,6 +24,7 @@ import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -45,7 +48,30 @@ public class ModPacketsS2C {
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_MOUNT, ModPacketsS2C::onPlayerMount);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_DISMOUNT, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(ModPackets.SET_ATTACKER, ModPacketsS2C::onSetAttacker);
+            ClientPlayNetworking.registerReceiver(ModPackets.SYNC_STATUS_EFFECT, ModPacketsS2C::onStatusEffectSync);
         }));
+    }
+
+    private static void onStatusEffectSync(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {
+        int targetId = packetByteBuf.readInt();
+        SyncStatusEffectsUtil.UpdateType updateType = SyncStatusEffectsUtil.UpdateType.values()[packetByteBuf.readByte()];
+        StatusEffectInstance instance = null;
+        if(updateType != SyncStatusEffectsUtil.UpdateType.CLEAR) {
+            instance = SerializationHelper.readStatusEffect(packetByteBuf);
+        }
+        StatusEffectInstance finalInstance = instance;
+        minecraftClient.execute(() -> {
+            Entity target = clientPlayNetworkHandler.getWorld().getEntityById(targetId);
+            if (!(target instanceof LivingEntity living)) {
+                Apoli.LOGGER.warn("Received unknown target for status effect synchronization");
+            } else {
+                switch(updateType) {
+                    case CLEAR -> living.getActiveStatusEffects().clear();
+                    case APPLY, UPGRADE -> living.getActiveStatusEffects().put(finalInstance.getEffectType(), finalInstance);
+                    case REMOVE -> living.getActiveStatusEffects().remove(finalInstance.getEffectType());
+                }
+            }
+        });
     }
 
     private static void onSetAttacker(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {

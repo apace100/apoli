@@ -8,10 +8,7 @@ import dev.onyxstudios.cca.api.v3.component.tick.ServerTickingComponent;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.ModifyValueCallback;
 import io.github.apace100.apoli.networking.ModPackets;
-import io.github.apace100.apoli.power.AttributeModifyTransferPower;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.ValueModifyingPower;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.AttributeUtil;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -70,20 +67,29 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         if(entity == null || entity.world.isClient) {
             return;
         }
+        if(powerType instanceof PowerTypeReference) {
+            powerType = ((PowerTypeReference<?>)powerType).getReferencedPowerType();
+        }
+        if(powerType == null) {
+            return;
+        }
+        PowerType<?> finalPowerType = powerType;
         KEY.maybeGet(entity).ifPresent(phc -> {
-            Power power = phc.getPower(powerType);
-            NbtElement elem = power.toTag();
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeInt(entity.getId());
-            buf.writeIdentifier(powerType.getIdentifier());
-            NbtCompound compound = new NbtCompound();
-            compound.put("Data", elem);
-            buf.writeNbt(compound);
-            for(ServerPlayerEntity player : PlayerLookup.tracking(entity)) {
-                ServerPlayNetworking.send(player, ModPackets.SYNC_POWER, buf);
-            }
-            if(entity instanceof ServerPlayerEntity self) {
-                ServerPlayNetworking.send(self, ModPackets.SYNC_POWER, buf);
+            if(phc.hasPower(finalPowerType)) {
+                Power power = phc.getPower(finalPowerType);
+                NbtElement elem = power.toTag();
+                PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+                buf.writeInt(entity.getId());
+                buf.writeIdentifier(finalPowerType.getIdentifier());
+                NbtCompound compound = new NbtCompound();
+                compound.put("Data", elem);
+                buf.writeNbt(compound);
+                for(ServerPlayerEntity player : PlayerLookup.tracking(entity)) {
+                    ServerPlayNetworking.send(player, ModPackets.SYNC_POWER, buf);
+                }
+                if(entity instanceof ServerPlayerEntity self) {
+                    ServerPlayNetworking.send(self, ModPackets.SYNC_POWER, buf);
+                }
             }
         });
     }

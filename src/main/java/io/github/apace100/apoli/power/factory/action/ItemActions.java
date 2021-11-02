@@ -33,26 +33,19 @@ public class ItemActions {
         register(new ActionFactory<>(Apoli.identifier("modify"), new SerializableData()
             .add("modifier", SerializableDataTypes.IDENTIFIER),
             (data, worldAndStack) -> {
-                //Apoli.LOGGER.info("test^0");
-                //if(!worldAndStack.getLeft().isClient) {
-                    Apoli.LOGGER.info("test^1");
-                    MinecraftServer server = worldAndStack.getLeft().getServer();
-                    if(server != null) {
-                        Apoli.LOGGER.info("test^2");
-                        Identifier id = data.getId("modifier");
-                        LootFunctionManager lootFunctionManager = server.getItemModifierManager();
-                        LootFunction lootFunction = lootFunctionManager.get(id);
-                        if (lootFunction == null) {
-                            Apoli.LOGGER.info("Unknown item modifier used in `modify` action: " + id);
-                            return;
-                        }
-                        Apoli.LOGGER.info("test^3");
-                        ServerWorld serverWorld = server.getOverworld();
-                        LootContext.Builder builder = (new LootContext.Builder(serverWorld)).parameter(LootContextParameters.ORIGIN, new Vec3d(0, 0, 0));
-                        lootFunction.apply(worldAndStack.getRight(), builder.build(LootContextTypes.COMMAND));
-                        Apoli.LOGGER.info("test^4");
+                MinecraftServer server = worldAndStack.getLeft().getServer();
+                if(server != null) {
+                    Identifier id = data.getId("modifier");
+                    LootFunctionManager lootFunctionManager = server.getItemModifierManager();
+                    LootFunction lootFunction = lootFunctionManager.get(id);
+                    if (lootFunction == null) {
+                        Apoli.LOGGER.info("Unknown item modifier used in `modify` action: " + id);
+                        return;
                     }
-                //}
+                    ServerWorld serverWorld = server.getOverworld();
+                    LootContext.Builder builder = (new LootContext.Builder(serverWorld)).parameter(LootContextParameters.ORIGIN, new Vec3d(0, 0, 0));
+                    lootFunction.apply(worldAndStack.getRight(), builder.build(LootContextTypes.COMMAND));
+                }
             }));
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1)

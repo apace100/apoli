@@ -172,7 +172,7 @@ public class EntityConditions {
             .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null),
             (data, entity) -> entity.isOnGround() &&
                 (!data.isPresent("block_condition") || ((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")).test(
-                    new CachedBlockPosition(entity.world, entity.getBlockPos().down(), true)))));
+                    new CachedBlockPosition(entity.world, new BlockPos(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ()), true)))));
         register(new ConditionFactory<>(Apoli.identifier("equipped_item"), new SerializableData()
             .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
             .add("item_condition", ApoliDataTypes.ITEM_CONDITION),
