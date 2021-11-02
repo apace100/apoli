@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtByte;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 
 import java.util.function.Consumer;
@@ -22,6 +23,8 @@ public class ActionOverTimePower extends Power {
 
     private boolean wasActive = false;
 
+    private int currentTicks;
+
     public ActionOverTimePower(PowerType<?> type, LivingEntity entity, int interval, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction) {
         super(type, entity);
         this.interval = interval;
@@ -32,7 +35,9 @@ public class ActionOverTimePower extends Power {
     }
 
     public void tick() {
-        if(entity.age % interval == 0) {
+        currentTicks++;
+        if (currentTicks % interval == 0) {
+            currentTicks = 0;
             if (isActive()) {
                 if (!wasActive && risingAction != null) {
                     risingAction.accept(entity);
@@ -41,7 +46,8 @@ public class ActionOverTimePower extends Power {
                     entityAction.accept(entity);
                 }
                 wasActive = true;
-            } else {
+            }
+            else {
                 if (wasActive && fallingAction != null) {
                     fallingAction.accept(entity);
                 }
@@ -52,21 +58,30 @@ public class ActionOverTimePower extends Power {
 
     @Override
     public NbtElement toTag() {
-        return NbtByte.of(wasActive);
+        NbtCompound nbt = new NbtCompound();
+        nbt.putBoolean("WasActive", wasActive);
+        nbt.putInt("CurrentTicks", currentTicks);
+        return nbt;
     }
 
     @Override
     public void fromTag(NbtElement tag) {
-        wasActive = tag.equals(NbtByte.ONE);
+        if (tag instanceof NbtByte) {
+            wasActive = tag.equals(NbtByte.ONE);
+        }
+        else {
+            wasActive = ((NbtCompound)tag).getBoolean("WasActive");
+            currentTicks = ((NbtCompound)tag).getInt("CurrentTicks");
+        }
     }
 
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("action_over_time"),
             new SerializableData()
+                .add("interval", SerializableDataTypes.INT)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("rising_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("falling_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("interval", SerializableDataTypes.INT),
+                .add("falling_action", ApoliDataTypes.ENTITY_ACTION, null),
             data ->
                 (type, player) -> new ActionOverTimePower(type, player, data.getInt("interval"),
                     (ActionFactory<Entity>.Instance)data.get("entity_action"), (ActionFactory<Entity>.Instance)data.get("rising_action"), (ActionFactory<Entity>.Instance)data.get("falling_action")))
