@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.HiddenEffectStatus;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
@@ -13,6 +14,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
@@ -76,6 +78,29 @@ public abstract class LivingEntityMixin extends Entity {
     @Inject(method = "clearStatusEffects", at = @At("RETURN"))
     private void updateStatusEffectWhenCleared(CallbackInfoReturnable<Boolean> cir) {
         SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.CLEAR, null);
+    }
+
+    @ModifyVariable(method = "addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"))
+    private StatusEffectInstance modifyStatusEffect(StatusEffectInstance effect) {
+        StatusEffect effectType = effect.getEffectType();
+        int originalAmp = effect.getAmplifier();
+        int originalDur = effect.getDuration();
+
+        int amplifier = Math.round(PowerHolderComponent.modify(this, ModifyStatusEffectAmplifierPower.class, originalAmp, power -> power.doesApply(effectType)));
+        int duration = Math.round(PowerHolderComponent.modify(this, ModifyStatusEffectDurationPower.class, originalDur, power -> power.doesApply(effectType)));
+
+        if (amplifier != originalAmp || duration != originalDur) {
+            return new StatusEffectInstance(
+                    effectType,
+                    duration,
+                    amplifier,
+                    effect.isAmbient(),
+                    effect.shouldShowParticles(),
+                    effect.shouldShowIcon(),
+                    ((HiddenEffectStatus) effect).getHiddenEffect()
+            );
+        }
+        return effect;
     }
 
     @Inject(method = "setAttacker", at = @At("TAIL"))
