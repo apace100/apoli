@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.ApoliServer;
+import io.github.apace100.apoli.action.block.BonemealAction;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -102,6 +102,7 @@ public class BlockActions {
                     server.getCommandManager().execute(source, data.getString("command"));
                 }
             }));
+        register(BonemealAction.createFactory());
     }
 
     private static void register(ActionFactory<Triple<World, BlockPos, Direction>> actionFactory) {

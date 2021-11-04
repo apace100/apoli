@@ -1,6 +1,9 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.entity.AreaOfEffectAction;
+import io.github.apace100.apoli.action.entity.CraftingTableAction;
+import io.github.apace100.apoli.action.entity.EnderChestAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
@@ -606,6 +609,9 @@ public class EntityActions {
                     }
                 }
             }));
+        register(AreaOfEffectAction.createFactory());
+        register(CraftingTableAction.createFactory());
+        register(EnderChestAction.createFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
