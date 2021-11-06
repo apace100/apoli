@@ -35,7 +35,6 @@ public class ActionOverTimePower extends Power {
 
     public void tick() {
         if (initialTicks == null) {
-            initialTicksSet = true;
             initialTicks = entity.age % interval;
         }
         else if (entity.age % interval == initialTicks) {
