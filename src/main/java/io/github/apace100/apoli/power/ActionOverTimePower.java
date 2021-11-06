@@ -9,7 +9,6 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtByte;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 
 import java.util.function.Consumer;
@@ -22,9 +21,8 @@ public class ActionOverTimePower extends Power {
     private final Consumer<Entity> fallingAction;
 
     private boolean wasActive = false;
-    private boolean initialTicksSet = false;
 
-    private int initialTicks;
+    private Integer initialTicks = null;
 
     public ActionOverTimePower(PowerType<?> type, LivingEntity entity, int interval, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction) {
         super(type, entity);
@@ -36,7 +34,7 @@ public class ActionOverTimePower extends Power {
     }
 
     public void tick() {
-        if (!initialTicksSet) {
+        if (initialTicks == null) {
             initialTicksSet = true;
             initialTicks = entity.age % interval;
         }
