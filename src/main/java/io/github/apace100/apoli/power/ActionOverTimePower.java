@@ -22,8 +22,9 @@ public class ActionOverTimePower extends Power {
     private final Consumer<Entity> fallingAction;
 
     private boolean wasActive = false;
+    private boolean initialTicksSet = false;
 
-    private int currentTicks;
+    private int initialTicks;
 
     public ActionOverTimePower(PowerType<?> type, LivingEntity entity, int interval, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction) {
         super(type, entity);
@@ -35,9 +36,11 @@ public class ActionOverTimePower extends Power {
     }
 
     public void tick() {
-        currentTicks++;
-        if (currentTicks % interval == 0) {
-            currentTicks = 0;
+        if (!initialTicksSet) {
+            initialTicksSet = true;
+            initialTicks = entity.age % interval;
+        }
+        else if (entity.age % interval == initialTicks) {
             if (isActive()) {
                 if (!wasActive && risingAction != null) {
                     risingAction.accept(entity);
@@ -58,21 +61,12 @@ public class ActionOverTimePower extends Power {
 
     @Override
     public NbtElement toTag() {
-        NbtCompound nbt = new NbtCompound();
-        nbt.putBoolean("WasActive", wasActive);
-        nbt.putInt("CurrentTicks", currentTicks);
-        return nbt;
+        return NbtByte.of(wasActive);
     }
 
     @Override
     public void fromTag(NbtElement tag) {
-        if (tag instanceof NbtByte) {
-            wasActive = tag.equals(NbtByte.ONE);
-        }
-        else {
-            wasActive = ((NbtCompound)tag).getBoolean("WasActive");
-            currentTicks = ((NbtCompound)tag).getInt("CurrentTicks");
-        }
+        wasActive = tag.equals(NbtByte.ONE);
     }
 
     public static PowerFactory createFactory() {
