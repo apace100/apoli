@@ -3,7 +3,9 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.util.Comparison;
+import io.github.apace100.apoli.util.Shape;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.client.world.ClientWorld;
@@ -40,11 +42,10 @@ public class DistanceFromCoordinatesConditionRegistry {
      * @param object the object that couldn't be acquired
      * @param from the object that was supposed to provide the required object
      * @param assumption the result assumed because of the lack of information
-     * @param whatFor what the result describes
      * @return the assumed result
      * */
-    private static <T> T warnCouldNotGetObject(String object, String from, T assumption, String whatFor){
-        warnOnce("Could not retrieve " + object + " from " + from + " for distance_from_spawn condition, assuming " + assumption + " for " + whatFor + ".");
+    private static <T> T warnCouldNotGetObject(String object, String from, T assumption){
+        warnOnce("Could not retrieve " + object + " from " + from + " for distance_from_spawn condition, assuming " + assumption + " for condition.");
         return assumption;
     }
 
@@ -69,7 +70,7 @@ public class DistanceFromCoordinatesConditionRegistry {
             .add("ignore_x", SerializableDataTypes.BOOLEAN, false) // ignore the axis in the distance calculation
             .add("ignore_y", SerializableDataTypes.BOOLEAN, false) // idem
             .add("ignore_z", SerializableDataTypes.BOOLEAN, false) // idem
-            .add("shape", SerializableDataTypes.STRING, "euclidean") // the shape / distance type
+            .add("shape", SerializableDataType.enumValue(Shape.class), Shape.CUBE) // the shape / distance type
             .add("scale_reference_to_dimension", SerializableDataTypes.BOOLEAN, true) // whether to scale the reference's coordinates according to the dimension it's in and the player is in
             .add("scale_distance_to_dimension", SerializableDataTypes.BOOLEAN, false) // whether to scale the calculated distance to the current dimension
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -108,7 +109,7 @@ public class DistanceFromCoordinatesConditionRegistry {
             pos = new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ());
             WorldView worldView = block.getWorld();
             if (!(worldView instanceof World))
-                return warnCouldNotGetObject("world", "block", compareOutOfBounds((Comparison)data.get("comparison")), "condition");
+                return warnCouldNotGetObject("world", "block", compareOutOfBounds((Comparison)data.get("comparison")));
             else
                 world = (World)worldView;
         } else {
@@ -140,7 +141,7 @@ public class DistanceFromCoordinatesConditionRegistry {
                 else if (world instanceof ServerWorld)
                     spawnPos = ((ServerWorld)world).getSpawnPos();
                 else
-                    return warnCouldNotGetObject("world with spawn position", block != null ? "block" : "entity", compareOutOfBounds((Comparison)data.get("comparison")), "condition");
+                    return warnCouldNotGetObject("world with spawn position", block != null ? "block" : "entity", compareOutOfBounds((Comparison)data.get("comparison")));
                 x = spawnPos.getX();
                 y = spawnPos.getY();
                 z = spawnPos.getZ();
@@ -169,14 +170,8 @@ public class DistanceFromCoordinatesConditionRegistry {
             xDistance *= currentDimensionCoordinateScale;
             zDistance *= currentDimensionCoordinateScale;
         }
-        switch (data.getString("shape")) {
-            case "euclidean", "sphere" -> distance = Math.sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
-            case "manhattan", "star" -> distance = xDistance + yDistance + zDistance;
-            case "chebyshev", "cube" -> distance = Math.max(Math.max(xDistance, yDistance), zDistance);
-            default -> { // unrecognized
-                return warnCouldNotGetObject("recognized shape name", "data", compareOutOfBounds((Comparison)data.get("comparison")), "condition (got '" + data.getString("shape") + "')");
-            }
-        }
+
+        distance = Shape.getDistance((Shape)data.get("shape"), xDistance, yDistance, zDistance);
 
         if (data.isPresent("round_to_digit"))
             distance = new BigDecimal(distance).setScale(data.getInt("round_to_digit"), RoundingMode.HALF_UP).doubleValue();
