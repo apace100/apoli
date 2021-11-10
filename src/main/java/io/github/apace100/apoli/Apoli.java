@@ -24,12 +24,14 @@ import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.ArgumentTypes;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
@@ -38,6 +40,8 @@ import org.apache.logging.log4j.Logger;
 public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 	public static ApoliConfig config;
+
+	public static MinecraftServer server;
 
 	public static final Scheduler SCHEDULER = new Scheduler();
 
@@ -52,6 +56,9 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 	@Override
 	public void onInitialize() {
+
+		ServerLifecycleEvents.SERVER_STARTED.register(s -> server = s);
+
 		FabricLoader.getInstance().getModContainer(MODID).ifPresent(modContainer -> {
 			VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
 			if(VERSION.contains("+")) {

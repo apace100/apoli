@@ -1,0 +1,20 @@
+{
+  "type": "apoli:item_on_item",
+  "on_item_condition": {
+    "type": "apoli:smeltable"
+  },
+  "using_item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:coal"
+    }
+  },
+  "result_from_on_stack": 8,
+  "result_item_action": {
+    "type": "apoli:modify",
+    "modifier": "apoli:smelt"
+  },
+  "using_item_action": {
+    "type": "apoli:consume"
+  }
+}

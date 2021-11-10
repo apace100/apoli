@@ -6,6 +6,7 @@ import io.github.apace100.apoli.networking.ModPacketsS2C;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.condition.EntityConditionsClient;
+import io.github.apace100.apoli.power.factory.condition.ItemConditionsClient;
 import io.github.apace100.apoli.screen.GameHudRender;
 import io.github.apace100.apoli.screen.PowerHudRenderer;
 import io.github.apace100.apoli.util.ApoliConfigClient;
@@ -44,6 +45,7 @@ public class ApoliClient implements ClientModInitializer {
 		ModPacketsS2C.register();
 
 		EntityConditionsClient.register();
+		ItemConditionsClient.register();
 		ClientTickEvents.START_CLIENT_TICK.register(tick -> {
 			if(tick.player != null) {
 				List<Power> powers = PowerHolderComponent.KEY.get(tick.player).getPowers();

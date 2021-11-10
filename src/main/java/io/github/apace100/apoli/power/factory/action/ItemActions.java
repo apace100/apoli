@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -43,8 +44,10 @@ public class ItemActions {
                         return;
                     }
                     ServerWorld serverWorld = server.getOverworld();
+                    ItemStack stack = worldAndStack.getRight();
                     LootContext.Builder builder = (new LootContext.Builder(serverWorld)).parameter(LootContextParameters.ORIGIN, new Vec3d(0, 0, 0));
-                    lootFunction.apply(worldAndStack.getRight(), builder.build(LootContextTypes.COMMAND));
+                    ItemStack newStack = lootFunction.apply(stack, builder.build(LootContextTypes.COMMAND));
+                    ((MutableItemStack)stack).setFrom(newStack);
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()

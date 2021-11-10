@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.power.ModifyFoodPower;
 import io.github.apace100.apoli.util.AttributeUtil;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -38,7 +38,7 @@ public class HungerManagerMixin {
         apoli$ShouldUpdateManually = false;
         if(player != null) {
             double baseValue = foodComponent.getHunger();
-        List<EntityAttributeModifier> modifiers = PowerHolderComponent.KEY.get(player).getPowers(ModifyFoodPower.class).stream()
+        List<EntityAttributeModifier> modifiers = ((ModifiableFoodEntity)player).getCurrentModifyFoodPowers().stream()
             .filter(p -> p.doesApply(stack))
             .flatMap(p -> p.getFoodModifiers().stream()).collect(Collectors.toList());
             int newFood = (int) AttributeUtil.sortAndApplyModifiers(modifiers, baseValue);
@@ -54,7 +54,7 @@ public class HungerManagerMixin {
     private float modifySaturation(FoodComponent foodComponent, Item item, ItemStack stack) {
         if(player != null) {
             double baseValue = foodComponent.getSaturationModifier();
-            List<EntityAttributeModifier> modifiers = PowerHolderComponent.KEY.get(player).getPowers(ModifyFoodPower.class).stream()
+            List<EntityAttributeModifier> modifiers = ((ModifiableFoodEntity)player).getCurrentModifyFoodPowers().stream()
                 .filter(p -> p.doesApply(stack))
                 .flatMap(p -> p.getSaturationModifiers().stream()).collect(Collectors.toList());
             float newSaturation = (float) AttributeUtil.sortAndApplyModifiers(modifiers, baseValue);
@@ -69,7 +69,7 @@ public class HungerManagerMixin {
     @Inject(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V", shift = At.Shift.AFTER))
     private void executeAdditionalEatAction(Item item, ItemStack stack, CallbackInfo ci) {
         if(player != null) {
-            PowerHolderComponent.KEY.get(player).getPowers(ModifyFoodPower.class).stream().filter(p -> p.doesApply(stack)).forEach(ModifyFoodPower::eat);
+            ((ModifiableFoodEntity)player).getCurrentModifyFoodPowers().stream().filter(p -> p.doesApply(stack)).forEach(ModifyFoodPower::eat);
             if(apoli$ShouldUpdateManually && !player.world.isClient) {
                 ((ServerPlayerEntity)player).networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), foodLevel, foodSaturationLevel));
             }
