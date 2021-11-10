@@ -19,6 +19,8 @@ public enum Shape {
                     if(shape == Shape.CUBE || shape == Shape.CHEBYSHEV
                             || (shape == Shape.SPHERE || shape == Shape.EUCLIDEAN)
                                 && i * i + j * j + k * k <= radius * radius
+                                // The radius can't be negative here (the loops aren't even entered in that case)
+                                // so there's no behavior change from testing that sqrt(i*i + j*j + k*k) <= radius
                             || (Math.abs(i) + Math.abs(j) + Math.abs(k)) <= radius) {
                         positions.add(new BlockPos(center.add(i, j, k)));
                     }
