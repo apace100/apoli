@@ -18,7 +18,7 @@ public enum Shape {
                 for(int k = -radius; k <= radius; k++) {
                     if(shape == Shape.CUBE || shape == Shape.CHEBYSHEV
                             || (shape == Shape.SPHERE || shape == Shape.EUCLIDEAN)
-                                && Math.sqrt(i * i + j * j + k * k) <= radius
+                                && i * i + j * j + k * k <= radius * radius
                             || (Math.abs(i) + Math.abs(j) + Math.abs(k)) <= radius) {
                         positions.add(new BlockPos(center.add(i, j, k)));
                     }
