@@ -35,12 +35,12 @@ public class ParticlePower extends Power {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("particle"),
             new SerializableData()
-                .add("particle", SerializableDataTypes.PARTICLE_TYPE)
+                .add("particle", SerializableDataTypes.PARTICLE_EFFECT_OR_TYPE)
                 .add("frequency", SerializableDataTypes.INT)
                 .add("visible_in_first_person", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) ->
-                    new ParticlePower(type, player, (ParticleEffect)data.get("particle"), data.getInt("frequency"), data.getBoolean("visible_in_first_person")))
+                    new ParticlePower(type, player, data.get("particle"), data.getInt("frequency"), data.getBoolean("visible_in_first_person")))
             .allowCondition();
     }
 }

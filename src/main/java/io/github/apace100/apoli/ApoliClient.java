@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.condition.EntityConditionsClient;
 import io.github.apace100.apoli.power.factory.condition.ItemConditionsClient;
+import io.github.apace100.apoli.registry.ApoliClassDataClient;
 import io.github.apace100.apoli.screen.GameHudRender;
 import io.github.apace100.apoli.screen.PowerHudRenderer;
 import io.github.apace100.apoli.util.ApoliConfigClient;
@@ -43,6 +44,8 @@ public class ApoliClient implements ClientModInitializer {
 	public void onInitializeClient() {
 
 		ModPacketsS2C.register();
+
+		ApoliClassDataClient.registerAll();
 
 		EntityConditionsClient.register();
 		ItemConditionsClient.register();
