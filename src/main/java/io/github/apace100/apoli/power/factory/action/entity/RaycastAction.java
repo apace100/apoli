@@ -36,6 +36,8 @@ public class RaycastAction {
         Vec3d direction = entity.getRotationVec(1);
         Vec3d target = origin.add(direction.multiply((double)data.get("distance")));
 
+        data.<Consumer<Entity>>ifPresent("before_action", action -> action.accept(entity));
+
         HitResult hitResult = null;
         if(data.getBoolean("entity")) {
             hitResult = performEntityRaycast(entity, origin, target, data.get("bientity_condition"));
@@ -53,7 +55,6 @@ public class RaycastAction {
             }
         }
         if(hitResult != null && hitResult.getType() != HitResult.Type.MISS) {
-            data.<Consumer<Entity>>ifPresent("hit_action", action -> action.accept(entity));
             if(data.isPresent("command_at_hit")) {
                 Vec3d offsetDirection = direction;
                 double offset = 0;
@@ -93,11 +94,12 @@ public class RaycastAction {
                 Pair<Entity, Entity> bientityActionContext = new Pair<>(entity, ehr.getEntity());
                 bientityAction.accept(bientityActionContext);
             }
+            data.<Consumer<Entity>>ifPresent("hit_action", action -> action.accept(entity));
         } else {
-            data.<Consumer<Entity>>ifPresent("miss_action", action -> action.accept(entity));
             if(data.isPresent("command_along_ray") && !data.getBoolean("command_along_ray_only_on_hit")) {
                 executeStepCommands(entity, origin, target, data.getString("command_along_ray"), data.getDouble("command_step"));
             }
+            data.<Consumer<Entity>>ifPresent("miss_action", action -> action.accept(entity));
         }
     }
 
@@ -171,6 +173,7 @@ public class RaycastAction {
                 .add("command_along_ray", SerializableDataTypes.STRING, null)
                 .add("command_step", SerializableDataTypes.DOUBLE, 1.0)
                 .add("command_along_ray_only_on_hit", SerializableDataTypes.BOOLEAN, false)
+                .add("before_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("hit_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("miss_action", ApoliDataTypes.ENTITY_ACTION, null),
             RaycastAction::action
