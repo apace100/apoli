@@ -2,8 +2,12 @@ package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MutableItemStack;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.FilterableWeightedList;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -22,10 +26,45 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 
+import java.util.List;
+import java.util.Random;
+
 public class ItemActions {
 
     @SuppressWarnings("unchecked")
     public static void register() {
+        register(new ActionFactory<>(Apoli.identifier("and"), new SerializableData()
+            .add("actions", ApoliDataTypes.ITEM_ACTIONS),
+            (data, worldAndStack) -> ((List<ActionFactory<Pair<World, ItemStack>>.Instance>)data.get("actions")).forEach((e) -> e.accept(worldAndStack))));
+        register(new ActionFactory<>(Apoli.identifier("chance"), new SerializableData()
+            .add("action", ApoliDataTypes.ITEM_ACTION)
+            .add("chance", SerializableDataTypes.FLOAT),
+            (data, worldAndStack) -> {
+                if(new Random().nextFloat() < data.getFloat("chance")) {
+                    ((ActionFactory<Pair<World, ItemStack>>.Instance)data.get("action")).accept(worldAndStack);
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("if_else"), new SerializableData()
+            .add("condition", ApoliDataTypes.ITEM_CONDITION)
+            .add("if_action", ApoliDataTypes.ITEM_ACTION)
+            .add("else_action", ApoliDataTypes.ITEM_ACTION, null),
+            (data, worldAndStack) -> {
+                if(((ConditionFactory<ItemStack>.Instance)data.get("condition")).test(worldAndStack.getRight())) {
+                    ((ActionFactory<Pair<World, ItemStack>>.Instance)data.get("if_action")).accept(worldAndStack);
+                } else {
+                    if(data.isPresent("else_action")) {
+                        ((ActionFactory<Pair<World, ItemStack>>.Instance)data.get("else_action")).accept(worldAndStack);
+                    }
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("choice"), new SerializableData()
+            .add("actions", SerializableDataType.weightedList(ApoliDataTypes.ITEM_ACTION)),
+            (data, worldAndStack) -> {
+                FilterableWeightedList<ActionFactory<Pair<World, ItemStack>>.Instance> actionList = data.get("actions");
+                ActionFactory<Pair<World, ItemStack>>.Instance action = actionList.pickRandom(new Random());
+                action.accept(worldAndStack);
+            }));
+
         register(new ActionFactory<>(Apoli.identifier("consume"), new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1),
             (data, worldAndStack) -> {
