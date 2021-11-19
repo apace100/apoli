@@ -1,0 +1,45 @@
+{
+	"type": "apoli:multiple",
+
+	"tellraw": {
+
+		"comment": "Server-side test",
+		"comment_": "Note that 'within four blocks' means in the 8x8 area around it",
+		"comment__": "Also note that we ignore height here",
+
+		"type": "apoli:action_over_time",
+		"interval": 1,
+
+		"rising_action": {
+			"type": "apoli:execute_command",
+			"command": "tellraw @s \"You are now horizontally within 4 blocks of spawn\""
+		},
+
+		"falling_action": {
+			"type": "apoli:execute_command",
+			"command": "tellraw @s \"You are not within 4 blocks of spawn anymore\""
+		},
+
+		"condition": {
+			"type": "apoli:distance_from_spawn",
+			"shape": "cube",
+			"ignore_y": true,
+			"comparison": "<",
+			"compare_to": 4
+		}
+	},
+
+	"entity_glow": {
+
+		"comment": "Client-side test",
+
+		"type": "apoli:entity_glow",
+		"entity_condition": {
+			"type": "apoli:distance_from_spawn",
+			"shape": "cube",
+			"ignore_y": true,
+			"comparison": "<",
+			"compare_to": 4
+		}
+	}
+}
