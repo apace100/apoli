@@ -33,7 +33,7 @@ public class ModifyDamageTakenPower extends ValueModifyingPower {
     }
 
     public boolean doesApply(DamageSource source, float damageAmount) {
-        return source.getAttacker() == null ? this.condition.test(new Pair(source, damageAmount)) && biEntityCondition == null : this.condition.test(new Pair(source, damageAmount)) && (biEntityCondition == null || biEntityCondition.test(new Pair(entity, source.getAttacker())));
+        return source.getAttacker() == null ? this.condition.test(new Pair(source, damageAmount)) && biEntityCondition == null : this.condition.test(new Pair(source, damageAmount)) && (biEntityCondition == null || biEntityCondition.test(new Pair(source.getAttacker(), entity)));
     }
 
     public void setAttackerAction(Consumer<Entity> attackerAction) {
@@ -56,7 +56,7 @@ public class ModifyDamageTakenPower extends ValueModifyingPower {
             attackerAction.accept(attacker);
         }
         if(biEntityAction != null) {
-            biEntityAction.accept(new Pair<>(entity, attacker));
+            biEntityAction.accept(new Pair<>(attacker, entity));
         }
     }
 
