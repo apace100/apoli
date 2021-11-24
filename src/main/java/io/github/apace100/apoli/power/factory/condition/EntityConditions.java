@@ -14,7 +14,7 @@ import io.github.apace100.apoli.util.Shape;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.ladysnake.pal.PlayerAbility;
+//import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -80,7 +80,7 @@ public class EntityConditions {
                     data.getFloat("offset_x") * entity.getBoundingBox().getXLength(),
                     data.getFloat("offset_y") * entity.getBoundingBox().getYLength(),
                     data.getFloat("offset_z") * entity.getBoundingBox().getZLength())
-            ).findAny().isPresent()));
+            ).iterator().hasNext()));
         register(new ConditionFactory<>(Apoli.identifier("brightness"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
@@ -551,11 +551,11 @@ public class EntityConditions {
                 return PowerHolderComponent.KEY.maybeGet(entity).map(phc -> phc.getPowerTypes(true).contains(powerType)).orElse(false);
             }));
         register(new ConditionFactory<>(Apoli.identifier("ability"), new SerializableData()
-            .add("ability", ApoliDataTypes.PLAYER_ABILITY),
+            ,//.add("ability", ApoliDataTypes.PLAYER_ABILITY),
             (data, entity) -> {
-                if(entity instanceof PlayerEntity && !entity.world.isClient) {
+                /*if(entity instanceof PlayerEntity && !entity.world.isClient) {
                     return ((PlayerAbility) data.get("ability")).isEnabledFor((PlayerEntity) entity);
-                }
+                }*/
                 return false;
             }));
         register(RaycastCondition.getFactory());

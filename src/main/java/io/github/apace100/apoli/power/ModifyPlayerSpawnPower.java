@@ -67,7 +67,7 @@ public class ModifyPlayerSpawnPower extends Power {
     public void onRemoved() {
         if(entity instanceof ServerPlayerEntity) {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) entity;
-            if(!serverPlayer.isDisconnected() && serverPlayer.getSpawnPointPosition() != null && serverPlayer.isSpawnPointSet()) {
+            if(!serverPlayer.isDisconnected() && serverPlayer.getSpawnPointPosition() != null && serverPlayer.isSpawnForced()) {
                 serverPlayer.setSpawnPoint(World.OVERWORLD, null, 0F, false, false);
             }
         }
@@ -76,8 +76,8 @@ public class ModifyPlayerSpawnPower extends Power {
     public Pair<ServerWorld, BlockPos> getSpawn(boolean isSpawnObstructed) {
         if(entity instanceof ServerPlayerEntity) {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) entity;
-            ServerWorld world = serverPlayer.getServerWorld().getServer().getWorld(dimension);
-            BlockPos regularSpawn = serverPlayer.getServerWorld().getServer().getWorld(World.OVERWORLD).getSpawnPos();
+            ServerWorld world = serverPlayer.getServer().getWorld(dimension);
+            BlockPos regularSpawn = serverPlayer.getServer().getWorld(World.OVERWORLD).getSpawnPos();
             BlockPos spawnToDimPos;
             int iterations = (world.getLogicalHeight() / 2) - 8;
             int center = world.getLogicalHeight() / 2;
@@ -132,7 +132,7 @@ public class ModifyPlayerSpawnPower extends Power {
                 }
                 structureChunkPos = new ChunkPos(structurePos.getX() >> 4, structurePos.getZ() >> 4);
                 StructureStart structureStart = world.getStructureAccessor().getStructureStart(ChunkSectionPos.from(structureChunkPos, 0), structure, world.getChunk(structurePos));
-                BlockPos structureCenter = new BlockPos(structureStart.setBoundingBoxFromChildren().getCenter());
+                BlockPos structureCenter = new BlockPos(structureStart.getBoundingBox().getCenter());
                 tpPos = getValidSpawn(structureCenter, range, world);
             }
 

@@ -4,10 +4,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyDamageTakenPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.GameStateChangeS2CPacket;
 import net.minecraft.screen.ScreenHandlerListener;
@@ -28,7 +26,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Optional;
@@ -43,9 +40,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     private BlockPos spawnPointPosition;
 
     @Shadow
-    private boolean spawnPointSet;
-
-    @Shadow
     @Final
     public MinecraftServer server;
 
@@ -57,6 +51,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Shadow
     public boolean notInAnyWorld;
+
+    @Shadow private boolean spawnForced;
 
     public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile profile) {
         super(world, pos, yaw, profile);
@@ -98,7 +94,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     }
 
 
-    @Inject(at = @At("HEAD"), method = "isSpawnPointSet", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "isSpawnForced", cancellable = true)
     private void modifySpawnPointSet(CallbackInfoReturnable<Boolean> info) {
         if(!this.origins_isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class)) {
             info.setReturnValue(true);
@@ -108,7 +104,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     private boolean hasObstructedSpawn() {
         ServerWorld world = server.getWorld(spawnPointDimension);
         if(spawnPointPosition != null && world != null) {
-            Optional optional = PlayerEntity.findRespawnPosition(world, spawnPointPosition, 0F, spawnPointSet, true);
+            Optional optional = PlayerEntity.findRespawnPosition(world, spawnPointPosition, 0F, spawnForced, true);
             return !optional.isPresent();
         }
         return false;

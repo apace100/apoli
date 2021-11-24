@@ -158,7 +158,7 @@ public class BlockConditions {
             (data, block) -> {
                 NbtCompound nbt = new NbtCompound();
                 if(block.getBlockEntity() != null) {
-                    nbt = block.getBlockEntity().writeNbt(nbt);
+                    nbt = block.getBlockEntity().createNbtWithIdentifyingData();
                 }
                 return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
             }));

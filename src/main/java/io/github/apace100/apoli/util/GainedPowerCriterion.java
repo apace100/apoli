@@ -26,7 +26,7 @@ public class GainedPowerCriterion extends AbstractCriterion<GainedPowerCriterion
     }
 
     public void trigger(ServerPlayerEntity player, PowerType type) {
-        this.test(player, (conditions -> conditions.matches(type)));
+        this.trigger(player, (conditions -> conditions.matches(type)));
     }
 
     @Override

@@ -1,10 +1,10 @@
 plugins {
-	id 'fabric-loom' version '0.8-SNAPSHOT'
+	id 'fabric-loom' version '0.10-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -35,7 +35,7 @@ repositories {
 }
 
 loom {
-	accessWidener = file("src/main/resources/apoli.accesswidener")
+	accessWidenerPath = file("src/main/resources/apoli.accesswidener")
 }
 
 dependencies {
@@ -47,17 +47,14 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modImplementation "net.adriantodt.fabricmc:fallflyinglib:${project.ffl_version}"
-	include "net.adriantodt.fabricmc:fallflyinglib:${project.ffl_version}"
-
 	modImplementation "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:${project.cca_version}"
 	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-base:${project.cca_version}"
 
 	modImplementation "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-entity:${project.cca_version}"
 	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-entity:${project.cca_version}"
 
-	modImplementation "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
-	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
+	//modImplementation "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
+	//include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 
 	modImplementation "com.github.apace100:calio:${project.calio_version}"
 	include "com.github.apace100:calio:${project.calio_version}"
@@ -96,7 +93,7 @@ tasks.withType(JavaCompile).configureEach {
 	// If Javadoc is generated, this must be specified in that task too.
 	it.options.encoding = "UTF-8"
 
-	it.options.release = 16
+	it.options.release = 17
 }
 
 java {

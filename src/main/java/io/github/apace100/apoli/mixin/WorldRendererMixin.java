@@ -39,10 +39,6 @@ public abstract class WorldRendererMixin {
 
     @Shadow public abstract void reload();
 
-    @Shadow protected abstract void updateChunks(long limitTime);
-
-    @Shadow private boolean needsTerrainUpdate;
-
     @Shadow public abstract void render(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f);
 
     @Inject(method = "render", at = @At("HEAD"))
@@ -54,7 +50,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void getEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f2, boolean bl, Frustum frustum2, boolean bl3, VertexConsumerProvider.Immediate immediate, Iterator var39, Entity entity) {
+    private void getEntity(MatrixStack matrices, float tickDelta, long var3, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci, Profiler profiler, boolean bl, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f2, boolean bl2, Frustum frustum, boolean bl4, VertexConsumerProvider.Immediate immediate, Iterator var26, Entity entity) {
         this.renderEntity = entity;
     }
 

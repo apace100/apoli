@@ -4,7 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.ladysnake.pal.VanillaAbilities;
+//import io.github.ladysnake.pal.VanillaAbilities;
 import net.minecraft.util.registry.Registry;
 
 public class PowerFactories {
@@ -82,7 +82,7 @@ public class PowerFactories {
         register(ActionOnItemUsePower::createFactory);
         register(ModifyFallingPower::createFactory);
         register(() -> PlayerAbilityPower.createAbilityFactory(
-            Apoli.identifier("creative_flight"), VanillaAbilities.ALLOW_FLYING));
+            Apoli.identifier("creative_flight")));//, VanillaAbilities.ALLOW_FLYING));
         register(ActionOnEntityUsePower::createFactory);
         register(ActionOnBeingUsedPower::createFactory);
         register(PreventEntityUsePower::createFactory);

@@ -49,10 +49,10 @@
   "accessWidener": "apoli.accesswidener",
 
   "depends": {
-    "java": ">=16",
+    "java": ">=17",
     "fabricloader": ">=0.11.3",
-    "fabric": "*",
-    "minecraft": "1.17.x",
-    "calio": ">=1.0.3"
+    "fabric": ">=0.43.0",
+    "minecraft": "1.18.x",
+    "calio": ">=1.4.1"
   }
 }

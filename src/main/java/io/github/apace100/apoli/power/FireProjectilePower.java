@@ -154,7 +154,7 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 }
                 ProjectileEntity projectile = (ProjectileEntity)entity;
                 projectile.setOwner(this.entity);
-                projectile.setProperties(this.entity, pitch, yaw, 0F, speed, divergence);
+                projectile.setVelocity(this.entity, pitch, yaw, 0F, speed, divergence);
             } else {
                 float f = -MathHelper.sin(yaw * 0.017453292F) * MathHelper.cos(pitch * 0.017453292F);
                 float g = -MathHelper.sin(pitch * 0.017453292F);

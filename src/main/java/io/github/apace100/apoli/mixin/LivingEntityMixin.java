@@ -125,7 +125,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-    @Inject(method = "getEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;removeModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "getEquipmentChanges", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;removeModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void removeEquipmentPowers(CallbackInfoReturnable<Map> cir, Map map, EquipmentSlot var2[], int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack3, ItemStack itemStack4) {
         List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers(itemStack3, equipmentSlot);
         if(powers.size() > 0) {
@@ -140,7 +140,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-    @Inject(method = "getEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;addTemporaryModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "getEquipmentChanges", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;addTemporaryModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void addEquipmentPowers(CallbackInfoReturnable<Map> cir, Map map, EquipmentSlot var2[], int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack3, ItemStack itemStack4) {
         List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers(itemStack4, equipmentSlot);
         if(powers.size() > 0) {
@@ -425,7 +425,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         this.applyFoodEffects(stack, world, targetEntity);
     }
 
-    @Shadow public float flyingSpeed;
+    @Shadow public float airStrafingSpeed;
 
     @Shadow @Nullable private LivingEntity attacker;
 
@@ -434,7 +434,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){
         if (!onGround)
-            cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, flyingSpeed));
+            cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, airStrafingSpeed));
     }
 
     @Unique

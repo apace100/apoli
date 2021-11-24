@@ -19,24 +19,28 @@ import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
 import io.github.apace100.calio.util.OrderedResourceListeners;
-import io.github.ladysnake.pal.AbilitySource;
-import io.github.ladysnake.pal.Pal;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.ArgumentTypes;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.item.Items;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+//import io.github.ladysnake.pal.AbilitySource;
+//import io.github.ladysnake.pal.Pal;
 
 public class Apoli implements ModInitializer, EntityComponentInitializer {
 
@@ -51,12 +55,18 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 	public static String VERSION = "";
 	public static int[] SEMVER;
 
-	public static final AbilitySource LEGACY_POWER_SOURCE = Pal.getAbilitySource(Apoli.identifier("power_source"));
+	//public static final AbilitySource LEGACY_POWER_SOURCE = Pal.getAbilitySource(Apoli.identifier("power_source"));
 
 	public static final boolean PERFORM_VERSION_CHECK = false;
 
 	@Override
 	public void onInitialize() {
+
+		SerializableData data = new SerializableData().add("food", SerializableDataTypes.FOOD_COMPONENT);
+		SerializableData.Instance inst = data.new Instance();
+		inst.set("food", Items.APPLE.getFoodComponent());
+		PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+		data.write(buf, inst);
 
 		ServerLifecycleEvents.SERVER_STARTED.register(s -> server = s);
 
