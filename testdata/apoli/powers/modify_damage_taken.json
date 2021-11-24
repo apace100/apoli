@@ -1,0 +1,17 @@
+{
+  "type": "apoli:modify_damage_taken",
+  "bientity_condition": {
+    "type": "apoli:distance",
+    "comparison": "<",
+    "compare_to": 3
+  },
+  "bientity_action": {
+    "type": "apoli:add_velocity",
+    "z": 1
+  },
+  "modifier": {
+    "name": "Test damage modifier",
+    "operation": "addition",
+    "value": 4.0
+  }
+}

@@ -21,22 +21,29 @@ public class ModifyDamageDealtPower extends ValueModifyingPower {
 
     private final Predicate<Pair<DamageSource, Float>> condition;
     private final Predicate<Entity> targetCondition;
+    private final Predicate<Pair<Entity, Entity>> biEntityCondition;
 
     private Consumer<Entity> targetAction;
     private Consumer<Entity> selfAction;
+    private Consumer<Pair<Entity, Entity>> biEntityAction;
 
-    public ModifyDamageDealtPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<DamageSource, Float>> condition, Predicate<Entity> targetCondition) {
+    public ModifyDamageDealtPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<DamageSource, Float>> condition, Predicate<Entity> targetCondition, Predicate<Pair<Entity, Entity>> biEntityCondition) {
         super(type, entity);
         this.condition = condition;
         this.targetCondition = targetCondition;
+        this.biEntityCondition = biEntityCondition;
     }
 
     public boolean doesApply(DamageSource source, float damageAmount, LivingEntity target) {
-        return condition.test(new Pair<>(source, damageAmount)) && (target == null || targetCondition == null || targetCondition.test(target));
+        return condition.test(new Pair<>(source, damageAmount)) && (target == null || targetCondition == null || targetCondition.test(target)) && (target == null || biEntityCondition == null || biEntityCondition.test(new Pair<>(entity, target)));
     }
 
     public void setTargetAction(Consumer<Entity> targetAction) {
         this.targetAction = targetAction;
+    }
+
+    public void setBiEntityAction(Consumer<Pair<Entity, Entity>> biEntityAction) {
+        this.biEntityAction = biEntityAction;
     }
 
     public void setSelfAction(Consumer<Entity> selfAction) {
@@ -47,8 +54,11 @@ public class ModifyDamageDealtPower extends ValueModifyingPower {
         if(selfAction != null) {
             selfAction.accept(entity);
         }
-        if(targetAction != null && target instanceof LivingEntity) {
-            targetAction.accept((LivingEntity)target);
+        if(targetAction != null) {
+            targetAction.accept(target);
+        }
+        if(biEntityAction != null) {
+            biEntityAction.accept(new Pair<>(entity, target));
         }
     }
 
@@ -59,18 +69,24 @@ public class ModifyDamageDealtPower extends ValueModifyingPower {
                 .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
                 .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
                 .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null)
+                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
                 .add("self_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("target_action", ApoliDataTypes.ENTITY_ACTION, null),
+                .add("target_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null),
             data ->
                 (type, player) -> {
                     ModifyDamageDealtPower power = new ModifyDamageDealtPower(type, player,
-                        data.isPresent("damage_condition") ? (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition") : dmg -> true,
-                        (ConditionFactory<Entity>.Instance)data.get("target_condition"));
+                        data.isPresent("damage_condition") ? data.get("damage_condition") : dmg -> true,
+                        data.get("target_condition"),
+                        data.get("bientity_condition"));
                     if(data.isPresent("modifier")) {
                         power.addModifier(data.getModifier("modifier"));
                     }
                     if(data.isPresent("modifiers")) {
                         ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
+                    }
+                    if(data.isPresent("bientity_action")) {
+                        power.setBiEntityAction((ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"));
                     }
                     if(data.isPresent("self_action")) {
                         power.setSelfAction((ActionFactory<Entity>.Instance)data.get("self_action"));

@@ -1,0 +1,25 @@
+{
+  "type": "apoli:modify_damage_taken",
+  "modifier": {
+    "operation": "multiply_total",
+    "value": -1
+  },
+  "damage_condition": {
+    "type": "apoli:or",
+    "conditions": [
+      {
+        "type": "apoli:name",
+        "name": "flyIntoWall"
+      },
+      {
+        "type": "apoli:name",
+        "name": "fall"
+      }
+    ]
+  },
+  "condition": {
+    "type": "apoli:power",
+    "power": "apoli:check_elytra_flight_state",
+    "source": "apoli:check_elytra_flight"
+  }
+}

@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
@@ -59,6 +60,19 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
+    }
+
+    @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
+    private ItemStack modifyEatenItemStack(ItemStack original) {
+        List<ModifyFoodPower> mfps = PowerHolderComponent.getPowers(this, ModifyFoodPower.class);
+        mfps = mfps.stream().filter(mfp -> mfp.doesApply(original)).collect(Collectors.toList());
+        ItemStack newStack = original;
+        for(ModifyFoodPower mfp : mfps) {
+            newStack = mfp.getConsumedItemStack(newStack);
+        }
+        ((ModifiableFoodEntity)this).setCurrentModifyFoodPowers(mfps);
+        ((ModifiableFoodEntity)this).setOriginalFoodStack(original);
+        return newStack;
     }
 
     @ModifyArg(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"), index = 1)

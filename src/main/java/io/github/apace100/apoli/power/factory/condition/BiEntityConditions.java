@@ -5,6 +5,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -90,10 +91,12 @@ public class BiEntityConditions {
                 return ((Comparison)data.get("comparison")).compare(distanceSq, comp);
             }
             ));
-        register(new ConditionFactory<>(Apoli.identifier("can_see"), new SerializableData(),
+        register(new ConditionFactory<>(Apoli.identifier("can_see"), new SerializableData()
+            .add("shape_type", SerializableDataType.enumValue(RaycastContext.ShapeType.class), RaycastContext.ShapeType.VISUAL)
+            .add("fluid_handling", SerializableDataType.enumValue(RaycastContext.FluidHandling.class), RaycastContext.FluidHandling.NONE),
             (data, pair) -> {
-                RaycastContext.ShapeType shapeType = RaycastContext.ShapeType.VISUAL;
-                RaycastContext.FluidHandling fluidHandling = RaycastContext.FluidHandling.NONE;
+                RaycastContext.ShapeType shapeType = (RaycastContext.ShapeType) data.get("shape_type");
+                RaycastContext.FluidHandling fluidHandling = (RaycastContext.FluidHandling) data.get("fluid_handling");
                 if (pair.getRight().world != pair.getLeft().world) {
                     return false;
                 } else {

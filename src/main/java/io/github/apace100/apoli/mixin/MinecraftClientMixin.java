@@ -25,7 +25,7 @@ public class MinecraftClientMixin {
     private void makeEntitiesGlow(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if(!cir.getReturnValue()) {
             if(this.player != null) {
-                if(player != entity && entity instanceof LivingEntity) {
+                if(player != entity) {
                     if(PowerHolderComponent.getPowers(player, EntityGlowPower.class).stream().anyMatch(p -> p.doesApply(entity))) {
                         cir.setReturnValue(true);
                     }

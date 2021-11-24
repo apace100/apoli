@@ -1,0 +1,26 @@
+{
+  "type": "apoli:action_over_time",
+  "entity_action": {
+    "type": "apoli:block_action_at",
+    "block_action": {
+      "type": "apoli:offset",
+      "y": -1,
+      "action": {
+        "type": "apoli:and",
+        "actions": [
+          {
+            "type": "apoli:modify_block_state",
+            "property": "axis",
+            "cycle": true
+          },
+          {
+            "type": "apoli:modify_block_state",
+            "property": "facing",
+            "cycle": true
+          }
+        ]
+      }
+    }
+  },
+  "interval": 4
+}

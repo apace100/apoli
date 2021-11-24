@@ -1,0 +1,7 @@
+{
+  "type": "apoli:prevent_entity_collision",
+  "bientity_condition": {
+    "type": "apoli:owner",
+    "inverted": true
+  }
+}

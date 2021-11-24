@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.HiddenEffectStatus;
+import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
@@ -16,6 +17,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
@@ -27,6 +29,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,12 +38,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity {
+public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity {
     @Shadow
     protected abstract float getJumpVelocity();
 
@@ -349,6 +354,19 @@ public abstract class LivingEntityMixin extends Entity {
         return in;
     }
 
+    @ModifyVariable(method = "travel", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;onGround:Z", opcode = Opcodes.GETFIELD, ordinal = 2))
+    private float modifySlipperiness(float original) {
+        return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(world, getVelocityAffectingPos()));
+    }
+
+    @Inject(method = "pushAway", at = @At("HEAD"), cancellable = true)
+    private void preventPushing(Entity entity, CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower(this, PreventEntityCollisionPower.class, p -> p.doesApply(entity))
+            || PowerHolderComponent.hasPower(entity, PreventEntityCollisionPower.class, p -> p.doesApply(this))) {
+            ci.cancel();
+        }
+    }
+
     @Unique
     private float cachedDamageAmount;
 
@@ -367,13 +385,81 @@ public abstract class LivingEntityMixin extends Entity {
         }
     }
 
+    @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
+    private ItemStack modifyEatenItemStack(ItemStack original) {
+        if((Object)this instanceof PlayerEntity) {
+            return original;
+        }
+        List<ModifyFoodPower> mfps = PowerHolderComponent.getPowers(this, ModifyFoodPower.class);
+        mfps = mfps.stream().filter(mfp -> mfp.doesApply(original)).collect(Collectors.toList());
+        ItemStack newStack = original;
+        for(ModifyFoodPower mfp : mfps) {
+            newStack = mfp.getConsumedItemStack(newStack);
+        }
+        ((ModifiableFoodEntity)this).setCurrentModifyFoodPowers(mfps);
+        ((ModifiableFoodEntity)this).setOriginalFoodStack(original);
+        return newStack;
+    }
+
+    @ModifyVariable(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V", shift = At.Shift.AFTER))
+    private ItemStack unmodifyEatenItemStack(ItemStack modified) {
+        ModifiableFoodEntity foodEntity = (ModifiableFoodEntity)this;
+        ItemStack original = foodEntity.getOriginalFoodStack();
+        if(original != null) {
+            foodEntity.setOriginalFoodStack(null);
+            return original;
+        }
+        return modified;
+    }
+
+    @Inject(method = "eatFood", at = @At("TAIL"))
+    private void removeCurrentModifyFoodPowers(World world, ItemStack stack, CallbackInfoReturnable<ItemStack> cir) {
+        setCurrentModifyFoodPowers(new LinkedList<>());
+    }
+
+    @Redirect(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V"))
+    private void preventApplyingFoodEffects(LivingEntity livingEntity, ItemStack stack, World world, LivingEntity targetEntity) {
+        if(getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
+            return;
+        }
+        this.applyFoodEffects(stack, world, targetEntity);
+    }
+
     @Shadow public float flyingSpeed;
 
     @Shadow @Nullable private LivingEntity attacker;
+
+    @Shadow protected abstract void applyFoodEffects(ItemStack stack, World world, LivingEntity targetEntity);
 
     @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){
         if (!onGround)
             cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, flyingSpeed));
+    }
+
+    @Unique
+    private List<ModifyFoodPower> apoli$currentModifyFoodPowers = new LinkedList<>();
+
+    @Unique
+    private ItemStack apoli$originalFoodStack;
+
+    @Override
+    public List<ModifyFoodPower> getCurrentModifyFoodPowers() {
+        return apoli$currentModifyFoodPowers;
+    }
+
+    @Override
+    public void setCurrentModifyFoodPowers(List<ModifyFoodPower> powers) {
+        apoli$currentModifyFoodPowers = powers;
+    }
+
+    @Override
+    public ItemStack getOriginalFoodStack() {
+        return apoli$originalFoodStack;
+    }
+
+    @Override
+    public void setOriginalFoodStack(ItemStack original) {
+        apoli$originalFoodStack = original;
     }
 }

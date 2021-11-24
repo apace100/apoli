@@ -7,27 +7,26 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.condition.LootCondition;
 import net.minecraft.loot.context.LootContext;
@@ -118,7 +117,7 @@ public class EntityConditions {
             .add("min_duration", SerializableDataTypes.INT, 0)
             .add("max_duration", SerializableDataTypes.INT, Integer.MAX_VALUE),
             (data, entity) -> {
-                StatusEffect effect = (StatusEffect)data.get("effect");
+                StatusEffect effect = data.get("effect");
                 if(entity instanceof LivingEntity living) {
                     if (living.hasStatusEffect(effect)) {
                         StatusEffectInstance instance = living.getStatusEffect(effect);
@@ -129,17 +128,21 @@ public class EntityConditions {
                 return false;
             }));
         register(new ConditionFactory<>(Apoli.identifier("submerged_in"), new SerializableData().add("fluid", SerializableDataTypes.FLUID_TAG),
-            (data, entity) -> ((SubmergableEntity)entity).isSubmergedInLoosely((Tag<Fluid>)data.get("fluid"))));
+            (data, entity) -> ((SubmergableEntity)entity).isSubmergedInLoosely(data.get("fluid"))));
         register(new ConditionFactory<>(Apoli.identifier("fluid_height"), new SerializableData()
             .add("fluid", SerializableDataTypes.FLUID_TAG)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.DOUBLE),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely((Tag<Fluid>)data.get("fluid")), data.getDouble("compare_to"))));
+            (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely(data.get("fluid")), data.getDouble("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("power"), new SerializableData()
-            .add("power", SerializableDataTypes.IDENTIFIER),
+            .add("power", SerializableDataTypes.IDENTIFIER)
+            .add("source", SerializableDataTypes.IDENTIFIER, null),
             (data, entity) -> {
                 try {
                     PowerType<?> powerType = PowerTypeRegistry.get(data.getId("power"));
+                    if(data.isPresent("source")) {
+                        return PowerHolderComponent.KEY.get(entity).hasPower(powerType, data.getId("source"));
+                    }
                     return PowerHolderComponent.KEY.get(entity).hasPower(powerType);
                 } catch(IllegalArgumentException e) {
                     return false;
@@ -172,7 +175,7 @@ public class EntityConditions {
             .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
             .add("item_condition", ApoliDataTypes.ITEM_CONDITION),
             (data, entity) -> entity instanceof LivingEntity && ((ConditionFactory<ItemStack>.Instance) data.get("item_condition")).test(
-                ((LivingEntity) entity).getEquippedStack((EquipmentSlot) data.get("equipment_slot")))));
+                ((LivingEntity) entity).getEquippedStack(data.get("equipment_slot")))));
         register(new ConditionFactory<>(Apoli.identifier("attribute"), new SerializableData()
             .add("attribute", SerializableDataTypes.ATTRIBUTE)
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -180,7 +183,7 @@ public class EntityConditions {
             (data, entity) -> {
                 double attrValue = 0F;
                 if(entity instanceof LivingEntity living) {
-                    EntityAttributeInstance attributeInstance = living.getAttributeInstance((EntityAttribute) data.get("attribute"));
+                    EntityAttributeInstance attributeInstance = living.getAttributeInstance(data.get("attribute"));
                     if(attributeInstance != null) {
                         attrValue = attributeInstance.getValue();
                     }
@@ -218,9 +221,9 @@ public class EntityConditions {
             .add("compare_to", SerializableDataTypes.INT, 1)
             .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN_OR_EQUAL),
             (data, entity) -> {
-                Predicate<CachedBlockPosition> blockCondition = ((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition"));
+                Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
                 int stopAt = -1;
-                Comparison comparison = ((Comparison)data.get("comparison"));
+                Comparison comparison = data.get("comparison");
                 int compareTo = data.getInt("compare_to");
                 switch(comparison) {
                     case EQUAL: case LESS_THAN_OR_EQUAL: case GREATER_THAN:
@@ -231,7 +234,7 @@ public class EntityConditions {
                         break;
                 }
                 int count = 0;
-                for(BlockPos pos : Shape.getPositions(entity.getBlockPos(), (Shape) data.get("shape"), data.getInt("radius"))) {
+                for(BlockPos pos : Shape.getPositions(entity.getBlockPos(), data.get("shape"), data.getInt("radius"))) {
                     if(blockCondition.test(new CachedBlockPosition(entity.world, pos, true))) {
                         count++;
                         if(count == stopAt) {
@@ -241,6 +244,7 @@ public class EntityConditions {
                 }
                 return comparison.compare(count, compareTo);
             }));
+        DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("dimension"), new SerializableData()
             .add("dimension", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.WORLD_KEY, data.getId("dimension"))));
@@ -282,7 +286,7 @@ public class EntityConditions {
             .add("condition", ApoliDataTypes.BIOME_CONDITION, null),
             (data, entity) -> {
                 Biome biome = entity.world.getBiome(entity.getBlockPos());
-                ConditionFactory<Biome>.Instance condition = (ConditionFactory<Biome>.Instance)data.get("condition");
+                ConditionFactory<Biome>.Instance condition = data.get("condition");
                 if(data.isPresent("biome") || data.isPresent("biomes")) {
                     Identifier biomeId = entity.world.getRegistryManager().get(Registry.BIOME_KEY).getId(biome);
                     if(data.isPresent("biome") && biomeId.equals(data.getId("biome"))) {
@@ -344,7 +348,7 @@ public class EntityConditions {
             (data, entity) -> {
                 MinecraftServer server = entity.world.getServer();
                 if (server != null) {
-                    LootCondition lootCondition = server.getPredicateManager().get((Identifier) data.get("predicate"));
+                    LootCondition lootCondition = server.getPredicateManager().get(data.get("predicate"));
                     if (lootCondition != null) {
                         LootContext.Builder lootBuilder = (new LootContext.Builder((ServerWorld) entity.world))
                             .parameter(LootContextParameters.ORIGIN, entity.getPos())
@@ -366,9 +370,9 @@ public class EntityConditions {
             .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN_OR_EQUAL)
             .add("compare_to", SerializableDataTypes.INT, 1),
             (data, entity) -> {
-                Predicate<CachedBlockPosition> blockCondition = ((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition"));
+                Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
                 int stopAt = -1;
-                Comparison comparison = ((Comparison)data.get("comparison"));
+                Comparison comparison = data.get("comparison");
                 int compareTo = data.getInt("compare_to");
                 switch(comparison) {
                     case EQUAL: case LESS_THAN_OR_EQUAL: case GREATER_THAN: case NOT_EQUAL:
@@ -411,7 +415,7 @@ public class EntityConditions {
             .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null), (data, entity) -> {
             if(entity instanceof LivingEntity living) {
                 if (living.isUsingItem()) {
-                    ConditionFactory<ItemStack>.Instance condition = (ConditionFactory<ItemStack>.Instance) data.get("item_condition");
+                    ConditionFactory<ItemStack>.Instance condition = data.get("item_condition");
                     if (condition != null) {
                         Hand activeHand = living.getActiveHand();
                         ItemStack handStack = living.getStackInHand(activeHand);
@@ -433,7 +437,7 @@ public class EntityConditions {
             (data, entity) -> {
                 int value = 0;
                 if(entity instanceof LivingEntity le) {
-                    Enchantment enchantment = (Enchantment)data.get("enchantment");
+                    Enchantment enchantment = data.get("enchantment");
                     String calculation = data.getString("calculation");
                     switch(calculation) {
                         case "sum":
@@ -456,7 +460,7 @@ public class EntityConditions {
             (data, entity) -> {
                 if(entity.hasVehicle()) {
                     if(data.isPresent("bientity_condition")) {
-                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                        Predicate<Pair<Entity, Entity>> condition = data.get("bientity_condition");
                         Entity vehicle = entity.getVehicle();
                         return condition.test(new Pair<>(entity, vehicle));
                     }
@@ -469,7 +473,7 @@ public class EntityConditions {
             (data, entity) -> {
                 if(entity.hasVehicle()) {
                     if(data.isPresent("bientity_condition")) {
-                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                        Predicate<Pair<Entity, Entity>> condition = data.get("bientity_condition");
                         Entity vehicle = entity.getRootVehicle();
                         return condition.test(new Pair<>(entity, vehicle));
                     }
@@ -484,7 +488,7 @@ public class EntityConditions {
             (data, entity) -> {
                 int count = 0;
                 if(entity.hasVehicle()) {
-                    Predicate<Pair<Entity, Entity>> cond = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                    Predicate<Pair<Entity, Entity>> cond = data.get("bientity_condition");
                     Entity vehicle = entity.getVehicle();
                     while(vehicle != null) {
                         if(cond == null || cond.test(new Pair<>(entity, vehicle))) {
@@ -504,7 +508,7 @@ public class EntityConditions {
                 int count = 0;
                 if(entity.hasPassengers()) {
                     if(data.isPresent("bientity_condition")) {
-                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                        Predicate<Pair<Entity, Entity>> condition = data.get("bientity_condition");
                         count = (int)entity.getPassengerList().stream().filter(e -> condition.test(new Pair<>(e, entity))).count();
                     } else {
                         count = entity.getPassengerList().size();
@@ -520,7 +524,7 @@ public class EntityConditions {
                 int count = 0;
                 if(entity.hasPassengers()) {
                     if(data.isPresent("bientity_condition")) {
-                        Predicate<Pair<Entity, Entity>> condition = (Predicate<Pair<Entity, Entity>>) data.get("bientity_condition");
+                        Predicate<Pair<Entity, Entity>> condition = data.get("bientity_condition");
                         List<Entity> passengers = entity.getPassengerList();
                         count = (int)passengers.stream().flatMap(Entity::streamSelfAndPassengers).filter(e -> condition.test(new Pair<>(e, entity))).count();
                     } else {
@@ -534,12 +538,27 @@ public class EntityConditions {
             (data, entity) -> {
                 NbtCompound nbt = new NbtCompound();
                 entity.writeNbt(nbt);
-                return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
+                return NbtHelper.matches(data.get("nbt"), nbt, true);
             }));
         register(new ConditionFactory<>(Apoli.identifier("exists"), new SerializableData(), (data, entity) -> entity != null));
         register(new ConditionFactory<>(Apoli.identifier("creative_flying"), new SerializableData(),
             (data, entity) -> entity instanceof PlayerEntity && ((PlayerEntity)entity).getAbilities().flying));
-
+        register(new ConditionFactory<>(Apoli.identifier("power_type"), new SerializableData()
+            .add("power_type", ApoliDataTypes.POWER_TYPE),
+            (data, entity) -> {
+                PowerTypeReference powerTypeReference = data.get("power_type");
+                PowerType<?> powerType = powerTypeReference.getReferencedPowerType();
+                return PowerHolderComponent.KEY.maybeGet(entity).map(phc -> phc.getPowerTypes(true).contains(powerType)).orElse(false);
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("ability"), new SerializableData()
+            .add("ability", ApoliDataTypes.PLAYER_ABILITY),
+            (data, entity) -> {
+                if(entity instanceof PlayerEntity && !entity.world.isClient) {
+                    return ((PlayerAbility) data.get("ability")).isEnabledFor((PlayerEntity) entity);
+                }
+                return false;
+            }));
+        register(RaycastCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

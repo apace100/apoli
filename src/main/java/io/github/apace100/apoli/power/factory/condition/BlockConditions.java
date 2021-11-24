@@ -59,6 +59,7 @@ public class BlockConditions {
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
             (data, block) -> ((Comparison)data.get("comparison")).compare(block.getBlockPos().getY(), data.getInt("compare_to"))));
+        DistanceFromCoordinatesConditionRegistry.registerBlockCondition(BlockConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("block"), new SerializableData()
             .add("block", SerializableDataTypes.BLOCK),
             (data, block) -> block.getBlockState().isOf((Block)data.get("block"))));
@@ -160,6 +161,27 @@ public class BlockConditions {
                     nbt = block.getBlockEntity().writeNbt(nbt);
                 }
                 return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("slipperiness"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.FLOAT),
+            (data, block) -> {
+                BlockState state = block.getBlockState();
+                return ((Comparison)data.get("comparison")).compare(state.getBlock().getSlipperiness(), data.getFloat("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("blast_resistance"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.FLOAT),
+            (data, block) -> {
+                BlockState state = block.getBlockState();
+                return ((Comparison)data.get("comparison")).compare(state.getBlock().getBlastResistance(), data.getFloat("compare_to"));
+            }));
+        register(new ConditionFactory<>(Apoli.identifier("hardness"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.FLOAT),
+            (data, block) -> {
+                BlockState state = block.getBlockState();
+                return ((Comparison)data.get("comparison")).compare(state.getBlock().getHardness(), data.getFloat("compare_to"));
             }));
     }
 
