@@ -1,0 +1,37 @@
+{
+  "type": "apoli:action_over_time",
+  "entity_action": {
+    "type": "apoli:block_action_at",
+    "block_action": {
+      "type": "apoli:offset",
+      "y": -1,
+      "action": {
+        "type": "apoli:if_else",
+        "condition": {
+          "type": "apoli:block_state",
+          "property": "lit",
+          "value": false
+        },
+        "if_action": {
+          "type": "apoli:modify_block_state",
+          "property": "lit",
+          "value": true
+        },
+        "else_action": {
+          "type": "apoli:if_else",
+          "condition": {
+            "type": "apoli:block_state",
+            "property": "powered",
+            "value": false
+          },
+          "if_action": {
+            "type": "apoli:modify_block_state",
+            "property": "powered",
+            "value": true
+          }
+        }
+      }
+    }
+  },
+  "interval": 2
+}

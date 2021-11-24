@@ -1,0 +1,38 @@
+{
+  "type": "apoli:action_over_time",
+  "entity_action": {
+    "type": "apoli:block_action_at",
+    "block_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:if_else",
+          "condition": {
+            "type": "apoli:block",
+            "block": "minecraft:wheat"
+          },
+          "if_action": {
+            "type": "apoli:set_block",
+            "block": "minecraft:wheat[age=7]"
+          }
+        },
+        {
+          "type": "apoli:offset",
+          "y": 1,
+          "action": {
+            "type": "apoli:if_else",
+            "condition": {
+              "type": "apoli:block",
+              "block": "minecraft:wheat"
+            },
+            "if_action": {
+              "type": "apoli:set_block",
+              "block": "minecraft:wheat[age=7]"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "interval": 2
+}

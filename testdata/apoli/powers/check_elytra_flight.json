@@ -1,0 +1,47 @@
+{
+  "type": "apoli:multiple",
+  "activate": {
+    "type": "apoli:active_self",
+    "key": {
+      "key": "key.jump",
+      "continuous": false
+    },
+    "cooldown": 1,
+    "hud_render": {
+      "should_render": false
+    },
+    "condition": {
+      "type": "apoli:and",
+      "conditions": [
+        {
+          "type": "apoli:on_block",
+          "inverted": true
+        },
+        {
+          "type": "apoli:ability",
+          "ability": "fallflyinglib:fallflying"
+        }
+      ]
+    },
+    "entity_action": {
+      "type": "apoli:grant_power",
+      "power": "*:*_state",
+      "source": "*:*"
+    }
+  },
+  "deactivate": {
+    "type": "apoli:action_on_land",
+    "entity_action": {
+      "type": "apoli:delay",
+      "ticks": 1,
+      "action": {
+        "type": "apoli:revoke_power",
+        "power": "*:*_state",
+        "source": "*:*"
+      }
+    }
+  },
+  "state": {
+    "type": "apoli:simple"
+  }
+}

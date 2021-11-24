@@ -1,18 +1,16 @@
 package io.github.apace100.apoli.mixin;
 
-import com.google.common.collect.EnumHashBiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableMap;
+import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -21,6 +19,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -30,7 +29,13 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.List;
 
 @Mixin(ItemStack.class)
-public class ItemStackMixin {
+public class ItemStackMixin implements MutableItemStack {
+
+    @Shadow @Deprecated private Item item;
+
+    @Shadow private NbtCompound nbt;
+
+    @Shadow private int count;
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;hasNbt()Z", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
     private void addEquipmentPowerTooltips(PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, List<Text> list) {
@@ -95,5 +100,17 @@ public class ItemStackMixin {
                 }
             }
         }
+    }
+
+    @Override
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    @Override
+    public void setFrom(ItemStack stack) {
+        setItem(stack.getItem());
+        nbt = stack.getNbt();
+        count = stack.getCount();
     }
 }

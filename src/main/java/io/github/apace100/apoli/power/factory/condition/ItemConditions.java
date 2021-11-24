@@ -120,6 +120,7 @@ public class ItemConditions {
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
             (data, stack) -> ((Comparison)data.get("comparison")).compare(stack.getCount(), data.getInt("compare_to"))));
+
     }
 
     private static void register(ConditionFactory<ItemStack> conditionFactory) {

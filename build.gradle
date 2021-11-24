@@ -31,6 +31,11 @@ repositories {
 	maven {
 		url "https://maven.terraformersmc.com/"
 	}
+	mavenLocal()
+}
+
+loom {
+	accessWidener = file("src/main/resources/apoli.accesswidener")
 }
 
 dependencies {

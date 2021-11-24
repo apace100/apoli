@@ -23,13 +23,14 @@ public class ItemOnItemPower extends Power {
     private final Predicate<ItemStack> usingItemCondition;
     private final Predicate<ItemStack> onItemCondition;
 
+    private final int resultFromOnStack;
     private final ItemStack newStack;
     private final Consumer<Pair<World, ItemStack>> usingItemAction;
     private final Consumer<Pair<World, ItemStack>> onItemAction;
     private final Consumer<Pair<World, ItemStack>> resultItemAction;
     private final Consumer<Entity> entityAction;
 
-    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> usingItemCondition, Predicate<ItemStack> onItemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> usingItemAction, Consumer<Pair<World, ItemStack>> onItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction) {
+    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> usingItemCondition, Predicate<ItemStack> onItemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> usingItemAction, Consumer<Pair<World, ItemStack>> onItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, int resultFromOnStack) {
         super(type, entity);
         this.usingItemCondition = usingItemCondition;
         this.onItemCondition = onItemCondition;
@@ -38,6 +39,7 @@ public class ItemOnItemPower extends Power {
         this.onItemAction = onItemAction;
         this.resultItemAction = resultItemAction;
         this.entityAction = entityAction;
+        this.resultFromOnStack = resultFromOnStack;
     }
 
     public boolean doesApply(ItemStack using, ItemStack on) {
@@ -58,7 +60,14 @@ public class ItemOnItemPower extends Power {
                 resultItemAction.accept(new Pair<>(entity.world, stack));
             }
         } else {
-            stack = on;
+            if(resultFromOnStack > 0) {
+                stack = on.split(resultFromOnStack);
+            } else {
+                stack = on;
+            }
+            if(resultItemAction != null) {
+                resultItemAction.accept(new Pair<>(entity.world, stack));
+            }
         }
         if(usingItemAction != null) {
             usingItemAction.accept(new Pair<>(entity.world, using));
@@ -66,7 +75,7 @@ public class ItemOnItemPower extends Power {
         if(onItemAction != null) {
             onItemAction.accept(new Pair<>(entity.world, on));
         }
-        if(newStack != null) {
+        if(newStack != null || resultItemAction != null) {
             PlayerEntity player = (PlayerEntity)entity;
             if(slot.getStack().isEmpty()) {
                 slot.setStack(stack);
@@ -85,6 +94,7 @@ public class ItemOnItemPower extends Power {
             new SerializableData()
                 .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("on_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("result_from_on_stack", SerializableDataTypes.INT, 0)
                 .add("result", SerializableDataTypes.ITEM_STACK, null)
                 .add("using_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
@@ -97,7 +107,8 @@ public class ItemOnItemPower extends Power {
                     (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("using_item_action"),
                     (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
                     (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("result_item_action"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action")))
+                    (ActionFactory<Entity>.Instance)data.get("entity_action"),
+                    data.getInt("result_from_on_stack")))
             .allowCondition();
     }
 }

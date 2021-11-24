@@ -1,0 +1,33 @@
+{
+	"type": "apoli:action_over_time",
+	"interval": 1,
+
+	"rising_action": {
+		"type": "apoli:execute_command",
+		"command": "tellraw @s \"You are now within a six blocks radius of a torch\""
+	},
+
+	"falling_action": {
+		"type": "apoli:execute_command",
+		"command": "tellraw @s \"You are now further than a radius of six blocks from any torch\""
+	},
+
+	"condition": {
+		"type": "apoli:block_in_radius",
+		"radius": 6,
+		"shape": "sphere",
+		"block_condition": {
+			"type": "apoli:or",
+			"conditions": [
+				{
+					"type": "apoli:block",
+					"block": "minecraft:torch"
+				},
+				{
+					"type": "apoli:block",
+					"block": "minecraft:wall_torch"
+				}
+			]
+		}
+	}
+}

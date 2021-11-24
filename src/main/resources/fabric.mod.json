@@ -46,6 +46,8 @@
     }
   },
 
+  "accessWidener": "apoli.accesswidener",
+
   "depends": {
     "java": ">=16",
     "fabricloader": ">=0.11.3",

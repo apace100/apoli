@@ -3,13 +3,15 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.action.block.BonemealAction;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.action.block.ExplodeAction;
+import io.github.apace100.apoli.power.factory.action.block.ModifyBlockStateAction;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.FilterableWeightedList;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
@@ -74,14 +76,19 @@ public class BlockActions {
             )));
 
         register(new ActionFactory<>(Apoli.identifier("set_block"), new SerializableData()
-            .add("block", SerializableDataTypes.BLOCK),
+            .add("block", SerializableDataTypes.BLOCK_STATE),
             (data, block) -> {
-                block.getLeft().setBlockState(block.getMiddle(), ((Block)data.get("block")).getDefaultState());
+                BlockState actualState = (BlockState)data.get("block");
+                //actualState = Block.postProcessState(actualState, block.getLeft(), block.getMiddle());
+                block.getLeft().setBlockState(block.getMiddle(), actualState);
             }));
         register(new ActionFactory<>(Apoli.identifier("add_block"), new SerializableData()
-            .add("block", SerializableDataTypes.BLOCK),
+            .add("block", SerializableDataTypes.BLOCK_STATE),
             (data, block) -> {
-                block.getLeft().setBlockState(block.getMiddle().offset(block.getRight()), ((Block)data.get("block")).getDefaultState());
+                BlockState actualState = (BlockState)data.get("block");
+                BlockPos pos = block.getMiddle().offset(block.getRight());
+                //actualState = Block.postProcessState(actualState, block.getLeft(), pos);
+                block.getLeft().setBlockState(pos, actualState);
             }));
         register(new ActionFactory<>(Apoli.identifier("execute_command"), new SerializableData()
             .add("command", SerializableDataTypes.STRING),
@@ -103,6 +110,8 @@ public class BlockActions {
                 }
             }));
         register(BonemealAction.createFactory());
+        register(ModifyBlockStateAction.getFactory());
+        register(ExplodeAction.getFactory());
     }
 
     private static void register(ActionFactory<Triple<World, BlockPos, Direction>> actionFactory) {

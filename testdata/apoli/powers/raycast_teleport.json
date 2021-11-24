@@ -1,0 +1,60 @@
+{
+  "type": "apoli:active_self",
+  "cooldown": 40,
+  "hud_render": {
+    "should_render": false
+  },
+  "key": {
+    "key": "key.use",
+    "continuous": false
+  },
+  "entity_action": {
+    "type": "apoli:raycast",
+    "distance": 16,
+    "command_at_hit": "tp @s ~ ~ ~",
+    "before_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:spawn_particles",
+          "particle": {
+            "type": "minecraft:portal"
+          },
+          "count": 32,
+          "offset_y": 0.25,
+          "spread_y": 0.25,
+          "spread_x": 0.65,
+          "spread_z": 0.65
+        },
+        {
+          "type": "apoli:play_sound",
+          "sound": "minecraft:entity.enderman.teleport"
+        }
+      ]
+    },
+    "hit_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:spawn_particles",
+          "particle": {
+            "type": "minecraft:portal"
+          },
+          "count": 32,
+          "offset_y": 0.25,
+          "spread_y": 0.25,
+          "spread_x": 0.65,
+          "spread_z": 0.65
+        },
+        {
+          "type": "apoli:play_sound",
+          "sound": "minecraft:entity.enderman.teleport"
+        }
+      ]
+    }
+  },
+  "condition": {
+    "type": "apoli:raycast",
+    "distance": 16
+  }
+}

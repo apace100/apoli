@@ -7,6 +7,9 @@ import io.github.apace100.apoli.action.entity.EnderChestAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.action.entity.RaycastAction;
+import io.github.apace100.apoli.power.factory.action.entity.SpawnParticlesAction;
+import io.github.apace100.apoli.power.factory.action.entity.SwingHandAction;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ResourceOperation;
@@ -40,7 +43,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.BlockView;
@@ -201,57 +203,22 @@ public class EntityActions {
             .add("y", SerializableDataTypes.FLOAT, 0F)
             .add("z", SerializableDataTypes.FLOAT, 0F)
             .add("space", ApoliDataTypes.SPACE, Space.WORLD)
+            .add("client", SerializableDataTypes.BOOLEAN, true)
+            .add("server", SerializableDataTypes.BOOLEAN, true)
             .add("set", SerializableDataTypes.BOOLEAN, false),
             (data, entity) -> {
+                if (entity instanceof PlayerEntity
+                    && (entity.world.isClient ?
+                    !data.getBoolean("client") : !data.getBoolean("server")))
+                    return;
                 Space space = (Space)data.get("space");
                 Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
-                Vec3d vel;
-                Vec3d velH;
                 TriConsumer<Float, Float, Float> method = entity::addVelocity;
                 if(data.getBoolean("set")) {
                     method = entity::setVelocity;
                 }
-                switch(space) {
-                    case WORLD:
-                        method.accept(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
-                        break;
-                    case LOCAL:
-                        Space.rotateVectorToBase(entity.getRotationVector(), vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case LOCAL_HORIZONTAL:
-                        vel = entity.getRotationVector();
-                        velH = new Vec3d(vel.x, 0, vel.z);
-                        if(velH.lengthSquared() > 0.00005) {
-                            velH = velH.normalize();
-                            Space.rotateVectorToBase(velH, vec);
-                            method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        }
-                        break;
-                    case VELOCITY:
-                        Space.rotateVectorToBase(entity.getVelocity(), vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case VELOCITY_NORMALIZED:
-                        Space.rotateVectorToBase(entity.getVelocity().normalize(), vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case VELOCITY_HORIZONTAL:
-                        vel = entity.getVelocity();
-                        velH = new Vec3d(vel.x, 0, vel.z);
-                        Space.rotateVectorToBase(velH, vec);
-                        method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        break;
-                    case VELOCITY_HORIZONTAL_NORMALIZED:
-                        vel = entity.getVelocity();
-                        velH = new Vec3d(vel.x, 0, vel.z);
-                        if(velH.lengthSquared() > 0.00005) {
-                            velH = velH.normalize();
-                            Space.rotateVectorToBase(velH, vec);
-                            method.accept(vec.getX(), vec.getY(), vec.getZ());
-                        }
-                        break;
-                }
+                space.toGlobal(vec, entity);
+                method.accept(vec.getX(), vec.getY(), vec.getZ());
                 entity.velocityModified = true;
             }));
         register(new ActionFactory<>(Apoli.identifier("spawn_entity"), new SerializableData()
@@ -612,6 +579,9 @@ public class EntityActions {
         register(AreaOfEffectAction.createFactory());
         register(CraftingTableAction.createFactory());
         register(EnderChestAction.createFactory());
+        register(SwingHandAction.getFactory());
+        register(RaycastAction.getFactory());
+        register(SpawnParticlesAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {

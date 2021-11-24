@@ -1,0 +1,16 @@
+{
+  "type": "apoli:modify_damage_taken",
+  "damage_condition": {
+    "type": "apoli:name",
+    "name": "fall"
+  },
+  "self_action": {
+    "type": "apoli:add_velocity",
+    "z": -4
+  },
+  "modifier": {
+    "name": "Test damage modifier",
+    "operation": "multiply_base",
+    "value": 2.0
+  }
+}
