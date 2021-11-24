@@ -32,6 +32,7 @@
     "ServerPlayerInteractionManagerAccessor",
     "ServerPlayerInteractionManagerMixin",
     "ServerPlayNetworkHandlerMixin",
+    "StatusEffectInstanceMixin",
     "TridentEntityMixin",
     "WeightedListEntryAccessor"
   ],
