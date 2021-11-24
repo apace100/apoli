@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.block.BonemealAction;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.block.ExplodeAction;
 import io.github.apace100.apoli.power.factory.action.block.ModifyBlockStateAction;
@@ -108,6 +109,7 @@ public class BlockActions {
                     server.getCommandManager().execute(source, data.getString("command"));
                 }
             }));
+        register(BonemealAction.createFactory());
         register(ModifyBlockStateAction.getFactory());
         register(ExplodeAction.getFactory());
     }
