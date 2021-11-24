@@ -1,0 +1,6 @@
+{
+  "type": "apoli:action_on_block_use",
+  "block_action": {
+    "type": "apoli:bonemeal"
+  }
+}
