@@ -15,8 +15,8 @@ import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-//import io.github.ladysnake.pal.Pal;
-//import io.github.ladysnake.pal.PlayerAbility;
+import io.github.ladysnake.pal.Pal;
+import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -216,9 +216,9 @@ public class ApoliDataTypes {
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
 
-    /*public static final SerializableDataType<PlayerAbility> PLAYER_ABILITY = SerializableDataType.wrap(
+    public static final SerializableDataType<PlayerAbility> PLAYER_ABILITY = SerializableDataType.wrap(
         PlayerAbility.class, SerializableDataTypes.IDENTIFIER,
-        PlayerAbility::getId, id -> Pal.provideRegisteredAbility(id).get());*/
+        PlayerAbility::getId, id -> Pal.provideRegisteredAbility(id).get());
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

@@ -10,13 +10,13 @@ import net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 
-public class ElytraFlightPower extends PlayerAbilityPower {
+public class ElytraFlightPower extends Power {
 
     private final boolean renderElytra;
     private final Identifier textureLocation;
 
     public ElytraFlightPower(PowerType<?> type, LivingEntity entity, boolean renderElytra, Identifier textureLocation) {
-        super(type, entity);//, FallFlyingLib.ABILITY);
+        super(type, entity);
         this.renderElytra = renderElytra;
         this.textureLocation = textureLocation;
     }

@@ -53,8 +53,8 @@ dependencies {
 	modImplementation "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-entity:${project.cca_version}"
 	include "io.github.onyxstudios.Cardinal-Components-API:cardinal-components-entity:${project.cca_version}"
 
-	//modImplementation "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
-	//include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
+	modImplementation "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
+	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 
 	modImplementation "com.github.apace100:calio:${project.calio_version}"
 	include "com.github.apace100:calio:${project.calio_version}"
