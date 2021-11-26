@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.power.KeepInventoryPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
 import net.minecraft.entity.player.PlayerEntity;
@@ -20,12 +21,14 @@ import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Optional;
@@ -98,6 +101,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     private void modifySpawnPointSet(CallbackInfoReturnable<Boolean> info) {
         if(!this.origins_isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class)) {
             info.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "copyFrom", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/server/network/ServerPlayerEntity;enchantmentTableSeed:I"))
+    private void copyInventoryWhenKeeping(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower(oldPlayer, KeepInventoryPower.class)) {
+            this.getInventory().clone(oldPlayer.getInventory());
         }
     }
 

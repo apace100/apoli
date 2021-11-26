@@ -190,6 +190,16 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
                 }
             }
         });
+        PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(keepInventoryPower -> {
+            keepInventoryPower.preventItemsFromDropping(inventory);
+        });
+    }
+
+    @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V", shift = At.Shift.AFTER))
+    private void restoreKeptInventory(CallbackInfo ci) {
+        PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(keepInventoryPower -> {
+            keepInventoryPower.restoreSavedItems(inventory);
+        });
     }
 
     @Inject(method = "canEquip", at = @At("HEAD"), cancellable = true)
