@@ -11,17 +11,8 @@
       "should_render": false
     },
     "condition": {
-      "type": "apoli:and",
-      "conditions": [
-        {
-          "type": "apoli:on_block",
-          "inverted": true
-        },
-        {
-          "type": "apoli:ability",
-          "ability": "fallflyinglib:fallflying"
-        }
-      ]
+      "type": "apoli:elytra_flight_possible",
+      "check_state": true
     },
     "entity_action": {
       "type": "apoli:grant_power",

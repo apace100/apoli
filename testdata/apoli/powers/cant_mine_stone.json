@@ -1,0 +1,11 @@
+{
+  "type": "apoli:modify_break_speed",
+  "block_condition": {
+    "type": "apoli:material",
+    "material": "stone"
+  },
+  "modifier": {
+    "operation": "multiply_total",
+    "value": -1
+  }
+}

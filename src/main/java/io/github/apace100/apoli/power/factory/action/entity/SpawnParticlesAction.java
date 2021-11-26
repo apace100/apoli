@@ -6,6 +6,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.Vec3d;
 
 public class SpawnParticlesAction {
 
@@ -18,9 +19,10 @@ public class SpawnParticlesAction {
         if(count <= 0)
             return;
         float speed = data.get("speed");
-        float deltaX = entity.getWidth() * data.getFloat("spread_x");
-        float deltaY = entity.getHeight() * data.getFloat("spread_y");
-        float deltaZ = entity.getWidth() * data.getFloat("spread_z");
+        Vec3d spread = data.get("spread");
+        float deltaX = (float) (entity.getWidth() * spread.x);
+        float deltaY = (float) (entity.getHeight() * spread.y);
+        float deltaZ = (float) (entity.getWidth() * spread.z);
         float offsetY = entity.getHeight() * data.getFloat("offset_y");
         serverWorld.spawnParticles(data.get("particle"), entity.getX(), entity.getY() + offsetY, entity.getZ(), count, deltaX, deltaY, deltaZ, speed);
     }
@@ -32,9 +34,7 @@ public class SpawnParticlesAction {
                 .add("count", SerializableDataTypes.INT)
                 .add("speed", SerializableDataTypes.FLOAT, 0.0F)
                 .add("force", SerializableDataTypes.BOOLEAN, false)
-                .add("spread_x", SerializableDataTypes.FLOAT, 0.5F)
-                .add("spread_y", SerializableDataTypes.FLOAT, 0.25F)
-                .add("spread_z", SerializableDataTypes.FLOAT, 0.5F)
+                .add("spread", SerializableDataTypes.VECTOR, new Vec3d(0.5, 0.25, 0.5))
                 .add("offset_y", SerializableDataTypes.FLOAT, 0.5F),
             SpawnParticlesAction::action
         );

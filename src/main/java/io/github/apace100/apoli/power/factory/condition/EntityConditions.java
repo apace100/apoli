@@ -7,6 +7,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.condition.entity.ElytraFlightPossibleCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
@@ -546,7 +547,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("power_type"), new SerializableData()
             .add("power_type", ApoliDataTypes.POWER_TYPE),
             (data, entity) -> {
-                PowerTypeReference powerTypeReference = data.get("power_type");
+                PowerTypeReference<?> powerTypeReference = data.get("power_type");
                 PowerType<?> powerType = powerTypeReference.getReferencedPowerType();
                 return PowerHolderComponent.KEY.maybeGet(entity).map(phc -> phc.getPowerTypes(true).contains(powerType)).orElse(false);
             }));
@@ -559,6 +560,7 @@ public class EntityConditions {
                 return false;
             }));
         register(RaycastCondition.getFactory());
+        register(ElytraFlightPossibleCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
