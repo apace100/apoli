@@ -59,14 +59,10 @@ public class DistanceFromCoordinatesConditionRegistry {
     private static SerializableData getSerializableData(String alias){
         // Using doubles and not ints because the player position is a vector of doubles and the sqrt function (for the distance) returns a double so we might as well use that precision
         return new SerializableData()
-            .addFunctionedDefault("reference", SerializableDataTypes.STRING, data -> alias.equals("distance_from_coordinates") ? "world_origin" : "world_spawn") // the reference point
+            .add("reference", SerializableDataTypes.STRING, alias.equals("distance_from_coordinates") ? "world_origin" : "world_spawn") // the reference point
 //          .add("check_modified_spawn", SerializableDataTypes.BOOLEAN, true) // whether to check for modified spawns
-            .add("offset_x", SerializableDataTypes.DOUBLE, 0.0) // offset to the reference point
-            .add("offset_y", SerializableDataTypes.DOUBLE, 0.0) // idem
-            .add("offset_z", SerializableDataTypes.DOUBLE, 0.0) // idem
-            .add("x", SerializableDataTypes.DOUBLE, 0.0) // adds up (instead of replacing, for simplicity) to the prior for aliasing
-            .add("y", SerializableDataTypes.DOUBLE, 0.0) // idem
-            .add("z", SerializableDataTypes.DOUBLE, 0.0) // idem
+            .add("offset", SerializableDataTypes.VECTOR, null) // offset to the reference point
+            .add("coordinates", SerializableDataTypes.VECTOR, null) // adds up (instead of replacing, for simplicity) to the prior for aliasing
             .add("ignore_x", SerializableDataTypes.BOOLEAN, false) // ignore the axis in the distance calculation
             .add("ignore_y", SerializableDataTypes.BOOLEAN, false) // idem
             .add("ignore_z", SerializableDataTypes.BOOLEAN, false) // idem
@@ -149,9 +145,11 @@ public class DistanceFromCoordinatesConditionRegistry {
             case "world_origin":
                 break;
         }
-        x += data.getDouble("x") + data.getDouble("offset_x");
-        y += data.getDouble("y") + data.getDouble("offset_y");
-        z += data.getDouble("z") + data.getDouble("offset_z");
+        Vec3d coords = data.get("coordinates");
+        Vec3d offset = data.get("offset");
+        x += coords.x + offset.x;
+        y += coords.y + offset.y;
+        z += coords.z + offset.z;
         if (scaleReferenceToDimension && (x != 0 || z != 0)){
             if (currentDimensionCoordinateScale == 0) // pocket dimensions?
                 // coordinate scale 0 means it takes 0 blocks to travel in the OW to travel 1 block in the dimension,
