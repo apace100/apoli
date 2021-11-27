@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -64,9 +63,9 @@ public class PhasingPower extends Power {
                 .add("phase_down_condition", ApoliDataTypes.ENTITY_CONDITION, null),
             data ->
                 (type, player) ->
-                    new PhasingPower(type, player, data.isPresent("block_condition") ? (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition") : cbp -> true,
-                        data.getBoolean("blacklist"), (PhasingPower.RenderType)data.get("render_type"), data.getFloat("view_distance"),
-                        (ConditionFactory<Entity>.Instance)data.get("phase_down_condition")))
+                    new PhasingPower(type, player, data.isPresent("block_condition") ? data.get("block_condition") : cbp -> true,
+                        data.getBoolean("blacklist"), data.get("render_type"), data.getFloat("view_distance"),
+                        data.get("phase_down_condition")))
             .allowCondition();
     }
 }

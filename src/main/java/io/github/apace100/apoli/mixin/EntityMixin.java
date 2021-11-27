@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
@@ -14,22 +13,20 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.ServerTagManagerHolder;
 import net.minecraft.tag.Tag;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
@@ -142,13 +139,18 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "emitGameEvent(Lnet/minecraft/world/event/GameEvent;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/BlockPos;)V", at = @At("HEAD"), cancellable = true)
     private void preventGameEvents(GameEvent event, @Nullable Entity entity, BlockPos pos, CallbackInfo ci) {
-        if(entity != null && entity instanceof LivingEntity) {
+        if(entity instanceof LivingEntity) {
             List<PreventGameEventPower> preventingPowers = PowerHolderComponent.getPowers(entity, PreventGameEventPower.class).stream().filter(p -> p.doesPrevent(event)).toList();
             if(preventingPowers.size() > 0) {
                 preventingPowers.forEach(p -> p.executeAction(entity));
                 ci.cancel();
             }
         }
+    }
+
+    @Redirect(method = "method_30022", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/util/shape/VoxelShape;"))
+    private VoxelShape preventPhasingSuffocation(BlockState state, BlockView world, BlockPos pos) {
+        return state.getCollisionShape(world, pos, ShapeContext.of((Entity)(Object)this));
     }
 
     private boolean isMoving;
