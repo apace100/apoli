@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.bientity.RelativeRotationCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
@@ -41,42 +42,42 @@ public class BiEntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("invert"), new SerializableData()
             .add("condition", ApoliDataTypes.BIENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Pair<Entity, Entity>> cond = ((ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("condition"));
+                Predicate<Pair<Entity, Entity>> cond = data.get("condition");
                 return cond.test(new Pair<>(pair.getRight(), pair.getLeft()));
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("actor_condition"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = data.get("condition");
                 return cond.test(pair.getLeft());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("target_condition"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = data.get("condition");
                 return cond.test(pair.getRight());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("either"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = data.get("condition");
                 return cond.test(pair.getLeft()) || cond.test(pair.getRight());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("both"), new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Entity> cond = ((ConditionFactory<Entity>.Instance)data.get("condition"));
+                Predicate<Entity> cond = data.get("condition");
                 return cond.test(pair.getLeft()) && cond.test(pair.getRight());
             }
         ));
         register(new ConditionFactory<>(Apoli.identifier("undirected"), new SerializableData()
             .add("condition", ApoliDataTypes.BIENTITY_CONDITION),
             (data, pair) -> {
-                Predicate<Pair<Entity, Entity>> cond = ((ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("condition"));
+                Predicate<Pair<Entity, Entity>> cond = data.get("condition");
                 return cond.test(pair) || cond.test(new Pair<>(pair.getRight(), pair.getLeft()));
             }
             ));
@@ -95,8 +96,8 @@ public class BiEntityConditions {
             .add("shape_type", SerializableDataType.enumValue(RaycastContext.ShapeType.class), RaycastContext.ShapeType.VISUAL)
             .add("fluid_handling", SerializableDataType.enumValue(RaycastContext.FluidHandling.class), RaycastContext.FluidHandling.NONE),
             (data, pair) -> {
-                RaycastContext.ShapeType shapeType = (RaycastContext.ShapeType) data.get("shape_type");
-                RaycastContext.FluidHandling fluidHandling = (RaycastContext.FluidHandling) data.get("fluid_handling");
+                RaycastContext.ShapeType shapeType = data.get("shape_type");
+                RaycastContext.FluidHandling fluidHandling = data.get("fluid_handling");
                 if (pair.getRight().world != pair.getLeft().world) {
                     return false;
                 } else {
@@ -155,6 +156,7 @@ public class BiEntityConditions {
                 return false;
             }
         ));
+        register(RelativeRotationCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Pair<Entity, Entity>> conditionFactory) {

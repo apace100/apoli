@@ -1,0 +1,55 @@
+{
+	"type": "apoli:multiple",
+	"indicator": {
+		"type": "apoli:entity_glow",
+		"use_teams": false,
+		"red": 1.0,
+		"green": 0.0,
+		"blue": 0.0,
+		"bientity_condition": {
+			"type": "apoli:and",
+			"conditions": [
+				{
+					"type": "apoli:distance",
+					"comparison": "<=",
+					"compare_to": 6
+				},
+				{
+					"type": "apoli:relative_rotation",
+					"actor_rotation": "head",
+					"target_rotation": "body",
+					"comparison": ">",
+					"compare_to": 0.125
+				},
+				{
+					"type": "apoli:can_see",
+					"shape_type": "visual"
+				}
+			]
+		}
+	},
+	"damage": {
+		"type": "apoli:modify_damage_dealt",
+		"modifier": {
+			"operation": "multiply_base",
+			"value": 0.5
+		},
+		"bientity_condition": {
+			"type": "apoli:and",
+			"conditions": [
+				{
+					"type": "apoli:distance",
+					"comparison": "<=",
+					"compare_to": 6
+				},
+				{
+					"type": "apoli:relative_rotation",
+					"actor_rotation": "head",
+					"target_rotation": "body",
+					"comparison": ">",
+					"compare_to": 0.125
+				}
+			]
+		}
+	}
+}
