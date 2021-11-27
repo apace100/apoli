@@ -13,14 +13,38 @@ import net.minecraft.nbt.NbtElement;
 public class TogglePower extends Power implements Active {
 
     private boolean isActive;
+    private final boolean shouldRetainState;
 
     public TogglePower(PowerType<?> type, LivingEntity entity) {
-        this(type, entity, false);
+        this(type, entity, false, true);
     }
 
     public TogglePower(PowerType<?> type, LivingEntity entity, boolean activeByDefault) {
+        this(type, entity, activeByDefault, true);
+    }
+
+    public TogglePower(PowerType<?> type, LivingEntity entity, boolean activeByDefault, boolean shouldRetainState) {
         super(type, entity);
+        this.shouldRetainState = shouldRetainState;
         this.isActive = activeByDefault;
+    }
+
+    @Override
+    public boolean shouldTick() {
+        return !shouldRetainState && this.conditions.size() > 0;
+    }
+
+    @Override
+    public boolean shouldTickWhenInactive() {
+        return true;
+    }
+
+    @Override
+    public void tick() {
+        if(!super.isActive() && this.isActive) {
+            this.isActive = false;
+            PowerHolderComponent.syncPower(entity, this.type);
+        }
     }
 
     @Override
@@ -59,11 +83,14 @@ public class TogglePower extends Power implements Active {
         return new PowerFactory<TogglePower>(Apoli.identifier("toggle"),
             new SerializableData()
                 .add("active_by_default", SerializableDataTypes.BOOLEAN, true)
+                .add("retain_state", SerializableDataTypes.BOOLEAN, true)
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data ->
                 (type, player) -> {
-                    TogglePower power = new TogglePower(type, player, data.getBoolean("active_by_default"));
-                    power.setKey((Active.Key)data.get("key"));
+                    TogglePower power = new TogglePower(type, player,
+                        data.getBoolean("active_by_default"),
+                        data.getBoolean("retain_state"));
+                    power.setKey(data.get("key"));
                     return power;
                 })
             .allowCondition();

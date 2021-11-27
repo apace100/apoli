@@ -21,7 +21,7 @@ public class Power {
     private boolean shouldTick = false;
     private boolean shouldTickWhenInactive = false;
 
-    private List<Predicate<Entity>> conditions;
+    protected List<Predicate<Entity>> conditions;
 
     public Power(PowerType<?> type, LivingEntity entity) {
         this.type = type;
