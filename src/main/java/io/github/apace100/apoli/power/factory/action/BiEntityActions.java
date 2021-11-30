@@ -4,6 +4,7 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.networking.ModPackets;
+import io.github.apace100.apoli.power.factory.action.bientity.DamageAction;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.FilterableWeightedList;
@@ -111,6 +112,7 @@ public class BiEntityActions {
                 method.accept(vec.getX(), vec.getY(), vec.getZ());
                 target.velocityModified = true;
             }));
+        register(DamageAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<Entity, Entity>> actionFactory) {

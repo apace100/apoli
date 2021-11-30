@@ -1,0 +1,18 @@
+{
+  "type": "apoli:action_on_hit",
+  "bientity_action": {
+    "type": "apoli:actor_action",
+    "action": {
+      "type": "apoli:area_of_effect",
+      "radius": 5,
+      "bientity_action": {
+        "type": "apoli:damage",
+        "amount": 8,
+        "source": {
+          "name": "player",
+          "magic": true
+        }
+      }
+    }
+  }
+}
