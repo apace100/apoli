@@ -6,6 +6,7 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -23,12 +24,14 @@ import java.util.function.Predicate;
 
 public class ActionOnBlockUsePower extends InteractionPower {
 
+    private final Consumer<Entity> entityAction;
     private final Predicate<CachedBlockPosition> blockCondition;
     private final EnumSet<Direction> directions;
     private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
 
-    public ActionOnBlockUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<CachedBlockPosition> blockCondition, EnumSet<Direction> directions, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
+    public ActionOnBlockUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, Predicate<CachedBlockPosition> blockCondition, EnumSet<Direction> directions, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
         super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, resultItemAction);
+        this.entityAction = entityAction;
         this.blockCondition = blockCondition;
         this.directions = directions;
         this.blockAction = blockAction;
@@ -49,6 +52,9 @@ public class ActionOnBlockUsePower extends InteractionPower {
         if(blockAction != null) {
             blockAction.accept(Triple.of(entity.world, blockPos, direction));
         }
+        if(entityAction != null) {
+            entityAction.accept(entity);
+        }
         performActorItemStuff(this, (PlayerEntity) entity, hand);
         return getActionResult();
     }
@@ -57,6 +63,7 @@ public class ActionOnBlockUsePower extends InteractionPower {
         return new PowerFactory<>(Apoli.identifier("action_on_block_use"),
             new SerializableData()
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("block_action", ApoliDataTypes.BLOCK_ACTION, null)
                 .add("directions", SerializableDataTypes.DIRECTION_SET, EnumSet.allOf(Direction.class))
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
@@ -68,15 +75,16 @@ public class ActionOnBlockUsePower extends InteractionPower {
             data ->
                 (type, player) -> {
                     return new ActionOnBlockUsePower(type, player,
-                        (EnumSet<Hand>)data.get("hands"),
-                        (ActionResult)data.get("action_result"),
-                        (Predicate<ItemStack>)data.get("item_condition"),
-                        (Consumer<Pair<World, ItemStack>>)data.get("held_item_action"),
-                        (ItemStack)data.get("result_stack"),
-                        (Consumer<Pair<World, ItemStack>>)data.get("result_item_action"),
-                        (Predicate<CachedBlockPosition>) data.get("block_condition"),
-                        (EnumSet<Direction>) data.get("directions"),
-                        (Consumer<Triple<World, BlockPos, Direction>>) data.get("block_action"));
+                        data.get("hands"),
+                        data.get("action_result"),
+                        data.get("item_condition"),
+                        data.get("held_item_action"),
+                        data.get("result_stack"),
+                        data.get("result_item_action"),
+                        data.get("entity_action"),
+                        data.get("block_condition"),
+                        data.get("directions"),
+                        data.get("block_action"));
                 })
             .allowCondition();
     }
