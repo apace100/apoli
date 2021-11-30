@@ -1,0 +1,7 @@
+{
+  "type": "apoli:action_on_land",
+  "entity_action": {
+    "type": "apoli:heal",
+    "amount": 1
+  }
+}
