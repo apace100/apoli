@@ -137,7 +137,7 @@ public class BlockConditions {
                 for(Property<?> p : properties) {
                     if(p.getName().equals(desiredPropertyName)) {
                         property = p;
-                        break;
+                        return true;
                     }
                 }
                 if(property != null) {
