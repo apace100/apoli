@@ -149,6 +149,7 @@ public class BlockConditions {
                     } else if(data.isPresent("comparison") && data.isPresent("compare_to") && value instanceof Integer) {
                         return ((Comparison)data.get("comparison")).compare((Integer) value, data.getInt("compare_to"));
                     }
+                    return true;
                 }
                 return false;
             }));
