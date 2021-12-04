@@ -405,7 +405,16 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
             .add("tag", SerializableDataTypes.ENTITY_TAG),
             (data, entity) -> ((Tag<EntityType<?>>)data.get("tag")).contains(entity.getType())));
-        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(), (data, entity) -> entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()));
+        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(),
+            (data, entity) -> {
+                if(entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()) {
+                    return true;
+                }
+                if(PowerHolderComponent.hasPower(entity, ClimbingPower.class)) {
+                    return true;
+                }
+                return false;
+            }));
         register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
             if(entity instanceof TameableEntity) {
                 return ((TameableEntity)entity).isTamed();
