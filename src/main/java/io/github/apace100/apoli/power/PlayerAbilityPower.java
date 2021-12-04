@@ -39,21 +39,28 @@ public class PlayerAbilityPower extends Power {
 
     @Override
     public void onGained() {
-        if(entity instanceof PlayerEntity && !entity.world.isClient && isActive() && !hasAbility()) {
+        if(!entity.world.isClient &&
+            entity instanceof PlayerEntity &&
+            isActive() &&
+            !hasAbility()) {
             grantAbility();
         }
     }
 
     @Override
     public void onAdded() {
-        if(entity instanceof PlayerEntity && Apoli.LEGACY_POWER_SOURCE.grants((PlayerEntity)entity, ability)) {
-            Apoli.LEGACY_POWER_SOURCE.revokeFrom((PlayerEntity) entity, ability);
+        if(!entity.world.isClient &&
+            entity instanceof PlayerEntity player &&
+            Apoli.LEGACY_POWER_SOURCE.grants(player, ability)) {
+            Apoli.LEGACY_POWER_SOURCE.revokeFrom(player, ability);
         }
     }
 
     @Override
     public void onLost() {
-        if(!entity.world.isClient && hasAbility()) {
+        if(!entity.world.isClient &&
+            entity instanceof PlayerEntity &&
+            hasAbility()) {
             revokeAbility();
         }
     }
