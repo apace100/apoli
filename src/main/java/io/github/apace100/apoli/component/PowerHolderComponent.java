@@ -101,6 +101,12 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         }
     }
 
+    static <T extends Power> void withPowers(Entity entity, Class<T> powerClass, Predicate<T> filter, Consumer<T> with) {
+        if(entity instanceof LivingEntity) {
+            KEY.get(entity).getPowers(powerClass).stream().filter(p -> filter == null || filter.test(p)).forEach(with);
+        }
+    }
+
     static <T extends Power> List<T> getPowers(Entity entity, Class<T> powerClass) {
         if(entity instanceof LivingEntity) {
             return KEY.get(entity).getPowers(powerClass);

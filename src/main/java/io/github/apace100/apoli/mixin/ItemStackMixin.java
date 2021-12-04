@@ -64,7 +64,7 @@ public class ItemStackMixin implements MutableItemStack {
                 });
             }
         }
-        PowerHolderComponent.withPower(player, TooltipPower.class, ttp -> ttp.doesApply((ItemStack) (Object)this), t -> t.addToTooltip(list));
+        PowerHolderComponent.withPowers(player, TooltipPower.class, ttp -> ttp.doesApply((ItemStack) (Object)this), t -> t.addToTooltip(list));
     }
 
     @Inject(at = @At("HEAD"), method = "use", cancellable = true)
