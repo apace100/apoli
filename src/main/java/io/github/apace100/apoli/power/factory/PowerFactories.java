@@ -112,6 +112,8 @@ public class PowerFactories {
         register(ActionOnBlockUsePower::createFactory);
         register(PreventElytraFlightPower::createFactory);
         register(KeepInventoryPower::createFactory);
+        register(ModifyStatusEffectDurationPower::createFactory);
+        register(ModifyStatusEffectAmplifierPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

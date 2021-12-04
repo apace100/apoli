@@ -20,7 +20,7 @@ public class ModifyStatusEffectDurationPower extends ValueModifyingPower {
         return statusEffect.equals(this.statusEffect);
     }
 
-    public static PowerFactory<?> getFactory() {
+    public static PowerFactory createFactory() {
         return new PowerFactory<ModifyStatusEffectDurationPower>(
                 Apoli.identifier("modify_status_effect_duration"),
                 new SerializableData()
