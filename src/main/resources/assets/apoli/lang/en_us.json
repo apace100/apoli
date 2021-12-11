@@ -39,6 +39,23 @@
 
   "commands.apoli.resource.invalid_entity": "The entity is not a living entity, thus can't have any powers.",
 
+  "tooltip.apoli.unusable.none.single": "Unusable (%s)",
+  "tooltip.apoli.unusable.none.multiple": "Unusable (%s)",
+  "tooltip.apoli.unusable.eat.single": "Inedible (%s)",
+  "tooltip.apoli.unusable.eat.multiple": "Inedible (%s)",
+  "tooltip.apoli.unusable.drink.single": "Undrinkable (%s)",
+  "tooltip.apoli.unusable.drink.multiple": "Undrinkable (%s)",
+  "tooltip.apoli.unusable.block.single": "Unusable (%s)",
+  "tooltip.apoli.unusable.block.multiple": "Unusable (%s)",
+  "tooltip.apoli.unusable.bow.single": "Unusable (%s)",
+  "tooltip.apoli.unusable.bow.multiple": "Unusable (%s)",
+  "tooltip.apoli.unusable.spear.single": "Unusable (%s)",
+  "tooltip.apoli.unusable.spear.multiple": "Unusable (%s)",
+  "tooltip.apoli.unusable.crossbow.single": "Unusable (%s)",
+  "tooltip.apoli.unusable.crossbow.multiple": "Unusable (%s)",
+  "tooltip.apoli.unusable.spyglass.single": "Unusable (%s)",
+  "tooltip.apoli.unusable.spyglass.multiple": "Unusable (%s)",
+
   "text.autoconfig.power_config.title": "Apoli Power Config",
 
   "text.autoconfig.power_config.option.resourcesAndCooldowns": "Resources & Cooldowns",
@@ -47,5 +64,9 @@
 
   "text.autoconfig.power_config.option.executeCommand": "Execute Command",
   "text.autoconfig.power_config.option.executeCommand.permissionLevel": "Permission Level",
-  "text.autoconfig.power_config.option.executeCommand.showOutput": "Show Output in Chat"
+  "text.autoconfig.power_config.option.executeCommand.showOutput": "Show Output in Chat",
+
+  "text.autoconfig.power_config.option.tooltips": "Tooltips",
+  "text.autoconfig.power_config.option.tooltips.showUsabilityHints": "Show Usability Hints",
+  "text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compact Usability Hints"
 }
