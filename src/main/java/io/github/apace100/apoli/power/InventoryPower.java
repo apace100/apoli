@@ -139,7 +139,6 @@ public class InventoryPower extends Power implements Active, Inventory {
             ItemStack currentItemStack = inventory.get(i);
             if (!lostPower && shouldDropOnDeath) {
                 if (shouldDropOnDeath(currentItemStack)) {
-                    Apoli.LOGGER.info(currentItemStack.getName() + " matches the filter " + dropOnDeathFilter.toString());
                     if (!currentItemStack.isEmpty() && EnchantmentHelper.hasVanishingCurse(currentItemStack)) {
                         inventory.set(i, ItemStack.EMPTY);
                     }
