@@ -176,19 +176,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V"))
     private void dropAdditionalInventory(CallbackInfo ci) {
         PowerHolderComponent.getPowers(this, InventoryPower.class).forEach(inventory -> {
-            if(inventory.shouldDropOnDeath()) {
-                for(int i = 0; i < inventory.size(); ++i) {
-                    ItemStack itemStack = inventory.getStack(i);
-                    if(inventory.shouldDropOnDeath(itemStack)) {
-                        if (!itemStack.isEmpty() && EnchantmentHelper.hasVanishingCurse(itemStack)) {
-                            inventory.removeStack(i);
-                        } else {
-                            ((PlayerEntity)(Object)this).dropItem(itemStack, true, false);
-                            inventory.setStack(i, ItemStack.EMPTY);
-                        }
-                    }
-                }
-            }
+            inventory.dropContents();
         });
         PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(keepInventoryPower -> {
             keepInventoryPower.preventItemsFromDropping(inventory);

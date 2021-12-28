@@ -6,6 +6,7 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
@@ -30,6 +31,8 @@ public class InventoryPower extends Power implements Active, Inventory {
     private final boolean shouldDropOnDeath;
     private final Predicate<ItemStack> dropOnDeathFilter;
 
+    private boolean lostPower;
+
     public InventoryPower(PowerType<?> type, LivingEntity entity, String containerName, int size, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter) {
         super(type, entity);
         this.size = size;
@@ -51,6 +54,12 @@ public class InventoryPower extends Power implements Active, Inventory {
             PlayerEntity player = (PlayerEntity)entity;
             player.openHandledScreen(new SimpleNamedScreenHandlerFactory(factory, containerName));
         }
+    }
+
+    @Override
+    public void onLost() {
+        lostPower = true;
+        dropContents();
     }
 
     @Override
@@ -120,6 +129,31 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     public boolean shouldDropOnDeath(ItemStack stack) {
         return shouldDropOnDeath && dropOnDeathFilter.test(stack);
+    }
+
+    //  Drop the cached item stacks of the power
+    //  (used for losing the power and death (if shouldDropOnDeath is true))
+    public void dropContents() {
+        for (int i = 0; i < size; ++i) {
+            PlayerEntity player = (PlayerEntity)entity;
+            ItemStack currentItemStack = inventory.get(i);
+            if (!lostPower && shouldDropOnDeath) {
+                if (shouldDropOnDeath(currentItemStack)) {
+                    Apoli.LOGGER.info(currentItemStack.getName() + " matches the filter " + dropOnDeathFilter.toString());
+                    if (!currentItemStack.isEmpty() && EnchantmentHelper.hasVanishingCurse(currentItemStack)) {
+                        inventory.set(i, ItemStack.EMPTY);
+                    }
+                    else {
+                        player.dropItem(currentItemStack, true, false);
+                        inventory.set(i, ItemStack.EMPTY);
+                    }
+                }
+            }
+            else {
+                player.dropItem(currentItemStack, true, false);
+                inventory.set(i, ItemStack.EMPTY);
+            }
+        }
     }
 
     private Key key;
