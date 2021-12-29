@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
@@ -25,18 +26,21 @@ import java.util.function.Predicate;
 public class InventoryPower extends Power implements Active, Inventory {
 
     private final int size;
-    private final DefaultedList<ItemStack> inventory;
+    private final DefaultedList<ItemStack> inventoryPower;
     private final TranslatableText containerName;
     private final ScreenHandlerFactory factory;
     private final boolean shouldDropOnDeath;
     private final Predicate<ItemStack> dropOnDeathFilter;
 
     private boolean lostPower;
+    private boolean inventoryPlayerFull;
+
+    private int inventoryPlayerOccupiedSlots;
 
     public InventoryPower(PowerType<?> type, LivingEntity entity, String containerName, int size, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter) {
         super(type, entity);
         this.size = size;
-        this.inventory = DefaultedList.ofSize(size, ItemStack.EMPTY);
+        this.inventoryPower = DefaultedList.ofSize(size, ItemStack.EMPTY);
         this.containerName = new TranslatableText(containerName);
         this.factory = (i, playerInventory, playerEntity) -> {
             return new Generic3x3ContainerScreenHandler(i, playerInventory, this);
@@ -65,13 +69,13 @@ public class InventoryPower extends Power implements Active, Inventory {
     @Override
     public NbtCompound toTag() {
         NbtCompound tag = new NbtCompound();
-        Inventories.writeNbt(tag, inventory);
+        Inventories.writeNbt(tag, inventoryPower);
         return tag;
     }
 
     @Override
     public void fromTag(NbtElement tag) {
-        Inventories.readNbt((NbtCompound)tag, inventory);
+        Inventories.readNbt((NbtCompound)tag, inventoryPower);
     }
 
     @Override
@@ -81,29 +85,29 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public boolean isEmpty() {
-        return inventory.isEmpty();
+        return inventoryPower.isEmpty();
     }
 
     @Override
     public ItemStack getStack(int slot) {
-        return inventory.get(slot);
+        return inventoryPower.get(slot);
     }
 
     @Override
     public ItemStack removeStack(int slot, int amount) {
-        return inventory.get(slot).split(amount);
+        return inventoryPower.get(slot).split(amount);
     }
 
     @Override
     public ItemStack removeStack(int slot) {
-        ItemStack stack = inventory.get(slot);
+        ItemStack stack = inventoryPower.get(slot);
         setStack(slot, ItemStack.EMPTY);
         return stack;
     }
 
     @Override
     public void setStack(int slot, ItemStack stack) {
-        inventory.set(slot, stack);
+        inventoryPower.set(slot, stack);
     }
 
     @Override
@@ -123,38 +127,53 @@ public class InventoryPower extends Power implements Active, Inventory {
         }
     }
 
-    public boolean shouldDropOnDeath() {
-        return shouldDropOnDeath;
-    }
-
     public boolean shouldDropOnDeath(ItemStack stack) {
         return shouldDropOnDeath && dropOnDeathFilter.test(stack);
     }
 
+    //  Count how many player inventory slots are occupied by an item stack
+    //  (called to check if the player's inventory is full)
+    public void checkInventoryPlayerFull() {
+        inventoryPlayerOccupiedSlots = 0;
+        PlayerEntity player = (PlayerEntity) entity;
+        PlayerInventory inventoryPlayer = player.getInventory();
+        int inventoryPlayerSlots = player.getInventory().main.size();
+        for (int i = 0; i < inventoryPlayerSlots; ++i) {
+            ItemStack currentItemStack = inventoryPlayer.getStack(i);
+            if (!currentItemStack.isEmpty()) {
+                inventoryPlayerOccupiedSlots++;
+            }
+        }
+        inventoryPlayerFull = inventoryPlayerOccupiedSlots >= inventoryPlayerSlots;
+    }
+
     //  Drop the cached item stacks of the power
-    //  (used for losing the power and death (if shouldDropOnDeath is true))
+    //  (called when the player dies or loses the power)
     public void dropContents() {
         PlayerEntity player = (PlayerEntity) entity;
         if (!lostPower && shouldDropOnDeath) {
             for (int i = 0; i < size; ++i) {
-                ItemStack currentItemStack = inventory.get(i);
+                ItemStack currentItemStack = inventoryPower.get(i);
                 if (!currentItemStack.isEmpty() && shouldDropOnDeath(currentItemStack)) {
                     if (!EnchantmentHelper.hasVanishingCurse(currentItemStack)) {
                         player.dropItem(currentItemStack, true, false);
                     }
-                    inventory.set(i, ItemStack.EMPTY);
+                    inventoryPower.set(i, ItemStack.EMPTY);
                 }
             }
         }
         else if (lostPower) {
             for (int i = 0; i < size; ++i) {
-                ItemStack currentItemStack = inventory.get(i);
+                checkInventoryPlayerFull();
+                ItemStack currentItemStack = inventoryPower.get(i);
                 if (!currentItemStack.isEmpty()) {
-                    boolean insertedCurItemStack = player.getInventory().insertStack(currentItemStack);
-                    if (!insertedCurItemStack) {
+                    if (inventoryPlayerFull) {
                         player.dropItem(currentItemStack, false, false);
                     }
-                    inventory.set(i, ItemStack.EMPTY);
+                    else {
+                        player.getInventory().insertStack(currentItemStack);
+                    }
+                    inventoryPower.set(i, ItemStack.EMPTY);
                 }
             }
         }
