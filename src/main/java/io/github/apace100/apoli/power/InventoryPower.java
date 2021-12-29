@@ -35,8 +35,6 @@ public class InventoryPower extends Power implements Active, Inventory {
     private boolean lostPower;
     private boolean inventoryPlayerFull;
 
-    private int inventoryPlayerOccupiedSlots;
-
     public InventoryPower(PowerType<?> type, LivingEntity entity, String containerName, int size, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter) {
         super(type, entity);
         this.size = size;
@@ -134,7 +132,7 @@ public class InventoryPower extends Power implements Active, Inventory {
     //  Count how many player inventory slots are occupied by an item stack
     //  (called to check if the player's inventory is full)
     public void checkInventoryPlayerFull() {
-        inventoryPlayerOccupiedSlots = 0;
+        int inventoryPlayerOccupiedSlots = 0;
         PlayerEntity player = (PlayerEntity) entity;
         PlayerInventory inventoryPlayer = player.getInventory();
         int inventoryPlayerSlots = player.getInventory().main.size();
