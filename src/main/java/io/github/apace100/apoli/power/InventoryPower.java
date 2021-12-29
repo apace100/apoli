@@ -134,23 +134,28 @@ public class InventoryPower extends Power implements Active, Inventory {
     //  Drop the cached item stacks of the power
     //  (used for losing the power and death (if shouldDropOnDeath is true))
     public void dropContents() {
-        for (int i = 0; i < size; ++i) {
-            PlayerEntity player = (PlayerEntity)entity;
-            ItemStack currentItemStack = inventory.get(i);
-            if (!lostPower && shouldDropOnDeath) {
-                if (shouldDropOnDeath(currentItemStack)) {
-                    if (!currentItemStack.isEmpty() && EnchantmentHelper.hasVanishingCurse(currentItemStack)) {
-                        inventory.set(i, ItemStack.EMPTY);
-                    }
-                    else {
+        PlayerEntity player = (PlayerEntity) entity;
+        if (!lostPower && shouldDropOnDeath) {
+            for (int i = 0; i < size; ++i) {
+                ItemStack currentItemStack = inventory.get(i);
+                if (!currentItemStack.isEmpty() && shouldDropOnDeath(currentItemStack)) {
+                    if (!EnchantmentHelper.hasVanishingCurse(currentItemStack)) {
                         player.dropItem(currentItemStack, true, false);
-                        inventory.set(i, ItemStack.EMPTY);
                     }
+                    inventory.set(i, ItemStack.EMPTY);
                 }
             }
-            else {
-                player.dropItem(currentItemStack, true, false);
-                inventory.set(i, ItemStack.EMPTY);
+        }
+        else if (lostPower) {
+            for (int i = 0; i < size; ++i) {
+                ItemStack currentItemStack = inventory.get(i);
+                if (!currentItemStack.isEmpty()) {
+                    boolean insertedCurItemStack = player.getInventory().insertStack(currentItemStack);
+                    if (!insertedCurItemStack) {
+                        player.dropItem(currentItemStack, false, false);
+                    }
+                    inventory.set(i, ItemStack.EMPTY);
+                }
             }
         }
     }

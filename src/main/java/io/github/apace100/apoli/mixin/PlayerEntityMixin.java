@@ -6,7 +6,6 @@ import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
@@ -175,8 +174,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V"))
     private void dropAdditionalInventory(CallbackInfo ci) {
-        PowerHolderComponent.getPowers(this, InventoryPower.class).forEach(inventory -> {
-            inventory.dropContents();
+        PowerHolderComponent.getPowers(this, InventoryPower.class).forEach(inventoryPower -> {
+            inventoryPower.dropContents();
         });
         PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(keepInventoryPower -> {
             keepInventoryPower.preventItemsFromDropping(inventory);
