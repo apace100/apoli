@@ -45,11 +45,18 @@ public abstract class ItemStackMixin implements MutableItemStack {
 
     @Shadow public abstract UseAction getUseAction();
 
+    @Shadow protected abstract int getHideFlags();
+
+    @Shadow
+    private static boolean isSectionVisible(int flags, ItemStack.TooltipSection tooltipSection) {
+        return (flags & tooltipSection.getFlag()) == 0;
+    }
+
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 0, shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void addUnusableTooltip(@Nullable PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, List<Text> list) {
         if(player != null) {
             ApoliConfigClient.Tooltips config = ((ApoliConfigClient) Apoli.config).tooltips;
-            if(!config.showUsabilityHints) {
+            if(!config.showUsabilityHints || !isSectionVisible(getHideFlags(), ItemStack.TooltipSection.ADDITIONAL)) {
                 return;
             }
             List<PreventItemUsePower> powers = PowerHolderComponent.getPowers(player, PreventItemUsePower.class).stream().filter(p -> p.doesPrevent((ItemStack)(Object)this)).toList();
