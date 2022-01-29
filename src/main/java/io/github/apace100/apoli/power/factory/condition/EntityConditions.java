@@ -9,6 +9,7 @@ import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.condition.entity.ElytraFlightPossibleCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
+import io.github.apace100.apoli.power.factory.condition.entity.ScoreboardCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
@@ -303,24 +304,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("entity_type"), new SerializableData()
             .add("entity_type", SerializableDataTypes.ENTITY_TYPE),
             (data, entity) -> entity.getType() == data.get("entity_type")));
-        register(new ConditionFactory<>(Apoli.identifier("scoreboard"), new SerializableData()
-            .add("objective", SerializableDataTypes.STRING)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT),
-            (data, entity) -> {
-                if(entity instanceof PlayerEntity) {
-                    PlayerEntity player = (PlayerEntity)entity;
-                    Scoreboard scoreboard = player.getScoreboard();
-                    ScoreboardObjective objective = scoreboard.getObjective(data.getString("objective"));
-                    String playerName = player.getName().asString();
-
-                    if (scoreboard.playerHasObjective(playerName, objective)) {
-                        int value = scoreboard.getPlayerScore(playerName, objective).getScore();
-                        return ((Comparison)data.get("comparison")).compare(value, data.getInt("compare_to"));
-                    }
-                }
-                return false;
-            }));
+        register(ScoreboardCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("command"), new SerializableData()
             .add("command", SerializableDataTypes.STRING)
             .add("comparison", ApoliDataTypes.COMPARISON)
