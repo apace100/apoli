@@ -8,6 +8,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.action.entity.RaycastAction;
+import io.github.apace100.apoli.power.factory.action.entity.RemovePowerAction;
 import io.github.apace100.apoli.power.factory.action.entity.SpawnParticlesAction;
 import io.github.apace100.apoli.power.factory.action.entity.SwingHandAction;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
@@ -582,6 +583,7 @@ public class EntityActions {
         register(SwingHandAction.getFactory());
         register(RaycastAction.getFactory());
         register(SpawnParticlesAction.getFactory());
+        register(RemovePowerAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
