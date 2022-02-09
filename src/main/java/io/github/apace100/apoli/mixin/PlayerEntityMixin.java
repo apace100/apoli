@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
@@ -208,6 +209,43 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
         if(component.getPowers(RestrictArmorPower.class).stream().anyMatch(rap -> !rap.canEquip(stack, slot))) {
             info.setReturnValue(false);
+        }
+    }
+
+    public boolean apoli$hasModifiedDamage;
+
+    @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
+    private float modifyDamageStuff(float originalValue, DamageSource source, float amount) {
+
+        float newValue = originalValue;
+
+        //  ModifyDamageDealt
+        if(source.getAttacker() != null && !source.isProjectile()) {
+            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPower.class, originalValue,
+                p -> p.doesApply(source, originalValue, this), p -> p.executeActions(this));
+        }
+
+        //  ModifyProjectileDamage
+        if (source.getAttacker() != null && source.isProjectile()) {
+            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyProjectileDamagePower.class, originalValue,
+                p -> p.doesApply(source, originalValue, this), p -> p.executeActions(this));
+        }
+
+        //  ModifyDamageTaken
+        float intermediateValue = newValue;
+
+        newValue = PowerHolderComponent.modify(this, ModifyDamageTakenPower.class,
+            intermediateValue, p -> p.doesApply(source, intermediateValue), p -> p.executeActions(source.getAttacker()));
+
+        apoli$hasModifiedDamage = newValue != originalValue;
+
+        return newValue;
+    }
+
+    @Inject(method = "damage", at = @At(value = "HEAD"), cancellable = true)
+    private void preventHitIfDamageIsZero(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if(apoli$hasModifiedDamage && amount == 0.0F) {
+            cir.setReturnValue(false);
         }
     }
 }

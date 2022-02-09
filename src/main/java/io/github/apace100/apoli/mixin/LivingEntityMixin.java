@@ -165,20 +165,34 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-    private boolean apoli$hasModifiedDamage;
+    public boolean apoli$hasModifiedDamage;
 
     @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
-    private float modifyDamageTaken(float originalValue, DamageSource source, float amount) {
+    private float modifyDamageStuff(float originalValue, DamageSource source, float amount) {
+
         float newValue = originalValue;
         LivingEntity thisAsLiving = (LivingEntity)(Object)this;
-        if(source.getAttacker() != null && !source.isProjectile()) {
-            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPower.class, originalValue,
-                p -> p.doesApply(source, originalValue, thisAsLiving), p -> p.executeActions(thisAsLiving));
-        }
 
-        float intermediateValue = newValue;
-        newValue = PowerHolderComponent.modify(this, ModifyDamageTakenPower.class,
-            intermediateValue, p -> p.doesApply(source, intermediateValue), p -> p.executeActions(source.getAttacker()));
+        if (!(thisAsLiving instanceof PlayerEntity)) {
+
+            //  ModifyDamageDealt
+            if(source.getAttacker() != null && !source.isProjectile()) {
+                newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPower.class, originalValue,
+                    p -> p.doesApply(source, originalValue, thisAsLiving), p -> p.executeActions(thisAsLiving));
+            }
+
+            //  ModifyProjectileDamage
+            if (source.getAttacker() != null && source.isProjectile()) {
+                newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyProjectileDamagePower.class, originalValue,
+                    p -> p.doesApply(source, originalValue, thisAsLiving), p -> p.executeActions(thisAsLiving));
+            }
+
+            //  ModifyDamageTaken
+            float intermediateValue = newValue;
+
+            newValue = PowerHolderComponent.modify(this, ModifyDamageTakenPower.class,
+                intermediateValue, p -> p.doesApply(source, intermediateValue), p -> p.executeActions(source.getAttacker()));
+        }
 
         apoli$hasModifiedDamage = newValue != originalValue;
 
