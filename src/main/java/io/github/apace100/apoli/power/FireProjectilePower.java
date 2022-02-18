@@ -176,7 +176,7 @@ public class FireProjectilePower extends ActiveCooldownPower {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("fire_projectile"),
             new SerializableData()
-                .add("cooldown", SerializableDataTypes.INT)
+                .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("count", SerializableDataTypes.INT, 1)
                 .add("interval", SerializableDataTypes.INT, 0)
                 .add("start_delay", SerializableDataTypes.INT, 0)
