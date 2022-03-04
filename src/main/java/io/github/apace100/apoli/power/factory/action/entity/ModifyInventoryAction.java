@@ -63,10 +63,10 @@ public class ModifyInventoryAction {
 
         for (int i = 0; i < inventory.size(); ++i) {
             if (slots != null && !slots.contains(i)) continue;
-            if (entityAction != null) entityAction.accept(playerEntity);
             ItemStack currentItemStack = inventory.getStack(i);
             if (!currentItemStack.isEmpty()) {
                 if (itemCondition == null || itemCondition.test(currentItemStack)) {
+                    if (entityAction != null) entityAction.accept(playerEntity);
                     itemAction.accept(new Pair<>(playerEntity.world, currentItemStack));
                 }
             }
