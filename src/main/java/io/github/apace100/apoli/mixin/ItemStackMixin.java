@@ -73,7 +73,7 @@ public class ItemStackMixin implements MutableItemStack {
             PowerHolderComponent component = PowerHolderComponent.KEY.get(user);
             ItemStack stackInHand = user.getStackInHand(hand);
             for(PreventItemUsePower piup : component.getPowers(PreventItemUsePower.class)) {
-                if(piup.doesPrevent(stackInHand)) {
+                if(piup.doesPreventUsage(stackInHand)) {
                     info.setReturnValue(TypedActionResult.fail(stackInHand));
                     break;
                 }
