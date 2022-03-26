@@ -7,16 +7,22 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
@@ -26,12 +32,14 @@ import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(Entity.class)
@@ -62,6 +70,12 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow @Nullable protected Tag<Fluid> submergedFluidTag;
 
     @Shadow protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
+
+    @Shadow public abstract boolean collidesWithStateAtPos(BlockPos pos, BlockState state);
+
+    @Shadow public abstract boolean removeScoreboardTag(String tag);
+
+    @Shadow protected abstract void fall(double heightDifference, boolean onGround, BlockState landedState, BlockPos landedPosition);
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -178,4 +192,55 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     public boolean isMoving() {
         return isMoving;
     }
+
+    @Environment(EnvType.CLIENT)
+    @Inject(method = "getTeamColorValue", at = @At("RETURN"), cancellable = true)
+    private void modifyGlowingColorFromPower(CallbackInfoReturnable<Integer> cir) {
+        Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
+        Entity renderEntity = (Entity) (Object) this;
+        AbstractTeam abstractTeam = renderEntity.getScoreboardTeam();
+        boolean isUsingTeam = abstractTeam != null && abstractTeam.getColor().getColorValue() != null;
+        boolean modified = false;
+        List<Float> unmixedRed = new ArrayList<>();
+        List<Float> unmixedGreen = new ArrayList<>();
+        List<Float> unmixedBlue = new ArrayList<>();
+
+        for (EntityGlowPower power : PowerHolderComponent.getPowers(cameraEntity, EntityGlowPower.class)) {
+            if (power.doesApply(renderEntity)) {
+                if (!isUsingTeam || !power.usesTeams()) {
+                    modified = true;
+                    unmixedRed.add(power.getRed());
+                    unmixedGreen.add(power.getGreen());
+                    unmixedBlue.add(power.getBlue());
+                }
+            }
+        }
+
+        for (SelfGlowPower power : PowerHolderComponent.getPowers(renderEntity, SelfGlowPower.class)) {
+            if (!isUsingTeam || !power.usesTeams()) {
+                modified = true;
+                unmixedRed.add(power.getRed());
+                unmixedGreen.add(power.getGreen());
+                unmixedBlue.add(power.getBlue());
+            }
+        }
+
+        if(modified) {
+            cir.setReturnValue(MathHelper.packRgb(mixColors(unmixedRed), mixColors(unmixedGreen), mixColors(unmixedBlue)));
+        }
+
+    }
+
+    @Unique
+    private static float mixColors(List<Float> colors) {
+        if(colors.size() == 0) return 1.0F;
+        if(colors.size() == 1) return colors.get(0);
+
+        float sum = 0.0F;
+        for(float color : colors) {
+            sum += color;
+        }
+        return sum / colors.size();
+    }
+
 }
