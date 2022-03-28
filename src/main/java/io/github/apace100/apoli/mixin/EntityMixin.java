@@ -7,7 +7,6 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import joptsimple.internal.Reflection;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
@@ -40,7 +39,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Mixin(Entity.class)
@@ -196,7 +194,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         StackWalker walker = StackWalker.getInstance(Set.of(StackWalker.Option.RETAIN_CLASS_REFERENCE), 2);
         boolean calledByWorldRenderer = walker.walk(s -> s.map(StackWalker.StackFrame::getDeclaringClass).anyMatch(cls -> cls == WorldRenderer.class));
         if(!calledByWorldRenderer) return;
-        */
+         */
 
         Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
         Entity renderEntity = (Entity) (Object) this;
