@@ -7,11 +7,13 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import joptsimple.internal.Reflection;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
@@ -31,15 +33,15 @@ import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
@@ -189,51 +191,44 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Environment(EnvType.CLIENT)
     @Inject(method = "getTeamColorValue", at = @At("RETURN"), cancellable = true)
     private void modifyGlowingColorFromPower(CallbackInfoReturnable<Integer> cir) {
+        /** Adviced by @EdwinMindcraft: a solution making the hook limited to WorldRenderer ONLY.
+         * Remove this comment when run into unexpected call to Entity#getTeamColorValue to fix the problem.
+        StackWalker walker = StackWalker.getInstance(Set.of(StackWalker.Option.RETAIN_CLASS_REFERENCE), 2);
+        boolean calledByWorldRenderer = walker.walk(s -> s.map(StackWalker.StackFrame::getDeclaringClass).anyMatch(cls -> cls == WorldRenderer.class));
+        if(!calledByWorldRenderer) return;
+        */
+
         Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
         Entity renderEntity = (Entity) (Object) this;
         AbstractTeam abstractTeam = renderEntity.getScoreboardTeam();
         boolean isUsingTeam = abstractTeam != null && abstractTeam.getColor().getColorValue() != null;
-        boolean modified = false;
-        List<Float> unmixedRed = new ArrayList<>();
-        List<Float> unmixedGreen = new ArrayList<>();
-        List<Float> unmixedBlue = new ArrayList<>();
+        int colorAmount = 0;
+        float r = 0.0F;
+        float g = 0.0F;
+        float b = 0.0F;
 
         for (EntityGlowPower power : PowerHolderComponent.getPowers(cameraEntity, EntityGlowPower.class)) {
-            if (power.doesApply(renderEntity)) {
-                if (!isUsingTeam || !power.usesTeams()) {
-                    modified = true;
-                    unmixedRed.add(power.getRed());
-                    unmixedGreen.add(power.getGreen());
-                    unmixedBlue.add(power.getBlue());
-                }
+            if (power.doesApply(renderEntity) && !(isUsingTeam && power.usesTeams())) {
+                colorAmount++;
+                r += power.getRed();
+                g += power.getGreen();
+                b += power.getBlue();
             }
         }
 
         for (SelfGlowPower power : PowerHolderComponent.getPowers(renderEntity, SelfGlowPower.class)) {
-            if (!isUsingTeam || !power.usesTeams()) {
-                modified = true;
-                unmixedRed.add(power.getRed());
-                unmixedGreen.add(power.getGreen());
-                unmixedBlue.add(power.getBlue());
+            if (!(isUsingTeam && power.usesTeams())) {
+                colorAmount++;
+                r += power.getRed();
+                g += power.getGreen();
+                b += power.getBlue();
             }
         }
 
-        if(modified) {
-            cir.setReturnValue(MathHelper.packRgb(mixColors(unmixedRed), mixColors(unmixedGreen), mixColors(unmixedBlue)));
+        if(colorAmount > 0) {
+            cir.setReturnValue(MathHelper.packRgb(r / colorAmount, g / colorAmount, b / colorAmount));
         }
 
-    }
-
-    @Unique
-    private static float mixColors(List<Float> colors) {
-        if(colors.size() == 0) return 1.0F;
-        if(colors.size() == 1) return colors.get(0);
-
-        float sum = 0.0F;
-        for(float color : colors) {
-            sum += color;
-        }
-        return sum / colors.size();
     }
 
 }
