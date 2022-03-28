@@ -3,5 +3,6 @@
   "entity_condition": {
     "type": "apoli:status_effect",
     "effect": "minecraft:invisibility"
-  }
+  },
+  "blue": 0.0
 }
