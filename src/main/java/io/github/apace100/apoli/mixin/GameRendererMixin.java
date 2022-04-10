@@ -17,7 +17,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -47,12 +46,6 @@ public abstract class GameRendererMixin {
     @Shadow
     @Final
     private MinecraftClient client;
-
-    @Shadow
-    private ItemStack floatingItem;
-
-    @Shadow
-    protected abstract void method_31136(float f);
 
     @Shadow
     protected abstract void loadShader(Identifier identifier);

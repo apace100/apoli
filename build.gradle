@@ -31,6 +31,9 @@ repositories {
 	maven {
 		url "https://maven.terraformersmc.com/"
 	}
+	flatDir {
+		dirs 'localdeps'
+	}
 	mavenLocal()
 }
 
@@ -65,6 +68,9 @@ dependencies {
 	include "me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}"
 
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+	modImplementation "de.dafuqs.additionalentityattributes:Additionalentityattributes-1.0.0+1.18.1"
+	include "de.dafuqs.additionalentityattributes:Additionalentityattributes-1.0.0+1.18.1"
 }
 
 processResources {

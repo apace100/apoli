@@ -9,8 +9,6 @@ import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
@@ -23,17 +21,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -213,16 +212,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         PowerHolderComponent.getPowers(source.getAttacker(), SelfActionOnKillPower.class).forEach(p -> p.onKill((LivingEntity)(Object)this, source, amount));
     }
 
-    // ModifyLavaSpeedPower
-    @ModifyConstant(method = "travel", constant = {
-        @Constant(doubleValue = 0.5D, ordinal = 0),
-        @Constant(doubleValue = 0.5D, ordinal = 1),
-        @Constant(doubleValue = 0.5D, ordinal = 2)
-    })
-    private double modifyLavaSpeed(double original) {
-        return PowerHolderComponent.modify(this, ModifyLavaSpeedPower.class, original);
-    }
-
     @Redirect(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isWet()Z"))
     private boolean preventExtinguishingFromSwimming(LivingEntity livingEntity) {
         if(PowerHolderComponent.hasPower(livingEntity, SwimmingPower.class) && livingEntity.isSwimming() && !(getFluidHeight(FluidTags.WATER) > 0)) {
@@ -316,26 +305,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
                 }
             }
         }
-    }
-
-    // SWIM_SPEED
-    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;updateVelocity(FLnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
-    public void modifyUnderwaterMovementSpeed(LivingEntity livingEntity, float speedMultiplier, Vec3d movementInput) {
-        livingEntity.updateVelocity(PowerHolderComponent.modify(livingEntity, ModifySwimSpeedPower.class, speedMultiplier), movementInput);
-    }
-
-    @ModifyConstant(method = "swimUpward", constant = @Constant(doubleValue = 0.03999999910593033D))
-    public double modifyUpwardSwimming(double original, Tag<Fluid> fluid) {
-        if(fluid == FluidTags.LAVA) {
-            return original;
-        }
-        return PowerHolderComponent.modify(this, ModifySwimSpeedPower.class, original);
-    }
-
-    @Environment(EnvType.CLIENT)
-    @ModifyConstant(method = "knockDownwards", constant = @Constant(doubleValue = -0.03999999910593033D))
-    public double swimDown(double original) {
-        return PowerHolderComponent.modify(this, ModifySwimSpeedPower.class, original);
     }
 
     // SLOW_FALLING

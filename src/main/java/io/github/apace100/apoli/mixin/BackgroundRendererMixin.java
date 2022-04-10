@@ -2,7 +2,6 @@ package io.github.apace100.apoli.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.LavaVisionPower;
 import io.github.apace100.apoli.power.ModifyCameraSubmersionTypePower;
 import io.github.apace100.apoli.power.NightVisionPower;
 import io.github.apace100.apoli.power.PhasingPower;
@@ -19,7 +18,9 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.List;
 
@@ -146,57 +147,5 @@ public abstract class BackgroundRendererMixin {
         }
 
         return null;
-    }
-/*
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 0))
-    private static boolean allowUnderlavaVision(LivingEntity livingEntity, StatusEffect effect) {
-        //if(PowerTypes.LAVA_SWIMMING.isActive(livingEntity)) {
-        //    return true;
-        //}
-        return livingEntity.hasStatusEffect(effect);
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 3.0F, ordinal = 0))
-    private static float modifyLavaVisibility(float original, Camera camera) {
-        //if(PowerTypes.LAVA_SWIMMING.isActive(camera.getFocusedEntity())) {
-        //    return original * 5F;
-        //}
-        return original;
-    }
-
- */ @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 0.25F, ordinal = 1))
-    private static float modifyLavaVisibilitySNoPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getS();
-        }
-        return original;
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 1.0F, ordinal = 0))
-    private static float modifyLavaVisibilityVNoPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getV();
-        }
-        return original;
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 0.0F, ordinal = 0))
-    private static float modifyLavaVisibilitySWithPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getS();
-        }
-        return original;
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 3.0F, ordinal = 0))
-    private static float modifyLavaVisibilityVWithPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getV();
-        }
-        return original;
     }
 }

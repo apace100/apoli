@@ -40,13 +40,11 @@ public class PowerFactories {
         register(RestrictArmorPower::createFactory);
         register(ConditionedRestrictArmorPower::createFactory);
         register(StackingStatusEffectPower::createFactory);
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifySwimSpeedPower::new, Apoli.identifier("modify_swim_speed")));
+        register(ModifySwimSpeedPower::createFactory);
         register(DamageOverTimePower::createFactory);
         register(() -> Power.createSimpleFactory(SwimmingPower::new, Apoli.identifier("swimming")));
         register(() -> Power.createSimpleFactory(FireImmunityPower::new, Apoli.identifier("fire_immunity")));
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyLavaSpeedPower::new, Apoli.identifier("modify_lava_speed")));
+        register(ModifyLavaSpeedPower::createFactory);
         register(LavaVisionPower::createFactory);
         register(ConditionedAttributePower::createFactory);
         register(ActiveCooldownPower::createActiveSelfFactory);
