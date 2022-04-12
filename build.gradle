@@ -31,9 +31,6 @@ repositories {
 	maven {
 		url "https://maven.terraformersmc.com/"
 	}
-	flatDir {
-		dirs 'localdeps'
-	}
 	mavenLocal()
 }
 
@@ -69,8 +66,8 @@ dependencies {
 
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-	modImplementation "de.dafuqs.additionalentityattributes:Additionalentityattributes-1.0.0+1.18.1"
-	include "de.dafuqs.additionalentityattributes:Additionalentityattributes-1.0.0+1.18.1"
+	modImplementation "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
+	include "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
 }
 
 processResources {
