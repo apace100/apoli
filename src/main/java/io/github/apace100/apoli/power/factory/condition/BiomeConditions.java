@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.BiomeAccessor;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
@@ -37,7 +38,7 @@ public class BiomeConditions {
             (data, biome) -> ((Comparison)data.get("comparison")).compare(biome.getTemperature(), data.getFloat("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("category"), new SerializableData()
             .add("category", SerializableDataTypes.STRING),
-            (data, biome) -> biome.getCategory().getName().equals(data.getString("category"))));
+            (data, biome) -> ((BiomeAccessor)(Object)biome).getCategory().getName().equals(data.getString("category"))));
         register(new ConditionFactory<>(Apoli.identifier("precipitation"), new SerializableData()
             .add("precipitation", SerializableDataTypes.STRING),
             (data, biome) -> biome.getPrecipitation().getName().equals(data.getString("precipitation"))));

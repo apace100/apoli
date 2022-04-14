@@ -61,8 +61,8 @@ public class DistanceFromCoordinatesConditionRegistry {
         return new SerializableData()
             .add("reference", SerializableDataTypes.STRING, alias.equals("distance_from_coordinates") ? "world_origin" : "world_spawn") // the reference point
 //          .add("check_modified_spawn", SerializableDataTypes.BOOLEAN, true) // whether to check for modified spawns
-            .add("offset", SerializableDataTypes.VECTOR, null) // offset to the reference point
-            .add("coordinates", SerializableDataTypes.VECTOR, null) // adds up (instead of replacing, for simplicity) to the prior for aliasing
+            .add("offset", SerializableDataTypes.VECTOR, new Vec3d(0, 0, 0)) // offset to the reference point
+            .add("coordinates", SerializableDataTypes.VECTOR, new Vec3d(0, 0, 0)) // adds up (instead of replacing, for simplicity) to the prior for aliasing
             .add("ignore_x", SerializableDataTypes.BOOLEAN, false) // ignore the axis in the distance calculation
             .add("ignore_y", SerializableDataTypes.BOOLEAN, false) // idem
             .add("ignore_z", SerializableDataTypes.BOOLEAN, false) // idem
@@ -105,7 +105,7 @@ public class DistanceFromCoordinatesConditionRegistry {
             pos = new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ());
             WorldView worldView = block.getWorld();
             if (!(worldView instanceof World))
-                return warnCouldNotGetObject("world", "block", compareOutOfBounds((Comparison)data.get("comparison")));
+                return warnCouldNotGetObject("world", "block", compareOutOfBounds(data.get("comparison")));
             else
                 world = (World)worldView;
         } else {
@@ -137,7 +137,7 @@ public class DistanceFromCoordinatesConditionRegistry {
                 else if (world instanceof ServerWorld)
                     spawnPos = ((ServerWorld)world).getSpawnPos();
                 else
-                    return warnCouldNotGetObject("world with spawn position", block != null ? "block" : "entity", compareOutOfBounds((Comparison)data.get("comparison")));
+                    return warnCouldNotGetObject("world with spawn position", block != null ? "block" : "entity", compareOutOfBounds(data.get("comparison")));
                 x = spawnPos.getX();
                 y = spawnPos.getY();
                 z = spawnPos.getZ();
@@ -154,7 +154,7 @@ public class DistanceFromCoordinatesConditionRegistry {
             if (currentDimensionCoordinateScale == 0) // pocket dimensions?
                 // coordinate scale 0 means it takes 0 blocks to travel in the OW to travel 1 block in the dimension,
                 // so the dimension is folded on 0 0, so unless the OW reference is at 0 0, it gets scaled to infinity
-                return compareOutOfBounds((Comparison)data.get("comparison"));
+                return compareOutOfBounds(data.get("comparison"));
             x /= currentDimensionCoordinateScale;
             z /= currentDimensionCoordinateScale;
         }
@@ -169,7 +169,7 @@ public class DistanceFromCoordinatesConditionRegistry {
             zDistance *= currentDimensionCoordinateScale;
         }
 
-        distance = Shape.getDistance((Shape)data.get("shape"), xDistance, yDistance, zDistance);
+        distance = Shape.getDistance(data.get("shape"), xDistance, yDistance, zDistance);
 
         if (data.isPresent("round_to_digit"))
             distance = new BigDecimal(distance).setScale(data.getInt("round_to_digit"), RoundingMode.HALF_UP).doubleValue();

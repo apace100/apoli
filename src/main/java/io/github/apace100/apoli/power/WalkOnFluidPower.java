@@ -6,18 +6,18 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 
 public class WalkOnFluidPower extends Power {
 
-    private final Tag<Fluid> fluidTag;
+    private final TagKey<Fluid> fluidTag;
 
-    public WalkOnFluidPower(PowerType<?> type, LivingEntity entity, Tag<Fluid> fluidTag) {
+    public WalkOnFluidPower(PowerType<?> type, LivingEntity entity, TagKey<Fluid> fluidTag) {
         super(type, entity);
         this.fluidTag = fluidTag;
     }
 
-    public Tag<Fluid> getFluidTag() {
+    public TagKey<Fluid> getFluidTag() {
         return fluidTag;
     }
 
@@ -26,7 +26,7 @@ public class WalkOnFluidPower extends Power {
             new SerializableData()
                 .add("fluid", SerializableDataTypes.FLUID_TAG),
             data ->
-                (type, player) -> new WalkOnFluidPower(type, player, (Tag<Fluid>)data.get("fluid")))
+                (type, player) -> new WalkOnFluidPower(type, player, data.get("fluid")))
             .allowCondition();
     }
 }

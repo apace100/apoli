@@ -2,7 +2,6 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -14,6 +13,7 @@ import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.structure.StructureStart;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Unit;
@@ -22,10 +22,12 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
 
 import java.util.Optional;
 
@@ -34,10 +36,10 @@ public class ModifyPlayerSpawnPower extends Power {
     public final float dimensionDistanceMultiplier;
     public final Identifier biomeId;
     public final String spawnStrategy;
-    public final StructureFeature structure;
+    public final RegistryKey<ConfiguredStructureFeature<?, ?>> structure;
     public final SoundEvent spawnSound;
 
-    public ModifyPlayerSpawnPower(PowerType<?> type, LivingEntity entity, RegistryKey<World> dimension, float dimensionDistanceMultiplier, Identifier biomeId, String spawnStrategy, StructureFeature<?> structure, SoundEvent spawnSound) {
+    public ModifyPlayerSpawnPower(PowerType<?> type, LivingEntity entity, RegistryKey<World> dimension, float dimensionDistanceMultiplier, Identifier biomeId, String spawnStrategy, RegistryKey<ConfiguredStructureFeature<?, ?>> structure, SoundEvent spawnSound) {
         super(type, entity);
         this.dimension = dimension;
         this.dimensionDistanceMultiplier = dimensionDistanceMultiplier;
@@ -110,28 +112,29 @@ public class ModifyPlayerSpawnPower extends Power {
             if(biomeId != null) {
                 Optional<Biome> biomeOptional = world.getRegistryManager().get(Registry.BIOME_KEY).getOrEmpty(biomeId);
                 if(biomeOptional.isPresent()) {
-                    BlockPos biomePos = world.locateBiome(biomeOptional.get(), spawnToDimPos, 6400, 8);
+                    com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> biomePos = world.locateBiome(b -> b.value() == biomeOptional.get(), spawnToDimPos, 6400, 8);
                     if(biomePos != null) {
-                        spawnToDimPos = biomePos;
+                        spawnToDimPos = biomePos.getFirst();
                     } else {
-                        Apoli.LOGGER.warn("Could not find biome \"" + biomeId.toString() + "\" in dimension \"" + dimension.toString() + "\".");
+                        Apoli.LOGGER.warn("Could not find biome \"" + biomeId + "\" in dimension \"" + dimension.toString() + "\".");
                     }
                 } else {
-                    Apoli.LOGGER.warn("Biome with ID \"" + biomeId.toString() + "\" was not registered.");
+                    Apoli.LOGGER.warn("Biome with ID \"" + biomeId + "\" was not registered.");
                 }
             }
 
             if(structure == null) {
                 tpPos = getValidSpawn(spawnToDimPos, range, world);
             } else {
-                BlockPos structurePos = getStructureLocation(structure, dimension);
+                Pair<BlockPos, ConfiguredStructureFeature<?, ?>> locateStructure = getStructureLocation(world, structure, null, dimension);
+                BlockPos structurePos = locateStructure.getLeft();
                 ChunkPos structureChunkPos;
 
                 if(structurePos == null) {
                     return null;
                 }
                 structureChunkPos = new ChunkPos(structurePos.getX() >> 4, structurePos.getZ() >> 4);
-                StructureStart structureStart = world.getStructureAccessor().getStructureStart(ChunkSectionPos.from(structureChunkPos, 0), structure, world.getChunk(structurePos));
+                StructureStart structureStart = world.getStructureAccessor().getStructureStart(ChunkSectionPos.from(structureChunkPos, 0), locateStructure.getRight(), world.getChunk(structurePos));
                 BlockPos structureCenter = new BlockPos(structureStart.getBoundingBox().getCenter());
                 tpPos = getValidSpawn(structureCenter, range, world);
             }
@@ -147,16 +150,32 @@ public class ModifyPlayerSpawnPower extends Power {
         return null;
     }
 
-    private BlockPos getStructureLocation(StructureFeature structure, RegistryKey<World> dimension) {
+    private Pair<BlockPos, ConfiguredStructureFeature<?, ?>> getStructureLocation(World world, RegistryKey<ConfiguredStructureFeature<?, ?>> structure, TagKey<ConfiguredStructureFeature<?, ?>> structureTag, RegistryKey<World> dimension) {
+        Registry<ConfiguredStructureFeature<?, ?>> registry = world.getRegistryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
+        RegistryEntryList<ConfiguredStructureFeature<?, ?>> entryList = null;
+        String structureOrTagName = "";
+        if(structure != null) {
+            var entry = registry.getEntry(structure);
+            if(entry.isPresent()) {
+                entryList = RegistryEntryList.of(entry.get());
+            }
+            structureOrTagName = structure.getValue().toString();
+        }
+        if(entryList == null) {
+            var optionalList = registry.getEntryList(structureTag);
+            if(optionalList.isPresent()) {
+                entryList = optionalList.get();
+            }
+            structureOrTagName = "#" + structureTag.id().toString();
+        }
         BlockPos blockPos = new BlockPos(0, 70, 0);
         ServerWorld serverWorld = entity.getServer().getWorld(dimension);
-        BlockPos blockPos2 = serverWorld.locateStructure(structure, blockPos, 100, false);
-        //FrostburnOrigins.LOGGER.warn("Unrecognized dimension id '" + dimensionId + "', defaulting to id '0', OVERWORLD");
-        if (blockPos2 == null) {
-            Apoli.LOGGER.warn("Could not find '" + structure.getName() + "' in dimension: " + dimension.getValue());
+        com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<ConfiguredStructureFeature<?, ?>>> result = serverWorld.getChunkManager().getChunkGenerator().locateStructure(serverWorld, entryList, blockPos, 100, false);
+        if (result == null) {
+            Apoli.LOGGER.warn("Could not find structure \"" + structureOrTagName + "\" in dimension: " + dimension.getValue());
             return null;
         } else {
-            return blockPos2;
+            return new Pair<>(result.getFirst(), result.getSecond().value());
         }
     }
 
@@ -228,17 +247,17 @@ public class ModifyPlayerSpawnPower extends Power {
                 .add("dimension_distance_multiplier", SerializableDataTypes.FLOAT, 0F)
                 .add("biome", SerializableDataTypes.IDENTIFIER, null)
                 .add("spawn_strategy", SerializableDataTypes.STRING, "default")
-                .add("structure", SerializableDataType.registry(ClassUtil.castClass(StructureFeature.class), Registry.STRUCTURE_FEATURE), null)
+                .add("structure", SerializableDataType.registryKey(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY), null)
                 .add("respawn_sound", SerializableDataTypes.SOUND_EVENT, null),
             data ->
                 (type, player) ->
                     new ModifyPlayerSpawnPower(type, player,
-                        (RegistryKey<World>)data.get("dimension"),
+                        data.get("dimension"),
                         data.getFloat("dimension_distance_multiplier"),
                         data.getId("biome"),
                         data.getString("spawn_strategy"),
-                        data.isPresent("structure") ? (StructureFeature<?>)data.get("structure") : null,
-                        (SoundEvent)data.get("respawn_sound")))
+                        data.isPresent("structure") ? data.get("structure") : null,
+                        data.get("respawn_sound")))
             .allowCondition();
     }
 }

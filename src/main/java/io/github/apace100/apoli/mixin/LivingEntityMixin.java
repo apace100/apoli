@@ -16,7 +16,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -158,9 +158,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     @Inject(method = "canWalkOnFluid", at = @At("HEAD"), cancellable = true)
-    private void modifyWalkableFluids(Fluid fluid, CallbackInfoReturnable<Boolean> info) {
-        if(PowerHolderComponent.getPowers(this, WalkOnFluidPower.class).stream().anyMatch(p -> fluid.isIn(p.getFluidTag()))) {
-            info.setReturnValue(true);
+    private void modifyWalkableFluids(FluidState fluidState, CallbackInfoReturnable<Boolean> cir) {
+        if(PowerHolderComponent.getPowers(this, WalkOnFluidPower.class).stream().anyMatch(p -> fluidState.isIn(p.getFluidTag()))) {
+            cir.setReturnValue(true);
         }
     }
 

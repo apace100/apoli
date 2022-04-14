@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class HungerManagerMixin {
 
     @Shadow private int foodLevel;
-    @Shadow private float foodSaturationLevel;
+    @Shadow private float saturationLevel;
     @Unique
     private PlayerEntity player;
 
@@ -71,7 +71,7 @@ public class HungerManagerMixin {
         if(player != null) {
             ((ModifiableFoodEntity)player).getCurrentModifyFoodPowers().stream().filter(p -> p.doesApply(stack)).forEach(ModifyFoodPower::eat);
             if(apoli$ShouldUpdateManually && !player.world.isClient) {
-                ((ServerPlayerEntity)player).networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), foodLevel, foodSaturationLevel));
+                ((ServerPlayerEntity)player).networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), foodLevel, saturationLevel));
             }
         }
     }

@@ -15,7 +15,7 @@ import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
@@ -33,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.Set;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
@@ -48,7 +49,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     public World world;
 
     @Shadow
-    public abstract double getFluidHeight(Tag<Fluid> fluid);
+    public abstract double getFluidHeight(TagKey<Fluid> fluid);
 
     @Shadow
     public abstract Vec3d getVelocity();
@@ -59,9 +60,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow
     protected boolean onGround;
 
-    @Shadow @Nullable protected Tag<Fluid> submergedFluidTag;
+    @Shadow @Nullable protected Set<TagKey<Fluid>> submergedFluidTag;
 
-    @Shadow protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
+    @Shadow protected Object2DoubleMap<TagKey<Fluid>> fluidHeight;
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -148,25 +149,26 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     }
 
     @Override
-    public boolean isSubmergedInLoosely(Tag<Fluid> tag) {
+    public boolean isSubmergedInLoosely(TagKey<Fluid> tag) {
         if(tag == null || submergedFluidTag == null) {
             return false;
         }
-        if(tag == submergedFluidTag) {
+        if(submergedFluidTag.contains(tag)) {
             return true;
         }
-        return Calio.areTagsEqual(Registry.FLUID_KEY, tag, submergedFluidTag);
+        return false;
+        //return Calio.areTagsEqual(Registry.FLUID_KEY, tag, submergedFluidTag);
     }
 
     @Override
-    public double getFluidHeightLoosely(Tag<Fluid> tag) {
+    public double getFluidHeightLoosely(TagKey<Fluid> tag) {
         if(tag == null) {
             return 0;
         }
         if(fluidHeight.containsKey(tag)) {
             return fluidHeight.getDouble(tag);
         }
-        for(Tag<Fluid> ft : fluidHeight.keySet()) {
+        for(TagKey<Fluid> ft : fluidHeight.keySet()) {
             if(Calio.areTagsEqual(Registry.FLUID_KEY, ft, tag)) {
                 return fluidHeight.getDouble(ft);
             }
