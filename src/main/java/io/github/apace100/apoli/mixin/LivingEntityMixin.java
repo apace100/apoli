@@ -354,6 +354,26 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return in;
     }
 
+    @ModifyConstant(method = "fall", constant = @Constant(floatValue = 3.0F))
+    private float modifyDamagingFallDistanceClient(float original) {
+        List<ModifyFallingPower> modifyFallingPowers = PowerHolderComponent.getPowers(this, ModifyFallingPower.class);
+        if(modifyFallingPowers.size() > 0) {
+            ModifyFallingPower power = modifyFallingPowers.get(0);
+            return power.damagingFallDistance;
+        }
+        return original;
+    }
+
+    @ModifyVariable(method = "computeFallDamage", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+    private float modifyDamagingFallDistanceServer(float original) {
+        List<ModifyFallingPower> modifyFallingPowers = PowerHolderComponent.getPowers(this, ModifyFallingPower.class);
+        if(modifyFallingPowers.size() > 0) {
+            ModifyFallingPower power = modifyFallingPowers.get(0);
+            return original - power.damagingFallDistance + 3.0F;
+        }
+        return original;
+    }
+
     @ModifyVariable(method = "travel", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;onGround:Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
         return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(world, getVelocityAffectingPos()));
