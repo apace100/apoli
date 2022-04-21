@@ -65,6 +65,16 @@ public class DamageConditions {
                 }
                 return false;
             }));
+        register(new ConditionFactory<>(Apoli.identifier("bypasses_armor"), new SerializableData(),
+            (data, dmg) -> dmg.getLeft().bypassesArmor()));
+        register(new ConditionFactory<>(Apoli.identifier("explosive"), new SerializableData(),
+            (data, dmg) -> dmg.getLeft().isExplosive()));
+        register(new ConditionFactory<>(Apoli.identifier("from_falling"), new SerializableData(),
+            (data, dmg) -> dmg.getLeft().isFromFalling()));
+        register(new ConditionFactory<>(Apoli.identifier("unblockable"), new SerializableData(),
+            (data, dmg) -> dmg.getLeft().isUnblockable()));
+        register(new ConditionFactory<>(Apoli.identifier("out_of_world"), new SerializableData(),
+            (data, dmg) -> dmg.getLeft().isOutOfWorld()));
     }
 
     private static void register(ConditionFactory<Pair<DamageSource, Float>> conditionFactory) {
