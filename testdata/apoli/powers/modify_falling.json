@@ -1,0 +1,5 @@
+{
+  "type": "apoli:modify_falling",
+  "velocity": 0.08,
+  "damaging_fall_distance": 10.0
+}
