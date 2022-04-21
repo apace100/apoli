@@ -37,6 +37,7 @@ public class BlockActions {
             t -> new CachedBlockPosition(t.getLeft(), t.getMiddle(), true)));
         register(DelayAction.getFactory(ApoliDataTypes.BLOCK_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.BLOCK_ACTION, block -> !block.getLeft().isClient));
 
         register(new ActionFactory<>(Apoli.identifier("offset"), new SerializableData()
             .add("action", ApoliDataTypes.BLOCK_ACTION)

@@ -37,6 +37,7 @@ public class ItemActions {
             Pair::getRight));
         register(DelayAction.getFactory(ApoliDataTypes.ITEM_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.ITEM_ACTION, worldAndStack -> !worldAndStack.getLeft().isClient));
 
         register(new ActionFactory<>(Apoli.identifier("consume"), new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1),

@@ -64,6 +64,7 @@ public class EntityActions {
         register(IfElseListAction.getFactory(ApoliDataTypes.ENTITY_ACTION, ApoliDataTypes.ENTITY_CONDITION));
         register(DelayAction.getFactory(ApoliDataTypes.ENTITY_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.ENTITY_ACTION, entity -> !entity.world.isClient));
 
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT)

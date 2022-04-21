@@ -34,6 +34,7 @@ public class BiEntityActions {
         register(IfElseListAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, ApoliDataTypes.BIENTITY_CONDITION));
         register(DelayAction.getFactory(ApoliDataTypes.BIENTITY_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, entities -> !entities.getLeft().world.isClient));
 
         register(new ActionFactory<>(Apoli.identifier("invert"), new SerializableData()
             .add("action", ApoliDataTypes.BIENTITY_ACTION),
