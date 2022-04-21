@@ -12,6 +12,8 @@ import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
+import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -165,6 +167,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     private boolean apoli$hasModifiedDamage;
+    private Optional<Boolean> apoli$shouldApplyArmor;
+    private Optional<Boolean> apoli$shouldDamageArmor;
 
     @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
     private float modifyDamageTaken(float originalValue, DamageSource source, float amount) {
@@ -181,7 +185,49 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
         apoli$hasModifiedDamage = newValue != originalValue;
 
+        List<ModifyDamageTakenPower> mdtps = PowerHolderComponent.getPowers(this, ModifyDamageTakenPower.class).stream().filter(p -> p.doesApply(source, originalValue)).toList();
+        long wantArmor = mdtps.stream().filter(p -> p.modifiesArmorApplicance() && p.shouldApplyArmor()).count();
+        long dontWantArmor = mdtps.stream().filter(p -> p.modifiesArmorApplicance() && !p.shouldApplyArmor()).count();
+        apoli$shouldApplyArmor = wantArmor == dontWantArmor ? Optional.empty() : Optional.of(wantArmor > dontWantArmor);
+        long wantDamage = mdtps.stream().filter(p -> p.modifiesArmorDamaging() && p.shouldDamageArmor()).count();
+        long dontWantDamage = mdtps.stream().filter(p -> p.modifiesArmorDamaging() && !p.shouldDamageArmor()).count();
+        apoli$shouldDamageArmor = wantDamage == dontWantDamage ? Optional.empty() : Optional.of(wantDamage > dontWantDamage);
+
         return newValue;
+    }
+
+    @Inject(method = "applyArmorToDamage", at = @At("HEAD"), cancellable = true)
+    private void modifyArmorApplicance(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
+        if(apoli$shouldApplyArmor.isPresent()) {
+            if(apoli$shouldDamageArmor.isPresent() && apoli$shouldDamageArmor.get()) {
+                this.damageArmor(source, amount);
+            }
+            if(apoli$shouldApplyArmor.get()) {
+                if(!apoli$shouldDamageArmor.isPresent()) {
+                    this.damageArmor(source, amount);
+                }
+                float damageLeft = DamageUtil.getDamageLeft(amount, this.getArmor(), (float)this.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS));
+                cir.setReturnValue(damageLeft);
+            } else {
+                cir.setReturnValue(amount);
+            }
+        } else {
+            if(apoli$shouldDamageArmor.isPresent()) {
+                if(apoli$shouldDamageArmor.get() && source.bypassesArmor()) {
+                    this.damageArmor(source, amount);
+                }
+            }
+        }
+    }
+
+    @Redirect(method = "applyArmorToDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;damageArmor(Lnet/minecraft/entity/damage/DamageSource;F)V"))
+    private void preventArmorDamaging(LivingEntity instance, DamageSource source, float amount) {
+        if(apoli$shouldDamageArmor.isPresent()) {
+            if(!apoli$shouldDamageArmor.get()) {
+                return;
+            }
+        }
+        this.damageArmor(source, amount);
     }
 
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"), cancellable = true)
@@ -261,14 +307,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // SPRINT_JUMP
-    @Inject(at = @At("HEAD"), method = "getJumpVelocity", cancellable = true)
-    private void modifyJumpVelocity(CallbackInfoReturnable<Float> info) {
-        float base = 0.42F * this.getJumpVelocityMultiplier();
-        float modified = PowerHolderComponent.modify(this, ModifyJumpPower.class, base, p -> {
+    @ModifyVariable(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getVelocity()Lnet/minecraft/util/math/Vec3d;"), ordinal = 0)
+    private double modifyJumpVelocity(double original) {
+        return PowerHolderComponent.modify(this, ModifyJumpPower.class, (float)original, p -> {
             p.executeAction();
             return true;
         });
-        info.setReturnValue(modified);
     }
 
     // HOTBLOODED
@@ -312,13 +356,10 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     public double modifyFallingVelocity(double in) {
         List<ModifyFallingPower> modifyFallingPowers = PowerHolderComponent.getPowers(this, ModifyFallingPower.class);
         if(modifyFallingPowers.size() > 0) {
-            ModifyFallingPower power = modifyFallingPowers.get(0);
-            if(!power.takeFallDamage) {
+            if(modifyFallingPowers.stream().anyMatch(p -> !p.takeFallDamage)) {
                 this.fallDistance = 0;
             }
-            if(this.getVelocity().y <= 0.0D) {
-                return power.velocity;
-            }
+            return PowerHolderComponent.modify(this, ModifyFallingPower.class, in);
         }
         return in;
     }
@@ -399,6 +440,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Shadow @Nullable private LivingEntity attacker;
 
     @Shadow protected abstract void applyFoodEffects(ItemStack stack, World world, LivingEntity targetEntity);
+
+    @Shadow protected abstract void damageArmor(DamageSource source, float amount);
+
+    @Shadow public abstract int getArmor();
+
+    @Shadow public abstract double getAttributeValue(EntityAttribute attribute);
 
     @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){

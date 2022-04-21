@@ -19,6 +19,7 @@ import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
 import io.github.apace100.calio.util.OrderedResourceListeners;
 import io.github.ladysnake.pal.AbilitySource;
@@ -88,6 +89,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ArgumentTypes.register(MODID + ":power_operation", PowerOperation.class, new ConstantArgumentSerializer<>(PowerOperation::operation));
 
 		ApoliClassData.registerAll();
+
+		ModifierOperations.registerAll();
 
 		PowerFactories.register();
 		EntityConditions.register();

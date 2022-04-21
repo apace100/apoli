@@ -1,0 +1,7 @@
+{
+  "type": "apoli:modify_jump",
+  "modifier": {
+    "operation": "set_total",
+    "value": 0.48
+  }
+}

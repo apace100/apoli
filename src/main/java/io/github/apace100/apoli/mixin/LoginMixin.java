@@ -68,8 +68,8 @@ public abstract class LoginMixin {
 
 		List<ServerPlayerEntity> playerList = getPlayerList();
 		playerList.forEach(spe -> {
-			PowerHolderComponent.KEY.syncWith(spe, ComponentProvider.fromEntity(player));
-			PowerHolderComponent.KEY.syncWith(player, ComponentProvider.fromEntity(spe));
+			PowerHolderComponent.KEY.syncWith(spe, player);
+			PowerHolderComponent.KEY.syncWith(player, spe);
 		});
 		PowerHolderComponent.sync(player);
 	}

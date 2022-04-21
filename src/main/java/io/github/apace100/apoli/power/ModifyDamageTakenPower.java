@@ -5,6 +5,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -26,10 +27,37 @@ public class ModifyDamageTakenPower extends ValueModifyingPower {
     private Consumer<Entity> selfAction;
     private Consumer<Pair<Entity, Entity>> biEntityAction;
 
+    private Predicate<Entity> applyArmorCondition;
+    private Predicate<Entity> damageArmorCondition;
+
     public ModifyDamageTakenPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<DamageSource, Float>> condition, Predicate<Pair<Entity, Entity>> biEntityCondition) {
         super(type, entity);
         this.condition = condition;
         this.biEntityCondition = biEntityCondition;
+    }
+
+    public void setApplyArmorCondition(Predicate<Entity> applyArmorCondition) {
+        this.applyArmorCondition = applyArmorCondition;
+    }
+
+    public void setDamageArmorCondition(Predicate<Entity> damageArmorCondition) {
+        this.damageArmorCondition = damageArmorCondition;
+    }
+
+    public boolean modifiesArmorApplicance() {
+        return this.applyArmorCondition != null;
+    }
+
+    public boolean shouldApplyArmor() {
+        return applyArmorCondition != null && applyArmorCondition.test(entity);
+    }
+
+    public boolean modifiesArmorDamaging() {
+        return this.damageArmorCondition != null;
+    }
+
+    public boolean shouldDamageArmor() {
+        return damageArmorCondition != null && damageArmorCondition.test(entity);
     }
 
     public boolean doesApply(DamageSource source, float damageAmount) {
@@ -65,31 +93,33 @@ public class ModifyDamageTakenPower extends ValueModifyingPower {
             new SerializableData()
                 .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
                 .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
-                .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
-                .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
+                .add("modifier", Modifier.DATA_TYPE, null)
+                .add("modifiers", Modifier.LIST_TYPE, null)
                 .add("self_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("attacker_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null),
+                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null)
+                .add("apply_armor_condition", ApoliDataTypes.ENTITY_CONDITION, null)
+                .add("damage_armor_condition", ApoliDataTypes.ENTITY_CONDITION, null),
             data ->
                 (type, player) -> {
                     ModifyDamageTakenPower power = new ModifyDamageTakenPower(type, player,
-                        data.isPresent("damage_condition") ? (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition") : dmg -> true,
-                        (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition"));
-                    if(data.isPresent("modifier")) {
-                        power.addModifier(data.getModifier("modifier"));
-                    }
-                    if(data.isPresent("modifiers")) {
-                        ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
-                    }
+                        data.isPresent("damage_condition") ? data.get("damage_condition") : dmg -> true,
+                        data.get("bientity_condition"));
+                    data.ifPresent("modifier", power::addModifier);
+                    data.<List<Modifier>>ifPresent("modifiers",
+                        mods -> mods.forEach(power::addModifier)
+                    );
                     if(data.isPresent("bientity_action")) {
-                        power.setBiEntityAction((ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"));
+                        power.setBiEntityAction(data.get("bientity_action"));
                     }
                     if(data.isPresent("self_action")) {
-                        power.setSelfAction((ActionFactory<Entity>.Instance)data.get("self_action"));
+                        power.setSelfAction(data.get("self_action"));
                     }
                     if(data.isPresent("attacker_action")) {
-                        power.setAttackerAction((ActionFactory<Entity>.Instance)data.get("attacker_action"));
+                        power.setAttackerAction(data.get("attacker_action"));
                     }
+                    data.ifPresent("apply_armor_condition", power::setApplyArmorCondition);
+                    data.ifPresent("damage_armor_condition", power::setDamageArmorCondition);
                     return power;
                 })
             .allowCondition();

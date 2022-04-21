@@ -5,6 +5,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -66,8 +67,8 @@ public class ModifyDamageDealtPower extends ValueModifyingPower {
         return new PowerFactory<>(Apoli.identifier("modify_damage_dealt"),
             new SerializableData()
                 .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
-                .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
-                .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
+                .add("modifier", Modifier.DATA_TYPE, null)
+                .add("modifiers", Modifier.LIST_TYPE, null)
                 .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null)
                 .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
                 .add("self_action", ApoliDataTypes.ENTITY_ACTION, null)
@@ -79,20 +80,18 @@ public class ModifyDamageDealtPower extends ValueModifyingPower {
                         data.isPresent("damage_condition") ? data.get("damage_condition") : dmg -> true,
                         data.get("target_condition"),
                         data.get("bientity_condition"));
-                    if(data.isPresent("modifier")) {
-                        power.addModifier(data.getModifier("modifier"));
-                    }
-                    if(data.isPresent("modifiers")) {
-                        ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
-                    }
+                    data.ifPresent("modifier", power::addModifier);
+                    data.<List<Modifier>>ifPresent("modifiers",
+                        mods -> mods.forEach(power::addModifier)
+                    );
                     if(data.isPresent("bientity_action")) {
-                        power.setBiEntityAction((ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"));
+                        power.setBiEntityAction(data.get("bientity_action"));
                     }
                     if(data.isPresent("self_action")) {
-                        power.setSelfAction((ActionFactory<Entity>.Instance)data.get("self_action"));
+                        power.setSelfAction(data.get("self_action"));
                     }
                     if(data.isPresent("target_action")) {
-                        power.setTargetAction((ActionFactory<Entity>.Instance)data.get("target_action"));
+                        power.setTargetAction(data.get("target_action"));
                     }
                     return power;
                 })

@@ -10,6 +10,8 @@ import io.github.apace100.apoli.integration.ModifyValueCallback;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.AttributeUtil;
+import io.github.apace100.apoli.util.modifier.Modifier;
+import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -147,16 +149,17 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         if(entity instanceof LivingEntity living) {
             PowerHolderComponent powerHolder = PowerHolderComponent.KEY.get(entity);
             List<T> powers = powerHolder.getPowers(powerClass);
-            List<EntityAttributeModifier> mps = powers.stream()
+            List<Modifier> mps = powers.stream()
                 .filter(p -> powerFilter == null || powerFilter.test(p))
                 .flatMap(p -> p.getModifiers().stream()).collect(Collectors.toList());
             if(powerAction != null) {
                 powers.stream().filter(p -> powerFilter == null || powerFilter.test(p)).forEach(powerAction);
             }
+
             powerHolder.getPowers(AttributeModifyTransferPower.class).stream()
-                .filter(p -> p.doesApply(powerClass)).forEach(p -> p.apply(mps));
+                .filter(p -> p.doesApply(powerClass)).forEach(p -> p.addModifiers(mps));
             ModifyValueCallback.EVENT.invoker().collectModifiers(living, powerClass, baseValue, mps);
-            return AttributeUtil.sortAndApplyModifiers(mps, baseValue);
+            return ModifierUtil.applyModifiers(entity, mps, baseValue);
         }
         return baseValue;
     }
