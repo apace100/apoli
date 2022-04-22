@@ -69,7 +69,7 @@ public class ActionOverTimePower extends Power {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("action_over_time"),
             new SerializableData()
-                .add("interval", SerializableDataTypes.INT)
+                .add("interval", SerializableDataTypes.INT, 20)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("rising_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("falling_action", ApoliDataTypes.ENTITY_ACTION, null),

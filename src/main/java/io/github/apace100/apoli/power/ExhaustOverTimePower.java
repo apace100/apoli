@@ -28,7 +28,7 @@ public class ExhaustOverTimePower extends Power {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("exhaust"),
             new SerializableData()
-                .add("interval", SerializableDataTypes.INT)
+                .add("interval", SerializableDataTypes.INT, 20)
                 .add("exhaustion", SerializableDataTypes.FLOAT),
             data ->
                 (type, player) -> new ExhaustOverTimePower(type, player, data.getInt("interval"), data.getFloat("exhaustion")))

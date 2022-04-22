@@ -120,7 +120,7 @@ public class DamageOverTimePower extends Power {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("damage_over_time"),
             new SerializableData()
-                .add("interval", SerializableDataTypes.INT)
+                .add("interval", SerializableDataTypes.INT, 20)
                 .addFunctionedDefault("onset_delay", SerializableDataTypes.INT, data -> data.getInt("interval"))
                 .add("damage", SerializableDataTypes.FLOAT)
                 .addFunctionedDefault("damage_easy", SerializableDataTypes.FLOAT, data -> data.getFloat("damage"))
