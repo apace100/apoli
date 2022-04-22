@@ -25,7 +25,7 @@ public enum ModifierOperation implements IModifierOperation {
     ADD_BASE_LATE(Phase.BASE, 300, (values, base, current) -> {
         double value = current;
         for(double v : values) {
-            value = v;
+            value += v;
         }
         return value;
     }),
