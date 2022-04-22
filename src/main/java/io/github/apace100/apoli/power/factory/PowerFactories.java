@@ -113,6 +113,7 @@ public class PowerFactories {
         register(ModifyStatusEffectDurationPower::createFactory);
         register(ModifyStatusEffectAmplifierPower::createFactory);
         register(ModifyAttributePower::createFactory);
+        register(() -> Power.createSimpleFactory(PreventSprintingPower::new, Apoli.identifier("prevent_sprinting")));
     }
 
     private static void register(PowerFactory<?> powerFactory) {
