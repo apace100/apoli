@@ -12,6 +12,7 @@ import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
+import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -364,6 +365,15 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return in;
     }
 
+    @Inject(method = "getAttributeValue", at = @At("RETURN"), cancellable = true)
+    private void modifyAttributeValue(EntityAttribute attribute, CallbackInfoReturnable<Double> cir) {
+        double originalValue = this.getAttributes().getValue(attribute);
+        double modified = PowerHolderComponent.modify(this, ModifyAttributePower.class, (float)originalValue, p -> p.getAttribute() == attribute);
+        if(originalValue != modified) {
+            cir.setReturnValue(modified);
+        }
+    }
+
     @ModifyVariable(method = "travel", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;onGround:Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
         return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(world, getVelocityAffectingPos()));
@@ -446,6 +456,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Shadow public abstract int getArmor();
 
     @Shadow public abstract double getAttributeValue(EntityAttribute attribute);
+
+    @Shadow public abstract AttributeContainer getAttributes();
 
     @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){

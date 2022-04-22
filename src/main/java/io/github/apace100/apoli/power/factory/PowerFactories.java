@@ -112,6 +112,7 @@ public class PowerFactories {
         register(KeepInventoryPower::createFactory);
         register(ModifyStatusEffectDurationPower::createFactory);
         register(ModifyStatusEffectAmplifierPower::createFactory);
+        register(ModifyAttributePower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {
