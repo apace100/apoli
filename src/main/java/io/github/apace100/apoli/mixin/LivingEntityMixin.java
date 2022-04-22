@@ -167,6 +167,11 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
+    @ModifyVariable(method = "heal", at = @At("HEAD"), argsOnly = true)
+    private float modifyHealingApplied(float originalValue) {
+        return PowerHolderComponent.modify(this, ModifyHealingPower.class, originalValue);
+    }
+
     private boolean apoli$hasModifiedDamage;
     private Optional<Boolean> apoli$shouldApplyArmor;
     private Optional<Boolean> apoli$shouldDamageArmor;

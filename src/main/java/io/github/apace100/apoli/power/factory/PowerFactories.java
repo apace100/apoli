@@ -114,6 +114,8 @@ public class PowerFactories {
         register(ModifyStatusEffectAmplifierPower::createFactory);
         register(ModifyAttributePower::createFactory);
         register(() -> Power.createSimpleFactory(PreventSprintingPower::new, Apoli.identifier("prevent_sprinting")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(
+            ModifyHealingPower::new, Apoli.identifier("modify_healing")));
     }
 
     private static void register(PowerFactory<?> powerFactory) {
