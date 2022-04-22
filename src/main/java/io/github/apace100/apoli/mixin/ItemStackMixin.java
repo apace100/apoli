@@ -31,6 +31,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -113,7 +114,10 @@ public abstract class ItemStackMixin implements MutableItemStack {
                 });
             }
         }
-        PowerHolderComponent.withPowers(player, TooltipPower.class, ttp -> ttp.doesApply((ItemStack) (Object)this), t -> t.addToTooltip(list));
+        PowerHolderComponent.getPowers(player, TooltipPower.class)
+            .stream().filter(t -> t.doesApply((ItemStack) (Object)this))
+            .sorted(Comparator.comparing(TooltipPower::getOrder))
+            .forEachOrdered(t -> t.addToTooltip(list));
     }
 
     @Inject(at = @At("HEAD"), method = "use", cancellable = true)
