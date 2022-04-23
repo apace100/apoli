@@ -25,14 +25,14 @@ import java.util.stream.Collectors;
 @Mixin(Item.class)
 public class ItemMixin {
 
-    @Redirect(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FoodComponent;isAlwaysEdible()Z"))
-    private boolean makeItemEdible(FoodComponent foodComponent, World world, PlayerEntity user, Hand hand) {
+    @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/TypedActionResult;fail(Ljava/lang/Object;)Lnet/minecraft/util/TypedActionResult;"), cancellable = true)
+    private void tryItemAlwaysEdible(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         ItemStack itemStack = user.getStackInHand(hand);
-        if(PowerHolderComponent.KEY.get(user).getPowers(ModifyFoodPower.class).stream()
+        if (PowerHolderComponent.KEY.get(user).getPowers(ModifyFoodPower.class).stream()
             .anyMatch(p -> p.doesMakeAlwaysEdible() && p.doesApply(itemStack))) {
-            return true;
+            user.setCurrentHand(hand);
+            cir.setReturnValue(TypedActionResult.consume(itemStack));
         }
-        return foodComponent.isAlwaysEdible();
     }
 
     @Inject(method = "onClicked", at = @At("RETURN"), cancellable = true)
