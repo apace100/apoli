@@ -2,5 +2,16 @@
   "type": "apoli:replace_loot_table",
   "replace": {
     "([a-z]|_|[1-9])*:blocks/([a-z]|_|[1-9])*_ore": "apoli:double_ore"
+  },
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:stone_pickaxe"
+    }
+  },
+  "block_condition": {
+    "type": "apoli:height",
+    "comparison": "==",
+    "compare_to": 64
   }
 }

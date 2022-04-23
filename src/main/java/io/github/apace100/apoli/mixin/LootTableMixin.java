@@ -66,7 +66,7 @@ public class LootTableMixin implements IdentifiedLootTable {
                 }
             }
             List<ReplaceLootTablePower> powers = PowerHolderComponent.getPowers(entity, ReplaceLootTablePower.class);
-            Optional<ReplaceLootTablePower> match = powers.stream().filter(p -> p.hasReplacement(apoli$id)).findFirst();
+            Optional<ReplaceLootTablePower> match = powers.stream().filter(p -> p.hasReplacement(apoli$id) && p.doesApply(context)).findFirst();
             if(match.isPresent()) {
                 ((ReplacingLootContext)context).setReplaced((LootTable)(Object)this);
                 Identifier id = match.get().getReplacement(apoli$id);
