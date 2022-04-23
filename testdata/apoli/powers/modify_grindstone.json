@@ -1,0 +1,21 @@
+{
+  "type": "apoli:modify_grindstone",
+  "bottom_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:enchanted_book"
+    }
+  },
+  "result_type": "specified",
+  "result_stack": {
+    "item": "minecraft:book"
+  },
+  "item_action_after_grinding": {
+    "type": "apoli:modify",
+    "modifier": "apoli:enchant_randomly"
+  },
+  "xp_modifier": {
+    "operation": "set_total",
+    "value": 50
+  }
+}
