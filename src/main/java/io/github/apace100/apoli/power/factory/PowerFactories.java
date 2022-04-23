@@ -116,6 +116,8 @@ public class PowerFactories {
         register(() -> Power.createSimpleFactory(PreventSprintingPower::new, Apoli.identifier("prevent_sprinting")));
         register(() -> ValueModifyingPower.createValueModifyingFactory(
             ModifyHealingPower::new, Apoli.identifier("modify_healing")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(
+            ModifyInsomniaTicksPower::new, Apoli.identifier("modify_insomnia_ticks")));
     }
 
     private static void register(PowerFactory<?> powerFactory) {

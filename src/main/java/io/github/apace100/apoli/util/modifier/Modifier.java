@@ -5,6 +5,7 @@ import com.google.gson.JsonParseException;
 import io.github.apace100.calio.data.DataException;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
+import net.minecraft.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -25,6 +26,10 @@ public class Modifier implements Comparable<Modifier> {
 
     public SerializableData.Instance getData() {
         return dataInstance;
+    }
+
+    public double apply(Entity entity, double value) {
+        return operation.apply(entity, List.of(dataInstance), value, value);
     }
 
     @Override
