@@ -119,6 +119,7 @@ public class PowerFactories {
         register(() -> ValueModifyingPower.createValueModifyingFactory(
             ModifyInsomniaTicksPower::new, Apoli.identifier("modify_insomnia_ticks")));
         register(ModifyGrindstonePower::createFactory);
+        register(ReplaceLootTablePower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

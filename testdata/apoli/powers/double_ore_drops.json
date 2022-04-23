@@ -1,0 +1,6 @@
+{
+  "type": "apoli:replace_loot_table",
+  "replace": {
+    "([a-z]|_|[1-9])*:blocks/([a-z]|_|[1-9])*_ore": "apoli:double_ore"
+  }
+}
