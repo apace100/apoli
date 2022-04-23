@@ -103,43 +103,16 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             }
         }
         apoli$CachedPriorityZeroResult = ActionResult.PASS;
-        HashMap<Integer, List<InteractionPower>> interactionPowers = new HashMap<>();
-        int max = 0;
-        for(ActionOnEntityUsePower p :
-            PowerHolderComponent.getPowers(this, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack) && p.getPriority() >= 0).toList()) {
-            int prio = p.getPriority();
-            if(interactionPowers.containsKey(prio)) {
-                interactionPowers.get(prio).add(p);
-            } else {
-                List<InteractionPower> powerList = new LinkedList<>();
-                powerList.add(p);
-                interactionPowers.put(prio, powerList);
-            }
-            if(prio > max) {
-                max = prio;
-            }
-        }
-        for(ActionOnBeingUsedPower p :
-            PowerHolderComponent.getPowers(this, ActionOnBeingUsedPower.class).stream().filter(p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() >= 0).toList()) {
-            int prio = p.getPriority();
-            if(interactionPowers.containsKey(prio)) {
-                interactionPowers.get(prio).add(p);
-            } else {
-                List<InteractionPower> powerList = new LinkedList<>();
-                powerList.add(p);
-                interactionPowers.put(prio, powerList);
-            }
-            if(prio > max) {
-                max = prio;
-            }
-        }
-        for(int i = max; i >= 0; i--) {
-            if(!interactionPowers.containsKey(i)) {
+        ActiveInteractionPower.CallInstance<ActiveInteractionPower> callInstance = new ActiveInteractionPower.CallInstance<>();
+        callInstance.add(this, ActionOnEntityUsePower.class, p -> p.shouldExecute(entity, hand, stack) && p.getPriority() >= 0);
+        callInstance.add(entity, ActionOnBeingUsedPower.class, p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() >= 0);
+        for(int i = callInstance.getMaxPriority(); i >= 0; i--) {
+            if(!callInstance.hasPowers(i)) {
                 continue;
             }
-            List<InteractionPower> powers = interactionPowers.get(i);
+            List<ActiveInteractionPower> powers = callInstance.getPowers(i);
             ActionResult result = ActionResult.PASS;
-            for(InteractionPower ip : powers) {
+            for(ActiveInteractionPower ip : powers) {
                 ActionResult ar = ActionResult.PASS;
                 if(ip instanceof ActionOnEntityUsePower aoeup) {
                     ar = aoeup.executeAction(entity, hand);
@@ -175,43 +148,16 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             custom = apoli$CachedPriorityZeroResult;
         } else if(cir.getReturnValue() == ActionResult.PASS) {
             ItemStack stack = this.getStackInHand(hand);
-            HashMap<Integer, List<InteractionPower>> interactionPowers = new HashMap<>();
-            int min = 0;
-            for(ActionOnEntityUsePower p :
-                PowerHolderComponent.getPowers(this, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack) && p.getPriority() < 0).toList()) {
-                int prio = p.getPriority();
-                if(interactionPowers.containsKey(prio)) {
-                    interactionPowers.get(prio).add(p);
-                } else {
-                    List<InteractionPower> powerList = new LinkedList<>();
-                    powerList.add(p);
-                    interactionPowers.put(prio, powerList);
-                }
-                if(prio < min) {
-                    min = prio;
-                }
-            }
-            for(ActionOnBeingUsedPower p :
-                PowerHolderComponent.getPowers(this, ActionOnBeingUsedPower.class).stream().filter(p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() < 0).toList()) {
-                int prio = p.getPriority();
-                if(interactionPowers.containsKey(prio)) {
-                    interactionPowers.get(prio).add(p);
-                } else {
-                    List<InteractionPower> powerList = new LinkedList<>();
-                    powerList.add(p);
-                    interactionPowers.put(prio, powerList);
-                }
-                if(prio < min) {
-                    min = prio;
-                }
-            }
-            for(int i = -1; i >= min; i--) {
-                if(!interactionPowers.containsKey(i)) {
+            ActiveInteractionPower.CallInstance<ActiveInteractionPower> callInstance = new ActiveInteractionPower.CallInstance<>();
+            callInstance.add(this, ActionOnEntityUsePower.class, p -> p.shouldExecute(entity, hand, stack) && p.getPriority() < 0);
+            callInstance.add(entity, ActionOnBeingUsedPower.class, p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() < 0);
+            for(int i = -1; i >= callInstance.getMinPriority(); i--) {
+                if(!callInstance.hasPowers(i)) {
                     continue;
                 }
-                List<InteractionPower> powers = interactionPowers.get(i);
+                List<ActiveInteractionPower> powers = callInstance.getPowers(i);
                 ActionResult result = ActionResult.PASS;
-                for(InteractionPower ip : powers) {
+                for(ActiveInteractionPower ip : powers) {
                     ActionResult ar = ActionResult.PASS;
                     if(ip instanceof ActionOnEntityUsePower aoeup) {
                         ar = aoeup.executeAction(entity, hand);
@@ -224,14 +170,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
                         result = ar;
                     }
                 }
-                if(i == 0) {
-                    apoli$CachedPriorityZeroResult = result;
-                } else {
-                    apoli$CachedPriorityZeroResult = ActionResult.PASS;
-                    if(result != ActionResult.PASS) {
-                        custom = result;
-                        break;
-                    }
+                if(result != ActionResult.PASS) {
+                    custom = result;
+                    break;
                 }
             }
         }

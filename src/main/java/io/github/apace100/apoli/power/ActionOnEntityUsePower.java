@@ -19,21 +19,15 @@ import java.util.EnumSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class ActionOnEntityUsePower extends InteractionPower {
+public class ActionOnEntityUsePower extends ActiveInteractionPower {
 
     private final Consumer<Pair<Entity, Entity>> biEntityAction;
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
-    private final int priority;
 
     public ActionOnEntityUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition, int priority) {
-        super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, itemAction);
+        super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, itemAction, priority);
         this.biEntityAction = biEntityAction;
         this.bientityCondition = bientityCondition;
-        this.priority = priority;
-    }
-
-    public int getPriority() {
-        return priority;
     }
 
     public boolean shouldExecute(Entity other, Hand hand, ItemStack heldStack) {
