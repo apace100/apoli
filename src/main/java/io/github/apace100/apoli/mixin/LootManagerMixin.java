@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.IdentifiedLootTable;
 import io.github.apace100.apoli.power.ReplaceLootTablePower;
 import net.minecraft.loot.LootManager;
@@ -23,7 +24,10 @@ public abstract class LootManagerMixin {
     @Inject(method = "getTable", at = @At("HEAD"), cancellable = true)
     private void setTableId(Identifier id, CallbackInfoReturnable<LootTable> cir) {
         if(id.equals(ReplaceLootTablePower.REPLACED_TABLE_UTIL_ID)) {
-            cir.setReturnValue(getTable(ReplaceLootTablePower.LAST_REPLACED_TABLE_ID));
+            LootTable replace = ReplaceLootTablePower.peek();
+            Apoli.LOGGER.info("Replacing " + id + " with " + ((IdentifiedLootTable)replace).getId());
+            cir.setReturnValue(replace);
+            //cir.setReturnValue(getTable(ReplaceLootTablePower.LAST_REPLACED_TABLE_ID));
         } else
         if(this.tables.containsKey(id)) {
             LootTable table = this.tables.get(id);

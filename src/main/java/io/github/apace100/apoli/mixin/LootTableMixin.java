@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
+import com.google.common.collect.Lists;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.IdentifiedLootTable;
 import io.github.apace100.apoli.access.ReplacingLootContext;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -23,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -39,6 +42,11 @@ public class LootTableMixin implements IdentifiedLootTable {
     public void setId(Identifier id, LootManager lootManager) {
         apoli$id = id;
         apoli$lootManager = lootManager;
+    }
+
+    @Override
+    public Identifier getId() {
+        return apoli$id;
     }
 
     @Inject(method = "generateUnprocessedLoot", at = @At("HEAD"), cancellable = true)
@@ -66,15 +74,34 @@ public class LootTableMixin implements IdentifiedLootTable {
                 }
             }
             List<ReplaceLootTablePower> powers = PowerHolderComponent.getPowers(entity, ReplaceLootTablePower.class);
-            Optional<ReplaceLootTablePower> match = powers.stream().filter(p -> p.hasReplacement(apoli$id) && p.doesApply(context)).findFirst();
-            if(match.isPresent()) {
-                ((ReplacingLootContext)context).setReplaced((LootTable)(Object)this);
-                Identifier id = match.get().getReplacement(apoli$id);
-                LootTable replacement = apoli$lootManager.getTable(id);
-                ReplaceLootTablePower.LAST_REPLACED_TABLE_ID = apoli$id;
-                replacement.generateUnprocessedLoot(context, lootConsumer);
-                ci.cancel();
+            powers = powers.stream()
+                .filter(p -> p.hasReplacement(apoli$id) && p.doesApply(context))
+                .sorted(Comparator.comparing(ReplaceLootTablePower::getPriority))
+                .toList();
+            if(powers.size() == 0) {
+                return;
             }
+            ReplaceLootTablePower.addToStack((LootTable)(Object)this);
+            LootTable replacement = null;
+            for (ReplaceLootTablePower power : powers) {
+                Identifier id = power.getReplacement(apoli$id);
+                replacement = apoli$lootManager.getTable(id);
+                ReplaceLootTablePower.addToStack(replacement);
+            }
+            ((ReplacingLootContext)context).setReplaced((LootTable)(Object)this);
+            replacement.generateUnprocessedLoot(context, lootConsumer);
+            ReplaceLootTablePower.clearStack();
+            ci.cancel();
         }
+    }
+
+    @Inject(method = "generateUnprocessedLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markActive(Lnet/minecraft/loot/LootTable;)Z"))
+    private void popReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
+        ReplaceLootTablePower.pop();
+    }
+
+    @Inject(method = "generateUnprocessedLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markInactive(Lnet/minecraft/loot/LootTable;)V"))
+    private void restoreReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
+        ReplaceLootTablePower.restore();
     }
 }
