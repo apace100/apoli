@@ -3,8 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -30,15 +28,17 @@ public class ModifyCraftingPower extends ValueModifyingPower {
 
     private final ItemStack newStack;
     private final Consumer<Pair<World, ItemStack>> itemAction;
+    private final Consumer<Pair<World, ItemStack>> lateItemAction;
     private final Consumer<Entity> entityAction;
     private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
 
-    public ModifyCraftingPower(PowerType<?> type, LivingEntity entity, Identifier recipeIdentifier, Predicate<ItemStack> itemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
+    public ModifyCraftingPower(PowerType<?> type, LivingEntity entity, Identifier recipeIdentifier, Predicate<ItemStack> itemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<World, ItemStack>> lateItemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
         super(type, entity);
         this.recipeIdentifier = recipeIdentifier;
         this.itemCondition = itemCondition;
         this.newStack = newStack;
         this.itemAction = itemAction;
+        this.lateItemAction = lateItemAction;
         this.entityAction = entityAction;
         this.blockAction = blockAction;
     }
@@ -55,6 +55,13 @@ public class ModifyCraftingPower extends ValueModifyingPower {
             }
         }
         return true;
+    }
+
+    public void applyAfterCraftingItemAction(ItemStack output) {
+        if(lateItemAction == null) {
+            return;
+        }
+        lateItemAction.accept(new Pair<>(entity.world, output));
     }
 
     public ItemStack getNewResult(CraftingInventory inventory, Recipe<CraftingInventory> recipe) {
@@ -86,16 +93,14 @@ public class ModifyCraftingPower extends ValueModifyingPower {
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("result", SerializableDataTypes.ITEM_STACK, null)
                 .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("item_action_after_crafting", ApoliDataTypes.ITEM_ACTION, null)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("block_action", ApoliDataTypes.BLOCK_ACTION, null),
             data ->
-                (type, player) -> {
-                    return new ModifyCraftingPower(type, player,
-                        data.getId("recipe"), (ConditionFactory<ItemStack>.Instance)data.get("item_condition"),
-                        (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("item_action"),
-                        (ActionFactory<Entity>.Instance)data.get("entity_action"),
-                        (ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action"));
-                })
+                (type, player) -> new ModifyCraftingPower(type, player,
+                    data.getId("recipe"), data.get("item_condition"),
+                    data.get("result"), data.get("item_action"),
+                    data.get("item_action_after_crafting"), data.get("entity_action"), data.get("block_action")))
             .allowCondition();
     }
 }
