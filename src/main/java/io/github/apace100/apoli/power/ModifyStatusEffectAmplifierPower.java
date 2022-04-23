@@ -37,7 +37,7 @@ public class ModifyStatusEffectAmplifierPower extends ValueModifyingPower {
                 data.<StatusEffect>ifPresent("status_effect", statusEffects::add);
                 data.<List<StatusEffect>>ifPresent("status_effects", statusEffects::addAll);
                 ModifyStatusEffectAmplifierPower power = new ModifyStatusEffectAmplifierPower(type, player,
-                    data.isPresent("status_effect") || data.isPresent("status_effect") ? statusEffects : null);
+                    data.isPresent("status_effect") || data.isPresent("status_effects") ? statusEffects : null);
                 data.ifPresent("modifier", power::addModifier);
                 data.<List<Modifier>>ifPresent("modifiers", l -> l.forEach(power::addModifier));
 
