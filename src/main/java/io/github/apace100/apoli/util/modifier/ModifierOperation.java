@@ -1,5 +1,11 @@
 package io.github.apace100.apoli.util.modifier;
 
+import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.CooldownPower;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.VariableIntPower;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -89,7 +95,9 @@ public enum ModifierOperation implements IModifierOperation {
     });
 
     public static final SerializableData DATA = new SerializableData()
-        .add("value", SerializableDataTypes.DOUBLE);
+        .add("value", SerializableDataTypes.DOUBLE)
+        .add("resource", ApoliDataTypes.POWER_TYPE, null)
+        .add("modifier", Modifier.LIST_TYPE, null);
 
     private final Phase phase;
     private final int order;
@@ -120,7 +128,30 @@ public enum ModifierOperation implements IModifierOperation {
     public double apply(Entity entity, List<SerializableData.Instance> instances, double base, double current) {
         return function.apply(
             instances.stream()
-                .map(instance -> instance.<Double>get("value"))
+                .map(instance -> {
+                    double value = 0;
+                    if(instance.isPresent("resource")) {
+                        PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
+                        PowerType<?> powerType = instance.get("resource");
+                        if(!component.hasPower(powerType)) {
+                            value = instance.get("value");
+                        } else {
+                            Power p = component.getPower(powerType);
+                            if(p instanceof VariableIntPower vip) {
+                                value = vip.getValue();
+                            } else if(p instanceof CooldownPower cp) {
+                                value = cp.getRemainingTicks();
+                            }
+                        }
+                    } else {
+                        value = instance.get("value");
+                    }
+                    if(instance.isPresent("modifier")) {
+                        List<Modifier> modifiers = instance.get("modifier");
+                        value = ModifierUtil.applyModifiers(entity, modifiers, value);
+                    }
+                    return value;
+                })
                 .collect(Collectors.toList()),
             base, current);
     }
