@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.modifier.IModifierOperation;
 import io.github.apace100.calio.ClassUtil;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -34,6 +35,7 @@ public class ApoliRegistries {
     public static final Registry<ActionFactory<Pair<World, ItemStack>>> ITEM_ACTION;
     public static final Registry<ActionFactory<Triple<World, BlockPos, Direction>>> BLOCK_ACTION;
     public static final Registry<ActionFactory<Pair<Entity, Entity>>> BIENTITY_ACTION;
+    public static final Registry<IModifierOperation> MODIFIER_OPERATION;
 
     static {
         POWER_FACTORY = FabricRegistryBuilder.createSimple(PowerFactory.class, Apoli.identifier("power_factory")).buildAndRegister();
@@ -48,5 +50,6 @@ public class ApoliRegistries {
         ITEM_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Pair<World, ItemStack>>>castClass(ActionFactory.class), Apoli.identifier("item_action")).buildAndRegister();
         BLOCK_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Triple<World, BlockPos, Direction>>>castClass(ActionFactory.class), Apoli.identifier("block_action")).buildAndRegister();
         BIENTITY_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Pair<Entity, Entity>>>castClass(ActionFactory.class), Apoli.identifier("bientity_action")).buildAndRegister();
+        MODIFIER_OPERATION = FabricRegistryBuilder.createSimple(IModifierOperation.class, Apoli.identifier("modifier_operation")).buildAndRegister();
     }
 }

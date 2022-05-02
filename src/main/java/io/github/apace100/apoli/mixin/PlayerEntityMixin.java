@@ -25,13 +25,15 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,6 +59,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @Shadow
     public abstract ItemEntity dropItem(ItemStack stack, boolean retainOwnership);
 
+    @Shadow public abstract ActionResult interact(Entity entity, Hand hand);
+
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
     }
@@ -74,10 +78,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         return newStack;
     }
 
-    @ModifyArg(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"), index = 1)
-    private double adjustVerticalSwimSpeed(double original) {
-        return PowerHolderComponent.modify(this, ModifySwimSpeedPower.class, original);
-    }
+    @Unique
+    private ActionResult apoli$CachedPriorityZeroResult;
 
     @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
     private void preventEntityInteraction(Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
@@ -99,29 +101,87 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
                 return;
             }
         }
-        ActionResult result = ActionResult.PASS;
-        List<ActionOnEntityUsePower> powers = PowerHolderComponent.getPowers(this, ActionOnEntityUsePower.class).stream().filter(p -> p.shouldExecute(entity, hand, stack)).toList();
-        for (ActionOnEntityUsePower aoip : powers) {
-            ActionResult ar = aoip.executeAction(entity, hand);
-            if(ar.isAccepted() && !result.isAccepted()) {
-                result = ar;
-            } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
-                result = ar;
+        apoli$CachedPriorityZeroResult = ActionResult.PASS;
+        ActiveInteractionPower.CallInstance<ActiveInteractionPower> callInstance = new ActiveInteractionPower.CallInstance<>();
+        callInstance.add(this, ActionOnEntityUsePower.class, p -> p.shouldExecute(entity, hand, stack) && p.getPriority() >= 0);
+        callInstance.add(entity, ActionOnBeingUsedPower.class, p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() >= 0);
+        for(int i = callInstance.getMaxPriority(); i >= 0; i--) {
+            if(!callInstance.hasPowers(i)) {
+                continue;
+            }
+            List<ActiveInteractionPower> powers = callInstance.getPowers(i);
+            ActionResult result = ActionResult.PASS;
+            for(ActiveInteractionPower ip : powers) {
+                ActionResult ar = ActionResult.PASS;
+                if(ip instanceof ActionOnEntityUsePower aoeup) {
+                    ar = aoeup.executeAction(entity, hand);
+                } else if(ip instanceof ActionOnBeingUsedPower aobup) {
+                    ar = aobup.executeAction((PlayerEntity) (Object) this, hand);
+                }
+                if(ar.isAccepted() && !result.isAccepted()) {
+                    result = ar;
+                } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
+                    result = ar;
+                }
+            }
+            if(i == 0) {
+                apoli$CachedPriorityZeroResult = result;
+            } else {
+                apoli$CachedPriorityZeroResult = ActionResult.PASS;
+                if(result != ActionResult.PASS) {
+                    if(result.shouldSwingHand()) {
+                        this.swingHand(hand);
+                    }
+                    cir.setReturnValue(result);
+                    break;
+                }
             }
         }
-        List<ActionOnBeingUsedPower> otherPowers = PowerHolderComponent.getPowers(entity, ActionOnBeingUsedPower.class).stream()
-            .filter(p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack)).collect(Collectors.toList());
-        for(ActionOnBeingUsedPower awip : otherPowers) {
-            ActionResult ar = awip.executeAction((PlayerEntity) (Object) this, hand);
-            if(ar.isAccepted() && !result.isAccepted()) {
-                result = ar;
-            } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
-                result = ar;
+    }
+
+    @Inject(method = "interact", at = @At("RETURN"), cancellable = true)
+    private void entityInteractionAfter(Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+        ActionResult original = cir.getReturnValue();
+        ActionResult custom = ActionResult.PASS;
+        if(apoli$CachedPriorityZeroResult != ActionResult.PASS) {
+            custom = apoli$CachedPriorityZeroResult;
+        } else if(cir.getReturnValue() == ActionResult.PASS) {
+            ItemStack stack = this.getStackInHand(hand);
+            ActiveInteractionPower.CallInstance<ActiveInteractionPower> callInstance = new ActiveInteractionPower.CallInstance<>();
+            callInstance.add(this, ActionOnEntityUsePower.class, p -> p.shouldExecute(entity, hand, stack) && p.getPriority() < 0);
+            callInstance.add(entity, ActionOnBeingUsedPower.class, p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() < 0);
+            for(int i = -1; i >= callInstance.getMinPriority(); i--) {
+                if(!callInstance.hasPowers(i)) {
+                    continue;
+                }
+                List<ActiveInteractionPower> powers = callInstance.getPowers(i);
+                ActionResult result = ActionResult.PASS;
+                for(ActiveInteractionPower ip : powers) {
+                    ActionResult ar = ActionResult.PASS;
+                    if(ip instanceof ActionOnEntityUsePower aoeup) {
+                        ar = aoeup.executeAction(entity, hand);
+                    } else if(ip instanceof ActionOnBeingUsedPower aobup) {
+                        ar = aobup.executeAction((PlayerEntity) (Object) this, hand);
+                    }
+                    if(ar.isAccepted() && !result.isAccepted()) {
+                        result = ar;
+                    } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
+                        result = ar;
+                    }
+                }
+                if(result != ActionResult.PASS) {
+                    custom = result;
+                    break;
+                }
             }
         }
-        if(powers.size() > 0 || otherPowers.size() > 0) {
-            cir.setReturnValue(result);
-            cir.cancel();
+        if(custom.shouldSwingHand()) {
+            this.swingHand(hand);
+        }
+        if(original.isAccepted() && !custom.isAccepted()) {
+        } else if(original.shouldSwingHand() && !custom.shouldSwingHand()) {
+        } else {
+            cir.setReturnValue(custom);
         }
     }
 

@@ -29,6 +29,7 @@ public class CraftingResultSlotMixin {
             if(pci.getPower() instanceof ModifyCraftingPower mcp) {
                 Optional<BlockPos> blockPos = ModifiedCraftingRecipe.getBlockFromInventory(input);
                 mcp.executeActions(blockPos);
+                mcp.applyAfterCraftingItemAction(stack);
             }
         }
     }

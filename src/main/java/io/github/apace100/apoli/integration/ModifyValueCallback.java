@@ -1,10 +1,10 @@
 package io.github.apace100.apoli.integration;
 
 import io.github.apace100.apoli.power.ValueModifyingPower;
+import io.github.apace100.apoli.util.modifier.Modifier;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
 
 import java.util.List;
 
@@ -18,5 +18,5 @@ public interface ModifyValueCallback {
         }
     );
 
-    void collectModifiers(LivingEntity entity, Class<? extends ValueModifyingPower> powerClass, double baseValue, List<EntityAttributeModifier> modifiers);
+    void collectModifiers(LivingEntity entity, Class<? extends ValueModifyingPower> powerClass, double baseValue, List<Modifier> modifiers);
 }

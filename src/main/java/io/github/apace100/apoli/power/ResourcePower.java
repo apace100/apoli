@@ -44,7 +44,7 @@ public class ResourcePower extends HudRenderedVariableIntPower {
                 .add("min", SerializableDataTypes.INT)
                 .add("max", SerializableDataTypes.INT)
                 .addFunctionedDefault("start_value", SerializableDataTypes.INT, data -> data.getInt("min"))
-                .add("hud_render", ApoliDataTypes.HUD_RENDER)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("min_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("max_action", ApoliDataTypes.ENTITY_ACTION, null),
             data ->

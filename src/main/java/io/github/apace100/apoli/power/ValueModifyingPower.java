@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
@@ -13,30 +14,30 @@ import java.util.function.BiFunction;
 
 public class ValueModifyingPower extends Power {
 
-    private final List<EntityAttributeModifier> modifiers = new LinkedList<>();
+    private final List<Modifier> modifiers = new LinkedList<>();
 
     public ValueModifyingPower(PowerType<?> type, LivingEntity entity) {
         super(type, entity);
     }
 
-    public void addModifier(EntityAttributeModifier modifier) {
+    public void addModifier(Modifier modifier) {
         this.modifiers.add(modifier);
     }
 
-    public List<EntityAttributeModifier> getModifiers() {
+    public List<Modifier> getModifiers() {
         return modifiers;
     }
 
     public static PowerFactory createValueModifyingFactory(BiFunction<PowerType, LivingEntity, ValueModifyingPower> powerConstructor, Identifier identifier) {
         return new PowerFactory<>(identifier,
             new SerializableData()
-                .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
-                .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null),
+                .add("modifier", Modifier.DATA_TYPE, null)
+                .add("modifiers", Modifier.LIST_TYPE, null),
             data ->
                 (type, player) -> {
                     ValueModifyingPower power = powerConstructor.apply(type, player);
                     data.ifPresent("modifier", power::addModifier);
-                    data.<List<EntityAttributeModifier>>ifPresent("modifiers",
+                    data.<List<Modifier>>ifPresent("modifiers",
                         mods -> mods.forEach(power::addModifier)
                     );
                     return power;

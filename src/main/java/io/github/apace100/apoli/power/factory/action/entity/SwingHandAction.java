@@ -12,7 +12,7 @@ public class SwingHandAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
         if(entity instanceof LivingEntity living) {
-            living.swingHand((Hand) data.get("hand"));
+            living.swingHand(data.get("hand"), true);
         }
     }
 

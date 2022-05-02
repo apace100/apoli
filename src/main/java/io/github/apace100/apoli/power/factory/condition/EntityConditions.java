@@ -20,7 +20,6 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.effect.StatusEffect;
@@ -42,7 +41,6 @@ import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.tag.Tag;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -286,7 +284,7 @@ public class EntityConditions {
             .add("biomes", SerializableDataTypes.IDENTIFIERS, null)
             .add("condition", ApoliDataTypes.BIOME_CONDITION, null),
             (data, entity) -> {
-                Biome biome = entity.world.getBiome(entity.getBlockPos());
+                Biome biome = entity.world.getBiome(entity.getBlockPos()).value();
                 ConditionFactory<Biome>.Instance condition = data.get("condition");
                 if(data.isPresent("biome") || data.isPresent("biomes")) {
                     Identifier biomeId = entity.world.getRegistryManager().get(Registry.BIOME_KEY).getId(biome);
@@ -404,8 +402,17 @@ public class EntityConditions {
             (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
             .add("tag", SerializableDataTypes.ENTITY_TAG),
-            (data, entity) -> ((Tag<EntityType<?>>)data.get("tag")).contains(entity.getType())));
-        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(), (data, entity) -> entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()));
+            (data, entity) -> entity.getType().getRegistryEntry().isIn(data.get("tag"))));
+        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(),
+            (data, entity) -> {
+                if(entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()) {
+                    return true;
+                }
+                if(PowerHolderComponent.hasPower(entity, ClimbingPower.class)) {
+                    return true;
+                }
+                return false;
+            }));
         register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
             if(entity instanceof TameableEntity) {
                 return ((TameableEntity)entity).isTamed();

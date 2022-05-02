@@ -1,0 +1,14 @@
+{
+  "type": "apoli:modify_food",
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:pumpkin_pie"
+    }
+  },
+  "entity_action": {
+    "type": "apoli:add_velocity",
+    "y": 0.6
+  },
+  "always_edible": true
+}

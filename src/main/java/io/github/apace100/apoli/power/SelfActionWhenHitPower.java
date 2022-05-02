@@ -41,7 +41,7 @@ public class SelfActionWhenHitPower extends CooldownPower {
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION)
                 .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
-                .add("cooldown", SerializableDataTypes.INT)
+                .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER),
             data ->
                 (type, player) -> new SelfActionWhenHitPower(type, player, data.getInt("cooldown"),

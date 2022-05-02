@@ -1,0 +1,8 @@
+{
+  "type": "apoli:action_over_time",
+  "interval": 20,
+  "entity_action": {
+    "type": "apoli:swing_hand",
+    "hand": "main_hand"
+  }
+}

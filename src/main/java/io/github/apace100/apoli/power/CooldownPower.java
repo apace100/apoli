@@ -84,7 +84,7 @@ public class CooldownPower extends Power implements HudRendered {
         return new PowerFactory<>(Apoli.identifier("cooldown"),
             new SerializableData()
                 .add("cooldown", SerializableDataTypes.INT)
-                .add("hud_render", ApoliDataTypes.HUD_RENDER),
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER),
             data ->
                 (type, player) ->
                     new CooldownPower(type, player, data.getInt("cooldown"), (HudRender)data.get("hud_render")))

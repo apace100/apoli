@@ -66,10 +66,10 @@ public class ActiveCooldownPower extends CooldownPower implements Active {
     public static PowerFactory createLaunchFactory() {
         return new PowerFactory<>(Apoli.identifier("launch"),
             new SerializableData()
-                .add("cooldown", SerializableDataTypes.INT)
+                .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("speed", SerializableDataTypes.FLOAT)
                 .add("sound", SerializableDataTypes.SOUND_EVENT, null)
-                .add("hud_render", ApoliDataTypes.HUD_RENDER)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
             data -> {
                 SoundEvent soundEvent = (SoundEvent)data.get("sound");

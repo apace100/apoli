@@ -4,12 +4,11 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.networking.ModPackets;
+import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.power.factory.action.bientity.DamageAction;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Space;
-import io.github.apace100.calio.FilterableWeightedList;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -24,31 +23,19 @@ import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.util.TriConsumer;
 
-import java.util.List;
-import java.util.Random;
-
 public class BiEntityActions {
 
     @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ActionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("actions", ApoliDataTypes.BIENTITY_ACTIONS),
-            (data, entities) -> ((List<ActionFactory<Pair<Entity, Entity>>.Instance>)data.get("actions")).forEach((e) -> e.accept(entities))));
-        register(new ActionFactory<>(Apoli.identifier("chance"), new SerializableData()
-            .add("action", ApoliDataTypes.BIENTITY_ACTION)
-            .add("chance", SerializableDataTypes.FLOAT),
-            (data, entities) -> {
-                if(new Random().nextFloat() < data.getFloat("chance")) {
-                    ((ActionFactory<Pair<Entity, Entity>>.Instance)data.get("action")).accept(entities);
-                }
-            }));
-        register(new ActionFactory<>(Apoli.identifier("choice"), new SerializableData()
-            .add("actions", SerializableDataType.weightedList(ApoliDataTypes.BIENTITY_ACTION)),
-            (data, entities) -> {
-                FilterableWeightedList<ActionFactory<Pair<Entity, Entity>>.Instance> actionList = (FilterableWeightedList<ActionFactory<Pair<Entity, Entity>>.Instance>)data.get("actions");
-                ActionFactory<Pair<Entity, Entity>>.Instance action = actionList.pickRandom(new Random());
-                action.accept(entities);
-            }));
+        register(AndAction.getFactory(ApoliDataTypes.BIENTITY_ACTIONS));
+        register(ChanceAction.getFactory(ApoliDataTypes.BIENTITY_ACTION));
+        register(IfElseAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, ApoliDataTypes.BIENTITY_CONDITION));
+        register(ChoiceAction.getFactory(ApoliDataTypes.BIENTITY_ACTION));
+        register(IfElseListAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, ApoliDataTypes.BIENTITY_CONDITION));
+        register(DelayAction.getFactory(ApoliDataTypes.BIENTITY_ACTION));
+        register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, entities -> !entities.getLeft().world.isClient));
+
         register(new ActionFactory<>(Apoli.identifier("invert"), new SerializableData()
             .add("action", ApoliDataTypes.BIENTITY_ACTION),
             (data, entities) -> {
@@ -64,8 +51,6 @@ public class BiEntityActions {
             (data, entities) -> {
                 ((ActionFactory<Entity>.Instance)data.get("action")).accept(entities.getRight());
             }));
-        register(new ActionFactory<>(Apoli.identifier("nothing"), new SerializableData(),
-            (data, entities) -> {}));
 
         register(new ActionFactory<>(Apoli.identifier("mount"), new SerializableData(),
             (data, entities) -> {

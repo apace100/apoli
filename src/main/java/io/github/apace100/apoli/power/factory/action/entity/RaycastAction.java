@@ -60,7 +60,7 @@ public class RaycastAction {
                 double offset = 0;
                 Vec3d hitPos = hitResult.getPos();
                 if(data.isPresent("command_hit_offset")) {
-                    offset = data.getDouble("offset");
+                    offset = data.getDouble("command_hit_offset");
                 } else {
                     if(hitResult instanceof BlockHitResult bhr) {
                         if(bhr.getSide() == Direction.DOWN) {

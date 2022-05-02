@@ -22,15 +22,15 @@ import java.util.EnumSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class ActionOnBlockUsePower extends InteractionPower {
+public class ActionOnBlockUsePower extends ActiveInteractionPower {
 
     private final Consumer<Entity> entityAction;
     private final Predicate<CachedBlockPosition> blockCondition;
     private final EnumSet<Direction> directions;
     private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
 
-    public ActionOnBlockUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, Predicate<CachedBlockPosition> blockCondition, EnumSet<Direction> directions, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
-        super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, resultItemAction);
+    public ActionOnBlockUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, Predicate<CachedBlockPosition> blockCondition, EnumSet<Direction> directions, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
+        super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, resultItemAction, priority);
         this.entityAction = entityAction;
         this.blockCondition = blockCondition;
         this.directions = directions;
@@ -71,21 +71,21 @@ public class ActionOnBlockUsePower extends InteractionPower {
                 .add("result_stack", SerializableDataTypes.ITEM_STACK, null)
                 .add("held_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("action_result", SerializableDataTypes.ACTION_RESULT, ActionResult.SUCCESS),
+                .add("action_result", SerializableDataTypes.ACTION_RESULT, ActionResult.SUCCESS)
+                .add("priority", SerializableDataTypes.INT, 0),
             data ->
-                (type, player) -> {
-                    return new ActionOnBlockUsePower(type, player,
-                        data.get("hands"),
-                        data.get("action_result"),
-                        data.get("item_condition"),
-                        data.get("held_item_action"),
-                        data.get("result_stack"),
-                        data.get("result_item_action"),
-                        data.get("entity_action"),
-                        data.get("block_condition"),
-                        data.get("directions"),
-                        data.get("block_action"));
-                })
+                (type, player) -> new ActionOnBlockUsePower(type, player,
+                    data.get("hands"),
+                    data.get("action_result"),
+                    data.get("item_condition"),
+                    data.get("held_item_action"),
+                    data.get("result_stack"),
+                    data.get("result_item_action"),
+                    data.get("entity_action"),
+                    data.get("block_condition"),
+                    data.get("directions"),
+                    data.get("block_action"),
+                    data.get("priority")))
             .allowCondition();
     }
 }

@@ -1,0 +1,24 @@
+{
+  "type": "apoli:action_on_entity_use",
+  "priority": 50,
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:bucket"
+    }
+  },
+  "bientity_condition": {
+    "type": "apoli:target_condition",
+    "condition": {
+      "type": "apoli:entity_type",
+      "entity_type": "minecraft:cow"
+    }
+  },
+  "bientity_action": {
+    "type": "apoli:damage",
+    "source": {
+      "name": "milking"
+    },
+    "amount": 2
+  }
+}

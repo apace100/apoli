@@ -40,13 +40,11 @@ public class PowerFactories {
         register(RestrictArmorPower::createFactory);
         register(ConditionedRestrictArmorPower::createFactory);
         register(StackingStatusEffectPower::createFactory);
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifySwimSpeedPower::new, Apoli.identifier("modify_swim_speed")));
+        register(ModifySwimSpeedPower::createFactory);
         register(DamageOverTimePower::createFactory);
         register(() -> Power.createSimpleFactory(SwimmingPower::new, Apoli.identifier("swimming")));
         register(() -> Power.createSimpleFactory(FireImmunityPower::new, Apoli.identifier("fire_immunity")));
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyLavaSpeedPower::new, Apoli.identifier("modify_lava_speed")));
+        register(ModifyLavaSpeedPower::createFactory);
         register(LavaVisionPower::createFactory);
         register(ConditionedAttributePower::createFactory);
         register(ActiveCooldownPower::createActiveSelfFactory);
@@ -112,6 +110,17 @@ public class PowerFactories {
         register(ActionOnBlockUsePower::createFactory);
         register(PreventElytraFlightPower::createFactory);
         register(KeepInventoryPower::createFactory);
+        register(ModifyStatusEffectDurationPower::createFactory);
+        register(ModifyStatusEffectAmplifierPower::createFactory);
+        register(ModifyAttributePower::createFactory);
+        register(() -> Power.createSimpleFactory(PreventSprintingPower::new, Apoli.identifier("prevent_sprinting")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(
+            ModifyHealingPower::new, Apoli.identifier("modify_healing")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(
+            ModifyInsomniaTicksPower::new, Apoli.identifier("modify_insomnia_ticks")));
+        register(ModifyGrindstonePower::createFactory);
+        register(ReplaceLootTablePower::createFactory);
+        register(ModifyVelocityPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

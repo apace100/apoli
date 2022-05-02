@@ -1,0 +1,17 @@
+{
+  "type": "apoli:modify_crafting",
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "tag": "apoli:swords"
+    }
+  },
+  "item_action_after_crafting": {
+    "type": "apoli:modify",
+    "modifier": "apoli:enchant_randomly"
+  },
+  "entity_action": {
+    "type": "apoli:add_velocity",
+    "y": 2
+  }
+}
