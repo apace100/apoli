@@ -122,6 +122,7 @@ public class PowerFactories {
         register(ReplaceLootTablePower::createFactory);
         register(ModifyVelocityPower::createFactory);
         register(PreventBlockPlacePower::createFactory);
+        register(ActionOnBlockPlacePower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {
