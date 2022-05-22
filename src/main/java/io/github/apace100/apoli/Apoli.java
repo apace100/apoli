@@ -21,7 +21,8 @@ import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
-import io.github.apace100.calio.util.OrderedResourceListeners;
+import io.github.apace100.calio.resource.OrderedResourceListenerInitializer;
+import io.github.apace100.calio.resource.OrderedResourceListenerManager;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
@@ -31,13 +32,14 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.ArgumentTypes;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Apoli implements ModInitializer, EntityComponentInitializer {
+public class Apoli implements ModInitializer, EntityComponentInitializer, OrderedResourceListenerInitializer {
 
 	public static ApoliConfig config;
 
@@ -106,8 +108,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		BlockActions.register();
 		BiEntityActions.register();
 
-		OrderedResourceListeners.register(new PowerTypes()).complete();
-
 		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
 
 		LOGGER.info("Apoli " + VERSION + " has initialized. Ready to power up your game!");
@@ -123,5 +123,10 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 			.impl(PowerHolderComponentImpl.class)
 			.respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY)
 			.end(PowerHolderComponentImpl::new);
+	}
+
+	@Override
+	public void registerResourceListeners(OrderedResourceListenerManager manager) {
+		manager.register(ResourceType.SERVER_DATA, new PowerTypes()).complete();
 	}
 }
