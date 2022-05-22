@@ -1,16 +1,26 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.power.PreventBlockPlacePower;
 import io.github.apace100.apoli.power.PreventItemUsePower;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Mixin(BlockItem.class)
 public class BlockItemMixin {
@@ -28,4 +38,28 @@ public class BlockItemMixin {
         }
         return blockItem.use(world, user, hand);
     }
+
+    @Inject(method = "canPlace", at = @At("HEAD"), cancellable = true)
+    private void preventBlockPlace(ItemPlacementContext context, BlockState state, CallbackInfoReturnable<Boolean> cir) {
+        PlayerEntity playerEntity = context.getPlayer();
+        ItemStack itemStack = context.getStack();
+        BlockPos hitPos = ((ItemUsageContextAccessor) context).callGetHitResult().getBlockPos();
+        Direction direction = context.getSide();
+        Hand hand = context.getHand();
+
+        if (playerEntity == null) return;
+
+        List<PreventBlockPlacePower> filteredPreventBlockPlacePowers = PowerHolderComponent.KEY
+            .get(playerEntity)
+            .getPowers(PreventBlockPlacePower.class)
+            .stream()
+            .filter(preventBlockPlacePower -> preventBlockPlacePower.doesPrevent(hitPos, direction, itemStack, hand))
+            .toList();
+
+        if (filteredPreventBlockPlacePowers.size() > 0) {
+            filteredPreventBlockPlacePowers.forEach(preventBlockPlacePower -> preventBlockPlacePower.executeActions(hand, hitPos, direction));
+            cir.setReturnValue(false);
+        }
+    }
+
 }
