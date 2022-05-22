@@ -23,7 +23,7 @@ public class DropInventoryAction {
 
         switch (inventoryType) {
             case INVENTORY:
-                dropInventory(data, entity);
+                dropInventory(data, entity, null);
                 break;
             case POWER:
                 if (!data.isPresent("power") || !(entity instanceof LivingEntity livingEntity)) return;

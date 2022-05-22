@@ -23,7 +23,7 @@ public class ReplaceInventoryAction {
 
         switch (inventoryType) {
             case INVENTORY:
-                replaceInventory(data, entity);
+                replaceInventory(data, entity, null);
                 break;
             case POWER:
                 if (!data.isPresent("power") || !(entity instanceof LivingEntity livingEntity)) return;

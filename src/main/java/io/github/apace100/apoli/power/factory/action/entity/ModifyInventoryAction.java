@@ -22,7 +22,7 @@ public class ModifyInventoryAction {
 
         switch (inventoryType) {
             case INVENTORY:
-                modifyInventory(data, entity);
+                modifyInventory(data, entity, null);
                 break;
             case POWER:
                 if (!data.isPresent("power") || !(entity instanceof LivingEntity livingEntity)) return;
