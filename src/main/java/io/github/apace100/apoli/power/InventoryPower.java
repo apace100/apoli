@@ -28,9 +28,10 @@ public class InventoryPower extends Power implements Active, Inventory {
     private final Predicate<ItemStack> dropOnDeathFilter;
 
     private final boolean shouldDropOnDeath;
+    private final boolean recoverable;
     private final int containerSize;
 
-    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter) {
+    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, boolean recoverable) {
         super(type, entity);
         switch (containerType) {
             case DOUBLE_CHEST:
@@ -57,6 +58,7 @@ public class InventoryPower extends Power implements Active, Inventory {
         this.containerTitle = new TranslatableText(containerTitle);
         this.shouldDropOnDeath = shouldDropOnDeath;
         this.dropOnDeathFilter = dropOnDeathFilter;
+        this.recoverable = recoverable;
     }
 
     public enum ContainerType {
@@ -69,7 +71,7 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void onLost() {
-        dropItemsOnLost();
+        if (recoverable) dropItemsOnLost();
     }
 
     @Override
@@ -202,18 +204,21 @@ public class InventoryPower extends Power implements Active, Inventory {
                 .add("container_type", SerializableDataType.enumValue(ContainerType.class), ContainerType.DROPPER)
                 .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
                 .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key())
+                .add("recoverable", SerializableDataTypes.BOOLEAN, true),
             data ->
-                (type, player) -> {
-                    InventoryPower power = new InventoryPower(
-                        type,
-                        player,
+                (powerType, livingEntity) -> {
+                    InventoryPower inventoryPower = new InventoryPower(
+                        powerType,
+                        livingEntity,
                         data.getString("title"),
                         data.get("container_type"),
                         data.getBoolean("drop_on_death"),
-                        data.isPresent("drop_on_death_filter") ? data.get("drop_on_death_filter") : itemStack -> true);
-                    power.setKey(data.get("key"));
-                    return power;
+                        data.isPresent("drop_on_death_filter") ? data.get("drop_on_death_filter") : itemStack -> true,
+                        data.getBoolean("recoverable")
+                    );
+                    inventoryPower.setKey(data.get("key"));
+                    return inventoryPower;
                 })
             .allowCondition();
     }
