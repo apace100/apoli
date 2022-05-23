@@ -46,6 +46,7 @@ public class BlockItemMixin {
         PlayerEntity playerEntity = context.getPlayer();
         ItemStack itemStack = context.getStack();
         BlockPos hitPos = ((ItemUsageContextAccessor) context).callGetHitResult().getBlockPos();
+        BlockPos placementPos = context.getBlockPos();
         Direction direction = context.getSide();
         Hand hand = context.getHand();
 
@@ -53,7 +54,7 @@ public class BlockItemMixin {
 
         int preventBlockPlacePowers = 0;
         ActiveInteractionPower.CallInstance<PreventBlockPlacePower> pbppci = new ActiveInteractionPower.CallInstance<>();
-        pbppci.add(playerEntity, PreventBlockPlacePower.class, p -> p.doesPrevent(hitPos, direction, itemStack, hand));
+        pbppci.add(playerEntity, PreventBlockPlacePower.class, p -> p.doesPrevent(hand, hitPos, placementPos, direction, itemStack));
 
         for (int i = pbppci.getMaxPriority(); i >= 0; i--) {
             if (!pbppci.hasPowers(i)) continue;
@@ -61,7 +62,7 @@ public class BlockItemMixin {
             List<PreventBlockPlacePower> pbpps = pbppci.getPowers(i);
             preventBlockPlacePowers += pbpps.size();
 
-            pbpps.forEach(pbpp -> pbpp.executeActions(hand, hitPos, direction));
+            pbpps.forEach(pbpp -> pbpp.executeActions(hand, hitPos, placementPos, direction));
         }
 
         if (preventBlockPlacePowers > 0) cir.setReturnValue(false);
@@ -79,13 +80,13 @@ public class BlockItemMixin {
         if (playerEntity == null) return;
 
         ActiveInteractionPower.CallInstance<ActionOnBlockPlacePower> aobppci = new ActiveInteractionPower.CallInstance<>();
-        aobppci.add(playerEntity, ActionOnBlockPlacePower.class, aobpp -> aobpp.shouldExecute(hand, hitPos, direction, itemStack));
+        aobppci.add(playerEntity, ActionOnBlockPlacePower.class, aobpp -> aobpp.shouldExecute(hand, hitPos, placementPos , direction, itemStack));
 
         for (int i = aobppci.getMaxPriority(); i >= 0; i--) {
             if (!aobppci.hasPowers(i)) continue;
 
             List<ActionOnBlockPlacePower> aobpps = aobppci.getPowers(i);
-            aobpps.forEach(aobpp -> aobpp.executeActions(hand, placementPos, direction));
+            aobpps.forEach(aobpp -> aobpp.executeActions(hand, hitPos, placementPos, direction));
         }
     }
 
