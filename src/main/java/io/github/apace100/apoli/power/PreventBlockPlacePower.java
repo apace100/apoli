@@ -22,15 +22,15 @@ import java.util.EnumSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class PreventBlockPlacePower extends InteractionPower {
+public class PreventBlockPlacePower extends ActiveInteractionPower {
 
     private final Consumer<Entity> entityAction;
     private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
     private final Predicate<CachedBlockPosition> blockCondition;
     private final EnumSet<Direction> directions;
 
-    public PreventBlockPlacePower(PowerType<?> powerType, LivingEntity livingEntity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack resultItemStack, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<CachedBlockPosition> blockCondition, EnumSet<Direction> directions, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
-        super(powerType, livingEntity, hands, actionResult, itemCondition, heldItemAction, resultItemStack, resultItemAction);
+    public PreventBlockPlacePower(PowerType<?> powerType, LivingEntity livingEntity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack resultItemStack, Consumer<Pair<World, ItemStack>> resultItemAction, int priority, Predicate<CachedBlockPosition> blockCondition, EnumSet<Direction> directions, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
+        super(powerType, livingEntity, hands, actionResult, itemCondition, heldItemAction, resultItemStack, resultItemAction, priority);
         this.blockCondition = blockCondition;
         this.directions = directions;
         this.entityAction = entityAction;
@@ -66,7 +66,8 @@ public class PreventBlockPlacePower extends InteractionPower {
                 .add("hands", SerializableDataTypes.HAND_SET, EnumSet.allOf(Hand.class))
                 .add("result_stack", SerializableDataTypes.ITEM_STACK, null)
                 .add("held_item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null),
+                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("priority", SerializableDataTypes.INT, 0),
             data -> (powerType, livingEntity) -> new PreventBlockPlacePower(
                 powerType,
                 livingEntity,
@@ -76,6 +77,7 @@ public class PreventBlockPlacePower extends InteractionPower {
                 data.get("held_item_action"),
                 data.get("result_stack"),
                 data.get("result_item_action"),
+                data.getInt("priority"),
                 data.get("block_condition"),
                 data.get("directions"),
                 data.get("entity_action"),

@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ActionOnBlockPlacePower;
+import io.github.apace100.apoli.power.ActiveInteractionPower;
 import io.github.apace100.apoli.power.PreventBlockPlacePower;
 import io.github.apace100.apoli.power.PreventItemUsePower;
 import net.minecraft.block.BlockState;
@@ -50,17 +51,20 @@ public class BlockItemMixin {
 
         if (playerEntity == null) return;
 
-        List<PreventBlockPlacePower> filteredPreventBlockPlacePowers = PowerHolderComponent.KEY
-            .get(playerEntity)
-            .getPowers(PreventBlockPlacePower.class)
-            .stream()
-            .filter(preventBlockPlacePower -> preventBlockPlacePower.doesPrevent(hitPos, direction, itemStack, hand))
-            .toList();
+        int preventBlockPlacePowers = 0;
+        ActiveInteractionPower.CallInstance<PreventBlockPlacePower> pbppci = new ActiveInteractionPower.CallInstance<>();
+        pbppci.add(playerEntity, PreventBlockPlacePower.class, p -> p.doesPrevent(hitPos, direction, itemStack, hand));
 
-        if (filteredPreventBlockPlacePowers.size() > 0) {
-            filteredPreventBlockPlacePowers.forEach(preventBlockPlacePower -> preventBlockPlacePower.executeActions(hand, hitPos, direction));
-            cir.setReturnValue(false);
+        for (int i = pbppci.getMaxPriority(); i >= 0; i--) {
+            if (!pbppci.hasPowers(i)) continue;
+
+            List<PreventBlockPlacePower> pbpps = pbppci.getPowers(i);
+            preventBlockPlacePowers += pbpps.size();
+
+            pbpps.forEach(pbpp -> pbpp.executeActions(hand, hitPos, direction));
         }
+
+        if (preventBlockPlacePowers > 0) cir.setReturnValue(false);
     }
 
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;)Lnet/minecraft/util/ActionResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemPlacementContext;getBlockPos()Lnet/minecraft/util/math/BlockPos;"), cancellable = true)
@@ -74,17 +78,14 @@ public class BlockItemMixin {
 
         if (playerEntity == null) return;
 
-        List<ActionOnBlockPlacePower> filteredActionOnBlockPlacePowers = PowerHolderComponent.KEY
-            .get(playerEntity)
-            .getPowers(ActionOnBlockPlacePower.class)
-            .stream()
-            .filter(actionOnBlockPlacePower -> actionOnBlockPlacePower.shouldExecute(hand, hitPos, direction, itemStack))
-            .toList();
+        ActiveInteractionPower.CallInstance<ActionOnBlockPlacePower> aobppci = new ActiveInteractionPower.CallInstance<>();
+        aobppci.add(playerEntity, ActionOnBlockPlacePower.class, aobpp -> aobpp.shouldExecute(hand, hitPos, direction, itemStack));
 
-        if (filteredActionOnBlockPlacePowers.size() > 0) {
-            filteredActionOnBlockPlacePowers.forEach(
-                actionOnBlockPlacePower -> actionOnBlockPlacePower.executeActions(hand, placementPos, direction)
-            );
+        for (int i = aobppci.getMaxPriority(); i >= 0; i--) {
+            if (!aobppci.hasPowers(i)) continue;
+
+            List<ActionOnBlockPlacePower> aobpps = aobppci.getPowers(i);
+            aobpps.forEach(aobpp -> aobpp.executeActions(hand, placementPos, direction));
         }
     }
 
