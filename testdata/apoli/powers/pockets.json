@@ -1,0 +1,9 @@
+{
+    "type": "apoli:inventory",
+    "title": "Pockets",
+    "container_type": "hopper",
+    "drop_on_death": false,
+    "key": {
+        "key": "key.saveToolbarActivator"
+    }
+}
