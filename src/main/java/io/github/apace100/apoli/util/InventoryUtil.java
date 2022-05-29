@@ -27,8 +27,7 @@ public class InventoryUtil {
         POWER
     }
 
-    public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
-
+    public static Set<Integer> getSlots(SerializableData.Instance data) {
         Set<Integer> slots = new HashSet<>();
 
         if (data.isPresent("slots")) {
@@ -48,6 +47,13 @@ public class InventoryUtil {
             Map<String, Integer> slotNamesWithId = ((ItemSlotArgumentTypeAccessor) itemSlotArgumentType).getSlotNamesToSlotCommandId();
             slots.addAll(slotNamesWithId.values());
         }
+
+        return slots;
+    }
+
+    public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
+
+        Set<Integer> slots = getSlots(data);
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<ItemStack> itemCondition = data.get("item_condition");
@@ -86,25 +92,7 @@ public class InventoryUtil {
 
     public static void replaceInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
 
-        Set<Integer> slots = new HashSet<>();
-
-        if (data.isPresent("slots")) {
-            List<ArgumentWrapper<Integer>> slotArgumentTypes = data.get("slots");
-            for (ArgumentWrapper<Integer> slotArgumentType : slotArgumentTypes) {
-                slots.add(slotArgumentType.get());
-            }
-        }
-
-        if (data.isPresent("slot")) {
-            ArgumentWrapper<Integer> slotArgumentType = data.get("slot");
-            slots.add(slotArgumentType.get());
-        }
-
-        if (slots.isEmpty()) {
-            ItemSlotArgumentType itemSlotArgumentType = new ItemSlotArgumentType();
-            Map<String, Integer> slotNamesWithId = ((ItemSlotArgumentTypeAccessor) itemSlotArgumentType).getSlotNamesToSlotCommandId();
-            slots.addAll(slotNamesWithId.values());
-        }
+        Set<Integer> slots = getSlots(data);
 
         ItemStack replacementStack = data.get("stack");
         Consumer<Entity> entityAction = data.get("entity_action");
@@ -142,25 +130,7 @@ public class InventoryUtil {
 
     public static void dropInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
 
-        Set<Integer> slots = new HashSet<>();
-
-        if (data.isPresent("slots")) {
-            List<ArgumentWrapper<Integer>> slotArgumentTypes = data.get("slots");
-            for (ArgumentWrapper<Integer> slotArgumentType : slotArgumentTypes) {
-                slots.add(slotArgumentType.get());
-            }
-        }
-
-        if (data.isPresent("slot")) {
-            ArgumentWrapper<Integer> slotArgumentType = data.get("slot");
-            slots.add(slotArgumentType.get());
-        }
-
-        if (slots.isEmpty()) {
-            ItemSlotArgumentType itemSlotArgumentType = new ItemSlotArgumentType();
-            Map<String, Integer> slotNamesWithId = ((ItemSlotArgumentTypeAccessor) itemSlotArgumentType).getSlotNamesToSlotCommandId();
-            slots.addAll(slotNamesWithId.values());
-        }
+        Set<Integer> slots = getSlots(data);
 
         boolean throwRandomly = data.getBoolean("throw_randomly");
         boolean retainOwnership = data.getBoolean("retain_ownership");
