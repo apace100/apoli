@@ -519,6 +519,7 @@ public class EntityActions {
         register(DropInventoryAction.getFactory());
         register(ModifyDeathTicksAction.getFactory());
         register(ModifyResourceAction.getFactory());
+        register(ModifyStatAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
