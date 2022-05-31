@@ -26,6 +26,7 @@
         "ItemMixin",
         "ItemSlotArgumentTypeAccessor",
         "ItemStackMixin",
+        "ItemUsageContextAccessor",
         "LivingEntityMixin",
         "LoginMixin",
         "LootContextBuilderMixin",
