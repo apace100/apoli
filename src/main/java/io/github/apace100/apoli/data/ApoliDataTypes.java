@@ -15,9 +15,11 @@ import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.ArgumentWrapper;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.command.argument.ItemSlotArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -27,10 +29,13 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.stat.Stat;
+import net.minecraft.stat.StatType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.tuple.Triple;
@@ -120,11 +125,11 @@ public class ApoliDataTypes {
             .add("operation", SerializableDataTypes.MODIFIER_OPERATION)
             .add("value", SerializableDataTypes.DOUBLE)
             .add("name", SerializableDataTypes.STRING, "Unnamed EntityAttributeModifier"),
-        dataInst -> new AttributedEntityAttributeModifier((EntityAttribute)dataInst.get("attribute"),
+        dataInst -> new AttributedEntityAttributeModifier(dataInst.get("attribute"),
             new EntityAttributeModifier(
                 dataInst.getString("name"),
                 dataInst.getDouble("value"),
-                (EntityAttributeModifier.Operation)dataInst.get("operation"))),
+                dataInst.get("operation"))),
         (data, inst) -> {
             SerializableData.Instance dataInst = data.new Instance();
             dataInst.set("attribute", inst.getAttribute());
@@ -144,9 +149,9 @@ public class ApoliDataTypes {
             .add("tag", SerializableDataTypes.NBT, null)
             .add("slot", SerializableDataTypes.INT, Integer.MIN_VALUE),
         (data) ->  {
-            ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
+            ItemStack stack = new ItemStack(data.get("item"), data.getInt("amount"));
             if(data.isPresent("tag")) {
-                stack.setNbt((NbtCompound) data.get("tag"));
+                stack.setNbt(data.get("tag"));
             }
             return new Pair<>(data.getInt("slot"), stack);
         },
@@ -201,7 +206,7 @@ public class ApoliDataTypes {
             dataInst.getBoolean("should_render"),
             dataInst.getInt("bar_index"),
             dataInst.getId("sprite_location"),
-            (ConditionFactory<LivingEntity>.Instance)dataInst.get("condition"),
+            dataInst.get("condition"),
             dataInst.getBoolean("inverted")),
         (data, inst) -> {
             SerializableData.Instance dataInst = data.new Instance();
@@ -219,6 +224,33 @@ public class ApoliDataTypes {
     public static final SerializableDataType<PlayerAbility> PLAYER_ABILITY = SerializableDataType.wrap(
         PlayerAbility.class, SerializableDataTypes.IDENTIFIER,
         PlayerAbility::getId, id -> Pal.provideRegisteredAbility(id).get());
+
+    public static final SerializableDataType<ArgumentWrapper<Integer>> ITEM_SLOT = SerializableDataType.argumentType(ItemSlotArgumentType.itemSlot());
+
+    public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = SerializableDataType.list(ITEM_SLOT);
+
+    public static final SerializableDataType<Stat<?>> STAT = SerializableDataType.compound(ClassUtil.castClass(Stat.class),
+        new SerializableData()
+            .add("type", SerializableDataType.registry(ClassUtil.castClass(StatType.class), Registry.STAT_TYPE))
+            .add("id", SerializableDataTypes.IDENTIFIER),
+        data -> {
+            StatType statType = data.get("type");
+            Registry<?> statRegistry = statType.getRegistry();
+            Identifier statId = data.get("id");
+            if(statRegistry.containsId(statId)) {
+                Object statObject = statRegistry.get(statId);
+                return statType.getOrCreateStat(statObject);
+            }
+            throw new IllegalArgumentException("Desired stat \"" + statId + "\" does not exist in stat type ");
+        },
+        (data, stat) -> {
+            SerializableData.Instance inst = data.new Instance();
+            inst.set("type", stat.getType());
+            Registry reg = stat.getType().getRegistry();
+            Identifier statId = reg.getId(stat.getValue());
+            inst.set("id", statId);
+            return inst;
+        });
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

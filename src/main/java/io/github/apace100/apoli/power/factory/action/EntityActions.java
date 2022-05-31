@@ -514,8 +514,12 @@ public class EntityActions {
         register(SwingHandAction.getFactory());
         register(RaycastAction.getFactory());
         register(SpawnParticlesAction.getFactory());
+        register(ModifyInventoryAction.getFactory());
+        register(ReplaceInventoryAction.getFactory());
+        register(DropInventoryAction.getFactory());
         register(ModifyDeathTicksAction.getFactory());
         register(ModifyResourceAction.getFactory());
+        register(ModifyStatAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {

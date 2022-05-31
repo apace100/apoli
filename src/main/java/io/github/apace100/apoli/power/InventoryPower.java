@@ -3,9 +3,10 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
@@ -13,9 +14,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.screen.Generic3x3ContainerScreenHandler;
-import net.minecraft.screen.ScreenHandlerFactory;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.screen.*;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.collection.DefaultedList;
 
@@ -23,23 +22,56 @@ import java.util.function.Predicate;
 
 public class InventoryPower extends Power implements Active, Inventory {
 
-    private final int size;
-    private final DefaultedList<ItemStack> inventory;
-    private final TranslatableText containerName;
-    private final ScreenHandlerFactory factory;
-    private final boolean shouldDropOnDeath;
+    private final DefaultedList<ItemStack> container;
+    private final TranslatableText containerTitle;
+    private final ScreenHandlerFactory containerScreen;
     private final Predicate<ItemStack> dropOnDeathFilter;
 
-    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerName, int size, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter) {
+    private final boolean shouldDropOnDeath;
+    private final boolean recoverable;
+    private final int containerSize;
+
+    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, boolean recoverable) {
         super(type, entity);
-        this.size = size;
-        this.inventory = DefaultedList.ofSize(size, ItemStack.EMPTY);
-        this.containerName = new TranslatableText(containerName);
-        this.factory = (i, playerInventory, playerEntity) -> {
-            return new Generic3x3ContainerScreenHandler(i, playerInventory, this);
-        };
+        switch (containerType) {
+            case DOUBLE_CHEST:
+                containerSize = 54;
+                this.containerScreen = (i, playerInventory, playerEntity) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X6, i,
+                    playerInventory, this, 6);
+                break;
+            case CHEST:
+                containerSize = 27;
+                this.containerScreen = (i, playerInventory, playerEntity) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X3, i,
+                    playerInventory, this, 3);
+                break;
+            case HOPPER:
+                containerSize = 5;
+                this.containerScreen = (i, playerInventory, playerEntity) -> new HopperScreenHandler(i, playerInventory, this);
+                break;
+            case DROPPER, DISPENSER:
+            default:
+                containerSize = 9;
+                this.containerScreen = (i, playerInventory, playerEntity) -> new Generic3x3ContainerScreenHandler(i, playerInventory, this);
+                break;
+        }
+        this.container = DefaultedList.ofSize(containerSize, ItemStack.EMPTY);
+        this.containerTitle = new TranslatableText(containerTitle);
         this.shouldDropOnDeath = shouldDropOnDeath;
         this.dropOnDeathFilter = dropOnDeathFilter;
+        this.recoverable = recoverable;
+    }
+
+    public enum ContainerType {
+        CHEST,
+        DOUBLE_CHEST,
+        DROPPER,
+        DISPENSER,
+        HOPPER
+    }
+
+    @Override
+    public void onLost() {
+        if (recoverable) dropItemsOnLost();
     }
 
     @Override
@@ -47,60 +79,57 @@ public class InventoryPower extends Power implements Active, Inventory {
         if(!isActive()) {
             return;
         }
-        if(!entity.world.isClient && entity instanceof PlayerEntity) {
-            PlayerEntity player = (PlayerEntity)entity;
-            player.openHandledScreen(new SimpleNamedScreenHandlerFactory(factory, containerName));
+        if(!entity.world.isClient && entity instanceof PlayerEntity playerEntity) {
+            playerEntity.openHandledScreen(new SimpleNamedScreenHandlerFactory(containerScreen, containerTitle));
         }
     }
 
     @Override
     public NbtCompound toTag() {
         NbtCompound tag = new NbtCompound();
-        Inventories.writeNbt(tag, inventory);
+        Inventories.writeNbt(tag, container);
         return tag;
     }
 
     @Override
     public void fromTag(NbtElement tag) {
-        Inventories.readNbt((NbtCompound)tag, inventory);
+        Inventories.readNbt((NbtCompound)tag, container);
     }
 
     @Override
     public int size() {
-        return size;
+        return containerSize;
     }
 
     @Override
     public boolean isEmpty() {
-        return inventory.isEmpty();
+        return container.isEmpty();
     }
 
     @Override
     public ItemStack getStack(int slot) {
-        return inventory.get(slot);
+        return container.get(slot);
     }
 
     @Override
     public ItemStack removeStack(int slot, int amount) {
-        return inventory.get(slot).split(amount);
+        return container.get(slot).split(amount);
     }
 
     @Override
     public ItemStack removeStack(int slot) {
-        ItemStack stack = inventory.get(slot);
+        ItemStack stack = container.get(slot);
         setStack(slot, ItemStack.EMPTY);
         return stack;
     }
 
     @Override
     public void setStack(int slot, ItemStack stack) {
-        inventory.set(slot, stack);
+        container.set(slot, stack);
     }
 
     @Override
-    public void markDirty() {
-
-    }
+    public void markDirty() {}
 
     @Override
     public boolean canPlayerUse(PlayerEntity player) {
@@ -109,9 +138,21 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void clear() {
-        for(int i = 0; i < size; i++) {
+        for(int i = 0; i < containerSize; i++) {
             setStack(i, ItemStack.EMPTY);
         }
+    }
+
+    public DefaultedList<ItemStack> getContainer() {
+        return container;
+    }
+
+    public TranslatableText getContainerTitle() {
+        return containerTitle;
+    }
+
+    public ScreenHandlerFactory getContainerScreen() {
+        return containerScreen;
     }
 
     public boolean shouldDropOnDeath() {
@@ -120,6 +161,28 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     public boolean shouldDropOnDeath(ItemStack stack) {
         return shouldDropOnDeath && dropOnDeathFilter.test(stack);
+    }
+
+    public void dropItemsOnDeath() {
+        PlayerEntity playerEntity = (PlayerEntity) entity;
+        for (int i = 0; i < containerSize; ++i) {
+            ItemStack currentItemStack = getStack(i);
+            if (shouldDropOnDeath(currentItemStack)) {
+                if (!currentItemStack.isEmpty() && EnchantmentHelper.hasVanishingCurse(currentItemStack)) removeStack(i);
+                else {
+                    playerEntity.dropItem(currentItemStack, true, false);
+                    setStack(i, ItemStack.EMPTY);
+                }
+            }
+        }
+    }
+
+    public void dropItemsOnLost() {
+        PlayerEntity playerEntity = (PlayerEntity) entity;
+        for (int i = 0; i < containerSize; ++i) {
+            ItemStack currentItemStack = getStack(i);
+            playerEntity.getInventory().offerOrDrop(currentItemStack);
+        }
     }
 
     private Key key;
@@ -138,17 +201,24 @@ public class InventoryPower extends Power implements Active, Inventory {
         return new PowerFactory<>(Apoli.identifier("inventory"),
             new SerializableData()
                 .add("title", SerializableDataTypes.STRING, "container.inventory")
+                .add("container_type", SerializableDataType.enumValue(ContainerType.class), ContainerType.DROPPER)
                 .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
                 .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key())
+                .add("recoverable", SerializableDataTypes.BOOLEAN, true),
             data ->
-                (type, player) -> {
-                    InventoryPower power = new InventoryPower(type, player, data.getString("title"), 9,
+                (powerType, livingEntity) -> {
+                    InventoryPower inventoryPower = new InventoryPower(
+                        powerType,
+                        livingEntity,
+                        data.getString("title"),
+                        data.get("container_type"),
                         data.getBoolean("drop_on_death"),
-                        data.isPresent("drop_on_death_filter") ? (ConditionFactory<ItemStack>.Instance) data.get("drop_on_death_filter") :
-                            itemStack -> true);
-                    power.setKey((Active.Key)data.get("key"));
-                    return power;
+                        data.isPresent("drop_on_death_filter") ? data.get("drop_on_death_filter") : itemStack -> true,
+                        data.getBoolean("recoverable")
+                    );
+                    inventoryPower.setKey(data.get("key"));
+                    return inventoryPower;
                 })
             .allowCondition();
     }

@@ -1,0 +1,26 @@
+{
+    "type": "apoli:action_over_time",
+    "interval": 100,
+    "entity_action": {
+        "type": "apoli:modify_inventory",
+        "inventory_type": "inventory",
+        "item_action": {
+            "type": "apoli:modify",
+            "modifier": "apoli:smelt"
+        },
+        "item_condition": {
+            "type": "apoli:smeltable"
+        },
+        "slots": [
+            "hotbar.0",
+            "hotbar.1",
+            "hotbar.2",
+            "hotbar.3",
+            "hotbar.4",
+            "hotbar.5",
+            "hotbar.6",
+            "hotbar.7",
+            "hotbar.8"
+        ]
+    }
+}

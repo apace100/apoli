@@ -238,7 +238,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"), cancellable = true)
     private void preventHitIfDamageIsZero(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if(apoli$hasModifiedDamage && amount == 0.0F) {
+        if(apoli$hasModifiedDamage && amount <= 0f) {
             cir.setReturnValue(false);
         }
     }

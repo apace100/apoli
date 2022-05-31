@@ -9,7 +9,23 @@
     "block": "minecraft:dirt"
   },
   "entity_action": {
-    "type": "apoli:heal",
-    "amount": 4
+    "type": "apoli:and",
+    "actions": [
+      {
+        "type": "apoli:heal",
+        "amount": 4
+      },
+      {
+        "type": "apoli:modify_stat",
+        "stat": {
+          "type": "minecraft:crafted",
+          "id": "minecraft:dirt"
+        },
+        "modifier": {
+          "operation": "addition",
+          "value": 1
+        }
+      }
+    ]
   }
 }
