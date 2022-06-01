@@ -408,43 +408,7 @@ public class EntityActions {
                     component.sync();
                 });
             }));
-        register(new ActionFactory<>(Apoli.identifier("explode"), new SerializableData()
-            .add("power", SerializableDataTypes.FLOAT)
-            .add("destruction_type", SerializableDataType.enumValue(Explosion.DestructionType.class), Explosion.DestructionType.BREAK)
-            .add("damage_self", SerializableDataTypes.BOOLEAN, true)
-            .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
-            .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)
-            .add("create_fire", SerializableDataTypes.BOOLEAN, false),
-            (data, entity) -> {
-                if(entity.world.isClient) {
-                    return;
-                }
-                if(data.isPresent("indestructible")) {
-                    Predicate<CachedBlockPosition> blockCondition = data.get("indestructible");
-                    ExplosionBehavior eb = new ExplosionBehavior() {
-                        @Override
-                        public Optional<Float> getBlastResistance(Explosion explosion, BlockView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
-                            Optional<Float> def = super.getBlastResistance(explosion, world, pos, blockState, fluidState);
-                            Optional<Float> ovr = blockCondition.test(
-                                new CachedBlockPosition(entity.world, pos, true)) ?
-                                Optional.of(Blocks.WATER.getBlastResistance()) : Optional.empty();
-                            return ovr.isPresent() ? def.isPresent() ? def.get() > ovr.get() ? def : ovr : ovr : def;
-                        }
-                    };
-                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
-                        entity instanceof LivingEntity ?
-                            DamageSource.explosion((LivingEntity)entity) :
-                            DamageSource.explosion((LivingEntity) null),
-                        eb, entity.getX(), entity.getY(), entity.getZ(),
-                        data.getFloat("power"), data.getBoolean("create_fire"),
-                        data.get("destruction_type"));
-                } else {
-                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
-                        entity.getX(), entity.getY(), entity.getZ(),
-                        data.getFloat("power"), data.getBoolean("create_fire"),
-                        data.get("destruction_type"));
-                }
-            }));
+        register(ExplodeAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("dismount"), new SerializableData(),
             (data, entity) -> entity.stopRiding()));
         register(new ActionFactory<>(Apoli.identifier("passenger_action"), new SerializableData()

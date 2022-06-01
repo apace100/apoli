@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.power.factory.action.block;
+package io.github.apace100.apoli.power.factory.action.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
@@ -10,10 +10,10 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockView;
@@ -27,8 +27,8 @@ import java.util.function.Predicate;
 
 public class ExplodeAction {
 
-    public static void action(SerializableData.Instance data, Triple<World, BlockPos, Direction> block) {
-        if(block.getLeft().isClient) {
+    public static void action(SerializableData.Instance data, Entity entity) {
+        if(entity.world.isClient) {
             return;
         }
 
@@ -42,15 +42,17 @@ public class ExplodeAction {
         }
 
         if(indestructible != null) {
-            ExplosionBehavior eb = getExplosionBehaviour(block.getLeft(), indestructible);
-            block.getLeft().createExplosion(null,
-                DamageSource.explosion((LivingEntity) null),
-                eb, block.getMiddle().getX() + 0.5, block.getMiddle().getY() + 0.5, block.getMiddle().getZ() + 0.5,
+            ExplosionBehavior eb = getExplosionBehaviour(entity.world, indestructible);
+            entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
+                entity instanceof LivingEntity ?
+                    DamageSource.explosion((LivingEntity)entity) :
+                    DamageSource.explosion((LivingEntity) null),
+                eb, entity.getX(), entity.getY(), entity.getZ(),
                 data.getFloat("power"), data.getBoolean("create_fire"),
                 data.get("destruction_type"));
         } else {
-            block.getLeft().createExplosion(null,
-                block.getMiddle().getX() + 0.5, block.getMiddle().getY() + 0.5, block.getMiddle().getZ() + 0.5,
+            entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
+                entity.getX(), entity.getY(), entity.getZ(),
                 data.getFloat("power"), data.getBoolean("create_fire"),
                 data.get("destruction_type"));
         }
@@ -69,11 +71,12 @@ public class ExplodeAction {
         };
     }
 
-    public static ActionFactory<Triple<World, BlockPos, Direction>> getFactory() {
+    public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(Apoli.identifier("explode"),
             new SerializableData()
                 .add("power", SerializableDataTypes.FLOAT)
-                .add("destruction_type", SerializableDataType.enumValue(Explosion.DestructionType.class), Explosion.DestructionType.BREAK)
+                .add("destruction_type", SerializableDataTypes.DESTRUCTION_TYPE, Explosion.DestructionType.BREAK)
+                .add("damage_self", SerializableDataTypes.BOOLEAN, true)
                 .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
                 .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)
                 .add("create_fire", SerializableDataTypes.BOOLEAN, false),

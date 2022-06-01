@@ -5,6 +5,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.function.Predicate;
+
 public final class MiscUtil {
 
     public static BlockState getInWallBlockState(LivingEntity playerEntity) {
@@ -22,5 +24,25 @@ public final class MiscUtil {
         }
 
         return null;
+    }
+
+    public static <T> Predicate<T> combineOr(Predicate<T> a, Predicate<T> b) {
+        if(a == null) {
+            return b;
+        }
+        if(b == null) {
+            return a;
+        }
+        return a.or(b);
+    }
+
+    public static <T> Predicate<T> combineAnd(Predicate<T> a, Predicate<T> b) {
+        if(a == null) {
+            return b;
+        }
+        if(b == null) {
+            return a;
+        }
+        return a.and(b);
     }
 }
