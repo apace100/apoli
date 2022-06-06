@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.11-SNAPSHOT'
+	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -68,6 +68,8 @@ dependencies {
 
 	modImplementation "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
 	include "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
+	// modImplementation "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
+	// include "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
 }
 
 processResources {

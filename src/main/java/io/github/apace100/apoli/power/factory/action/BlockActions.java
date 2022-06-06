@@ -15,7 +15,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec2f;
@@ -78,7 +78,7 @@ public class BlockActions {
                         (ServerWorld)block.getLeft(),
                         Apoli.config.executeCommand.permissionLevel,
                         blockName,
-                        new TranslatableText(blockName),
+                        Text.translatable(blockName),
                         server,
                         null);
                     server.getCommandManager().execute(source, data.getString("command"));

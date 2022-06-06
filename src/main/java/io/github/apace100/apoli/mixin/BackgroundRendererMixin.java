@@ -26,7 +26,7 @@ import java.util.List;
 @Environment(EnvType.CLIENT)
 public abstract class BackgroundRendererMixin {
 
-    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 1), method = "render")
+    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 0), method = "render")
     private static boolean hasStatusEffectProxy(LivingEntity player, StatusEffect effect) {
         if(player instanceof PlayerEntity && effect == StatusEffects.NIGHT_VISION && !player.hasStatusEffect(StatusEffects.NIGHT_VISION)) {
             return PowerHolderComponent.KEY.get(player).getPowers(NightVisionPower.class).stream().anyMatch(NightVisionPower::isActive);
@@ -58,6 +58,8 @@ public abstract class BackgroundRendererMixin {
         return original;
     }
 
+    // TODO
+    /*
     @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 0, shift = At.Shift.AFTER), ordinal = 2)
     private static float modifyFogDensityForPhasingBlindness(float original, Camera camera) {
         if(camera.getFocusedEntity() instanceof LivingEntity) {
@@ -101,7 +103,7 @@ public abstract class BackgroundRendererMixin {
             }
         }
         return original;
-    }
+    }*/
 
     @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V"))
     private static void redirectFogStart(float start, Camera camera, BackgroundRenderer.FogType fogType) {

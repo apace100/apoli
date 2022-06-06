@@ -62,7 +62,7 @@ public abstract class GameRendererMixin {
     private void loadShaderFromPowerOnCameraEntity(Entity entity, CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
-            if(this.resourceManager.containsResource(shaderLoc)) {
+            if(this.resourceManager.getResource(shaderLoc).isPresent()) {
                 loadShader(shaderLoc);
                 currentlyLoadedShader = shaderLoc;
             }
@@ -74,7 +74,7 @@ public abstract class GameRendererMixin {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
             if(currentlyLoadedShader != shaderLoc) {
-                if(this.resourceManager.containsResource(shaderLoc)) {
+                if(this.resourceManager.getResource(shaderLoc).isPresent()) {
                     loadShader(shaderLoc);
                     currentlyLoadedShader = shaderLoc;
                 }
@@ -189,7 +189,7 @@ public abstract class GameRendererMixin {
                 BlockState stateAtP = client.world.getBlockState(p);
                 if (!savedStates.containsKey(p) && !client.world.isAir(p) && !(stateAtP.getBlock() instanceof FluidBlock)) {
                     savedStates.put(p, stateAtP);
-                    client.world.setBlockStateWithoutNeighborUpdates(p, Blocks.AIR.getDefaultState());
+                    client.world.setBlockState(p, Blocks.AIR.getDefaultState());
                 }
             }
         } else if (savedStates.size() > 0) {

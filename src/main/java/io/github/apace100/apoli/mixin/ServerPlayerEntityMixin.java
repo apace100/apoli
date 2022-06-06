@@ -8,6 +8,7 @@ import io.github.apace100.apoli.power.KeepInventoryPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.encryption.PlayerPublicKey;
 import net.minecraft.network.packet.s2c.play.GameStateChangeS2CPacket;
 import net.minecraft.screen.ScreenHandlerListener;
 import net.minecraft.server.MinecraftServer;
@@ -15,12 +16,12 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,6 +50,10 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     @Shadow
     public ServerPlayNetworkHandler networkHandler;
 
+    public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile, @Nullable PlayerPublicKey publicKey) {
+        super(world, pos, yaw, gameProfile, publicKey);
+    }
+
     @Shadow
     public abstract void sendMessage(Text message, boolean actionBar);
 
@@ -56,10 +61,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     public boolean notInAnyWorld;
 
     @Shadow private boolean spawnForced;
-
-    public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile profile) {
-        super(world, pos, yaw, profile);
-    }
 
     // FRESH_AIR
     @Inject(method = "trySleep", at = @At(value = "INVOKE",target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/util/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"), cancellable = true)
@@ -70,7 +71,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
                         ((ServerPlayerEntity)(Object)this).setSpawnPoint(this.world.getRegistryKey(), pos, this.getYaw(), false, true);
                     }
                     info.setReturnValue(Either.left(null));
-                    this.sendMessage(new TranslatableText(p.getMessage()), true);
+                    this.sendMessage(Text.translatable(p.getMessage()), true);
                 }
             }
         );

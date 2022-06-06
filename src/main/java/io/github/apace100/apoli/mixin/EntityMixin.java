@@ -118,17 +118,6 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
-    @Inject(method = "emitGameEvent(Lnet/minecraft/world/event/GameEvent;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/BlockPos;)V", at = @At("HEAD"), cancellable = true)
-    private void preventGameEvents(GameEvent event, @Nullable Entity entity, BlockPos pos, CallbackInfo ci) {
-        if(entity instanceof LivingEntity) {
-            List<PreventGameEventPower> preventingPowers = PowerHolderComponent.getPowers(entity, PreventGameEventPower.class).stream().filter(p -> p.doesPrevent(event)).toList();
-            if(preventingPowers.size() > 0) {
-                preventingPowers.forEach(p -> p.executeAction(entity));
-                ci.cancel();
-            }
-        }
-    }
-
     @Redirect(method = "method_30022", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/util/shape/VoxelShape;"))
     private VoxelShape preventPhasingSuffocation(BlockState state, BlockView world, BlockPos pos) {
         return state.getCollisionShape(world, pos, ShapeContext.of((Entity)(Object)this));

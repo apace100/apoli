@@ -1,5 +1,6 @@
 package io.github.apace100.apoli;
 
+import com.mojang.brigadier.Command;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
@@ -26,7 +27,7 @@ import io.github.apace100.calio.resource.OrderedResourceListenerManager;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.ArgumentTypes;
@@ -77,7 +78,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 
 		ModPacketsC2S.register();
 
-		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			PowerCommand.register(dispatcher);
 			ResourceCommand.register(dispatcher);
 		});
@@ -89,9 +90,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		Registry.register(Registry.LOOT_FUNCTION_TYPE, Apoli.identifier("remove_power"), RemovePowerLootFunction.TYPE);
 
 		Registry.register(Registry.LOOT_CONDITION_TYPE, Apoli.identifier("power"), PowerLootCondition.TYPE);
-
-		ArgumentTypes.register(MODID + ":power", PowerTypeArgumentType.class, new ConstantArgumentSerializer<>(PowerTypeArgumentType::power));
-		ArgumentTypes.register(MODID + ":power_operation", PowerOperation.class, new ConstantArgumentSerializer<>(PowerOperation::operation));
 
 		ApoliClassData.registerAll();
 

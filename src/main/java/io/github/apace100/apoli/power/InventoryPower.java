@@ -15,7 +15,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.screen.*;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 
 import java.util.function.Predicate;
@@ -23,7 +24,7 @@ import java.util.function.Predicate;
 public class InventoryPower extends Power implements Active, Inventory {
 
     private final DefaultedList<ItemStack> container;
-    private final TranslatableText containerTitle;
+    private final MutableText containerTitle;
     private final ScreenHandlerFactory containerScreen;
     private final Predicate<ItemStack> dropOnDeathFilter;
 
@@ -55,7 +56,7 @@ public class InventoryPower extends Power implements Active, Inventory {
                 break;
         }
         this.container = DefaultedList.ofSize(containerSize, ItemStack.EMPTY);
-        this.containerTitle = new TranslatableText(containerTitle);
+        this.containerTitle = Text.translatable(containerTitle);
         this.shouldDropOnDeath = shouldDropOnDeath;
         this.dropOnDeathFilter = dropOnDeathFilter;
         this.recoverable = recoverable;
@@ -147,7 +148,7 @@ public class InventoryPower extends Power implements Active, Inventory {
         return container;
     }
 
-    public TranslatableText getContainerTitle() {
+    public MutableText getContainerTitle() {
         return containerTitle;
     }
 

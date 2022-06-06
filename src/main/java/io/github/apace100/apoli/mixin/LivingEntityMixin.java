@@ -104,7 +104,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
                     effect.isAmbient(),
                     effect.shouldShowParticles(),
                     effect.shouldShowIcon(),
-                    ((HiddenEffectStatus) effect).getHiddenEffect()
+                    ((HiddenEffectStatus) effect).getHiddenEffect(),
+                    Optional.empty()
             );
         }
         return effect;

@@ -48,6 +48,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 
@@ -285,19 +286,20 @@ public class EntityConditions {
             .add("biomes", SerializableDataTypes.IDENTIFIERS, null)
             .add("condition", ApoliDataTypes.BIOME_CONDITION, null),
             (data, entity) -> {
-                Biome biome = entity.world.getBiome(entity.getBlockPos()).value();
-                ConditionFactory<Biome>.Instance condition = data.get("condition");
+                RegistryEntry<Biome> biomeEntry = entity.world.getBiome(entity.getBlockPos());
+                Biome biome = biomeEntry.value();
+                ConditionFactory<RegistryEntry<Biome>>.Instance condition = data.get("condition");
                 if(data.isPresent("biome") || data.isPresent("biomes")) {
                     Identifier biomeId = entity.world.getRegistryManager().get(Registry.BIOME_KEY).getId(biome);
                     if(data.isPresent("biome") && biomeId.equals(data.getId("biome"))) {
-                        return condition == null || condition.test(biome);
+                        return condition == null || condition.test(biomeEntry);
                     }
                     if(data.isPresent("biomes") && ((List<Identifier>)data.get("biomes")).contains(biomeId)) {
-                        return condition == null || condition.test(biome);
+                        return condition == null || condition.test(biomeEntry);
                     }
                     return false;
                 }
-                return condition == null || condition.test(biome);
+                return condition == null || condition.test(biomeEntry);
             }));
         register(new ConditionFactory<>(Apoli.identifier("entity_type"), new SerializableData()
             .add("entity_type", SerializableDataTypes.ENTITY_TYPE),

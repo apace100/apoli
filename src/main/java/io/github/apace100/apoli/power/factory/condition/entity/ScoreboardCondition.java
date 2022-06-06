@@ -17,7 +17,7 @@ public class ScoreboardCondition {
 
         String name = data.getString("name");
         if (name == null) {
-            if (entity instanceof PlayerEntity playerEntity) name = playerEntity.getName().asString();
+            if (entity instanceof PlayerEntity playerEntity) name = playerEntity.getName().getString();
             else name = entity.getUuidAsString();
         }
 

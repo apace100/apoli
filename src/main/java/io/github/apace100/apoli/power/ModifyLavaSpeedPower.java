@@ -24,9 +24,9 @@ public class ModifyLavaSpeedPower extends AttributePower {
                 (type, player) -> {
                     ModifyLavaSpeedPower power = new ModifyLavaSpeedPower(type, player);
                     data.<EntityAttributeModifier>ifPresent
-                        ("modifier", mod -> power.addModifier(AdditionalEntityAttributes.WATER_SPEED, mod));
+                        ("modifier", mod -> power.addModifier(AdditionalEntityAttributes.LAVA_SPEED, mod));
                     data.<List<EntityAttributeModifier>>ifPresent("modifiers",
-                        mods -> mods.forEach(mod -> power.addModifier(AdditionalEntityAttributes.WATER_SPEED, mod))
+                        mods -> mods.forEach(mod -> power.addModifier(AdditionalEntityAttributes.LAVA_SPEED, mod))
                     );
                     return power;
                 })

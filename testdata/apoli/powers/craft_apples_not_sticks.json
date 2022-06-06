@@ -1,0 +1,21 @@
+{
+  "type": "apoli:modify_crafting",
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "minecraft:apple",
+    "amount": 4
+  },
+  "entity_action": {
+    "type": "apoli:add_velocity",
+    "y": 0.5
+  },
+  "block_action": {
+    "type": "apoli:set_block",
+    "block": "minecraft:stone"
+  }
+}

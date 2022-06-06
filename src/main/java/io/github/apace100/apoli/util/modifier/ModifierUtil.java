@@ -14,6 +14,8 @@ public class ModifierUtil {
     public static Modifier createSimpleModifier(IModifierOperation operation, double value) {
         SerializableData.Instance data = ModifierOperation.DATA.new Instance();
         data.set("value", value);
+        data.set("resource", null);
+        data.set("modifier", null);
         return new Modifier(operation, data);
     }
 

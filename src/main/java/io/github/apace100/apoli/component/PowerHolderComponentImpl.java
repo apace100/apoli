@@ -209,7 +209,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                         } catch (ClassCastException e) {
                             // Occurs when power was overriden by data pack since last world load
                             // to be a power type which uses different data class.
-                            Apoli.LOGGER.warn("Data type of \"" + powerTypeId + "\" changed, skipping data for that power on entity " + owner.getName().asString());
+                            Apoli.LOGGER.warn("Data type of \"" + powerTypeId + "\" changed, skipping data for that power on entity " + owner.getName().getString());
                         }
                         this.powers.put(type, power);
                         if (callPowerOnAdd) {

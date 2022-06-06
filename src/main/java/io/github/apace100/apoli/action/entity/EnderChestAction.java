@@ -10,10 +10,9 @@ import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.stat.Stats;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 public class EnderChestAction {
-    private static final Text TITLE = new TranslatableText("container.enderchest");
+    private static final Text TITLE = Text.translatable("container.enderchest");
 
     public static void action(SerializableData.Instance data, Entity entity) {
         if (!(entity instanceof PlayerEntity)) return;

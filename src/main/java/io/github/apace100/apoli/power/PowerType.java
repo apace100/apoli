@@ -4,7 +4,8 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class PowerType<T extends Power> {
@@ -73,8 +74,8 @@ public class PowerType<T extends Power> {
         return nameTranslationKey;
     }
 
-    public TranslatableText getName() {
-        return new TranslatableText(getOrCreateNameTranslationKey());
+    public MutableText getName() {
+        return Text.translatable(getOrCreateNameTranslationKey());
     }
 
     public String getOrCreateDescriptionTranslationKey() {
@@ -85,8 +86,8 @@ public class PowerType<T extends Power> {
         return descriptionTranslationKey;
     }
 
-    public TranslatableText getDescription() {
-        return new TranslatableText(getOrCreateDescriptionTranslationKey());
+    public MutableText getDescription() {
+        return Text.translatable(getOrCreateDescriptionTranslationKey());
     }
 
     @Override

@@ -36,6 +36,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.tuple.Triple;
@@ -84,10 +85,10 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<ConditionFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS =
         SerializableDataType.list(DAMAGE_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<Biome>.Instance> BIOME_CONDITION =
+    public static final SerializableDataType<ConditionFactory<RegistryEntry<Biome>>.Instance> BIOME_CONDITION =
         condition(ClassUtil.castClass(ConditionFactory.Instance.class), ConditionTypes.BIOME);
 
-    public static final SerializableDataType<List<ConditionFactory<Biome>.Instance>> BIOME_CONDITIONS =
+    public static final SerializableDataType<List<ConditionFactory<RegistryEntry<Biome>>.Instance>> BIOME_CONDITIONS =
         SerializableDataType.list(BIOME_CONDITION);
 
     public static final SerializableDataType<ActionFactory<Entity>.Instance> ENTITY_ACTION =
@@ -149,7 +150,7 @@ public class ApoliDataTypes {
             .add("tag", SerializableDataTypes.NBT, null)
             .add("slot", SerializableDataTypes.INT, Integer.MIN_VALUE),
         (data) ->  {
-            ItemStack stack = new ItemStack(data.get("item"), data.getInt("amount"));
+            ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
             if(data.isPresent("tag")) {
                 stack.setNbt(data.get("tag"));
             }
@@ -228,29 +229,6 @@ public class ApoliDataTypes {
     public static final SerializableDataType<ArgumentWrapper<Integer>> ITEM_SLOT = SerializableDataType.argumentType(ItemSlotArgumentType.itemSlot());
 
     public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = SerializableDataType.list(ITEM_SLOT);
-
-    public static final SerializableDataType<Stat<?>> STAT = SerializableDataType.compound(ClassUtil.castClass(Stat.class),
-        new SerializableData()
-            .add("type", SerializableDataType.registry(ClassUtil.castClass(StatType.class), Registry.STAT_TYPE))
-            .add("id", SerializableDataTypes.IDENTIFIER),
-        data -> {
-            StatType statType = data.get("type");
-            Registry<?> statRegistry = statType.getRegistry();
-            Identifier statId = data.get("id");
-            if(statRegistry.containsId(statId)) {
-                Object statObject = statRegistry.get(statId);
-                return statType.getOrCreateStat(statObject);
-            }
-            throw new IllegalArgumentException("Desired stat \"" + statId + "\" does not exist in stat type ");
-        },
-        (data, stat) -> {
-            SerializableData.Instance inst = data.new Instance();
-            inst.set("type", stat.getType());
-            Registry reg = stat.getType().getRegistry();
-            Identifier statId = reg.getId(stat.getValue());
-            inst.set("id", statId);
-            return inst;
-        });
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

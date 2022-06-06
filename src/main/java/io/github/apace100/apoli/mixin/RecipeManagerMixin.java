@@ -23,11 +23,12 @@ public abstract class RecipeManagerMixin {
 
     @Inject(method = "getFirstMatch", at = @At("HEAD"), cancellable = true)
     private void prioritizeModifiedRecipes(RecipeType<Recipe<Inventory>> type, Inventory inventory, World world, CallbackInfoReturnable<Optional<Recipe<Inventory>>> cir) {
+        /* TODO: this
         Optional<Recipe<Inventory>> modifiedRecipe = this.getAllOfType(type).values().stream().flatMap((recipe) -> {
             return type.match(recipe, world, inventory).stream();
         }).filter(r -> r.getClass() == ModifiedCraftingRecipe.class).findFirst();
         if(modifiedRecipe.isPresent()) {
             cir.setReturnValue(modifiedRecipe);
-        }
+        }*/
     }
 }

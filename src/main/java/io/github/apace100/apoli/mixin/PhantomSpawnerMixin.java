@@ -5,6 +5,7 @@ import io.github.apace100.apoli.power.ModifyInsomniaTicksPower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.spawner.PhantomSpawner;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Iterator;
-import java.util.Random;
 
 @Mixin(PhantomSpawner.class)
 public class PhantomSpawnerMixin {
@@ -28,7 +28,7 @@ public class PhantomSpawnerMixin {
         apoli$CachedPlayer = playerEntity;
     }
 
-    @ModifyVariable(method = "spawn", at = @At(value = "INVOKE",target = "Ljava/util/Random;nextInt(I)I", ordinal = 1, shift = At.Shift.BEFORE), ordinal = 1)
+    @ModifyVariable(method = "spawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/random/Random;nextInt(I)I", ordinal = 1), ordinal = 1)
     private int modifyTicks(int original) {
         return (int)PowerHolderComponent.modify(apoli$CachedPlayer, ModifyInsomniaTicksPower.class, original);
     }

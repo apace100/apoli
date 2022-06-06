@@ -112,7 +112,7 @@ public class DistanceFromCoordinatesConditionRegistry {
             pos = entity.getPos();
             world = entity.getEntityWorld();
         }
-        double currentDimensionCoordinateScale = world.getDimension().getCoordinateScale();
+        double currentDimensionCoordinateScale = world.getDimension().coordinateScale();
 
         // Get the reference's scaled coordinates
         switch (data.getString("reference")){

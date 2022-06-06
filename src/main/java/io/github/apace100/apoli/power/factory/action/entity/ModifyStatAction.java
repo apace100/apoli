@@ -5,6 +5,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.stat.ServerStatHandler;
@@ -32,7 +33,7 @@ public class ModifyStatAction {
     public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(Apoli.identifier("modify_stat"),
             new SerializableData()
-                .add("stat", ApoliDataTypes.STAT)
+                .add("stat", SerializableDataTypes.STAT)
                 .add("modifier", Modifier.DATA_TYPE),
             ModifyStatAction::action
         );

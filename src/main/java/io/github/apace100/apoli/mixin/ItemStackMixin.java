@@ -13,10 +13,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
@@ -72,22 +70,22 @@ public abstract class ItemStackMixin implements MutableItemStack {
             if(config.compactUsabilityHints || powers.size() == 0) {
                 if(powers.size() == 1) {
                     PreventItemUsePower power = powers.get(0);
-                    MutableText preventText = new TranslatableText(translationKeyBase + ".single",
+                    MutableText preventText = Text.translatable(translationKeyBase + ".single",
                         power.getType().getName().formatted(powerColor)).formatted(textColor);
                     list.add(preventText);
                 } else {
                     list.add(
-                        new TranslatableText(translationKeyBase + ".multiple",
-                            new LiteralText((powers.size() == 0 ? powerCountWithHidden : powers.size()) + "").formatted(powerColor))
+                        Text.translatable(translationKeyBase + ".multiple",
+                            Text.literal((powers.size() == 0 ? powerCountWithHidden : powers.size()) + "").formatted(powerColor))
                             .formatted(textColor));
                 }
             } else {
                 MutableText powerNameList = powers.get(0).getType().getName().formatted(powerColor);
                 for(int i = 1; i < powers.size(); i++) {
-                    powerNameList = powerNameList.append(new LiteralText(", ").formatted(textColor));
+                    powerNameList = powerNameList.append(Text.literal(", ").formatted(textColor));
                     powerNameList = powerNameList.append(powers.get(i).getType().getName().formatted(powerColor));
                 }
-                MutableText preventText = new TranslatableText(translationKeyBase + ".single",
+                MutableText preventText = Text.translatable(translationKeyBase + ".single",
                     powerNameList).formatted(textColor);
                 list.add(preventText);
             }
@@ -102,18 +100,19 @@ public abstract class ItemStackMixin implements MutableItemStack {
                 .filter(sp -> !sp.isHidden)
                 .toList();
             if(powers.size() > 0) {
-                list.add(LiteralText.EMPTY);
-                list.add((new TranslatableText("item.modifiers." + slot.getName())).formatted(Formatting.GRAY));
+                list.add(Text.empty());
+                list.add((Text.translatable("item.modifiers." + slot.getName())).formatted(Formatting.GRAY));
                 powers.forEach(sp -> {
+
                     if(PowerTypeRegistry.contains(sp.powerId)) {
                         PowerType<?> powerType = PowerTypeRegistry.get(sp.powerId);
                         list.add(
-                            new LiteralText(" ")
+                            Text.literal(" ")
                                 .append(powerType.getName())
                                 .formatted(sp.isNegative ? Formatting.RED : Formatting.BLUE));
                         if(context.isAdvanced()) {
                             list.add(
-                                new LiteralText("  ")
+                                Text.literal("  ")
                                     .append(powerType.getDescription())
                                     .formatted(Formatting.GRAY));
                         }

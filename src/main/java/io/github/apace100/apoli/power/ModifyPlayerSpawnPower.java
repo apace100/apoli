@@ -27,7 +27,8 @@ import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.structure.Structure;
 
 import java.util.Optional;
 
@@ -36,10 +37,10 @@ public class ModifyPlayerSpawnPower extends Power {
     public final float dimensionDistanceMultiplier;
     public final Identifier biomeId;
     public final String spawnStrategy;
-    public final RegistryKey<ConfiguredStructureFeature<?, ?>> structure;
+    public final RegistryKey<Structure> structure;
     public final SoundEvent spawnSound;
 
-    public ModifyPlayerSpawnPower(PowerType<?> type, LivingEntity entity, RegistryKey<World> dimension, float dimensionDistanceMultiplier, Identifier biomeId, String spawnStrategy, RegistryKey<ConfiguredStructureFeature<?, ?>> structure, SoundEvent spawnSound) {
+    public ModifyPlayerSpawnPower(PowerType<?> type, LivingEntity entity, RegistryKey<World> dimension, float dimensionDistanceMultiplier, Identifier biomeId, String spawnStrategy, RegistryKey<Structure> structure, SoundEvent spawnSound) {
         super(type, entity);
         this.dimension = dimension;
         this.dimensionDistanceMultiplier = dimensionDistanceMultiplier;
@@ -112,7 +113,8 @@ public class ModifyPlayerSpawnPower extends Power {
             if(biomeId != null) {
                 Optional<Biome> biomeOptional = world.getRegistryManager().get(Registry.BIOME_KEY).getOrEmpty(biomeId);
                 if(biomeOptional.isPresent()) {
-                    com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> biomePos = world.locateBiome(b -> b.value() == biomeOptional.get(), spawnToDimPos, 6400, 8);
+                    com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> biomePos =
+                        world.locateBiome(b -> b.value() == biomeOptional.get(), spawnToDimPos, 6400, 8, 8);
                     if(biomePos != null) {
                         spawnToDimPos = biomePos.getFirst();
                     } else {
@@ -126,7 +128,7 @@ public class ModifyPlayerSpawnPower extends Power {
             if(structure == null) {
                 tpPos = getValidSpawn(spawnToDimPos, range, world);
             } else {
-                Pair<BlockPos, ConfiguredStructureFeature<?, ?>> locateStructure = getStructureLocation(world, structure, null, dimension);
+                Pair<BlockPos, Structure> locateStructure = getStructureLocation(world, structure, null, dimension);
                 BlockPos structurePos = locateStructure.getLeft();
                 ChunkPos structureChunkPos;
 
@@ -150,9 +152,9 @@ public class ModifyPlayerSpawnPower extends Power {
         return null;
     }
 
-    private Pair<BlockPos, ConfiguredStructureFeature<?, ?>> getStructureLocation(World world, RegistryKey<ConfiguredStructureFeature<?, ?>> structure, TagKey<ConfiguredStructureFeature<?, ?>> structureTag, RegistryKey<World> dimension) {
-        Registry<ConfiguredStructureFeature<?, ?>> registry = world.getRegistryManager().get(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY);
-        RegistryEntryList<ConfiguredStructureFeature<?, ?>> entryList = null;
+    private Pair<BlockPos, Structure> getStructureLocation(World world, RegistryKey<Structure> structure, TagKey<Structure> structureTag, RegistryKey<World> dimension) {
+        Registry<Structure> registry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        RegistryEntryList<Structure> entryList = null;
         String structureOrTagName = "";
         if(structure != null) {
             var entry = registry.getEntry(structure);
@@ -170,7 +172,7 @@ public class ModifyPlayerSpawnPower extends Power {
         }
         BlockPos blockPos = new BlockPos(0, 70, 0);
         ServerWorld serverWorld = entity.getServer().getWorld(dimension);
-        com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<ConfiguredStructureFeature<?, ?>>> result = serverWorld.getChunkManager().getChunkGenerator().locateStructure(serverWorld, entryList, blockPos, 100, false);
+        com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Structure>> result = serverWorld.getChunkManager().getChunkGenerator().locateStructure(serverWorld, entryList, blockPos, 100, false);
         if (result == null) {
             Apoli.LOGGER.warn("Could not find structure \"" + structureOrTagName + "\" in dimension: " + dimension.getValue());
             return null;
@@ -247,7 +249,7 @@ public class ModifyPlayerSpawnPower extends Power {
                 .add("dimension_distance_multiplier", SerializableDataTypes.FLOAT, 0F)
                 .add("biome", SerializableDataTypes.IDENTIFIER, null)
                 .add("spawn_strategy", SerializableDataTypes.STRING, "default")
-                .add("structure", SerializableDataType.registryKey(Registry.CONFIGURED_STRUCTURE_FEATURE_KEY), null)
+                .add("structure", SerializableDataType.registryKey(Registry.STRUCTURE_KEY), null)
                 .add("respawn_sound", SerializableDataTypes.SOUND_EVENT, null),
             data ->
                 (type, player) ->

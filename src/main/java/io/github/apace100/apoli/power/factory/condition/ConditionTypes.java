@@ -8,6 +8,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 
 public class ConditionTypes {
@@ -18,6 +19,6 @@ public class ConditionTypes {
     public static ConditionType<CachedBlockPosition> BLOCK = new ConditionType<>("BlockCondition", ApoliRegistries.BLOCK_CONDITION);
     public static ConditionType<Pair<DamageSource, Float>> DAMAGE = new ConditionType<>("DamageCondition", ApoliRegistries.DAMAGE_CONDITION);
     public static ConditionType<FluidState> FLUID = new ConditionType<>("FluidCondition", ApoliRegistries.FLUID_CONDITION);
-    public static ConditionType<Biome> BIOME = new ConditionType<>("BiomeCondition", ApoliRegistries.BIOME_CONDITION);
+    public static ConditionType<RegistryEntry<Biome>> BIOME = new ConditionType<>("BiomeCondition", ApoliRegistries.BIOME_CONDITION);
 
 }
