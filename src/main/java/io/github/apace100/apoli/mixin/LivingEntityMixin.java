@@ -361,8 +361,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     // SLOW_FALLING
     @ModifyVariable(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getFluidState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/fluid/FluidState;"), method = "travel", name = "d", ordinal = 0)
     public double modifyFallingVelocity(double in) {
+        if(this.getVelocity().y > 0D) {
+            return in;
+        }
         List<ModifyFallingPower> modifyFallingPowers = PowerHolderComponent.getPowers(this, ModifyFallingPower.class);
         if(modifyFallingPowers.size() > 0) {
+
             if(modifyFallingPowers.stream().anyMatch(p -> !p.takeFallDamage)) {
                 this.fallDistance = 0;
             }
