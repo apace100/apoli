@@ -1,0 +1,13 @@
+{
+  "type": "apoli:toggle_night_vision",
+  "strength": 1.0,
+  "condition": {
+    "type": "apoli:submerged_in",
+    "fluid": "minecraft:water"
+  },
+  "active_by_default": true,
+  "key": {
+    "key": "key.use",
+    "continuous": false
+  }
+}
