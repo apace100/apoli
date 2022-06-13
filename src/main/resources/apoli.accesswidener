@@ -1,4 +1,8 @@
 accessWidener   v1  named
 
 mutable field net/minecraft/item/ItemStack item Lnet/minecraft/item/Item;
+accessible    method    net/minecraft/server/command/ExecuteCommand    addConditionLogic    (Lcom/mojang/brigadier/tree/CommandNode;Lcom/mojang/brigadier/builder/ArgumentBuilder;ZLnet/minecraft/server/command/ExecuteCommand$Condition;)Lcom/mojang/brigadier/builder/ArgumentBuilder;
+accessible    method    net/minecraft/server/command/ExecuteCommand    testScoreCondition    (Lcom/mojang/brigadier/context/CommandContext;Ljava/util/function/BiPredicate;)Z
+accessible    method    net/minecraft/server/command/ExecuteCommand    testScoreMatch    (Lcom/mojang/brigadier/context/CommandContext;Lnet/minecraft/predicate/NumberRange$IntRange;)Z
+accessible    class    net/minecraft/server/command/ExecuteCommand$Condition
 extendable class net/minecraft/item/ItemStack
