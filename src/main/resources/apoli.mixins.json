@@ -16,6 +16,7 @@
     "CraftingScreenHandlerMixin",
     "EntityAccessor",
     "EntityMixin",
+    "ExecuteCommandMixin",
     "ExperienceOrbEntityMixin",
     "EyeHeightAccess",
     "HungerManagerMixin",
