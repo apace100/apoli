@@ -1,9 +1,10 @@
 {
   "type": "apoli:particle",
   "particle": {
-    "type": "minecraft:dust",
-    "params": "0.2 0.6 0.2 2.0"
+    "type": "minecraft:end_rod"
   },
-  "frequency": 2,
+  "frequency": 1,
+  "speed": 2,
+  "count": 2,
   "visible_in_first_person": true
 }

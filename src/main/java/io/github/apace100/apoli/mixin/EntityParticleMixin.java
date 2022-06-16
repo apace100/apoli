@@ -38,10 +38,10 @@ public abstract class EntityParticleMixin extends Entity {
             for (ParticlePower particlePower : particlePowers) {
                 if(!this.isInvisibleTo(player) || particlePower.isVisibleWhileInvisible()) {
                     if (((Object) this != player || (!firstPerson || particlePower.isVisibleInFirstPerson()))) {
-                        if (this.age % particlePower.getFrequency() == 0 && particlePower.getCount() > 0) {
+                        if (this.age % particlePower.getFrequency() == 0 && particlePower.getCount() > 0 && particlePower.getSpeed() >= 0) {
                             Vec3d spread = particlePower.getSpread();
                             for (int i = 0; i < particlePower.getCount(); i++) {
-                                world.addParticle(particlePower.getParticle(), this.getX() + this.random.nextGaussian() * spread.getX(), particlePower.getOffset_y() + this.getY() + this.random.nextGaussian() * spread.getY(), this.getZ() + this.random.nextGaussian() * spread.getZ(), 0, 0, 0);
+                                world.addParticle(particlePower.getParticle(), this.getX() + this.random.nextGaussian() * spread.getX(), particlePower.getOffset_y() + this.getY() + this.random.nextGaussian() * spread.getY(), this.getZ() + this.random.nextGaussian() * spread.getZ(), (2.0 * this.random.nextDouble() - 1.0) * particlePower.getSpeed(), (2.0 * this.random.nextDouble() - 1.0) *particlePower.getSpeed(), (2.0 * this.random.nextDouble() - 1.0) *particlePower.getSpeed());
                             }
                         }
                     }

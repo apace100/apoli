@@ -23,7 +23,9 @@ public class ParticlePower extends Power {
 
     private final boolean visibleWhileInvisible;
 
-    public ParticlePower(PowerType<?> type, LivingEntity entity, ParticleEffect particle, int frequency, boolean visibleInFirstPerson, Vec3d spread, float offset_y, int count, boolean visibleWhileInvisible) {
+    private final float speed;
+
+    public ParticlePower(PowerType<?> type, LivingEntity entity, ParticleEffect particle, int frequency, boolean visibleInFirstPerson, Vec3d spread, float offset_y, int count, boolean visibleWhileInvisible, float speed) {
         super(type, entity);
         this.particleEffect = particle;
         this.frequency = frequency;
@@ -32,6 +34,7 @@ public class ParticlePower extends Power {
         this.offset_y = offset_y;
         this.count = count;
         this.visibleWhileInvisible = visibleWhileInvisible;
+        this.speed = speed;
     }
 
     public ParticleEffect getParticle() {
@@ -54,6 +57,8 @@ public class ParticlePower extends Power {
 
     public boolean isVisibleWhileInvisible() { return visibleWhileInvisible; }
 
+    public float getSpeed() { return speed; }
+
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("particle"),
                 new SerializableData()
@@ -63,10 +68,11 @@ public class ParticlePower extends Power {
                         .add("spread", SerializableDataTypes.VECTOR, new Vec3d(0.25, 0.5, 0.25))
                         .add("offset_y", SerializableDataTypes.FLOAT, 1.0F)
                         .add("count", SerializableDataTypes.INT, 1)
-                        .add("visible_while_invisible", SerializableDataTypes.BOOLEAN, false),
+                        .add("visible_while_invisible", SerializableDataTypes.BOOLEAN, false)
+                        .add("speed", SerializableDataTypes.FLOAT, 0.0F),
                 data ->
                         (type, player) ->
-                                new ParticlePower(type, player, data.get("particle"), data.getInt("frequency"), data.getBoolean("visible_in_first_person"), data.get("spread"), data.getFloat("offset_y"), data.getInt("count"), data.getBoolean("visible_while_invisible")))
+                                new ParticlePower(type, player, data.get("particle"), data.getInt("frequency"), data.getBoolean("visible_in_first_person"), data.get("spread"), data.getFloat("offset_y"), data.getInt("count"), data.getBoolean("visible_while_invisible"), data.getFloat("speed")))
                 .allowCondition();
     }
 }

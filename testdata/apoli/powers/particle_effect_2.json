@@ -4,17 +4,14 @@
     "type": "dust_color_transition",
     "params": "0.000 0.000 0.000 2 0.15 0.15 0.15"
   },
-  "offset_y": 0.1,
+  "offset_y": 1,
   "visible_while_invisible": true,
   "spread": {
-    "x": 0.3,
-    "y": 0.1,
-    "z": 0.3
+    "x": 0,
+    "y": 0.5,
+    "z": 0
   },
-  "count": 2,
+  "count": 0,
   "frequency": 1,
-  "condition": {
-    "type": "apoli:status_effect",
-    "effect": "minecraft:invisibility"
-  }
+  "visible_in_first_person": true
 }
