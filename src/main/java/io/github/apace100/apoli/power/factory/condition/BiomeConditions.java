@@ -25,16 +25,16 @@ public class BiomeConditions {
     public static void register() {
         register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
             .add("value", SerializableDataTypes.BOOLEAN),
-            (data, fluid) -> data.getBoolean("value")));
+            (data, biome) -> data.getBoolean("value")));
         register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
             .add("conditions", ApoliDataTypes.BIOME_CONDITIONS),
-            (data, fluid) -> ((List<ConditionFactory<Biome>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(fluid.value())
+            (data, biome) -> ((List<ConditionFactory<RegistryEntry<Biome>>.Instance>)data.get("conditions")).stream().allMatch(
+                condition -> condition.test(biome)
             )));
         register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
             .add("conditions", ApoliDataTypes.BIOME_CONDITIONS),
-            (data, fluid) -> ((List<ConditionFactory<Biome>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(fluid.value())
+            (data, biome) -> ((List<ConditionFactory<RegistryEntry<Biome>>.Instance>)data.get("conditions")).stream().anyMatch(
+                condition -> condition.test(biome)
             )));
 
         register(new ConditionFactory<>(Apoli.identifier("high_humidity"), new SerializableData(),
