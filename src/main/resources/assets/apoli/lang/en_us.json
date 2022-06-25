@@ -55,6 +55,8 @@
   "tooltip.apoli.unusable.crossbow.multiple": "Unusable (%s)",
   "tooltip.apoli.unusable.spyglass.single": "Unusable (%s)",
   "tooltip.apoli.unusable.spyglass.multiple": "Unusable (%s)",
+  "tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)",
+  "tooltip.apoli.unusable.toot_horn.multiple": "Untootable (%s)",
 
   "text.autoconfig.power_config.title": "Apoli Power Config",
 
