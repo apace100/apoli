@@ -106,8 +106,9 @@ public class InventoryUtil {
                     ItemStack currentItemStack = stackReference.get();
                     if (itemCondition == null || itemCondition.test(currentItemStack)) {
                         if (entityAction != null) entityAction.accept(entity);
-                        stackReference.set(replacementStack.copy());
-                        if (itemAction != null) itemAction.accept(new Pair<>(entity.world, currentItemStack));
+                        ItemStack stackAfterReplacement = replacementStack.copy();
+                        stackReference.set(stackAfterReplacement);
+                        if (itemAction != null) itemAction.accept(new Pair<>(entity.world, stackAfterReplacement));
                     }
                 }
             }
