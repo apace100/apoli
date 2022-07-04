@@ -139,6 +139,22 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         }
     }
 
+    @Inject(method = "damage", at = @At(value = "RETURN", ordinal = 3), cancellable = true)
+    private void allowDamageIfModifyingPowersExist(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        boolean hasModifyingPower = false;
+
+        if(source.getAttacker() != null && !source.isProjectile()) {
+            hasModifyingPower = PowerHolderComponent.getPowers(source.getAttacker(), ModifyDamageDealtPower.class).size() > 0;
+        }
+
+        hasModifyingPower |=
+            PowerHolderComponent.getPowers(this, ModifyDamageTakenPower.class).size() > 0;
+
+        if(hasModifyingPower) {
+            cir.setReturnValue(super.damage(source, amount));
+        }
+    }
+
     @Inject(method = "interact", at = @At("RETURN"), cancellable = true)
     private void entityInteractionAfter(Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         ActionResult original = cir.getReturnValue();
