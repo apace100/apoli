@@ -32,7 +32,6 @@
     "LootContextMixin",
     "LootManagerMixin",
     "LootTableMixin",
-    "PersistentProjectileEntityMixin",
     "PhantomSpawnerMixin",
     "PlayerEntityMixin",
     "PlayerScreenHandlerAccessor",
@@ -45,7 +44,6 @@
     "ServerPlayNetworkHandlerMixin",
     "ServerWorldMixin",
     "StatusEffectInstanceMixin",
-    "TridentEntityMixin",
     "WeightedListEntryAccessor"
   ],
   "client": [

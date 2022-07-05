@@ -143,8 +143,12 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     private void allowDamageIfModifyingPowersExist(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         boolean hasModifyingPower = false;
 
-        if(source.getAttacker() != null && !source.isProjectile()) {
-            hasModifyingPower = PowerHolderComponent.getPowers(source.getAttacker(), ModifyDamageDealtPower.class).size() > 0;
+        if(source.getAttacker() != null) {
+            if(!source.isProjectile()) {
+                hasModifyingPower = PowerHolderComponent.getPowers(source.getAttacker(), ModifyDamageDealtPower.class).size() > 0;
+            } else {
+                hasModifyingPower = PowerHolderComponent.getPowers(source.getAttacker(), ModifyProjectileDamagePower.class).size() > 0;
+            }
         }
 
         hasModifyingPower |=

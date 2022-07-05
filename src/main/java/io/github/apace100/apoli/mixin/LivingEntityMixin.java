@@ -181,9 +181,15 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     private float modifyDamageTaken(float originalValue, DamageSource source, float amount) {
         float newValue = originalValue;
         LivingEntity thisAsLiving = (LivingEntity)(Object)this;
-        if(source.getAttacker() != null && !source.isProjectile()) {
-            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPower.class, originalValue,
-                p -> p.doesApply(source, originalValue, thisAsLiving), p -> p.executeActions(thisAsLiving));
+        if(source.getAttacker() != null) {
+            if (!source.isProjectile()) {
+                newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPower.class, originalValue,
+                    p -> p.doesApply(source, originalValue, thisAsLiving), p -> p.executeActions(thisAsLiving));
+            } else {
+                newValue = PowerHolderComponent.modify(
+                    source.getAttacker(), ModifyProjectileDamagePower.class, originalValue,
+                    p -> p.doesApply(source, originalValue, thisAsLiving), p -> p.executeActions(thisAsLiving));
+            }
         }
 
         float intermediateValue = newValue;

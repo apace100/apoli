@@ -1,0 +1,15 @@
+{
+  "type": "apoli:modify_projectile_damage",
+  "damage_condition": {
+    "type": "apoli:projectile",
+    "projectile": "minecraft:trident"
+  },
+  "modifier": {
+    "operation": "multiply_total",
+    "value": -1
+  },
+  "target_action": {
+    "type": "apoli:add_velocity",
+    "y": 1
+  }
+}

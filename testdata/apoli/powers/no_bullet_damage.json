@@ -1,0 +1,11 @@
+{
+  "type": "apoli:modify_projectile_damage",
+  "damage_condition": {
+    "type": "apoli:projectile",
+    "projectile": "minecraft:shulker_bullet"
+  },
+  "modifier": {
+    "operation": "multiply_total",
+    "value": -1
+  }
+}

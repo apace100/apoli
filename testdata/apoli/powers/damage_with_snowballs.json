@@ -1,0 +1,11 @@
+{
+  "type": "apoli:modify_projectile_damage",
+  "modifier": {
+    "value": 8,
+    "operation": "addition"
+  },
+  "damage_condition": {
+    "type": "apoli:projectile",
+    "projectile": "minecraft:snowball"
+  }
+}
