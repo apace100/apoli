@@ -1,0 +1,17 @@
+{
+  "type": "apoli:particle",
+  "particle": {
+    "type": "dust_color_transition",
+    "params": "0.000 0.000 0.000 2 0.15 0.15 0.15"
+  },
+  "offset_y": 1,
+  "visible_while_invisible": true,
+  "spread": {
+    "x": 0,
+    "y": 0.5,
+    "z": 0
+  },
+  "count": 0,
+  "frequency": 1,
+  "visible_in_first_person": true
+}
