@@ -1,0 +1,32 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "bientity_condition": {
+    "type": "apoli:and",
+    "conditions": [
+      {
+        "type": "apoli:target_condition",
+        "condition": {
+          "type": "apoli:entity_type",
+          "entity_type": "minecraft:iron_golem"
+        }
+      },
+      {
+        "type": "apoli:actor_condition",
+        "condition": {
+          "type": "apoli:equipped_item",
+          "equipment_slot": "mainhand",
+          "item_condition": {
+            "type": "apoli:ingredient",
+            "ingredient": {
+              "item": "minecraft:poppy"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "behavior": {
+    "type": "apoli:passive"
+  },
+  "tick_rate": 1
+}

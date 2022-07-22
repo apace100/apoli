@@ -1,5 +1,8 @@
 package io.github.apace100.apoli.data;
 
+import com.google.gson.JsonObject;
+import io.github.apace100.apoli.behavior.BehaviorFactory;
+import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -9,6 +12,7 @@ import io.github.apace100.apoli.power.factory.action.ActionTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.power.factory.condition.ConditionTypes;
+import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
@@ -32,6 +36,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.StatType;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -218,6 +223,26 @@ public class ApoliDataTypes {
             dataInst.set("inverted", inst.isInverted());
             return dataInst;
         });
+
+    public static final SerializableDataType<MobBehavior> MOB_BEHAVIOR = new SerializableDataType<>(MobBehavior.class, (buffer, mobBehaviour) -> mobBehaviour.send(buffer),
+            (buffer) -> {
+                Identifier type = buffer.readIdentifier();
+                BehaviorFactory factory = ApoliRegistries.BEHAVIOR_FACTORY.get(type);
+                return factory.read(buffer);
+            },
+            (jsonElement) -> {
+                if(jsonElement.isJsonObject()) {
+                    JsonObject jo = jsonElement.getAsJsonObject();
+                    String type = JsonHelper.getString(jo, "type");
+                    try {
+                        BehaviorFactory factory = ApoliRegistries.BEHAVIOR_FACTORY.get(new Identifier(type));
+                        return factory.read(jo);
+                    } catch (NullPointerException e) {
+                        BehaviorFactory.throwExceptionMessages(jo);
+                    }
+                }
+                return null;
+            });
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));

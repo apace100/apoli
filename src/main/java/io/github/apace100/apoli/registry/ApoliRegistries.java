@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.registry;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
@@ -37,6 +38,7 @@ public class ApoliRegistries {
     public static final Registry<ActionFactory<Triple<World, BlockPos, Direction>>> BLOCK_ACTION;
     public static final Registry<ActionFactory<Pair<Entity, Entity>>> BIENTITY_ACTION;
     public static final Registry<IModifierOperation> MODIFIER_OPERATION;
+    public static final Registry<BehaviorFactory> BEHAVIOR_FACTORY;
 
     static {
         POWER_FACTORY = FabricRegistryBuilder.createSimple(PowerFactory.class, Apoli.identifier("power_factory")).buildAndRegister();
@@ -52,5 +54,6 @@ public class ApoliRegistries {
         BLOCK_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Triple<World, BlockPos, Direction>>>castClass(ActionFactory.class), Apoli.identifier("block_action")).buildAndRegister();
         BIENTITY_ACTION = FabricRegistryBuilder.createSimple(ClassUtil.<ActionFactory<Pair<Entity, Entity>>>castClass(ActionFactory.class), Apoli.identifier("bientity_action")).buildAndRegister();
         MODIFIER_OPERATION = FabricRegistryBuilder.createSimple(IModifierOperation.class, Apoli.identifier("modifier_operation")).buildAndRegister();
+        BEHAVIOR_FACTORY = FabricRegistryBuilder.createSimple(BehaviorFactory.class, Apoli.identifier("behavior_factory")).buildAndRegister();
     }
 }

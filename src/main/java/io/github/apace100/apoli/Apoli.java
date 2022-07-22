@@ -4,6 +4,7 @@ import com.mojang.brigadier.Command;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
+import io.github.apace100.apoli.behavior.MobBehaviors;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.PowerOperation;
 import io.github.apace100.apoli.command.PowerTypeArgumentType;
@@ -107,6 +108,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		ItemActions.register();
 		BlockActions.register();
 		BiEntityActions.register();
+		MobBehaviors.register();
 
 		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
 
