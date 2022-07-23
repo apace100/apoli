@@ -33,6 +33,9 @@
     "modmenu": [
       "io.github.apace100.apoli.integration.ModMenuIntegration"
     ],
+    "emi": [
+      "io.github.apace100.apoli.integration.emi.ApoliEmiPlugin"
+    ],
     "calio:ordered-resource-listener": [
       "io.github.apace100.apoli.Apoli"
     ]

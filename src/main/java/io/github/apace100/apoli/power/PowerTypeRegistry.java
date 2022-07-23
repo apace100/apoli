@@ -38,6 +38,10 @@ public class PowerTypeRegistry {
         return idToPower.entrySet();
     }
 
+    public static Stream<PowerType> valueStream() {
+        return idToPower.values().stream();
+    }
+
     public static Iterable<PowerType> values() {
         return idToPower.values();
     }

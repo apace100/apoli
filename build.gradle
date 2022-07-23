@@ -70,6 +70,10 @@ dependencies {
 	include "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
 	// modImplementation "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
 	// include "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
+
+	modImplementation("dev.emi:emi:${project.emi_version}") {
+		transitive = false
+	}
 }
 
 processResources {
