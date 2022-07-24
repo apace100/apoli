@@ -16,8 +16,8 @@ import java.util.List;
 
 public class ApoliEmiPlugin implements EmiPlugin {
     public static final EmiTexture REQUIRED_POWER_HEADING_BORDER = new EmiTexture(Apoli.identifier("textures/gui/emi_widgets.png"), 0, 0, 118, 18);
-    public static final EmiTexture POWER_NAME_BORDER_MIDDLE = new EmiTexture(Apoli.identifier("textures/gui/emi_widgets.png"), 0, 0, 118, 12);
-    public static final EmiTexture POWER_NAME_BORDER_BOTTOM = new EmiTexture(Apoli.identifier("textures/gui/emi_widgets.png"), 0, 0, 118, 4);
+    public static final EmiTexture POWER_NAME_BORDER_MIDDLE = new EmiTexture(Apoli.identifier("textures/gui/emi_widgets.png"), 0, 0, 118, 10);
+    public static final EmiTexture POWER_NAME_BORDER_BOTTOM = new EmiTexture(Apoli.identifier("textures/gui/emi_widgets.png"), 0, 0, 118, 2);
     private static final List<Identifier> LOADED_SUBPOWERS = new ArrayList<>();
 
     @Override

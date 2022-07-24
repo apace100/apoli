@@ -27,7 +27,7 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
 
     @Override
     public int getDisplayHeight() {
-        return 74 + (9 * MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), 118).size()) + 4;
+        return 74 + (10 * MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), 118).size()) + 4;
     }
 
     @Override
@@ -49,9 +49,9 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
         for (OrderedText line : powerNameLines) {
             widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_MIDDLE, 0, y);
             widgets.addText(line, 4, y, Formatting.WHITE.getColorValue(), false);
-            y += 12;
+            y += 10;
         }
-        widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_BOTTOM, 0, y - 4);
+        widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_BOTTOM, 0, y);
     }
 
     private MutableText getPowerName() {
