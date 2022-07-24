@@ -35,7 +35,7 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
     public void addWidgets(WidgetHolder widgets) {
         super.addWidgets(widgets);
         int colorValue;
-        if (PowerHolderComponent.KEY.get(MinecraftClient.getInstance().player).getPower(powerType) == null) {
+        if (!PowerHolderComponent.KEY.get(MinecraftClient.getInstance().player).hasPower(powerType)) {
             colorValue = Formatting.DARK_GRAY.getColorValue();
         } else if (!PowerHolderComponent.KEY.get(MinecraftClient.getInstance().player).getPower(powerType).isActive()) {
             colorValue = Formatting.RED.getColorValue();
@@ -52,6 +52,12 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
             y += 10;
         }
         widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_BOTTOM, 0, y);
+    }
+
+    @Override
+    @SuppressWarnings("ConstantConditions")
+    public boolean hideCraftable() {
+        return !PowerHolderComponent.KEY.get(MinecraftClient.getInstance().player).hasPower(powerType) || !PowerHolderComponent.KEY.get(MinecraftClient.getInstance().player).getPower(powerType).isActive();
     }
 
     private MutableText getPowerName() {
