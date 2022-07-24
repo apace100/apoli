@@ -17,18 +17,17 @@ import java.util.List;
 
 public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
     private final PowerType<?> powerType;
-    @Nullable private final MultiplePowerType<?> multiplePowerType;
+    @Nullable private final MutableText multiplePowerTypeName;
 
-    public RecipePowerShapedEmiRecipe(ShapedRecipe recipe, PowerType<?> powerType, @Nullable MultiplePowerType<?> multiplePowerType) {
+    public RecipePowerShapedEmiRecipe(ShapedRecipe recipe, PowerType<?> powerType, @Nullable MutableText multiplePowerTypeName) {
         super(recipe);
         this.powerType = powerType;
-        this.multiplePowerType = multiplePowerType;
+        this.multiplePowerTypeName = multiplePowerTypeName;
     }
 
     @Override
     public int getDisplayHeight() {
-        MutableText powerName = multiplePowerType != null ? multiplePowerType.getName() : powerType.getName();
-        return 74 + (9 * MinecraftClient.getInstance().textRenderer.wrapLines(powerName, 118).size()) + 4;
+        return 74 + (9 * MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), 118).size()) + 4;
     }
 
     @Override
@@ -45,8 +44,7 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
         }
         widgets.addTexture(ApoliEmiPlugin.REQUIRED_POWER_HEADING_BORDER, 0, 56);
         widgets.addText(Text.translatable("emi.apoli.required_power").asOrderedText(), 4, 59, colorValue, true);
-        MutableText powerName = multiplePowerType != null ? multiplePowerType.getName() : powerType.getName();
-        List<OrderedText> powerNameLines = MinecraftClient.getInstance().textRenderer.wrapLines(powerName, widgets.getWidth() - 8);
+        List<OrderedText> powerNameLines = MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), widgets.getWidth() - 8);
         int y = 74;
         for (OrderedText line : powerNameLines) {
             widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_MIDDLE, 0, y);
@@ -54,5 +52,9 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
             y += 12;
         }
         widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_BOTTOM, 0, y - 4);
+    }
+
+    private MutableText getPowerName() {
+        return multiplePowerTypeName != null ? multiplePowerTypeName : powerType.getName();
     }
 }
