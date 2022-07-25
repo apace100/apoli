@@ -1,0 +1,8 @@
+{
+  "type": "apoli:modify_crafting",
+  "recipe": "minecraft:shield",
+  "result": {
+    "item": "minecraft:air"
+  },
+  "name": "Unwieldy 2: Electric Boogaloo"
+}

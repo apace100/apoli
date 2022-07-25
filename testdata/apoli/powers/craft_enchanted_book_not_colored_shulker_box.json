@@ -1,0 +1,9 @@
+{
+  "type": "apoli:modify_crafting",
+  "recipe": "minecraft:shulker_box_coloring",
+  "result": {
+    "item": "minecraft:enchanted_book",
+    "tag": "{StoredEnchantments: [{id: \"minecraft:protection\", lvl: 4s}]}"
+  },
+  "name": "Dead"
+}

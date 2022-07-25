@@ -71,9 +71,7 @@ dependencies {
 	// modImplementation "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
 	// include "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
 
-	modImplementation("dev.emi:emi:${project.emi_version}") {
-		transitive = false
-	}
+	modImplementation "dev.emi:emi:${project.emi_version}"
 }
 
 processResources {

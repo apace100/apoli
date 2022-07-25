@@ -3,7 +3,6 @@ package io.github.apace100.apoli.integration.emi;
 import dev.emi.emi.api.widget.WidgetHolder;
 import dev.emi.emi.recipe.EmiShapedRecipe;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.MultiplePowerType;
 import io.github.apace100.apoli.power.PowerType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.recipe.ShapedRecipe;
@@ -27,7 +26,7 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
 
     @Override
     public int getDisplayHeight() {
-        return 74 + (10 * MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), 118).size()) + 4;
+        return 72 + (10 * MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), 118).size()) + 4;
     }
 
     @Override
@@ -42,10 +41,10 @@ public class RecipePowerShapedEmiRecipe extends EmiShapedRecipe {
         } else {
             colorValue = Formatting.DARK_GREEN.getColorValue();
         }
-        widgets.addTexture(ApoliEmiPlugin.REQUIRED_POWER_HEADING_BORDER, 0, 56);
-        widgets.addText(Text.translatable("emi.apoli.required_power").asOrderedText(), 4, 59, colorValue, true);
+        widgets.addTexture(ApoliEmiPlugin.REQUIRED_POWER_HEADING_BORDER_RECIPE_POWER, 0, 56);
+        widgets.addText(Text.translatable("emi.apoli.required_power").asOrderedText(), 4, 60, colorValue, true);
         List<OrderedText> powerNameLines = MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), widgets.getWidth() - 8);
-        int y = 74;
+        int y = 72;
         for (OrderedText line : powerNameLines) {
             widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_MIDDLE, 0, y);
             widgets.addText(line, 4, y, Formatting.WHITE.getColorValue(), false);

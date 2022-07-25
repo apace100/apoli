@@ -24,7 +24,7 @@ public class RecipePowerShapelessEmiRecipe extends EmiShapelessRecipe {
 
     @Override
     public int getDisplayHeight() {
-        return 74 + (10 * MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), 118).size()) + 4;
+        return 72 + (10 * MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), 118).size()) + 4;
     }
 
     @Override
@@ -39,10 +39,10 @@ public class RecipePowerShapelessEmiRecipe extends EmiShapelessRecipe {
         } else {
             colorValue = Formatting.DARK_GREEN.getColorValue();
         }
-        widgets.addTexture(ApoliEmiPlugin.REQUIRED_POWER_HEADING_BORDER, 0, 56);
-        widgets.addText(Text.translatable("emi.apoli.required_power").asOrderedText(), 4, 59, colorValue, true);
+        widgets.addTexture(ApoliEmiPlugin.REQUIRED_POWER_HEADING_BORDER_RECIPE_POWER, 0, 56);
+        widgets.addText(Text.translatable("emi.apoli.required_power").asOrderedText(), 4, 60, colorValue, true);
         List<OrderedText> powerNameLines = MinecraftClient.getInstance().textRenderer.wrapLines(getPowerName(), widgets.getWidth() - 8);
-        int y = 74;
+        int y = 72;
         for (OrderedText line : powerNameLines) {
             widgets.addTexture(ApoliEmiPlugin.POWER_NAME_BORDER_MIDDLE, 0, y);
             widgets.addText(line, 4, y, Formatting.WHITE.getColorValue(), false);
