@@ -36,20 +36,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ApoliEmiPlugin implements EmiPlugin {
-    public static Identifier WIDGETS = Apoli.identifier("textures/gui/emi_widgets.png");
-    public static EmiTexture REQUIRED_POWER_HEADING_BORDER_RECIPE_POWER = new EmiTexture(WIDGETS, 0, 0, 118, 16);
-    public static EmiTexture REQUIRED_POWER_HEADING_BORDER_MODIFY_CRAFTING = new EmiTexture(WIDGETS, 0, 0, 90, 16);
-    public static EmiTexture POWER_NAME_BORDER_MIDDLE = new EmiTexture(WIDGETS, 0, 0, 118, 10);
-    public static EmiTexture POWER_NAME_BORDER_BOTTOM = new EmiTexture(WIDGETS, 0, 0, 118, 2);
+    public static final Identifier WIDGETS = Apoli.identifier("textures/gui/emi_widgets.png");
+    public static final EmiTexture REQUIRED_POWER_HEADING_BORDER_RECIPE_POWER = new EmiTexture(WIDGETS, 0, 0, 118, 16);
+    public static final EmiTexture REQUIRED_POWER_HEADING_BORDER_MODIFY_CRAFTING = new EmiTexture(WIDGETS, 0, 0, 90, 16);
+    public static final EmiTexture POWER_NAME_BORDER_MIDDLE = new EmiTexture(WIDGETS, 0, 0, 118, 10);
+    public static final EmiTexture POWER_NAME_BORDER_BOTTOM = new EmiTexture(WIDGETS, 0, 0, 118, 2);
     private static final List<Identifier> LOADED_SUBPOWERS = new ArrayList<>();
-    public static EmiRecipeCategory MODIFY_GRINDSTONE = new EmiRecipeCategory(Apoli.identifier("modified_grindstone"), new EmiTexture(WIDGETS, 240, 240, 16, 16));
 
     @Override
     public void register(EmiRegistry registry) {
-        registry.addCategory(MODIFY_GRINDSTONE);
-
-        registry.addWorkstation(MODIFY_GRINDSTONE, EmiStack.of(Items.GRINDSTONE));
-
         for (PowerType<?> powerType : PowerTypeRegistry.valueStream().filter(identifierPowerTypeEntry -> identifierPowerTypeEntry instanceof MultiplePowerType<?>).toList()) {
             ((MultiplePowerType<?>) powerType).getSubPowers().forEach(subpowerId -> {
                 PowerType<?> powerType2 = PowerTypeRegistry.get(subpowerId);
