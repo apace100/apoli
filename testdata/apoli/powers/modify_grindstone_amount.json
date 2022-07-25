@@ -1,0 +1,20 @@
+{
+  "type": "apoli:modify_grindstone",
+  "bottom_condition": {
+    "type": "apoli:amount",
+    "comparison": ">=",
+    "compare_to": 10
+  },
+  "result_type": "specified",
+  "result_stack": {
+    "item": "minecraft:book"
+  },
+  "item_action_after_grinding": {
+    "type": "apoli:modify",
+    "modifier": "apoli:enchant_randomly"
+  },
+  "xp_modifier": {
+    "operation": "set_total",
+    "value": 50
+  }
+}

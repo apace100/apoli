@@ -1,0 +1,18 @@
+{
+  "type": "apoli:multiple",
+  "banner_shields": {
+    "type": "apoli:modify_crafting",
+    "recipe": "minecraft:shield_decoration",
+    "result": {
+      "item": "minecraft:barrier"
+    }
+  },
+  "leather_armor": {
+    "type": "apoli:modify_crafting",
+    "recipe": "minecraft:armor_dye",
+    "result": {
+      "item": "minecraft:barrier"
+    }
+  },
+  "name": "Undecorative"
+}

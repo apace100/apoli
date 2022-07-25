@@ -1,0 +1,23 @@
+{
+  "type": "apoli:recipe",
+  "recipe": {
+    "id": "apoli:stone_and_raw_gold_to_gold_ore",
+    "type": "minecraft:crafting_shapeless",
+    "ingredients": [
+      {
+        "item": "minecraft:raw_gold"
+      },
+      {
+        "item": "minecraft:stone"
+      }
+    ],
+    "result": {
+      "item": "minecraft:gold_ore"
+    }
+  },
+  "condition": {
+    "type": "apoli:biome",
+    "biome": "minecraft:plains"
+  },
+  "name": "Goldmember"
+}

@@ -1,0 +1,36 @@
+{
+  "type": "apoli:multiple",
+  "climbing": {
+    "type": "apoli:climbing",
+    "condition": {
+      "type": "apoli:in_block_anywhere",
+      "block_condition": {
+        "type": "apoli:in_tag",
+        "tag": "apoli:cobwebs"
+      }
+    },
+    "hold_condition": {
+      "type": "apoli:power_active",
+      "power": "*:*_climbing"
+    }
+  },
+  "web_crafting": {
+    "type": "apoli:recipe",
+    "recipe": {
+      "id": "apoli:master_of_webs/web_crafting",
+      "type": "minecraft:crafting_shapeless",
+      "ingredients": [
+        {
+          "item": "minecraft:string"
+        },
+        {
+          "item": "minecraft:string"
+        }
+      ],
+      "result": {
+        "item": "minecraft:cobweb"
+      }
+    }
+  },
+  "name": "Master of Webs"
+}

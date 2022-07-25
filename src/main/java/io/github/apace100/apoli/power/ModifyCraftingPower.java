@@ -64,6 +64,11 @@ public class ModifyCraftingPower extends ValueModifyingPower {
         lateItemAction.accept(new Pair<>(entity.world, output));
     }
 
+
+    public ItemStack getNewStack() {
+        return newStack;
+    }
+
     public ItemStack getNewResult(CraftingInventory inventory, Recipe<CraftingInventory> recipe) {
         ItemStack stack;
         if(newStack != null) {

@@ -1,0 +1,19 @@
+{
+  "type": "apoli:recipe",
+  "recipe": {
+    "id": "apoli:deepslate_and_raw_gold_to_deepslate_gold_ore",
+    "type": "minecraft:crafting_shapeless",
+    "ingredients": [
+      {
+        "item": "minecraft:raw_gold"
+      },
+      {
+        "item": "minecraft:deepslate"
+      }
+    ],
+    "result": {
+      "item": "minecraft:deepslate_gold_ore"
+    }
+  },
+  "name": "Hqhqhqhqhqhqhqhqhqhqhqhqhqhqhqhqhqhq"
+}
