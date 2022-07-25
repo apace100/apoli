@@ -52,7 +52,7 @@ public class ModifiedEmiBookCloningRecipe extends EmiBookCloningRecipe {
     public void addWidgets(WidgetHolder widgets) {
         super.addWidgets(widgets);
 
-        widgets.add(getOriginalOutputWidget(92, 42).output(true).appendTooltip(Text.translatable("emi.apoli.original_output").setStyle(Style.EMPTY.withColor(Formatting.WHITE).withItalic(true))));
+        widgets.add(getOriginalOutputWidget(92, 44).output(true).appendTooltip(Text.translatable("emi.apoli.original_output").setStyle(Style.EMPTY.withColor(Formatting.WHITE).withItalic(true))));
 
         ApoliEmiPlugin.showPowerRequirement(widgets, powerType, getPowerName());
     }

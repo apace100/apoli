@@ -38,7 +38,7 @@ public class ModifiedEmiCraftingRecipe extends EmiCraftingRecipe {
     public void addWidgets(WidgetHolder widgets) {
         super.addWidgets(widgets);
 
-        widgets.addSlot(originalRecipeOutput, 92, 42).output(true).appendTooltip(Text.translatable("emi.apoli.original_output").setStyle(Style.EMPTY.withColor(Formatting.WHITE).withItalic(true)));
+        widgets.addSlot(originalRecipeOutput, 92, 44).output(true).appendTooltip(Text.translatable("emi.apoli.original_output").setStyle(Style.EMPTY.withColor(Formatting.WHITE).withItalic(true)));
 
         ApoliEmiPlugin.showPowerRequirement(widgets, powerType, getPowerName());
     }
