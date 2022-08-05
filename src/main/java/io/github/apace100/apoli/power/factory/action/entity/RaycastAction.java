@@ -120,7 +120,7 @@ public class RaycastAction {
                     entity.getDisplayName(),
                     entity.world.getServer(),
                     entity);
-                server.getCommandManager().execute(source, command);
+                server.getCommandManager().executeWithPrefix(source, command);
             }
         }
     }
@@ -139,7 +139,7 @@ public class RaycastAction {
                 entity.getDisplayName(),
                 entity.world.getServer(),
                 entity);
-            server.getCommandManager().execute(source, command);
+            server.getCommandManager().executeWithPrefix(source, command);
         }
     }
 
