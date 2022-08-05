@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import com.wildfire.render.GenderLayer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModelColorPower;
 import net.fabricmc.api.EnvType;
@@ -15,12 +14,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.List;
 
 @Pseudo
-@Mixin(GenderLayer.class)
+@Mixin(targets = "com.wildfire.render.GenderLayer")
 public abstract class GenderLayerMixin {
     @Environment(EnvType.CLIENT)
     @Shadow
@@ -28,7 +28,7 @@ public abstract class GenderLayerMixin {
 
     @Environment(EnvType.CLIENT)
     @Redirect(method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/network/AbstractClientPlayerEntity;FFFFFF)V", at = @At(value = "INVOKE", target = "Lcom/wildfire/render/GenderLayer;renderBreastWithTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/model/ModelPart;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/render/RenderLayer;IIFFFFZFFFFFFFFFZZZZ)V"))
-    private void renderBreastWithTransformsColor(GenderLayer gl, AbstractClientPlayerEntity entity, ModelPart body, ItemStack armorStack, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, RenderLayer breastRenderType, int packedLightIn, int combineTex, float red, float green, float blue, float alpha, boolean bounceEnabled, float totalX, float total, float bounceRotation, float breastSize, float breastOffsetX, float breastOffsetY, float breastOffsetZ, float zOff, float outwardAngle, boolean uniboob, boolean isChestplateOccupied, boolean breathingAnimation, boolean left) {
+    private void renderBreastWithTransformsColor(@Coerce Object gl, AbstractClientPlayerEntity entity, ModelPart body, ItemStack armorStack, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, RenderLayer breastRenderType, int packedLightIn, int combineTex, float red, float green, float blue, float alpha, boolean bounceEnabled, float totalX, float total, float bounceRotation, float breastSize, float breastOffsetX, float breastOffsetY, float breastOffsetZ, float zOff, float outwardAngle, boolean uniboob, boolean isChestplateOccupied, boolean breathingAnimation, boolean left) {
         List<ModelColorPower> modelColorPowers = PowerHolderComponent.KEY.get(entity).getPowers(ModelColorPower.class);
         if (modelColorPowers.size() > 0) {
             red = modelColorPowers.stream().map(ModelColorPower::getRed).reduce((a, b) -> a * b).get();
