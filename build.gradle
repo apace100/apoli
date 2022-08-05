@@ -31,6 +31,12 @@ repositories {
 	maven {
 		url "https://maven.terraformersmc.com/"
 	}
+	maven {
+		url "https://cursemaven.com"
+		content {
+			includeGroup "curse.maven"
+		}
+	}
 	mavenLocal()
 }
 
@@ -70,6 +76,8 @@ dependencies {
 	include "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
 	// modImplementation "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
 	// include "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
+
+	modImplementation "curse.maven:female-gender-fabric-456319:${project.female_gender_file_id}"
 }
 
 processResources {

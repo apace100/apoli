@@ -59,6 +59,7 @@
     "EntityParticleMixin",
     "EntityRenderDispatcherMixin",
     "GameRendererMixin",
+    "GenderLayerMixin",
     "InGameHudMixin",
     "InGameOverlayRendererMixin",
     "LightmapTextureManagerMixin",
