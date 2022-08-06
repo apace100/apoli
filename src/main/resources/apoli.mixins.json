@@ -3,6 +3,7 @@
   "minVersion": "0.8",
   "package": "io.github.apace100.apoli.mixin",
   "compatibilityLevel": "JAVA_16",
+  "plugin": "io.github.apace100.apoli.mixin.MixinConfigPlugin",
   "mixins": [
     "AbstractBlockMixin",
     "AbstractBlockStateMixin",
