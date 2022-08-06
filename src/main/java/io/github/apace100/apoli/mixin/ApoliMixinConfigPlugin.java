@@ -1,7 +1,8 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.Apoli;
 import net.fabricmc.loader.api.FabricLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -9,7 +10,9 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
-public class MixinConfigPlugin implements IMixinConfigPlugin {
+public class ApoliMixinConfigPlugin implements IMixinConfigPlugin {
+    public static final Logger LOGGER = LogManager.getLogger(ApoliMixinConfigPlugin.class);
+
     /**
      * Called after the plugin is instantiated, do any setup here.
      *
@@ -48,7 +51,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         // Only load mixins for WildFire's Female Gender if it is loaded
         if (targetClassName.equals("com.wildfire.render.GenderLayer")) {
-            Apoli.LOGGER.info("Not applying wildfire_gender mixin as it is not loaded");
+            LOGGER.info("Not applying wildfire_gender mixin as it is not loaded");
             return FabricLoader.getInstance().isModLoaded("wildfire_gender");
         }
         return true;
