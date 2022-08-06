@@ -3,6 +3,7 @@
   "minVersion": "0.8",
   "package": "io.github.apace100.apoli.mixin",
   "compatibilityLevel": "JAVA_16",
+  "plugin": "io.github.apace100.apoli.mixin.ApoliMixinConfigPlugin",
   "mixins": [
     "AbstractBlockMixin",
     "AbstractBlockStateMixin",
@@ -59,6 +60,7 @@
     "EntityParticleMixin",
     "EntityRenderDispatcherMixin",
     "GameRendererMixin",
+    "GenderLayerMixin",
     "InGameHudMixin",
     "InGameOverlayRendererMixin",
     "LightmapTextureManagerMixin",
