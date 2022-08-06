@@ -51,8 +51,9 @@ public class ApoliMixinConfigPlugin implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         // Only load mixins for WildFire's Female Gender if it is loaded
         if (targetClassName.equals("com.wildfire.render.GenderLayer")) {
-            LOGGER.info("Not applying wildfire_gender mixin as it is not loaded");
-            return FabricLoader.getInstance().isModLoaded("wildfire_gender");
+            boolean modLoaded = FabricLoader.getInstance().isModLoaded("wildfire_gender");
+            if (!modLoaded) LOGGER.info("Not applying wildfire_gender mixin as it is not loaded");
+            return modLoaded;
         }
         return true;
     }
