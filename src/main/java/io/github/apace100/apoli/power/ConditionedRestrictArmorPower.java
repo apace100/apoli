@@ -52,6 +52,7 @@ public class ConditionedRestrictArmorPower extends Power {
                 .add("chest", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("legs", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("feet", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("offhand", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("tick_rate", SerializableDataTypes.INT, 80),
             data ->
                 (type, player) -> {
@@ -67,6 +68,9 @@ public class ConditionedRestrictArmorPower extends Power {
                     }
                     if(data.isPresent("feet")) {
                         restrictions.put(EquipmentSlot.FEET, (ConditionFactory<ItemStack>.Instance)data.get("feet"));
+                    }
+                    if(data.isPresent("offhand")) {
+                        restrictions.put(EquipmentSlot.OFFHAND, (ConditionFactory<ItemStack>.Instance)data.get("offhand"));
                     }
                     return new ConditionedRestrictArmorPower(type, player, restrictions, data.getInt("tick_rate"));
                 })
