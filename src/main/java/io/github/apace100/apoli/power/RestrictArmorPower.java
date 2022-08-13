@@ -46,7 +46,8 @@ public class RestrictArmorPower extends Power {
                 .add("head", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("chest", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("legs", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("feet", ApoliDataTypes.ITEM_CONDITION, null),
+                .add("feet", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("offhand", ApoliDataTypes.ITEM_CONDITION, null),
             data ->
                 (type, player) -> {
                     HashMap<EquipmentSlot, Predicate<ItemStack>> restrictions = new HashMap<>();
@@ -61,6 +62,9 @@ public class RestrictArmorPower extends Power {
                     }
                     if(data.isPresent("feet")) {
                         restrictions.put(EquipmentSlot.FEET, (ConditionFactory<ItemStack>.Instance)data.get("feet"));
+                    }
+                    if(data.isPresent("offhand")) {
+                        restrictions.put(EquipmentSlot.OFFHAND, (ConditionFactory<ItemStack>.Instance)data.get("offhand"));
                     }
                     return new RestrictArmorPower(type, player, restrictions);
                 });
