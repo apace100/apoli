@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.access.MobEntityAccess;
+import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(MobEntity.class)
-public abstract class MobEntityMixin extends LivingEntity implements MobEntityAccess {
+public abstract class MobEntityMixin extends LivingEntity implements ModifiableMobWithGoals {
 
     @Shadow public abstract void setTarget(@Nullable LivingEntity target);
 

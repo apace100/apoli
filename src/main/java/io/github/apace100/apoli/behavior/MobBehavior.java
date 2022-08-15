@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.behavior;
 
-import io.github.apace100.apoli.access.MobEntityAccess;
+import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
@@ -18,7 +18,6 @@ public class MobBehavior {
     protected int priority;
     protected Predicate<Pair<LivingEntity, MobEntity>> mobRelatedPredicates;
     protected Predicate<LivingEntity> entityRelatedPredicates;
-    private boolean appliedGoals;
 
     @Nullable public LivingEntity entity;
 
@@ -38,15 +37,14 @@ public class MobBehavior {
     }
 
     public void removeGoals(MobEntity mob) {
-        ((MobEntityAccess)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getTargetSelector().remove(pair.getRight()));
-        ((MobEntityAccess)mob).getModifiedTargetSelectorGoals().removeIf(pair -> pair.getLeft() == this);
-        ((MobEntityAccess)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getGoalSelector().remove(pair.getRight()));
-        ((MobEntityAccess)mob).getModifiedGoalSelectorGoals().removeIf(pair -> pair.getLeft() == this);
+        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getTargetSelector().remove(pair.getRight()));
+        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().removeIf(pair -> pair.getLeft() == this);
+        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getGoalSelector().remove(pair.getRight()));
+        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().removeIf(pair -> pair.getLeft() == this);
     }
 
     public boolean hasAppliedGoals(MobEntity mob) {
-        appliedGoals = true;
-        return ((MobEntityAccess)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((MobEntityAccess)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
+        return ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
     }
 
     public boolean isPassive(MobEntity mob, LivingEntity target) {

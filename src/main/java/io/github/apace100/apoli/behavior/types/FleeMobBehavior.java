@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.behavior.types;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.MobEntityAccess;
+import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
@@ -40,7 +40,7 @@ public class FleeMobBehavior extends MobBehavior {
         Goal fleeGoal = new FleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, this.slowSpeed, this.fastSpeed, entity ->
                 mobRelatedPredicates.test(new Pair<>(entity, mob)) && entityRelatedPredicates.test(entity));
         ((MobEntityAccessor)mob).getGoalSelector().add(this.priority, fleeGoal);
-        ((MobEntityAccess)mob).getModifiedTargetSelectorGoals().add(new Pair<>(this, fleeGoal));
+        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().add(new Pair<>(this, fleeGoal));
     }
 
     @Override
