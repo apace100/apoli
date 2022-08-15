@@ -42,13 +42,16 @@ public abstract class MobEntityMixin extends LivingEntity implements MobEntityAc
         List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(target, ModifyMobBehaviorPower.class);
         boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.doesApply(target, (MobEntity)(Object)this) && power.getMobBehavior().isPassive((MobEntity)(Object)this, target));
 
-        if (shouldMakePassive && this instanceof Angerable) {
-            ((Angerable)this).stopAnger();
-            ((Angerable)this).setAngryAt(null);
+        if (shouldMakePassive) {
+            if (this instanceof Angerable) {
+                ((Angerable)this).stopAnger();
+                ((Angerable)this).setAngryAt(null);
+            }
+            this.targetSelector.getGoals().stream().filter(ts -> ts.getGoal() instanceof TrackTargetGoal).forEach(PrioritizedGoal::stop);
+            return null;
         }
-        this.targetSelector.getGoals().stream().filter(ts -> ts.getGoal() instanceof TrackTargetGoal).forEach(PrioritizedGoal::stop);
 
-        return shouldMakePassive ? null : target;
+        return target;
     }
 
     @Override
