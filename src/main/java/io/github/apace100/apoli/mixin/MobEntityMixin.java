@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MobEntityAccess;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -8,12 +7,18 @@ import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.GoalSelector;
+import net.minecraft.entity.ai.goal.RevengeGoal;
+import net.minecraft.entity.ai.goal.TrackTargetGoal;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
@@ -22,6 +27,10 @@ import java.util.List;
 
 @Mixin(MobEntity.class)
 public abstract class MobEntityMixin extends LivingEntity implements MobEntityAccess {
+
+    @Shadow public abstract void setTarget(@Nullable LivingEntity target);
+
+    @Shadow @Final protected GoalSelector targetSelector;
 
     protected MobEntityMixin(EntityType<? extends LivingEntity> type, World level) {
         super(type, level);
@@ -38,8 +47,14 @@ public abstract class MobEntityMixin extends LivingEntity implements MobEntityAc
 
         if (shouldMakePassive && this instanceof Angerable) {
             ((Angerable)this).stopAnger();
-            ((Angerable)this).setAttacking(null);
+            ((Angerable)this).setAngryAt(null);
         }
+        this.targetSelector.getGoals().stream().filter(ts -> ts.getGoal() instanceof TrackTargetGoal).forEach(goal -> {
+            ((TrackTargetGoalAccessor)(Object)goal.getGoal()).setTarget(null);
+            if (goal.getGoal() instanceof RevengeGoal) {
+                ((RevengeGoalAccessor)(Object)goal.getGoal()).setLastAttackedTime(this.getLastAttackedTime());
+            }
+        });
 
         return shouldMakePassive ? null : target;
     }
