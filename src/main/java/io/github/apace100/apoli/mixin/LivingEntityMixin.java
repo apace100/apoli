@@ -18,6 +18,8 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.mob.Angerable;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
@@ -65,6 +67,17 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     public LivingEntityMixin(EntityType<?> type, World world) {
         super(type, world);
+    }
+
+    @Inject(method = "canTarget(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
+    private void setCanTargetBasedOnPower(LivingEntity target, CallbackInfoReturnable<Boolean> cir) {
+        if (!((LivingEntity)(Object)this instanceof MobEntity mobEntity)) return;
+        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(target, ModifyMobBehaviorPower.class);
+        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.doesApply(target, mobEntity) && power.getMobBehavior().isPassive(mobEntity, target));
+
+        if (shouldMakePassive) {
+            cir.setReturnValue(false);
+        }
     }
 
     @Inject(method = "onStatusEffectApplied", at = @At("TAIL"))

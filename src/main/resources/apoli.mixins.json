@@ -49,6 +49,7 @@
     "ServerWorldMixin",
     "StatusEffectInstanceMixin",
     "TrackTargetGoalMixin",
+    "WardenEntityMixin",
     "WeightedListEntryAccessor"
   ],
   "client": [

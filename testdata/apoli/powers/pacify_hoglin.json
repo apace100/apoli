@@ -1,0 +1,14 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "bientity_condition": {
+    "type": "apoli:target_condition",
+    "condition": {
+      "type": "apoli:entity_type",
+      "entity_type": "minecraft:hoglin"
+    }
+  },
+  "behavior": {
+    "type": "apoli:passive"
+  },
+  "tick_rate": 1
+}

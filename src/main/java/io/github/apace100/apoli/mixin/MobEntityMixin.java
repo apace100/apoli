@@ -13,7 +13,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,8 +25,6 @@ import java.util.List;
 public abstract class MobEntityMixin extends LivingEntity implements MobEntityAccess {
 
     @Shadow public abstract void setTarget(@Nullable LivingEntity target);
-
-    @Shadow @Final protected GoalSelector targetSelector;
 
     protected MobEntityMixin(EntityType<? extends LivingEntity> type, World level) {
         super(type, level);
