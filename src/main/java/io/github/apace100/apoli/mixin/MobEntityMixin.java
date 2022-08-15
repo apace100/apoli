@@ -6,10 +6,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.GoalSelector;
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.TrackTargetGoal;
+import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
@@ -49,12 +46,7 @@ public abstract class MobEntityMixin extends LivingEntity implements MobEntityAc
             ((Angerable)this).stopAnger();
             ((Angerable)this).setAngryAt(null);
         }
-        this.targetSelector.getGoals().stream().filter(ts -> ts.getGoal() instanceof TrackTargetGoal).forEach(goal -> {
-            ((TrackTargetGoalAccessor)(Object)goal.getGoal()).setTarget(null);
-            if (goal.getGoal() instanceof RevengeGoal) {
-                ((RevengeGoalAccessor)(Object)goal.getGoal()).setLastAttackedTime(this.getLastAttackedTime());
-            }
-        });
+        this.targetSelector.getGoals().stream().filter(ts -> ts.getGoal() instanceof TrackTargetGoal).forEach(PrioritizedGoal::stop);
 
         return shouldMakePassive ? null : target;
     }
