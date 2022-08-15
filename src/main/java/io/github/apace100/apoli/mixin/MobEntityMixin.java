@@ -45,9 +45,7 @@ public abstract class MobEntityMixin extends LivingEntity implements MobEntityAc
         if (shouldMakePassive) {
             if (this instanceof Angerable) {
                 ((Angerable)this).stopAnger();
-                ((Angerable)this).setAngryAt(null);
             }
-            this.targetSelector.getGoals().stream().filter(ts -> ts.getGoal() instanceof TrackTargetGoal).forEach(PrioritizedGoal::stop);
             return null;
         }
 

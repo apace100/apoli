@@ -18,6 +18,7 @@ public class MobBehavior {
     protected int priority;
     protected Predicate<Pair<LivingEntity, MobEntity>> mobRelatedPredicates;
     protected Predicate<LivingEntity> entityRelatedPredicates;
+    private boolean appliedGoals;
 
     @Nullable public LivingEntity entity;
 
@@ -44,6 +45,7 @@ public class MobBehavior {
     }
 
     public boolean hasAppliedGoals(MobEntity mob) {
+        appliedGoals = true;
         return ((MobEntityAccess)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((MobEntityAccess)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
     }
 

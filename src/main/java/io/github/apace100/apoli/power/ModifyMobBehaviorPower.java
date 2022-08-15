@@ -14,17 +14,16 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.util.TypeFilter;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Predicate;
 
 public class ModifyMobBehaviorPower extends Power {
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
     private final MobBehavior mobBehavior;
-    public final List<MobEntity> modifiableEntities = new ArrayList<>();
-    public final List<MobEntity> modifiedEntities = new ArrayList<>();
+    public final HashSet<MobEntity> modifiableEntities = new HashSet<>();
+    public final HashSet<MobEntity> modifiedEntities = new HashSet<>();
 
     private final int tickRate;
 
@@ -47,7 +46,7 @@ public class ModifyMobBehaviorPower extends Power {
         if (entity.age % tickRate != 0) return;
 
         ((ServerWorldAccessor)entity.world).getEntityManager().getLookup().forEach(TypeFilter.instanceOf(MobEntity.class), mob -> {
-            if (this.doesApply(entity, mob)) {
+            if (!this.modifiableEntities.contains(mob) && this.doesApply(entity, mob)) {
                 modifiableEntities.add(mob);
             }
         });
