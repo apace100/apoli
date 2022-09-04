@@ -232,7 +232,7 @@ public class EntityActions {
                         entity.getDisplayName(),
                         entity.world.getServer(),
                         entity);
-                    server.getCommandManager().execute(source, data.getString("command"));
+                    server.getCommandManager().executeWithPrefix(source, data.getString("command"));
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("change_resource"), new SerializableData()
