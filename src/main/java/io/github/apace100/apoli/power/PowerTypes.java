@@ -20,6 +20,8 @@ import java.util.function.BiFunction;
 @SuppressWarnings("rawtypes")
 public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResourceReloadListener {
 
+    public static final Set<Identifier> DEPENDENCIES = new HashSet<>();
+
     private static final Identifier MULTIPLE = Apoli.identifier("multiple");
     private static final Identifier SIMPLE = Apoli.identifier("simple");
 
@@ -180,5 +182,10 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
             return Integer.MIN_VALUE;
         }
         return LOADING_PRIORITIES.get(powerId);
+    }
+
+    @Override
+    public Collection<Identifier> getFabricDependencies() {
+        return DEPENDENCIES;
     }
 }
