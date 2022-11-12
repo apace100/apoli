@@ -133,44 +133,78 @@ public class InventoryUtil {
 
         Set<Integer> slots = getSlots(data);
 
+        int amount = data.getInt("amount");
         boolean throwRandomly = data.getBoolean("throw_randomly");
         boolean retainOwnership = data.getBoolean("retain_ownership");
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<ItemStack> itemCondition = data.get("item_condition");
-        ActionFactory<Pair<World, ItemStack>>.Instance itemAction = data.get("item_action");
+        Consumer<Pair<World, ItemStack>> itemAction = data.get("item_action");
 
-        if (inventoryPower == null) {
-            for (Integer slot : slots) {
+        if (inventoryPower == null) slots.forEach(
+            slot -> {
+
                 StackReference stackReference = entity.getStackReference(slot);
-                if (stackReference != StackReference.EMPTY) {
-                    ItemStack currentItemStack = stackReference.get();
-                    if (!currentItemStack.isEmpty()) {
-                        if (itemCondition == null || itemCondition.test(currentItemStack)) {
-                            if (entityAction != null) entityAction.accept(entity);
-                            if (itemAction != null) itemAction.accept(new Pair<>(entity.world, currentItemStack));
-                            throwItem(entity, currentItemStack, throwRandomly, retainOwnership);
-                            stackReference.set(ItemStack.EMPTY);
-                        }
-                    }
+                if (stackReference == StackReference.EMPTY) return;
+
+                ItemStack itemStack = stackReference.get();
+                if (itemStack.isEmpty()) return;
+
+                if (!(itemCondition == null || itemCondition.test(itemStack))) return;
+
+                if (entityAction != null) entityAction.accept(entity);
+                if (itemAction != null) itemAction.accept(new Pair<>(entity.world, itemStack));
+
+                if (amount != 0) {
+
+                    int newAmount = amount < 0 ? amount * -1 : amount;
+
+                    ItemStack droppedStack = itemStack.split(newAmount);
+                    throwItem(entity, droppedStack, throwRandomly, retainOwnership);
+
+                    stackReference.set(itemStack);
+
                 }
+
+                else {
+                    throwItem(entity, itemStack, throwRandomly, retainOwnership);
+                    stackReference.set(ItemStack.EMPTY);
+                }
+
             }
-        }
+        );
 
         else {
-            slots.removeIf(slot -> slot > inventoryPower.size());
-            for (int i = 0; i < inventoryPower.size(); i++) {
-                if (!slots.isEmpty() && !slots.contains(i)) continue;
-                ItemStack currentItemStack = inventoryPower.getStack(i);
-                if (!currentItemStack.isEmpty()) {
-                    if (itemCondition == null || itemCondition.test(currentItemStack)) {
-                        if (entityAction != null) entityAction.accept(entity);
-                        if (itemAction != null) itemAction.accept(new Pair<>(entity.world, currentItemStack));
-                        throwItem(entity, currentItemStack, throwRandomly, retainOwnership);
-                        inventoryPower.setStack(i, ItemStack.EMPTY);
+            slots.removeIf(slot -> slot < 0 || slot >= inventoryPower.size());
+            slots.forEach(
+                slot -> {
+
+                    ItemStack itemStack = inventoryPower.getStack(slot);
+                    if (itemStack.isEmpty()) return;
+
+                    if (!(itemCondition == null || itemCondition.test(itemStack))) return;
+
+                    if (entityAction != null) entityAction.accept(entity);
+                    if (itemAction != null) itemAction.accept(new Pair<>(entity.world, itemStack));
+
+                    if (amount != 0) {
+
+                        int newAmount = amount < 0 ? amount * -1 : amount;
+
+                        ItemStack droppedStack = itemStack.split(newAmount);
+                        throwItem(entity, droppedStack, throwRandomly, retainOwnership);
+
+                        inventoryPower.setStack(slot, itemStack);
+
                     }
+
+                    else {
+                        throwItem(entity, itemStack, throwRandomly, retainOwnership);
+                        inventoryPower.setStack(slot, ItemStack.EMPTY);
+                    }
+
                 }
-            }
+            );
         }
 
     }
