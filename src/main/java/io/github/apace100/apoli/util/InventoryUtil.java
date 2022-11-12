@@ -5,7 +5,6 @@ import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.ArgumentWrapper;
-import net.minecraft.command.argument.ItemSlotArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -16,7 +15,10 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -28,27 +30,16 @@ public class InventoryUtil {
     }
 
     public static Set<Integer> getSlots(SerializableData.Instance data) {
+
         Set<Integer> slots = new HashSet<>();
 
-        if (data.isPresent("slots")) {
-            List<ArgumentWrapper<Integer>> slotArgumentTypes = data.get("slots");
-            for (ArgumentWrapper<Integer> slotArgumentType : slotArgumentTypes) {
-                slots.add(slotArgumentType.get());
-            }
-        }
+        data.<ArgumentWrapper<Integer>>ifPresent("slot", iaw -> slots.add(iaw.get()));
+        data.<List<ArgumentWrapper<Integer>>>ifPresent("slots", iaws -> slots.addAll(iaws.stream().map(ArgumentWrapper::get).toList()));
 
-        if (data.isPresent("slot")) {
-            ArgumentWrapper<Integer> slotArgumentType = data.get("slot");
-            slots.add(slotArgumentType.get());
-        }
-
-        if (slots.isEmpty()) {
-            ItemSlotArgumentType itemSlotArgumentType = new ItemSlotArgumentType();
-            Map<String, Integer> slotNamesWithId = ((ItemSlotArgumentTypeAccessor) itemSlotArgumentType).getSlotNamesToSlotCommandId();
-            slots.addAll(slotNamesWithId.values());
-        }
+        if (slots.isEmpty()) slots.addAll(ItemSlotArgumentTypeAccessor.getSlotMappings().values());
 
         return slots;
+
     }
 
     public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
@@ -264,7 +255,7 @@ public class InventoryUtil {
             float l = 0.02F * random.nextFloat();
             itemEntity.setVelocity(
                 (double) (- i * h * f) + Math.cos(k) * (double) l,
-                -g * f + 0.1F + (random.nextFloat() - random.nextFloat()) * 0.1F,
+                (-g * f + 0.1F + (random.nextFloat() - random.nextFloat()) * 0.1F),
                 (double) (j * h * f) + Math.sin(k) * (double) l
             );
         }

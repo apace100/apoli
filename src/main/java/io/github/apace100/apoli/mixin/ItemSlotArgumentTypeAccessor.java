@@ -10,6 +10,8 @@ import java.util.Map;
 public interface ItemSlotArgumentTypeAccessor {
 
     @Accessor("SLOT_NAMES_TO_SLOT_COMMAND_ID")
-    Map<String, Integer> getSlotNamesToSlotCommandId();
+    static Map<String, Integer> getSlotMappings() {
+        throw new AssertionError();
+    }
 
 }
