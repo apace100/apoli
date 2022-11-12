@@ -94,37 +94,57 @@ public class InventoryUtil {
 
         Set<Integer> slots = getSlots(data);
 
-        ItemStack replacementStack = data.get("stack");
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<ItemStack> itemCondition = data.get("item_condition");
-        ActionFactory<Pair<World, ItemStack>>.Instance itemAction = data.get("item_action");
+        Consumer<Pair<World, ItemStack>> itemAction = data.get("item_action");
 
-        if (inventoryPower == null) {
-            for (Integer slot : slots) {
+        ItemStack replacementStack = data.get("stack");
+        boolean mergeNbt = data.getBoolean("merge_nbt");
+
+        if (inventoryPower == null) slots.forEach(
+            slot -> {
+
                 StackReference stackReference = entity.getStackReference(slot);
-                if (stackReference != StackReference.EMPTY) {
-                    ItemStack currentItemStack = stackReference.get();
-                    if (itemCondition == null || itemCondition.test(currentItemStack)) {
-                        if (entityAction != null) entityAction.accept(entity);
-                        ItemStack stackAfterReplacement = replacementStack.copy();
-                        stackReference.set(stackAfterReplacement);
-                        if (itemAction != null) itemAction.accept(new Pair<>(entity.world, stackAfterReplacement));
-                    }
+                if (stackReference == StackReference.EMPTY) return;
+
+                ItemStack itemStack = stackReference.get();
+                if (!(itemCondition == null || itemCondition.test(itemStack))) return;
+
+                if (entityAction != null) entityAction.accept(entity);
+
+                ItemStack stackAfterReplacement = replacementStack.copy();
+                if (mergeNbt && itemStack.hasNbt()) {
+                    itemStack.getOrCreateNbt().copyFrom(stackAfterReplacement.getOrCreateNbt());
+                    stackAfterReplacement.setNbt(itemStack.getOrCreateNbt());
                 }
+
+                stackReference.set(stackAfterReplacement);
+                if (itemAction != null) itemAction.accept(new Pair<>(entity.world, stackAfterReplacement));
+
             }
-        }
+        );
 
         else {
-            slots.removeIf(slot -> slot > inventoryPower.size());
-            for (int i = 0; i < inventoryPower.size(); i++) {
-                if (!slots.isEmpty() && !slots.contains(i)) continue;
-                ItemStack currentItemStack = inventoryPower.getStack(i);
-                if (itemCondition == null || itemCondition.test(currentItemStack)) {
+            slots.removeIf(slot -> slot < 0 || slot >= inventoryPower.size());
+            slots.forEach(
+                slot -> {
+
+                    ItemStack itemStack = inventoryPower.getStack(slot);
+                    if (!(itemCondition == null || itemCondition.test(itemStack))) return;
+
                     if (entityAction != null) entityAction.accept(entity);
-                    inventoryPower.setStack(i, replacementStack.copy());
-                    if (itemAction != null) itemAction.accept(new Pair<>(entity.world, currentItemStack));
+
+                    ItemStack stackAfterReplacement = replacementStack.copy();
+                    if (mergeNbt && itemStack.hasNbt()) {
+                        itemStack.getOrCreateNbt().copyFrom(stackAfterReplacement.getOrCreateNbt());
+                        stackAfterReplacement.setNbt(itemStack.getOrCreateNbt());
+                    }
+
+                    inventoryPower.setStack(slot, stackAfterReplacement);
+                    if (itemAction != null) itemAction.accept(new Pair<>(entity.world, stackAfterReplacement));
+
                 }
-            }
+            );
         }
 
     }

@@ -22,19 +22,25 @@ public class ReplaceInventoryAction {
         InventoryType inventoryType = data.get("inventory_type");
 
         switch (inventoryType) {
-            case INVENTORY:
-                replaceInventory(data, entity, null);
-                break;
-            case POWER:
-                if (!data.isPresent("power") || !(entity instanceof LivingEntity livingEntity)) return;
+            case INVENTORY -> replaceInventory(data, entity, null);
+            case POWER -> {
 
-                PowerType<?> targetPowerType = data.get("power");
-                Power targetPower = PowerHolderComponent.KEY.get(livingEntity).getPower(targetPowerType);
+                if (!data.isPresent("power")) return;
+                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(
+                    powerHolderComponent -> {
 
-                if (!(targetPower instanceof InventoryPower inventoryPower)) return;
-                replaceInventory(data, livingEntity, inventoryPower);
-                break;
+                        PowerType<?> targetPowerType = data.get("power");
+                        Power targetPower = powerHolderComponent.getPower(targetPowerType);
+                        if (!(targetPower instanceof InventoryPower inventoryPower)) return;
+
+                        replaceInventory(data, entity, inventoryPower);
+
+                    }
+                );
+
+            }
         }
+
     }
 
     public static ActionFactory<Entity> getFactory() {
@@ -47,8 +53,10 @@ public class ReplaceInventoryAction {
                 .add("slots", ApoliDataTypes.ITEM_SLOTS, null)
                 .add("slot", ApoliDataTypes.ITEM_SLOT, null)
                 .add("power", ApoliDataTypes.POWER_TYPE, null)
-                .add("stack", SerializableDataTypes.ITEM_STACK),
+                .add("stack", SerializableDataTypes.ITEM_STACK)
+                .add("merge_nbt", SerializableDataTypes.BOOLEAN, false),
             ReplaceInventoryAction::action
         );
     }
+
 }
