@@ -3,6 +3,7 @@ package io.github.apace100.apoli.mixin;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.HiddenEffectStatus;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
+import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
@@ -18,7 +19,6 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
@@ -71,7 +71,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "canTarget(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
     private void setCanTargetBasedOnPower(LivingEntity target, CallbackInfoReturnable<Boolean> cir) {
-        if (!((LivingEntity)(Object)this instanceof MobEntity mobEntity)) return;
+        if (!((LivingEntity)(Object)this instanceof MobEntity mobEntity) || !MobBehavior.usesBrain(mobEntity)) return;
         List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(target, ModifyMobBehaviorPower.class);
         boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.doesApply(target, mobEntity) && power.getMobBehavior().isPassive(mobEntity, target));
 

@@ -5,7 +5,6 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
-import io.github.apace100.apoli.behavior.ai.NonAttackableFleeEntityGoal;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
@@ -26,9 +25,7 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.intprovider.UniformIntProvider;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -55,7 +52,7 @@ public class FleeMobBehavior extends MobBehavior {
     @Override
     public void initGoals(MobEntity mob) {
         if (!(mob instanceof PathAwareEntity) || usesBrain(mob)) return;
-        Goal fleeGoal = new NonAttackableFleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, slowSpeed, fastSpeed, entity -> mobRelatedPredicates.test(new Pair<>(entity, mob)) && entityRelatedPredicates.test(entity));
+        Goal fleeGoal = new FleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, slowSpeed, fastSpeed, entity -> mobRelatedPredicates.test(new Pair<>(entity, mob)) && entityRelatedPredicates.test(entity));
         this.addToGoalSelector(mob, fleeGoal);
     }
 
