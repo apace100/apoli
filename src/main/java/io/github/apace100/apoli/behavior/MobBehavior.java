@@ -1,15 +1,20 @@
 package io.github.apace100.apoli.behavior;
 
 import io.github.apace100.apoli.access.ModifiableMobWithGoals;
+import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
+import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.brain.Activity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Pair;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class MobBehavior {
@@ -41,15 +46,24 @@ public class MobBehavior {
         ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().removeIf(pair -> pair.getLeft() == this);
     }
 
+    public void removeTasks(MobEntity mob) {
+        if (!ModifyMobBehaviorPower.usesBrain(mob)) return;
+        for (Activity activity : this.activitiesToApply()) {
+            ((BrainAccessor)mob.getBrain()).getPossibleActivities().remove(activity);
+        }
+    }
+
+    protected Set<Activity> activitiesToApply() {
+        return Set.of();
+    }
+
     public boolean hasAppliedGoals(MobEntity mob) {
         return ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
     }
 
-
-    public void initTasks(MobEntity mob) {
-
+    public boolean hasAppliedActivities(MobEntity mob) {
+        return activitiesToApply().stream().allMatch(activity -> mob.getBrain().hasActivity(activity));
     }
-
     public boolean isPassive(MobEntity mob, LivingEntity target) {
         return false;
     }

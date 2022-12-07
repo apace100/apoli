@@ -1,13 +1,10 @@
 package io.github.apace100.apoli;
 
-import com.mojang.brigadier.Command;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.behavior.MobBehaviors;
 import io.github.apace100.apoli.command.PowerCommand;
-import io.github.apace100.apoli.command.PowerOperation;
-import io.github.apace100.apoli.command.PowerTypeArgumentType;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
@@ -21,6 +18,7 @@ import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliClassData;
+import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
@@ -32,8 +30,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.command.argument.ArgumentTypes;
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
@@ -111,6 +107,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		BiEntityActions.register();
 		MobBehaviors.register();
 		ApoliActivities.register();
+		ApoliMemoryModuleTypes.register();
 
 		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
 

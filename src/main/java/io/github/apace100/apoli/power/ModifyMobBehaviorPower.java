@@ -58,9 +58,7 @@ public class ModifyMobBehaviorPower extends Power {
         if (this.isActive()) {
             for (Iterator<MobEntity> iterator = modifiableEntities.stream().filter(mob -> this.doesApply(entity, mob) && !mobBehavior.hasAppliedGoals(mob)).iterator(); iterator.hasNext();) {
                 MobEntity mob = iterator.next();
-                if (usesBrain(mob)) {
-                    mobBehavior.initTasks(mob);
-                } else if (usesGoals(mob)) {
+                if (usesGoals(mob)) {
                     mobBehavior.initGoals(mob);
                 }
                 this.modifiedEntities.add(mob);
@@ -74,9 +72,7 @@ public class ModifyMobBehaviorPower extends Power {
 
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().filter(mob -> !this.doesApply(entity, mob) || !this.isActive()).iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
-            if (usesBrain(mob)) {
-
-            } else if (usesGoals(mob)) {
+            if (usesGoals(mob)) {
                 if (this.getMobBehavior().isHostile(mob, entity) && (mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid())) {
                     if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
                         ((Angerable) mob).stopAnger();
@@ -84,9 +80,10 @@ public class ModifyMobBehaviorPower extends Power {
                     mob.setTarget(null);
                 }
                 this.mobBehavior.removeGoals(mob);
+                this.mobBehavior.removeTasks(mob);
             }
         }
-        modifiedEntities.removeIf(mob -> !mobBehavior.hasAppliedGoals(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
+        modifiedEntities.removeIf(mob -> !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedActivities(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
     }
 
     @Override
@@ -100,21 +97,20 @@ public class ModifyMobBehaviorPower extends Power {
         if (entity.world.isClient) return;
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
-            if (usesBrain(mob)) {
-
-            } else if (usesGoals(mob) && mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid()) {
+            if (usesGoals(mob) && mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid()) {
                 if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
                     ((Angerable) mob).stopAnger();
                 }
                 mob.setTarget(null);
             }
             this.mobBehavior.removeGoals(mob);
+            this.mobBehavior.removeTasks(mob);
         }
     }
 
 
     public static boolean usesBrain(MobEntity mob) {
-        return !((BrainAccessor)mob.getBrain()).getMemories().isEmpty();
+        return !((BrainAccessor)mob.getBrain()).getCoreActivities().isEmpty();
     }
 
     public static boolean usesGoals(MobEntity mob) {

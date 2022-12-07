@@ -8,6 +8,8 @@ import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
+import io.github.apace100.apoli.registry.ApoliActivities;
+import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -33,7 +35,6 @@ public class FleeMobBehavior extends MobBehavior {
     private final float fleeDistance;
     private final double slowSpeed;
     private final double fastSpeed;
-    private int nextFleeTime;
 
     public FleeMobBehavior(int priority, float fleeDistance, double slowSpeed, double fastSpeed) {
         super(priority);
@@ -60,40 +61,39 @@ public class FleeMobBehavior extends MobBehavior {
 
     @Override
     public void tick(MobEntity mob) {
-        if (!ModifyMobBehaviorPower.usesBrain(mob) || mob.age < this.nextFleeTime) return;
-        Optional<Entity> powerHolder = mob.world.getOtherEntities(mob, mob.getBoundingBox().expand(this.fleeDistance), entity -> entity instanceof LivingEntity && mobRelatedPredicates.test(new Pair<>((LivingEntity) entity, mob)) && entityRelatedPredicates.test((LivingEntity) entity)).stream().findFirst();
-        if (powerHolder.isPresent()) {
-            int fleeTime = mob.age + UniformIntProvider.create(5, 20).get(mob.world.random);
-            mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-            mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
-            mob.getBrain().remember(MemoryModuleType.AVOID_TARGET, (LivingEntity)powerHolder.get(), fleeTime);
-            this.nextFleeTime = fleeTime;
+        if (!ModifyMobBehaviorPower.usesBrain(mob)) return;
+        Optional<Entity> powerHolder = mob.world.getOtherEntities(mob, mob.getBoundingBox().expand(this.fleeDistance), entity -> entity instanceof LivingEntity living && mobRelatedPredicates.test(new Pair<>(living, mob)) && entityRelatedPredicates.test(living)).stream().findFirst();
+        if (powerHolder.isEmpty()) {
+            this.removeTasks(mob);
+        } else {
+            if (!this.hasAppliedActivities(mob)) {
+                ((BrainAccessor)mob.getBrain()).getPossibleActivities().add(ApoliActivities.AVOID);
+                ((BrainTaskAddition)mob.getBrain()).addToTaskList(ApoliActivities.AVOID, this.priority, ImmutableList.of(GoToRememberedPositionTask.toEntity(ApoliMemoryModuleTypes.AVOID_TARGET, (float) this.slowSpeed, Math.round(this.fleeDistance), true), new ForgetTask<>(FleeMobBehavior::shouldForgetAvoidTask, ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT)), mob);
+            }
+            if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
+                mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
+                mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
+                mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, (LivingEntity)powerHolder.get(), mob.age);
+            }
         }
     }
 
-    @Override
-    public void initTasks(MobEntity mob) {
-        ((BrainTaskAddition)mob.getBrain()).addToTaskList(Activity.AVOID, this.priority, ImmutableList.of(GoToRememberedPositionTask.toEntity(MemoryModuleType.AVOID_TARGET, (float) this.slowSpeed, Math.round(this.fleeDistance), true), new ForgetTask<>(FleeMobBehavior::shouldRunAwayFromPowerHolder, MemoryModuleType.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(MemoryModuleType.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT)));
-    }
-
-    private static boolean shouldRunAwayFromPowerHolder(MobEntity mob) {
+    private static boolean shouldForgetAvoidTask(MobEntity mob) {
         Brain<?> brain = mob.getBrain();
-        if (!brain.hasMemoryModule(MemoryModuleType.AVOID_TARGET)) {
+        if (!brain.hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
             return true;
         }
-        if (brain.getOptionalMemory(MemoryModuleType.AVOID_TARGET).isPresent()) {
-            LivingEntity livingEntity = brain.getOptionalMemory(MemoryModuleType.AVOID_TARGET).get();
-            if (PowerHolderComponent.getPowers(livingEntity, ModifyMobBehaviorPower.class).stream().anyMatch(power -> power.getMobBehavior() instanceof FleeMobBehavior && power.doesApply(livingEntity, mob))) {
-                return true;
-            } else {
-                Set<MemoryModuleType<?>> memoryModuleTypes = mob.getBrain().hasActivity(Activity.AVOID) ? ((BrainAccessor)mob.getBrain()).getForgettingActivityMemories().get(Activity.AVOID) : new HashSet<>();
-                for (MemoryModuleType<?> memoryModuleType : memoryModuleTypes) {
-                    mob.getBrain().forget(memoryModuleType);
-                }
-            }
+        if (brain.getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).isPresent()) {
+            LivingEntity livingEntity = brain.getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get();
+            return PowerHolderComponent.getPowers(livingEntity, ModifyMobBehaviorPower.class).stream().anyMatch(power -> power.getMobBehavior() instanceof FleeMobBehavior && !power.doesApply(livingEntity, mob));
         }
 
         return true;
+    }
+
+    @Override
+    protected Set<Activity> activitiesToApply() {
+        return Set.of(ApoliActivities.AVOID);
     }
 
     @Override

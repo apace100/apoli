@@ -4,14 +4,14 @@
     "type": "apoli:target_condition",
     "condition": {
       "type": "apoli:entity_type",
-      "entity_type": "minecraft:frog"
+      "entity_type": "minecraft:warden"
     }
   },
   "behavior": {
     "type": "apoli:flee",
     "priority": 0,
     "distance": 6.0,
-    "slow_speed": 5.0,
+    "slow_speed": 6.0,
     "fast_speed": 1.2
   },
   "tick_rate": 1

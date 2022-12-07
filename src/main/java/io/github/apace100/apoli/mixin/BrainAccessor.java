@@ -14,8 +14,8 @@ import java.util.Set;
 @Mixin(Brain.class)
 public interface BrainAccessor {
     @Accessor
-    Map<MemoryModuleType<?>, Optional<? extends Memory<?>>> getMemories();
+    Set<Activity> getCoreActivities();
 
     @Accessor
-    Map<Activity, Set<MemoryModuleType<?>>> getForgettingActivityMemories();
+    Set<Activity> getPossibleActivities();
 }

@@ -6,7 +6,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
 public class ApoliActivities {
-    public static final Activity APOLI_AVOID = register(Apoli.identifier("avoid"));
+    public static final Activity AVOID = register(Apoli.identifier("avoid"));
 
     public static void register() {
 
