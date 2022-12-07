@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.behavior;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
@@ -10,6 +11,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Activity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Pair;
 
@@ -40,14 +42,21 @@ public class MobBehavior {
     }
 
     public void removeGoals(MobEntity mob) {
+        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().forEach(mobBehaviorGoalPair -> {
+            Apoli.LOGGER.info("Target Selector: " + mobBehaviorGoalPair.getLeft().priority);
+        });
+        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().forEach(mobBehaviorGoalPair -> {
+            Apoli.LOGGER.info("Goal Selector: " + mobBehaviorGoalPair.getLeft().priority);
+        });
         ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getTargetSelector().remove(pair.getRight()));
         ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().removeIf(pair -> pair.getLeft() == this);
         ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getGoalSelector().remove(pair.getRight()));
         ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().removeIf(pair -> pair.getLeft() == this);
+        Apoli.LOGGER.info("Removed goals.");
     }
 
     public void removeTasks(MobEntity mob) {
-        if (!ModifyMobBehaviorPower.usesBrain(mob)) return;
+        if (!usesBrain(mob)) return;
         for (Activity activity : this.activitiesToApply()) {
             ((BrainAccessor)mob.getBrain()).getPossibleActivities().remove(activity);
         }
@@ -64,6 +73,7 @@ public class MobBehavior {
     public boolean hasAppliedActivities(MobEntity mob) {
         return activitiesToApply().stream().allMatch(activity -> mob.getBrain().hasActivity(activity));
     }
+
     public boolean isPassive(MobEntity mob, LivingEntity target) {
         return false;
     }
@@ -77,7 +87,6 @@ public class MobBehavior {
     }
 
     public void tick(MobEntity mob) {
-
     }
 
     protected void addToGoalSelector(MobEntity mob, Goal goal) {
@@ -109,5 +118,9 @@ public class MobBehavior {
         SerializableData.Instance dataInstance = data.new Instance();
         this.setToDataInstance(dataInstance);
         data.write(buffer, dataInstance);
+    }
+
+    public static boolean usesBrain(MobEntity mob) {
+        return !((BrainAccessor)mob.getBrain()).getCoreActivities().isEmpty();
     }
 }

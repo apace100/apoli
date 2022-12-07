@@ -5,6 +5,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.behavior.ai.NonAttackableFleeEntityGoal;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
@@ -53,15 +54,14 @@ public class FleeMobBehavior extends MobBehavior {
 
     @Override
     public void initGoals(MobEntity mob) {
-        if (!(mob instanceof PathAwareEntity)) return;
-        Goal fleeGoal = new FleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, this.slowSpeed, this.fastSpeed, entity ->
-                mobRelatedPredicates.test(new Pair<>(entity, mob)) && entityRelatedPredicates.test(entity));
+        if (!(mob instanceof PathAwareEntity) || usesBrain(mob)) return;
+        Goal fleeGoal = new NonAttackableFleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, slowSpeed, fastSpeed, entity -> mobRelatedPredicates.test(new Pair<>(entity, mob)) && entityRelatedPredicates.test(entity));
         this.addToGoalSelector(mob, fleeGoal);
     }
 
     @Override
     public void tick(MobEntity mob) {
-        if (!ModifyMobBehaviorPower.usesBrain(mob)) return;
+        if (!usesBrain(mob)) return;
         Optional<Entity> powerHolder = mob.world.getOtherEntities(mob, mob.getBoundingBox().expand(this.fleeDistance), entity -> entity instanceof LivingEntity living && mobRelatedPredicates.test(new Pair<>(living, mob)) && entityRelatedPredicates.test(living)).stream().findFirst();
         if (powerHolder.isEmpty()) {
             this.removeTasks(mob);
@@ -107,7 +107,7 @@ public class FleeMobBehavior extends MobBehavior {
                         .add("priority", SerializableDataTypes.INT, 0)
                         .add("distance", SerializableDataTypes.FLOAT)
                         .add("slow_speed", SerializableDataTypes.DOUBLE)
-                        .add("fast_speed", SerializableDataTypes.DOUBLE),
+                        .addFunctionedDefault("fast_speed", SerializableDataTypes.DOUBLE, data -> data.getDouble("slow_speed")),
                 data -> new FleeMobBehavior(data.getInt("priority"), data.getFloat("distance"), data.getDouble("slow_speed"), data.getDouble("fast_speed")));
     }
 }

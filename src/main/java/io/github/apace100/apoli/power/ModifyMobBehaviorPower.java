@@ -45,7 +45,7 @@ public class ModifyMobBehaviorPower extends Power {
 
     @Override
     public void tick() {
-        if (entity.age % tickRate != 0) return;
+        if (entity.world.isClient || entity.age % tickRate != 0) return;
 
         ((ServerWorldAccessor)entity.world).getEntityManager().getLookup().forEach(TypeFilter.instanceOf(MobEntity.class), mob -> {
             if (!this.modifiableEntities.contains(mob) && this.doesApply(entity, mob)) {
@@ -106,11 +106,6 @@ public class ModifyMobBehaviorPower extends Power {
             this.mobBehavior.removeGoals(mob);
             this.mobBehavior.removeTasks(mob);
         }
-    }
-
-
-    public static boolean usesBrain(MobEntity mob) {
-        return !((BrainAccessor)mob.getBrain()).getCoreActivities().isEmpty();
     }
 
     public static boolean usesGoals(MobEntity mob) {

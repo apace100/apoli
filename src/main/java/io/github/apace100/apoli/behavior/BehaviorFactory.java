@@ -52,7 +52,7 @@ public class BehaviorFactory<T extends MobBehavior> {
             String type = JsonHelper.getString(jo, "type");
             Identifier id = Identifier.tryParse(type);
             if (id == null) {
-                throw new JsonSyntaxException("Behaviour json requires \"type\" identifier.");
+                throw new JsonSyntaxException("Behavior json requires \"type\" identifier.");
             }
             Registry<BehaviorFactory> registry = ApoliRegistries.BEHAVIOR_FACTORY;
             Optional<BehaviorFactory> optionalCondition = registry.getOrEmpty(id);
@@ -61,10 +61,10 @@ public class BehaviorFactory<T extends MobBehavior> {
                     optionalCondition = registry.getOrEmpty(NamespaceAlias.resolveAlias(id));
                 }
                 if (optionalCondition.isEmpty()) {
-                    throw new JsonSyntaxException("Behaviour json type \"" + id + "\" is not defined.");
+                    throw new JsonSyntaxException("Behavior json type \"" + id + "\" is not defined.");
                 }
             }
         }
-        throw new JsonSyntaxException("Behaviour has to be a JsonObject!");
+        throw new JsonSyntaxException("Behavior has to be a JsonObject!");
     }
 }

@@ -4,7 +4,7 @@
     "type": "apoli:target_condition",
     "condition": {
       "type": "apoli:entity_type",
-      "entity_type": "minecraft:hoglin"
+      "entity_type": "minecraft:villager"
     }
   },
   "behavior": {

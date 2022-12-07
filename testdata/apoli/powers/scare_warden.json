@@ -11,7 +11,7 @@
     "type": "apoli:flee",
     "priority": 0,
     "distance": 6.0,
-    "slow_speed": 6.0,
+    "slow_speed": 2.0,
     "fast_speed": 1.2
   },
   "tick_rate": 1

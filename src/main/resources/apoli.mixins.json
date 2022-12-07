@@ -21,6 +21,7 @@
     "EntityMixin",
     "ExperienceOrbEntityMixin",
     "EyeHeightAccess",
+    "FleeEntityGoalAccessor",
     "GrindstoneScreenHandlerBottomInputSlotMixin",
     "GrindstoneScreenHandlerMixin",
     "GrindstoneScreenHandlerOutputSlotMixin",
