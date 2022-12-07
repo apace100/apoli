@@ -5,10 +5,10 @@ import io.github.apace100.apoli.mixin.MobEntityAccessor;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Pair;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
@@ -18,8 +18,6 @@ public class MobBehavior {
     protected int priority;
     protected Predicate<Pair<LivingEntity, MobEntity>> mobRelatedPredicates;
     protected Predicate<LivingEntity> entityRelatedPredicates;
-
-    @Nullable public LivingEntity entity;
 
     public MobBehavior(int priority) {
         this.priority = priority;
@@ -47,6 +45,11 @@ public class MobBehavior {
         return ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
     }
 
+
+    public void initTasks(MobEntity mob) {
+
+    }
+
     public boolean isPassive(MobEntity mob, LivingEntity target) {
         return false;
     }
@@ -57,6 +60,20 @@ public class MobBehavior {
 
     public void onMobDamage(MobEntity mob, Entity attacker) {
 
+    }
+
+    public void tick(MobEntity mob) {
+
+    }
+
+    protected void addToGoalSelector(MobEntity mob, Goal goal) {
+        ((MobEntityAccessor)mob).getGoalSelector().add(this.priority, goal);
+        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().add(new Pair<>(this, goal));
+    }
+
+    protected void addToTargetSelector(MobEntity mob, Goal goal) {
+        ((MobEntityAccessor)mob).getTargetSelector().add(this.priority, goal);
+        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().add(new Pair<>(this, goal));
     }
 
     public void addMobRelatedPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {

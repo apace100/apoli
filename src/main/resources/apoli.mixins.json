@@ -9,6 +9,7 @@
     "ArgumentTypesMixin",
     "ArmorItemMixin",
     "BlockItemMixin",
+    "BrainAccessor",
     "BrainMixin",
     "CraftingInventoryAccessor",
     "CraftingInventoryMixin",

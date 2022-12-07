@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.BrainAccessor;
+import io.github.apace100.apoli.mixin.MobEntityAccessor;
 import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
@@ -56,20 +58,33 @@ public class ModifyMobBehaviorPower extends Power {
         if (this.isActive()) {
             for (Iterator<MobEntity> iterator = modifiableEntities.stream().filter(mob -> this.doesApply(entity, mob) && !mobBehavior.hasAppliedGoals(mob)).iterator(); iterator.hasNext();) {
                 MobEntity mob = iterator.next();
-                mobBehavior.initGoals(mob);
+                if (usesBrain(mob)) {
+                    mobBehavior.initTasks(mob);
+                } else if (usesGoals(mob)) {
+                    mobBehavior.initGoals(mob);
+                }
                 this.modifiedEntities.add(mob);
             }
         }
 
+        for (Iterator<MobEntity> iterator = modifiedEntities.stream().iterator(); iterator.hasNext();) {
+            MobEntity mob = iterator.next();
+            this.getMobBehavior().tick(mob);
+        }
+
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().filter(mob -> !this.doesApply(entity, mob) || !this.isActive()).iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
-            if (this.getMobBehavior().isHostile(mob, entity) && (mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid())) {
-                if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
-                    ((Angerable) mob).stopAnger();
+            if (usesBrain(mob)) {
+
+            } else if (usesGoals(mob)) {
+                if (this.getMobBehavior().isHostile(mob, entity) && (mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid())) {
+                    if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
+                        ((Angerable) mob).stopAnger();
+                    }
+                    mob.setTarget(null);
                 }
-                mob.setTarget(null);
+                this.mobBehavior.removeGoals(mob);
             }
-            this.mobBehavior.removeGoals(mob);
         }
         modifiedEntities.removeIf(mob -> !mobBehavior.hasAppliedGoals(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
     }
@@ -85,7 +100,9 @@ public class ModifyMobBehaviorPower extends Power {
         if (entity.world.isClient) return;
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
-            if (mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid()) {
+            if (usesBrain(mob)) {
+
+            } else if (usesGoals(mob) && mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid()) {
                 if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
                     ((Angerable) mob).stopAnger();
                 }
@@ -93,6 +110,15 @@ public class ModifyMobBehaviorPower extends Power {
             }
             this.mobBehavior.removeGoals(mob);
         }
+    }
+
+
+    public static boolean usesBrain(MobEntity mob) {
+        return !((BrainAccessor)mob.getBrain()).getMemories().isEmpty();
+    }
+
+    public static boolean usesGoals(MobEntity mob) {
+        return !((MobEntityAccessor) mob).getGoalSelector().getGoals().isEmpty() || !((MobEntityAccessor) mob).getTargetSelector().getGoals().isEmpty();
     }
 
     public void addMobPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {

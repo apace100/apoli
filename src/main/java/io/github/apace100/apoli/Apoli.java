@@ -19,6 +19,7 @@ import io.github.apace100.apoli.power.factory.action.BlockActions;
 import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
@@ -109,6 +110,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		BlockActions.register();
 		BiEntityActions.register();
 		MobBehaviors.register();
+		ApoliActivities.register();
 
 		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
 
