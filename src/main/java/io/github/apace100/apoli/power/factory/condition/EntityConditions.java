@@ -323,7 +323,7 @@ public class EntityConditions {
                         entity.getDisplayName(),
                         server,
                         entity);
-                    int output = server.getCommandManager().execute(source, data.getString("command"));
+                    int output = server.getCommandManager().executeWithPrefix(source, data.getString("command"));
                     return ((Comparison)data.get("comparison")).compare(output, data.getInt("compare_to"));
                 }
                 return false;

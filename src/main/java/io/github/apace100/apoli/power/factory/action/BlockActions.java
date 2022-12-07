@@ -81,7 +81,7 @@ public class BlockActions {
                         Text.translatable(blockName),
                         server,
                         null);
-                    server.getCommandManager().execute(source, data.getString("command"));
+                    server.getCommandManager().executeWithPrefix(source, data.getString("command"));
                 }
             }));
         register(BonemealAction.createFactory());

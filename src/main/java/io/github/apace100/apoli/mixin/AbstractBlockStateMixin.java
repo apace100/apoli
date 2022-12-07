@@ -44,9 +44,9 @@ public abstract class AbstractBlockStateMixin {
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", cancellable = true)
+    @Inject(at = @At("RETURN"), method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", cancellable = true)
     private void phaseThroughBlocks(BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> info) {
-        VoxelShape blockShape = getBlock().getCollisionShape(asBlockState(), world, pos, context);
+        VoxelShape blockShape = info.getReturnValue();
         if(!blockShape.isEmpty() && context instanceof EntityShapeContext) {
             EntityShapeContext esc = (EntityShapeContext)context;
             if(esc.getEntity() != null) {
