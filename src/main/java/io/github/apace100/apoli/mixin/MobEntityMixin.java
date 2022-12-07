@@ -13,8 +13,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
@@ -22,7 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(MobEntity.class)
-public abstract class MobEntityMixin extends LivingEntity implements ModifiableMobWithGoals {
+@Implements(@Interface(iface = ModifiableMobWithGoals.class, prefix = "apoli$"))
+public abstract class MobEntityMixin extends LivingEntity {
 
     @Shadow public abstract void setTarget(@Nullable LivingEntity target);
 
@@ -59,16 +59,16 @@ public abstract class MobEntityMixin extends LivingEntity implements ModifiableM
         super.applyDamage(source, amount);
     }
 
-    private final List<Pair<MobBehavior, Goal>> modifiedTargetSelectorGoals = new ArrayList<>();
-    private final List<Pair<MobBehavior, Goal>> modifiedGoalSelectorGoals = new ArrayList<>();
+    @Unique
+    private final List<Pair<MobBehavior, Goal>> apoli$modifiedTargetSelectorGoals = new ArrayList<>();
+    @Unique
+    private final List<Pair<MobBehavior, Goal>> apoli$modifiedGoalSelectorGoals = new ArrayList<>();
 
-    @Override
-    public List<Pair<MobBehavior, Goal>> getModifiedTargetSelectorGoals() {
-        return modifiedTargetSelectorGoals;
+    public List<Pair<MobBehavior, Goal>> apoli$getModifiedTargetSelectorGoals() {
+        return apoli$modifiedTargetSelectorGoals;
     }
 
-    @Override
-    public List<Pair<MobBehavior, Goal>> getModifiedGoalSelectorGoals() {
-        return modifiedGoalSelectorGoals;
+    public List<Pair<MobBehavior, Goal>> apoli$getModifiedGoalSelectorGoals() {
+        return apoli$modifiedGoalSelectorGoals;
     }
 }

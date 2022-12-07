@@ -2,14 +2,10 @@ package io.github.apace100.apoli.mixin;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.BrainTaskAddition;
-import io.github.apace100.apoli.registry.ApoliActivities;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.*;
 import net.minecraft.entity.ai.brain.task.Task;
-import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.*;
 
 import java.util.HashSet;
