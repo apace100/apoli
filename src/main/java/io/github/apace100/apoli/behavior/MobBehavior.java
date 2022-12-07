@@ -42,17 +42,10 @@ public class MobBehavior {
     }
 
     public void removeGoals(MobEntity mob) {
-        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().forEach(mobBehaviorGoalPair -> {
-            Apoli.LOGGER.info("Target Selector: " + mobBehaviorGoalPair.getLeft().priority);
-        });
-        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().forEach(mobBehaviorGoalPair -> {
-            Apoli.LOGGER.info("Goal Selector: " + mobBehaviorGoalPair.getLeft().priority);
-        });
         ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getTargetSelector().remove(pair.getRight()));
         ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().removeIf(pair -> pair.getLeft() == this);
         ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getGoalSelector().remove(pair.getRight()));
         ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().removeIf(pair -> pair.getLeft() == this);
-        Apoli.LOGGER.info("Removed goals.");
     }
 
     public void removeTasks(MobEntity mob) {
