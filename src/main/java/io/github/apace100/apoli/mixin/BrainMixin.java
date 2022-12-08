@@ -28,7 +28,7 @@ public abstract class BrainMixin<E extends LivingEntity> {
 
     @Shadow @Final private Set<Activity> possibleActivities;
 
-    public void apoli$addToTaskList(Activity activity, int begin, ImmutableList<? extends Task<? super E>> tasks, ImmutableList<Pair<MemoryModuleType<?>, MemoryModuleState>> memoryTypes, LivingEntity entity) {
+    public void apoli$addToTaskList(Activity activity, int begin, ImmutableList<? extends Task<? super E>> tasks, ImmutableList<Pair<MemoryModuleType<?>, MemoryModuleState>> memoryTypes) {
         this.possibleActivities.add(activity);
         memoryTypes.forEach(memory -> this.memories.put(memory.getFirst(), Optional.empty()));
         Set<Pair<MemoryModuleType<?>, MemoryModuleState>> set = this.requiredActivityMemories.get(activity) == null ? new HashSet<>() : new HashSet<>(this.requiredActivityMemories.get(activity));

@@ -1,33 +1,42 @@
 package io.github.apace100.apoli.behavior;
 
-import io.github.apace100.apoli.Apoli;
+import com.google.common.collect.ImmutableList;
+import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
-import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Activity;
+import net.minecraft.entity.ai.brain.MemoryModuleState;
+import net.minecraft.entity.ai.brain.MemoryModuleType;
+import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Pair;
+import org.spongepowered.include.com.google.common.collect.Maps;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class MobBehavior {
     private BehaviorFactory<?> factory;
 
     protected int priority;
+    protected double taskRange;
     protected Predicate<Pair<LivingEntity, MobEntity>> mobRelatedPredicates;
     protected Predicate<LivingEntity> entityRelatedPredicates;
 
+
     public MobBehavior(int priority) {
+        this(priority, 0);
+    }
+
+    public MobBehavior(int priority, double taskRange) {
         this.priority = priority;
+        this.taskRange = taskRange;
     }
 
     private BehaviorFactory<?> getFactory() {
@@ -50,21 +59,21 @@ public class MobBehavior {
 
     public void removeTasks(MobEntity mob) {
         if (!usesBrain(mob)) return;
-        for (Activity activity : this.activitiesToApply()) {
+        for (Activity activity : this.tasksToApply().keySet()) {
             ((BrainAccessor)mob.getBrain()).getPossibleActivities().remove(activity);
         }
     }
 
-    protected Set<Activity> activitiesToApply() {
-        return Set.of();
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
+        return Maps.newHashMap();
     }
 
     public boolean hasAppliedGoals(MobEntity mob) {
         return ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
     }
 
-    public boolean hasAppliedActivities(MobEntity mob) {
-        return activitiesToApply().stream().allMatch(activity -> mob.getBrain().hasActivity(activity));
+    public boolean hasAppliedTasks(MobEntity mob) {
+        return tasksToApply().keySet().stream().allMatch(activity -> mob.getBrain().hasActivity(activity));
     }
 
     public boolean isPassive(MobEntity mob, LivingEntity target) {
@@ -80,6 +89,24 @@ public class MobBehavior {
     }
 
     public void tick(MobEntity mob) {
+    }
+
+    protected void updateMemories(MobEntity mob, LivingEntity powerHolder) {
+    }
+
+    public void tickTasks(MobEntity mob) {
+        if (!usesBrain(mob)) return;
+        Optional<Entity> powerHolder = mob.world.getOtherEntities(mob, mob.getBoundingBox().expand(this.taskRange), entity -> entity instanceof LivingEntity living && mobRelatedPredicates.test(new Pair<>(living, mob)) && entityRelatedPredicates.test(living)).stream().findFirst();
+        if (powerHolder.isEmpty()) {
+            this.removeTasks(mob);
+        } else {
+            if (!this.hasAppliedTasks(mob)) {
+                for (Map.Entry<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> entry : this.tasksToApply().entrySet()) {
+                    ((BrainTaskAddition)mob.getBrain()).addToTaskList(entry.getKey(), this.priority, entry.getValue().getLeft(), entry.getValue().getRight());
+                }
+            }
+            updateMemories(mob, (LivingEntity)powerHolder.get());
+        }
     }
 
     protected void addToGoalSelector(MobEntity mob, Goal goal) {
@@ -111,6 +138,10 @@ public class MobBehavior {
         SerializableData.Instance dataInstance = data.new Instance();
         this.setToDataInstance(dataInstance);
         data.write(buffer, dataInstance);
+    }
+
+    public static boolean usesGoals(MobEntity mob) {
+        return !((MobEntityAccessor) mob).getGoalSelector().getGoals().isEmpty() || !((MobEntityAccessor) mob).getTargetSelector().getGoals().isEmpty();
     }
 
     public static boolean usesBrain(MobEntity mob) {

@@ -2,17 +2,14 @@ package io.github.apace100.apoli.behavior.types;
 
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Activity;
 import net.minecraft.entity.ai.brain.Brain;
@@ -20,25 +17,28 @@ import net.minecraft.entity.ai.brain.MemoryModuleState;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.ForgetTask;
 import net.minecraft.entity.ai.brain.task.GoToRememberedPositionTask;
+import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.entity.ai.goal.FleeEntityGoal;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Pair;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FleeMobBehavior extends MobBehavior {
     private final float fleeDistance;
     private final double slowSpeed;
     private final double fastSpeed;
+    private final Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> taskMap = new HashMap();
 
     public FleeMobBehavior(int priority, float fleeDistance, double slowSpeed, double fastSpeed) {
-        super(priority);
+        super(priority, fleeDistance);
         this.fleeDistance = fleeDistance;
         this.slowSpeed = slowSpeed;
         this.fastSpeed = fastSpeed;
+        taskMap.put(ApoliActivities.AVOID, new Pair(ImmutableList.of(GoToRememberedPositionTask.toEntity(ApoliMemoryModuleTypes.AVOID_TARGET, (float) this.slowSpeed, Math.round(this.fleeDistance), true), new ForgetTask<>(FleeMobBehavior::shouldForgetAvoidTask, ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
     }
 
     @Override
@@ -57,22 +57,10 @@ public class FleeMobBehavior extends MobBehavior {
     }
 
     @Override
-    public void tick(MobEntity mob) {
-        if (!usesBrain(mob)) return;
-        Optional<Entity> powerHolder = mob.world.getOtherEntities(mob, mob.getBoundingBox().expand(this.fleeDistance), entity -> entity instanceof LivingEntity living && mobRelatedPredicates.test(new Pair<>(living, mob)) && entityRelatedPredicates.test(living)).stream().findFirst();
-        if (powerHolder.isEmpty()) {
-            this.removeTasks(mob);
-        } else {
-            if (!this.hasAppliedActivities(mob)) {
-                ((BrainAccessor)mob.getBrain()).getPossibleActivities().add(ApoliActivities.AVOID);
-                ((BrainTaskAddition)mob.getBrain()).addToTaskList(ApoliActivities.AVOID, this.priority, ImmutableList.of(GoToRememberedPositionTask.toEntity(ApoliMemoryModuleTypes.AVOID_TARGET, (float) this.slowSpeed, Math.round(this.fleeDistance), true), new ForgetTask<>(FleeMobBehavior::shouldForgetAvoidTask, ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT)), mob);
-            }
-            if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
-                mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-                mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
-                mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, (LivingEntity)powerHolder.get(), mob.age);
-            }
-        }
+    protected void updateMemories(MobEntity mob, LivingEntity powerHolder) {
+        mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
+        mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
+        mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, powerHolder, mob.age);
     }
 
     private static boolean shouldForgetAvoidTask(MobEntity mob) {
@@ -89,8 +77,8 @@ public class FleeMobBehavior extends MobBehavior {
     }
 
     @Override
-    protected Set<Activity> activitiesToApply() {
-        return Set.of(ApoliActivities.AVOID);
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
+        return taskMap;
     }
 
     @Override

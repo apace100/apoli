@@ -3,8 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.BrainAccessor;
-import io.github.apace100.apoli.mixin.MobEntityAccessor;
 import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
@@ -45,7 +43,7 @@ public class ModifyMobBehaviorPower extends Power {
 
     @Override
     public void tick() {
-        if (entity.world.isClient || entity.age % tickRate != 0) return;
+        if (entity.age % tickRate != 0) return;
 
         ((ServerWorldAccessor)entity.world).getEntityManager().getLookup().forEach(TypeFilter.instanceOf(MobEntity.class), mob -> {
             if (!this.modifiableEntities.contains(mob) && this.doesApply(entity, mob)) {
@@ -58,7 +56,7 @@ public class ModifyMobBehaviorPower extends Power {
         if (this.isActive()) {
             for (Iterator<MobEntity> iterator = modifiableEntities.stream().filter(mob -> this.doesApply(entity, mob) && !mobBehavior.hasAppliedGoals(mob)).iterator(); iterator.hasNext();) {
                 MobEntity mob = iterator.next();
-                if (usesGoals(mob)) {
+                if (MobBehavior.usesGoals(mob)) {
                     mobBehavior.initGoals(mob);
                 }
                 this.modifiedEntities.add(mob);
@@ -68,11 +66,12 @@ public class ModifyMobBehaviorPower extends Power {
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
             this.getMobBehavior().tick(mob);
+            this.getMobBehavior().tickTasks(mob);
         }
 
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().filter(mob -> !this.doesApply(entity, mob) || !this.isActive()).iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
-            if (usesGoals(mob)) {
+            if (MobBehavior.usesGoals(mob)) {
                 if (this.getMobBehavior().isHostile(mob, entity) && (mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid())) {
                     if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
                         ((Angerable) mob).stopAnger();
@@ -83,7 +82,7 @@ public class ModifyMobBehaviorPower extends Power {
                 this.mobBehavior.removeTasks(mob);
             }
         }
-        modifiedEntities.removeIf(mob -> !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedActivities(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
+        modifiedEntities.removeIf(mob -> !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedTasks(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
     }
 
     @Override
@@ -97,7 +96,7 @@ public class ModifyMobBehaviorPower extends Power {
         if (entity.world.isClient) return;
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
-            if (usesGoals(mob) && mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid()) {
+            if (MobBehavior.usesGoals(mob) && mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid()) {
                 if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
                     ((Angerable) mob).stopAnger();
                 }
@@ -108,15 +107,11 @@ public class ModifyMobBehaviorPower extends Power {
         }
     }
 
-    public static boolean usesGoals(MobEntity mob) {
-        return !((MobEntityAccessor) mob).getGoalSelector().getGoals().isEmpty() || !((MobEntityAccessor) mob).getTargetSelector().getGoals().isEmpty();
-    }
-
-    public void addMobPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {
+    private void addMobPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {
         mobBehavior.addMobRelatedPredicate(predicate);
     }
 
-    public void addPowerHolderPredicate(Predicate<LivingEntity> predicate) {
+    private void addPowerHolderPredicate(Predicate<LivingEntity> predicate) {
         mobBehavior.addEntityRelatedPredicate(predicate);
     }
 

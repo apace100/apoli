@@ -9,5 +9,5 @@ import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.Task;
 
 public interface BrainTaskAddition<E extends LivingEntity> {
-    void addToTaskList(Activity activity, int begin, ImmutableList<? extends Task<? super E>> tasks, ImmutableList<Pair<MemoryModuleType<?>, MemoryModuleState>> memoryTypes, LivingEntity entity);
+    void addToTaskList(Activity activity, int begin, ImmutableList<? extends Task<? super E>> tasks, ImmutableList<Pair<MemoryModuleType<?>, MemoryModuleState>> memoryTypes);
 }
