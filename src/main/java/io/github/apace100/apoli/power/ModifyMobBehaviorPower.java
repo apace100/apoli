@@ -16,14 +16,15 @@ import net.minecraft.util.TypeFilter;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class ModifyMobBehaviorPower extends Power {
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
     private final MobBehavior mobBehavior;
-    public final HashSet<MobEntity> modifiableEntities = new HashSet<>();
-    public final HashSet<MobEntity> modifiedEntities = new HashSet<>();
+    public final Set<MobEntity> modifiableEntities = new HashSet<>();
+    public final Set<MobEntity> modifiedEntities = new HashSet<>();
 
     private final int tickRate;
 
@@ -32,13 +33,12 @@ public class ModifyMobBehaviorPower extends Power {
         this.bientityCondition = bientityCondition;
         this.mobBehavior = mobBehavior;
         this.tickRate = tickRate;
-        this.addMobPredicate(pair -> doesApply(pair.getLeft(), pair.getRight()));
-        this.addPowerHolderPredicate(livingEntity -> this.getType().isActive(livingEntity));
+        this.addBiEntityPredicate(pair -> doesApply(pair.getLeft(), pair.getRight()));
         this.setTicking(true);
     }
 
     public boolean doesApply(LivingEntity powerHolder, MobEntity mob) {
-        return this.bientityCondition == null || this.bientityCondition.test(new Pair<>(powerHolder, mob));
+        return (this.bientityCondition == null || this.bientityCondition.test(new Pair<>(powerHolder, mob))) && this.getType().isActive(powerHolder);
     }
 
     @Override
@@ -46,28 +46,30 @@ public class ModifyMobBehaviorPower extends Power {
         if (entity.age % tickRate != 0) return;
 
         ((ServerWorldAccessor)entity.world).getEntityManager().getLookup().forEach(TypeFilter.instanceOf(MobEntity.class), mob -> {
-            if (!this.modifiableEntities.contains(mob) && this.doesApply(entity, mob)) {
+            if (!mob.isDead() && !mob.isRemoved() && !this.modifiableEntities.contains(mob) && this.doesApply(entity, mob)) {
+                Apoli.LOGGER.info("Added mob to modifiable entities: " + mob.getDisplayName().getString());
                 modifiableEntities.add(mob);
             }
         });
 
-        modifiableEntities.removeIf(entity -> entity.isDead() || entity.isRemoved());
+        modifiableEntities.removeIf(mob -> mob.isDead() || mob.isRemoved());
 
         if (this.isActive()) {
-            for (Iterator<MobEntity> iterator = modifiableEntities.stream().filter(mob -> this.doesApply(entity, mob) && !mobBehavior.hasAppliedGoals(mob)).iterator(); iterator.hasNext();) {
+            for (Iterator<MobEntity> iterator = modifiableEntities.stream().filter(mob -> !modifiedEntities.contains(mob) && this.doesApply(entity, mob) && !mobBehavior.hasAppliedGoals(mob)).iterator(); iterator.hasNext();) {
                 MobEntity mob = iterator.next();
                 if (MobBehavior.usesGoals(mob)) {
                     mobBehavior.initGoals(mob);
                 }
+                Apoli.LOGGER.info("Added mob to modified entities: " + mob.getDisplayName().getString());
                 this.modifiedEntities.add(mob);
             }
         }
 
-        for (Iterator<MobEntity> iterator = modifiedEntities.stream().iterator(); iterator.hasNext();) {
-            MobEntity mob = iterator.next();
+        modifiedEntities.forEach(mob -> {
             this.getMobBehavior().tick(mob);
             this.getMobBehavior().tickTasks(mob);
-        }
+            Apoli.LOGGER.info("Ticked: " + mob.getDisplayName().getString());
+        });
 
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().filter(mob -> !this.doesApply(entity, mob) || !this.isActive()).iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
@@ -80,9 +82,10 @@ public class ModifyMobBehaviorPower extends Power {
                 }
                 this.mobBehavior.removeGoals(mob);
                 this.mobBehavior.removeTasks(mob);
+                Apoli.LOGGER.info("Removed from: " + mob.getDisplayName().getString());
             }
         }
-        modifiedEntities.removeIf(mob -> !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedTasks(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
+        modifiedEntities.removeIf(mob -> mob.isDead() || mob.isRemoved() || !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedTasks(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
     }
 
     @Override
@@ -107,12 +110,8 @@ public class ModifyMobBehaviorPower extends Power {
         }
     }
 
-    private void addMobPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {
-        mobBehavior.addMobRelatedPredicate(predicate);
-    }
-
-    private void addPowerHolderPredicate(Predicate<LivingEntity> predicate) {
-        mobBehavior.addEntityRelatedPredicate(predicate);
+    private void addBiEntityPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {
+        mobBehavior.addBiEntityPredicate(predicate);
     }
 
     public MobBehavior getMobBehavior() {

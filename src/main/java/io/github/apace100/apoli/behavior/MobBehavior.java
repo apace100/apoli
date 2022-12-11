@@ -1,13 +1,16 @@
 package io.github.apace100.apoli.behavior;
 
 import com.google.common.collect.ImmutableList;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
+import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.brain.Activity;
 import net.minecraft.entity.ai.brain.MemoryModuleState;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
@@ -25,18 +28,12 @@ public class MobBehavior {
     private BehaviorFactory<?> factory;
 
     protected int priority;
-    protected double taskRange;
-    protected Predicate<Pair<LivingEntity, MobEntity>> mobRelatedPredicates;
-    protected Predicate<LivingEntity> entityRelatedPredicates;
-
+    private final Set<MobEntity> taskAppliedEntities = new HashSet<>();
+    protected Set<MobEntity> activeEntities = new HashSet<>();
+    protected Predicate<Pair<LivingEntity, MobEntity>> biEntityPredicate;
 
     public MobBehavior(int priority) {
-        this(priority, 0);
-    }
-
-    public MobBehavior(int priority, double taskRange) {
         this.priority = priority;
-        this.taskRange = taskRange;
     }
 
     private BehaviorFactory<?> getFactory() {
@@ -58,10 +55,12 @@ public class MobBehavior {
     }
 
     public void removeTasks(MobEntity mob) {
-        if (!usesBrain(mob)) return;
+        if (!usesBrain(mob) || this.tasksToApply().isEmpty()) return;
         for (Activity activity : this.tasksToApply().keySet()) {
             ((BrainAccessor)mob.getBrain()).getPossibleActivities().remove(activity);
         }
+        taskAppliedEntities.remove(mob);
+        activeEntities.remove(mob);
     }
 
     protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
@@ -73,7 +72,11 @@ public class MobBehavior {
     }
 
     public boolean hasAppliedTasks(MobEntity mob) {
-        return tasksToApply().keySet().stream().allMatch(activity -> mob.getBrain().hasActivity(activity));
+        return taskAppliedEntities.contains(mob);
+    }
+
+    public boolean isActive(MobEntity mob) {
+        return activeEntities.contains(mob);
     }
 
     public boolean isPassive(MobEntity mob, LivingEntity target) {
@@ -85,7 +88,6 @@ public class MobBehavior {
     }
 
     public void onMobDamage(MobEntity mob, Entity attacker) {
-
     }
 
     public void tick(MobEntity mob) {
@@ -95,17 +97,24 @@ public class MobBehavior {
     }
 
     public void tickTasks(MobEntity mob) {
-        if (!usesBrain(mob)) return;
-        Optional<Entity> powerHolder = mob.world.getOtherEntities(mob, mob.getBoundingBox().expand(this.taskRange), entity -> entity instanceof LivingEntity living && mobRelatedPredicates.test(new Pair<>(living, mob)) && entityRelatedPredicates.test(living)).stream().findFirst();
-        if (powerHolder.isEmpty()) {
+        if (!usesBrain(mob) || this.tasksToApply().isEmpty()) return;
+        List<LivingEntity> potentialTargets = new ArrayList<>();
+        for (Entity entity : ((ServerWorldAccessor)mob.world).getEntityManager().getLookup().iterate()) {
+            if (entity instanceof LivingEntity living && biEntityPredicate.test(new Pair<>(living, mob))) {
+                potentialTargets.add(living);
+            }
+        }
+        LivingEntity powerHolder = mob.world.getClosestEntity(potentialTargets, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
+        if (powerHolder == null) {
             this.removeTasks(mob);
         } else {
             if (!this.hasAppliedTasks(mob)) {
                 for (Map.Entry<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> entry : this.tasksToApply().entrySet()) {
                     ((BrainTaskAddition)mob.getBrain()).addToTaskList(entry.getKey(), this.priority, entry.getValue().getLeft(), entry.getValue().getRight());
                 }
+                taskAppliedEntities.add(mob);
             }
-            updateMemories(mob, (LivingEntity)powerHolder.get());
+            updateMemories(mob, powerHolder);
         }
     }
 
@@ -119,12 +128,8 @@ public class MobBehavior {
         ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().add(new Pair<>(this, goal));
     }
 
-    public void addMobRelatedPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {
-        mobRelatedPredicates = mobRelatedPredicates == null ? predicate : mobRelatedPredicates.and(predicate);
-    }
-
-    public void addEntityRelatedPredicate(Predicate<LivingEntity> predicate) {
-        entityRelatedPredicates = entityRelatedPredicates == null ? predicate : entityRelatedPredicates.and(predicate);
+    public void addBiEntityPredicate(Predicate<Pair<LivingEntity, MobEntity>> predicate) {
+        biEntityPredicate = biEntityPredicate == null ? predicate : biEntityPredicate.and(predicate);
     }
 
     protected void setToDataInstance(SerializableData.Instance dataInstance) {
