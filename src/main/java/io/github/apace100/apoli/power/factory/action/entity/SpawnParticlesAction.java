@@ -35,10 +35,10 @@ public class SpawnParticlesAction {
         float offsetY = entity.getHeight() * data.getFloat("offset_y");
         Vec3d velocity = data.get("velocity");
 
-        sendVelocityParticlePacket(serverWorld, data.get("particle"), force, entity.getX(), entity.getY() + offsetY, entity.getZ(), deltaX, deltaY, deltaZ, Optional.ofNullable(velocity), speed, count);
+        sendParticlePacket(serverWorld, data.get("particle"), force, entity.getX(), entity.getY() + offsetY, entity.getZ(), deltaX, deltaY, deltaZ, Optional.ofNullable(velocity), speed, count);
     }
 
-    private static void sendVelocityParticlePacket(ServerWorld world, ParticleEffect effect, boolean force, double x, double y, double z, float offsetX, float offsetY, float offsetZ, Optional<Vec3d> velocity, float speed, int count) {
+    private static void sendParticlePacket(ServerWorld world, ParticleEffect effect, boolean force, double x, double y, double z, float offsetX, float offsetY, float offsetZ, Optional<Vec3d> velocity, float speed, int count) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
         SerializableDataTypes.PARTICLE_EFFECT.send(buf, effect);
         buf.writeBoolean(force);
