@@ -1,0 +1,14 @@
+{
+  "type": "apoli:action_over_time",
+  "interval": 1,
+  "entity_action": {
+    "type": "apoli:spawn_particles",
+    "particle": {
+      "type": "minecraft:entity_effect"
+    },
+    "count": 1,
+    "velocity": {
+      "x": 1.0
+    }
+  }
+}

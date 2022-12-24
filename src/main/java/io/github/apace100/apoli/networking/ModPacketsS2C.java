@@ -10,6 +10,7 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import io.github.apace100.calio.SerializationHelper;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.fabricmc.api.EnvType;
@@ -22,6 +23,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -29,7 +31,9 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +53,67 @@ public class ModPacketsS2C {
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_DISMOUNT, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(ModPackets.SET_ATTACKER, ModPacketsS2C::onSetAttacker);
             ClientPlayNetworking.registerReceiver(ModPackets.SYNC_STATUS_EFFECT, ModPacketsS2C::onStatusEffectSync);
+            ClientPlayNetworking.registerReceiver(ModPackets.SEND_PARTICLES, ModPacketsS2C::onSendParticles);
         }));
+    }
+
+    private static void onSendParticles(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
+        ParticleEffect effect = SerializableDataTypes.PARTICLE_EFFECT.receive(buf);
+        boolean force = buf.readBoolean();
+        double x = buf.readDouble();
+        double y = buf.readDouble();
+        double z = buf.readDouble();
+        float offsetX = buf.readFloat();
+        float offsetY = buf.readFloat();
+        float offsetZ = buf.readFloat();
+        boolean hasVelocity = buf.readBoolean();
+
+        float speed;
+        Vec3d velocity;
+
+        if (hasVelocity) {
+            speed = 0.0F;
+            velocity = new Vec3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
+        } else {
+            speed = buf.readFloat();
+            velocity = null;
+        }
+        float count = buf.readInt();
+
+        client.execute(() -> {
+            ClientWorld world = MinecraftClient.getInstance().world;
+            if (world == null) {
+                Apoli.LOGGER.info("Could not find world to send particles to.");
+                return;
+            }
+            if (count == 0) {
+                try {
+                    double d = velocity != null ? velocity.x : speed * offsetX;
+                    double e = velocity != null ? velocity.y : speed * offsetY;
+                    double f = velocity != null ? velocity.z : speed * offsetZ;
+                    world.addParticle(effect, force, x, y, z, d, e, f);
+                }
+                catch (Throwable throwable) {
+                    Apoli.LOGGER.warn("Could not spawn particle effect {}", effect);
+                }
+            } else {
+                for (int i = 0; i < count; ++i) {
+                    double g = world.random.nextGaussian() * offsetX;
+                    double h = world.random.nextGaussian() * offsetY;
+                    double j = world.random.nextGaussian() * offsetZ;
+                    double k = velocity != null ? velocity.x : world.random.nextGaussian() * speed;
+                    double l = velocity != null ? velocity.y : world.random.nextGaussian() * speed;
+                    double m = velocity != null ? velocity.z : world.random.nextGaussian() * speed;
+                    try {
+                        world.addParticle(effect, force, x + g, y + h, z + j, k, l, m);
+                    }
+                    catch (Throwable throwable2) {
+                        Apoli.LOGGER.warn("Could not spawn particle effect {}", effect);
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     private static void onStatusEffectSync(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {

@@ -20,5 +20,7 @@ public class ModPackets {
 
     public static final Identifier SET_ATTACKER = Apoli.identifier("set_attacker");
 
+    public static final Identifier SEND_PARTICLES = Apoli.identifier("send_particles");
+
     public static final Identifier SYNC_STATUS_EFFECT = Apoli.identifier("sync_status_effect");
 }
