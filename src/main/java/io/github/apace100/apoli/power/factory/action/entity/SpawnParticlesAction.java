@@ -61,16 +61,13 @@ public class SpawnParticlesAction {
         buf.writeInt(count);
 
         for (int j = 0; j < world.getPlayers().size(); ++j) {
-            ServerPlayerEntity serverPlayerEntity = world.getPlayers().get(j);
-            sendToPlayerIfNearby(world, serverPlayerEntity, force, x, y, z, buf);
-        }
-    }
+            ServerPlayerEntity player = world.getPlayers().get(j);
 
-    private static void sendToPlayerIfNearby(ServerWorld world, ServerPlayerEntity player, boolean force, double x, double y, double z, PacketByteBuf buf) {
-        if (player.getWorld() != world) return;
-        BlockPos blockPos = player.getBlockPos();
-        if (blockPos.isWithinDistance(new Vec3d(x, y, z), force ? 512.0 : 32.0)) {
-            ServerPlayNetworking.send(player, ModPackets.SEND_PARTICLES, buf);
+            if (player.getWorld() != world) return;
+            BlockPos blockPos = player.getBlockPos();
+            if (blockPos.isWithinDistance(new Vec3d(x, y, z), force ? 512.0 : 32.0)) {
+                ServerPlayNetworking.send(player, ModPackets.SEND_PARTICLES, buf);
+            }
         }
     }
 
