@@ -7,7 +7,7 @@ import io.github.apace100.apoli.util.NamespaceAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 
 import java.util.Optional;
 

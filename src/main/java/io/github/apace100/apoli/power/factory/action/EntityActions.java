@@ -36,14 +36,15 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.registry.Registry;
+import org.joml.Vector3f;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
+//import net.minecraft.util.math.Vec3f;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -144,13 +145,13 @@ public class EntityActions {
                     !data.getBoolean("client") : !data.getBoolean("server")))
                     return;
                 Space space = data.get("space");
-                Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
+                Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 TriConsumer<Float, Float, Float> method = entity::addVelocity;
                 if(data.getBoolean("set")) {
                     method = entity::setVelocity;
                 }
                 space.toGlobal(vec, entity);
-                method.accept(vec.getX(), vec.getY(), vec.getZ());
+                method.accept(vec.x, vec.y, vec.z);
                 entity.velocityModified = true;
             }));
         register(new ActionFactory<>(Apoli.identifier("spawn_entity"), new SerializableData()

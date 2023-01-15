@@ -9,7 +9,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FluidBlock;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderEffect;
+import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.client.render.GameRenderer;
@@ -48,12 +48,12 @@ public abstract class GameRendererMixin {
     private MinecraftClient client;
 
     @Shadow
-    protected abstract void loadShader(Identifier identifier);
+    protected abstract void loadPostProcessor(Identifier identifier);
 
     @Shadow
-    private ShaderEffect shader;
+    private PostEffectProcessor postProcessor;
     @Shadow
-    private boolean shadersEnabled;
+    private boolean postProcessorEnabled;
     @Shadow @Final private ResourceManager resourceManager;
     @Unique
     private Identifier currentlyLoadedShader;
@@ -63,7 +63,7 @@ public abstract class GameRendererMixin {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
             if(this.resourceManager.getResource(shaderLoc).isPresent()) {
-                loadShader(shaderLoc);
+                loadPostProcessor(shaderLoc);
                 currentlyLoadedShader = shaderLoc;
             }
         });
@@ -75,17 +75,17 @@ public abstract class GameRendererMixin {
             Identifier shaderLoc = shaderPower.getShaderLocation();
             if(currentlyLoadedShader != shaderLoc) {
                 if(this.resourceManager.getResource(shaderLoc).isPresent()) {
-                    loadShader(shaderLoc);
+                    loadPostProcessor(shaderLoc);
                     currentlyLoadedShader = shaderLoc;
                 }
             }
         });
         if(!PowerHolderComponent.hasPower(client.getCameraEntity(), ShaderPower.class) && currentlyLoadedShader != null) {
-            if(this.shader != null) {
-                this.shader.close();
-                this.shader = null;
+            if(this.postProcessor != null) {
+                this.postProcessor.close();
+                this.postProcessor = null;
             }
-            this.shadersEnabled = false;
+            this.postProcessorEnabled = false;
             currentlyLoadedShader = null;
         }
     }
@@ -116,7 +116,7 @@ public abstract class GameRendererMixin {
         RenderSystem.enableTexture();
     }
 
-    @Inject(at = @At("HEAD"), method = "toggleShadersEnabled", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)
     private void disableShaderToggle(CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();

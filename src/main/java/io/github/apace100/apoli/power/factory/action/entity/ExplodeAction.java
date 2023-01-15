@@ -44,9 +44,7 @@ public class ExplodeAction {
         if(indestructible != null) {
             ExplosionBehavior eb = getExplosionBehaviour(entity.world, indestructible);
             entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
-                entity instanceof LivingEntity ?
-                    DamageSource.explosion((LivingEntity)entity) :
-                    DamageSource.explosion((LivingEntity) null),
+                null,
                 eb, entity.getX(), entity.getY(), entity.getZ(),
                 data.getFloat("power"), data.getBoolean("create_fire"),
                 data.get("destruction_type"));
@@ -75,7 +73,7 @@ public class ExplodeAction {
         return new ActionFactory<>(Apoli.identifier("explode"),
             new SerializableData()
                 .add("power", SerializableDataTypes.FLOAT)
-                .add("destruction_type", SerializableDataTypes.DESTRUCTION_TYPE, Explosion.DestructionType.BREAK)
+                .add("destruction_type", SerializableDataTypes.DESTRUCTION_TYPE, Explosion.DestructionType.DESTROY)
                 .add("damage_self", SerializableDataTypes.BOOLEAN, true)
                 .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
                 .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)

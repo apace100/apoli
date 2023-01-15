@@ -19,8 +19,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.registry.Registry;
+import org.joml.Vector3f;
+import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.util.TriConsumer;
 
 public class BiEntityActions {
@@ -89,12 +89,12 @@ public class BiEntityActions {
                     && (target.world.isClient ?
                         !data.getBoolean("client") : !data.getBoolean("server")))
                     return;
-                Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
+                Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 TriConsumer<Float, Float, Float> method = target::addVelocity;
                 if(data.getBoolean("set"))
                     method = target::setVelocity;
                 Space.transformVectorToBase(target.getPos().subtract(actor.getPos()), vec, actor.getYaw(), true); // vector normalized by method
-                method.accept(vec.getX(), vec.getY(), vec.getZ());
+                method.accept(vec.x, vec.y, vec.z);
                 target.velocityModified = true;
             }));
         register(DamageAction.getFactory());
