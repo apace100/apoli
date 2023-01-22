@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.ClientAdvancementManagerAccessor;
 import io.github.apace100.apoli.mixin.ClientPlayerInteractionManagerAccessor;
 import io.github.apace100.apoli.mixin.ServerPlayerInteractionManagerAccessor;
@@ -16,7 +15,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientAdvancementManager;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -82,6 +80,8 @@ public final class EntityConditionsClient {
             }
             return false;
         }));
+        register(new ConditionFactory<>(Apoli.identifier("glowing"), new SerializableData(),
+            (data, entity) -> MinecraftClient.getInstance().hasOutline(entity)));
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
