@@ -11,9 +11,9 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 
-import static io.github.apace100.apoli.util.InventoryUtil.*;
+import static io.github.apace100.apoli.util.InventoryUtil.InventoryType;
+import static io.github.apace100.apoli.util.InventoryUtil.dropInventory;
 
 public class DropInventoryAction {
 
@@ -22,19 +22,25 @@ public class DropInventoryAction {
         InventoryType inventoryType = data.get("inventory_type");
 
         switch (inventoryType) {
-            case INVENTORY:
-                dropInventory(data, entity, null);
-                break;
-            case POWER:
-                if (!data.isPresent("power") || !(entity instanceof LivingEntity livingEntity)) return;
+            case INVENTORY -> dropInventory(data, entity, null);
+            case POWER -> {
 
-                PowerType<?> targetPowerType = data.get("power");
-                Power targetPower = PowerHolderComponent.KEY.get(livingEntity).getPower(targetPowerType);
+                if (!data.isPresent("power")) return;
+                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(
+                    powerHolderComponent -> {
 
-                if (!(targetPower instanceof InventoryPower inventoryPower)) return;
-                dropInventory(data, livingEntity, inventoryPower);
-                break;
+                        PowerType<?> targetPowerType = data.get("power");
+                        Power targetPower = powerHolderComponent.getPower(targetPowerType);
+                        if (!(targetPower instanceof InventoryPower inventoryPower)) return;
+
+                        dropInventory(data, entity, inventoryPower);
+
+                    }
+                );
+
+            }
         }
+
     }
 
     public static ActionFactory<Entity> getFactory() {
@@ -48,8 +54,10 @@ public class DropInventoryAction {
                 .add("slot", ApoliDataTypes.ITEM_SLOT, null)
                 .add("power", ApoliDataTypes.POWER_TYPE, null)
                 .add("throw_randomly", SerializableDataTypes.BOOLEAN, false)
-                .add("retain_ownership", SerializableDataTypes.BOOLEAN, true),
+                .add("retain_ownership", SerializableDataTypes.BOOLEAN, true)
+                .add("amount", SerializableDataTypes.INT, 0),
             DropInventoryAction::action
         );
     }
+
 }
