@@ -11,6 +11,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
+import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -23,10 +24,10 @@ import java.util.Optional;
 
 public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
-    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(ModifiedCraftingRecipe::new);
+    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<ModifiedCraftingRecipe>(ModifiedCraftingRecipe::new);
 
-    public ModifiedCraftingRecipe(Identifier id) {
-        super(id);
+    public ModifiedCraftingRecipe(Identifier id, CraftingRecipeCategory category) {
+        super(id, category);
     }
 
     @Override

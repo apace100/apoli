@@ -23,7 +23,7 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.tag.FluidTags;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -381,7 +381,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return in;
     }
 
-    @Inject(method = "getAttributeValue", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", at = @At("RETURN"), cancellable = true)
     private void modifyAttributeValue(EntityAttribute attribute, CallbackInfoReturnable<Double> cir) {
         double originalValue = this.getAttributes().getValue(attribute);
         double modified = PowerHolderComponent.modify(this, ModifyAttributePower.class, (float)originalValue, p -> p.getAttribute() == attribute);

@@ -14,12 +14,13 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.TagKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
@@ -173,7 +174,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
             return fluidHeight.getDouble(tag);
         }
         for(TagKey<Fluid> ft : fluidHeight.keySet()) {
-            if(Calio.areTagsEqual(Registry.FLUID_KEY, ft, tag)) {
+            if(Calio.areTagsEqual(RegistryKeys.FLUID, ft, tag)) {
                 return fluidHeight.getDouble(ft);
             }
         }

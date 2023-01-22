@@ -2,7 +2,7 @@ package io.github.apace100.apoli.util.modifier;
 
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 
 import java.util.Locale;
 

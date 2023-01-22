@@ -5,7 +5,7 @@ import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.ladysnake.pal.VanillaAbilities;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 
 public class PowerFactories {
 
