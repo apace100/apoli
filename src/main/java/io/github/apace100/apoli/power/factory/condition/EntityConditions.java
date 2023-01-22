@@ -7,6 +7,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.condition.entity.BlockCollisionCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.ElytraFlightPossibleCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.ScoreboardCondition;
@@ -73,16 +74,7 @@ public class EntityConditions {
             (data, entity) -> ((List<ConditionFactory<Entity>.Instance>)data.get("conditions")).stream().anyMatch(
                 condition -> condition.test(entity)
             )));
-        register(new ConditionFactory<>(Apoli.identifier("block_collision"), new SerializableData()
-            .add("offset_x", SerializableDataTypes.FLOAT)
-            .add("offset_y", SerializableDataTypes.FLOAT)
-            .add("offset_z", SerializableDataTypes.FLOAT),
-            (data, entity) -> entity.world.getBlockCollisions(entity,
-                entity.getBoundingBox().offset(
-                    data.getFloat("offset_x") * entity.getBoundingBox().getXLength(),
-                    data.getFloat("offset_y") * entity.getBoundingBox().getYLength(),
-                    data.getFloat("offset_z") * entity.getBoundingBox().getZLength())
-            ).iterator().hasNext()));
+        register(BlockCollisionCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("brightness"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
