@@ -60,6 +60,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                                 || entry.getKey().equals("description")
                                 || entry.getKey().equals("hidden")
                                 || entry.getKey().equals("condition")
+                                || entry.getKey().toString().startsWith("$")
                                 || ADDITIONAL_DATA.containsKey(entry.getKey())) {
                                 continue;
                             }
