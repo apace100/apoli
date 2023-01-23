@@ -81,7 +81,7 @@ public enum Space {
             Matrix3f transformMatrix = getBaseTransformMatrixFromNormalizedDirectionVector(normalizedBase, baseYaw);
             if (!normalizeBase) // if the base wasn't supposed to get normalized, re-scale to compensate for the prior normalization
                 transformMatrix.scale(baseScale, baseScale, baseScale);
-            vector.mul(transformMatrix); // matrix multiplication, vector is now in the new base :D
+            vector.mulTranspose(transformMatrix); // matrix multiplication, vector is now in the new base :D
         }
     }
 
