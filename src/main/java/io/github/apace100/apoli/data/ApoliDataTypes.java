@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.data;
 
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableBiMap;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -39,6 +41,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.List;
@@ -229,6 +232,13 @@ public class ApoliDataTypes {
     public static final SerializableDataType<ArgumentWrapper<Integer>> ITEM_SLOT = SerializableDataType.argumentType(ItemSlotArgumentType.itemSlot());
 
     public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = SerializableDataType.list(ITEM_SLOT);
+
+    public static final SerializableDataType<Explosion.DestructionType> BACKWARDS_COMPATIBLE_DESTRUCTION_TYPE = SerializableDataType.mapped(Explosion.DestructionType.class,
+            HashBiMap.create(ImmutableBiMap.of(
+                    "none", Explosion.DestructionType.KEEP,
+                    "break", Explosion.DestructionType.DESTROY,
+                    "destroy", Explosion.DestructionType.DESTROY_WITH_DECAY)
+            ));
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);
