@@ -14,7 +14,7 @@ import net.minecraft.util.Identifier;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class PowerFactory<P extends Power> {
+public class PowerFactory<P extends Power> implements Factory {
 
     private final Identifier id;
     private boolean hasConditions = false;
@@ -35,6 +35,7 @@ public class PowerFactory<P extends Power> {
         return this;
     }
 
+    @Override
     public Identifier getSerializerId() {
         return id;
     }

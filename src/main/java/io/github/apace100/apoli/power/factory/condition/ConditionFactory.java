@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.condition;
 
 import com.google.gson.JsonObject;
+import io.github.apace100.apoli.power.factory.Factory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.network.PacketByteBuf;
@@ -9,7 +10,7 @@ import net.minecraft.util.Identifier;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-public class ConditionFactory<T> {
+public class ConditionFactory<T> implements Factory {
 
     private final Identifier identifier;
     protected SerializableData data;
@@ -49,6 +50,7 @@ public class ConditionFactory<T> {
         }
     }
 
+    @Override
     public Identifier getSerializerId() {
         return identifier;
     }
