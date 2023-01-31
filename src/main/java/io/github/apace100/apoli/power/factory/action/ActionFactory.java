@@ -49,6 +49,12 @@ public class ActionFactory<T> implements Factory {
         return identifier;
     }
 
+
+    @Override
+    public SerializableData getSerializableData() {
+        return data;
+    }
+
     public Instance read(JsonObject json) {
         return new Instance(data.read(json));
     }

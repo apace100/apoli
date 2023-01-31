@@ -40,6 +40,11 @@ public class PowerFactory<P extends Power> implements Factory {
         return id;
     }
 
+    @Override
+    public SerializableData getSerializableData() {
+        return data;
+    }
+
     public class Instance implements BiFunction<PowerType<P>, LivingEntity, P> {
 
         private final SerializableData.Instance dataInstance;
