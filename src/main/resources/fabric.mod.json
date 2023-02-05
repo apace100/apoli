@@ -46,6 +46,9 @@
     ],
     "modmenu": {
       "badges": ["library"]
+    },
+    "lithium:options": {
+      "mixin.entity.collisions.suffocation": false
     }
   },
 
