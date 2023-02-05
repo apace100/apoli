@@ -8,6 +8,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.registry.DataObject;
 import io.github.apace100.calio.registry.DataObjectFactory;
+import io.github.apace100.calio.util.TagLike;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.Registries;
@@ -30,7 +31,6 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
         this.order = order;
         this.entityTypes = entityTypes;
         this.powerTypes = powerTypes;
-        Apoli.LOGGER.info("Created global power set");
     }
 
     public boolean doesApply(EntityType<?> entityType) {
@@ -56,7 +56,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
     }
 
     public static final SerializableData DATA = new SerializableData()
-            .add("entity_types", TagLike.dataType(Registries.ENTITY_TYPE), null)
+            .add("entity_types", SerializableDataTypes.ENTITY_TYPE_TAG_LIKE, null)
             .add("powers", SerializableDataType.list(ApoliDataTypes.POWER_TYPE))
             .add("order", SerializableDataTypes.INT, 0);
 
