@@ -466,6 +466,7 @@ public class EntityActions {
         register(ModifyDeathTicksAction.getFactory());
         register(ModifyResourceAction.getFactory());
         register(ModifyStatAction.getFactory());
+        register(FireProjectileAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
