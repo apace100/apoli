@@ -30,6 +30,7 @@
     "LoginMixin",
     "LootContextBuilderMixin",
     "LootContextMixin",
+    "LootContextTypesAccessor",
     "LootManagerMixin",
     "LootTableMixin",
     "PhantomSpawnerMixin",
