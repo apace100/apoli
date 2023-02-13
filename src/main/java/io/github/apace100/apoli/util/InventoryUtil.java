@@ -53,9 +53,7 @@ public class InventoryUtil {
         if (inventoryPower == null) slots.forEach(
             slot -> {
 
-                StackReference stackReference = entity.getStackReference(slot);
-                if (stackReference == StackReference.EMPTY) return;
-
+                StackReference stackReference = StackReferenceUtil.of(entity, slot);
                 ItemStack itemStack = stackReference.get();
                 if (itemStack.isEmpty()) return;
 
@@ -100,9 +98,7 @@ public class InventoryUtil {
         if (inventoryPower == null) slots.forEach(
             slot -> {
 
-                StackReference stackReference = entity.getStackReference(slot);
-                if (stackReference == StackReference.EMPTY) return;
-
+                StackReference stackReference = StackReferenceUtil.of(entity, slot);
                 ItemStack itemStack = stackReference.get();
                 if (!(itemCondition == null || itemCondition.test(itemStack))) return;
 
@@ -160,9 +156,7 @@ public class InventoryUtil {
         if (inventoryPower == null) slots.forEach(
             slot -> {
 
-                StackReference stackReference = entity.getStackReference(slot);
-                if (stackReference == StackReference.EMPTY) return;
-
+                StackReference stackReference = StackReferenceUtil.of(entity, slot);
                 ItemStack itemStack = stackReference.get();
                 if (itemStack.isEmpty()) return;
 
