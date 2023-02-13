@@ -5,6 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.action.item.ModifyAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
@@ -55,25 +56,7 @@ public class ItemActions {
             (data, worldAndStack) -> {
                 worldAndStack.getRight().decrement(data.getInt("amount"));
             }));
-        register(new ActionFactory<>(Apoli.identifier("modify"), new SerializableData()
-            .add("modifier", SerializableDataTypes.IDENTIFIER),
-            (data, worldAndStack) -> {
-                MinecraftServer server = worldAndStack.getLeft().getServer();
-                if(server != null) {
-                    Identifier id = data.getId("modifier");
-                    LootFunctionManager lootFunctionManager = server.getItemModifierManager();
-                    LootFunction lootFunction = lootFunctionManager.get(id);
-                    if (lootFunction == null) {
-                        Apoli.LOGGER.info("Unknown item modifier used in `modify` action: " + id);
-                        return;
-                    }
-                    ServerWorld serverWorld = server.getOverworld();
-                    ItemStack stack = worldAndStack.getRight();
-                    LootContext.Builder builder = (new LootContext.Builder(serverWorld)).parameter(LootContextParameters.ORIGIN, new Vec3d(0, 0, 0));
-                    ItemStack newStack = lootFunction.apply(stack, builder.build(LootContextTypes.COMMAND));
-                    ((MutableItemStack)stack).setFrom(newStack);
-                }
-            }));
+        register(ModifyAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1)
             .add("ignore_unbreaking", SerializableDataTypes.BOOLEAN, false),
