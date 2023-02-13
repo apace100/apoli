@@ -7,12 +7,11 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextType;
 import net.minecraft.util.Identifier;
 
-import java.util.function.Function;
-
 public class ApoliLootContextTypes {
 
     public static final LootContextType ANY = register(
-        "any", builder -> builder
+        Apoli.identifier("any"),
+        LootContextType.create()
             .allow(LootContextParameters.THIS_ENTITY)
             .allow(LootContextParameters.LAST_DAMAGE_PLAYER)
             .allow(LootContextParameters.DAMAGE_SOURCE)
@@ -27,12 +26,11 @@ public class ApoliLootContextTypes {
 
     private ApoliLootContextTypes() {}
 
-    private static LootContextType register(String name, Function<LootContextType.Builder, LootContextType.Builder> builderFunction) {
+    private static LootContextType register(Identifier id, LootContextType.Builder lootContextTypeBuilder) {
 
-        Identifier id = Apoli.identifier(name);
-        LootContextType lootContextType = builderFunction.apply(new LootContextType.Builder()).build();
-
+        LootContextType lootContextType = lootContextTypeBuilder.build();
         BiMap<Identifier, LootContextType> idAndLootContextTypeMap = LootContextTypesAccessor.getMap();
+
         if (idAndLootContextTypeMap.containsKey(id)) throw new IllegalStateException("Loot table parameter set \"" + id + "\" is already registered!");
 
         idAndLootContextTypeMap.put(id, lootContextType);
