@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.ApoliConfigClient;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import net.minecraft.client.item.TooltipContext;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -26,6 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -141,11 +143,11 @@ public abstract class ItemStackMixin implements MutableItemStack {
     }
 
     @Unique
-    private ItemStack usedItemStack;
+    private ItemStack apoli$usedItemStack;
 
     @Inject(method = "finishUsing", at = @At("HEAD"))
     public void cacheUsedItemStack(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
-        usedItemStack = ((ItemStack)(Object)this).copy();
+        apoli$usedItemStack = ((ItemStack)(Object)this).copy();
     }
 
     @Inject(method = "finishUsing", at = @At("RETURN"))
@@ -154,11 +156,21 @@ public abstract class ItemStackMixin implements MutableItemStack {
             ItemStack returnStack = cir.getReturnValue();
             PowerHolderComponent component = PowerHolderComponent.KEY.get(user);
             for(ActionOnItemUsePower p : component.getPowers(ActionOnItemUsePower.class)) {
-                if(p.doesApply(usedItemStack)) {
+                if(p.doesApply(apoli$usedItemStack)) {
                     p.executeActions(returnStack);
                 }
             }
         }
+    }
+
+    @Inject(method = "inventoryTick", at = @At("HEAD"))
+    public void apoli$setHolderOnTick(World world, Entity entity, int slot, boolean selected, CallbackInfo ci) {
+        if (!hasHolder()) ((MutableItemStack) this).setHolder(entity);
+    }
+
+    @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
+    public void apoli$setHolderOnCopy(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
+        if (!hasHolder()) ((MutableItemStack) itemStack).setHolder(getHolder());
     }
 
     @Override
@@ -172,4 +184,24 @@ public abstract class ItemStackMixin implements MutableItemStack {
         nbt = stack.getNbt();
         count = stack.getCount();
     }
+
+    @Unique
+    private Entity apoli$holder;
+
+    @Override
+    public boolean hasHolder() {
+        return apoli$holder != null;
+    }
+
+    @Override
+    public Entity getHolder() {
+        return apoli$holder;
+    }
+
+    @Override
+    public ItemStack setHolder(Entity entity) {
+        if (!hasHolder()) apoli$holder = entity;
+        return (ItemStack) (Object) this;
+    }
+
 }
