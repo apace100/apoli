@@ -41,9 +41,9 @@ public class ModifyAction {
         LootContext lootContext = new LootContext.Builder(serverWorld)
             .parameter(LootContextParameters.ORIGIN, pos)
             .parameter(LootContextParameters.TOOL, stack)
-            .parameter(LootContextParameters.BLOCK_STATE, serverWorld.getBlockState(blockPos))
-            .parameter(LootContextParameters.BLOCK_ENTITY, serverWorld.getBlockEntity(blockPos))
             .optionalParameter(LootContextParameters.THIS_ENTITY, stackHolder)
+            .optionalParameter(LootContextParameters.BLOCK_STATE, serverWorld.getBlockState(blockPos))
+            .optionalParameter(LootContextParameters.BLOCK_ENTITY, serverWorld.getBlockEntity(blockPos))
             .build(ApoliLootContextTypes.ANY);
 
         ItemStack newStack = lootFunction.apply(stack, lootContext);
