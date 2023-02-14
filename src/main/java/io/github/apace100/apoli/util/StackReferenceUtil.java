@@ -15,8 +15,9 @@ public class StackReferenceUtil implements StackReference {
         this.stackReference = entity.getStackReference(mappedIndex);
     }
 
-    public static StackReferenceUtil of(Entity entity, int mappedIndex) {
-        return new StackReferenceUtil(entity, mappedIndex);
+    public static StackReference of(Entity entity, int mappedIndex) {
+        StackReferenceUtil util = new StackReferenceUtil(entity, mappedIndex);
+        return util.stackReference == StackReference.EMPTY ? StackReference.EMPTY : util;
     }
 
     @Override

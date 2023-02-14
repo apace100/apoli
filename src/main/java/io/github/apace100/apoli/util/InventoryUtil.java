@@ -54,6 +54,8 @@ public class InventoryUtil {
             slot -> {
 
                 StackReference stackReference = StackReferenceUtil.of(entity, slot);
+                if (stackReference == StackReference.EMPTY) return;
+
                 ItemStack itemStack = stackReference.get();
                 if (itemStack.isEmpty()) return;
 
@@ -99,6 +101,8 @@ public class InventoryUtil {
             slot -> {
 
                 StackReference stackReference = StackReferenceUtil.of(entity, slot);
+                if (stackReference == StackReference.EMPTY) return;
+
                 ItemStack itemStack = stackReference.get();
                 if (!(itemCondition == null || itemCondition.test(itemStack))) return;
 
@@ -157,6 +161,8 @@ public class InventoryUtil {
             slot -> {
 
                 StackReference stackReference = StackReferenceUtil.of(entity, slot);
+                if (stackReference == StackReference.EMPTY) return;
+
                 ItemStack itemStack = stackReference.get();
                 if (itemStack.isEmpty()) return;
 
