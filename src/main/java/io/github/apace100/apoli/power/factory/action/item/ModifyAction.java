@@ -36,7 +36,7 @@ public class ModifyAction {
         Vec3d pos = data.get("position");
         BlockPos blockPos = new BlockPos(pos);
         ItemStack stack = worldAndStack.getRight();
-        Entity stackHolder = ((MutableItemStack) stack).getHolder();
+        Entity stackHolder = stack.getHolder();
         ServerWorld serverWorld = stackHolder != null ? (ServerWorld) stackHolder.getWorld() : server.getOverworld();
         LootContext lootContext = new LootContext.Builder(serverWorld)
             .parameter(LootContextParameters.ORIGIN, pos)

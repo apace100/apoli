@@ -110,7 +110,9 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public ItemStack getStack(int slot) {
-        return ((MutableItemStack) container.get(slot)).setHolder(entity);
+        ItemStack stack = container.get(slot);
+        stack.setHolder(entity);
+        return stack;
     }
 
     @Override
@@ -127,7 +129,8 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void setStack(int slot, ItemStack stack) {
-        container.set(slot, ((MutableItemStack) stack).setHolder(entity));
+        stack.setHolder(entity);
+        container.set(slot, stack);
     }
 
     @Override

@@ -10,9 +10,4 @@ public interface MutableItemStack {
     void setItem(Item item);
     void setFrom(ItemStack stack);
 
-    boolean hasHolder();
-
-    Entity getHolder();
-    ItemStack setHolder(Entity entity);
-
 }

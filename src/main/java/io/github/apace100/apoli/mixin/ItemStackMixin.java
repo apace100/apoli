@@ -53,6 +53,12 @@ public abstract class ItemStackMixin implements MutableItemStack {
         return (flags & tooltipSection.getFlag()) == 0;
     }
 
+    @Shadow @Nullable public abstract Entity getHolder();
+
+    @Shadow public abstract void setHolder(@Nullable Entity holder);
+
+    @Shadow @Nullable private Entity holder;
+
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 0, shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void addUnusableTooltip(@Nullable PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, List<Text> list) {
         if(player != null) {
@@ -165,12 +171,12 @@ public abstract class ItemStackMixin implements MutableItemStack {
 
     @Inject(method = "inventoryTick", at = @At("HEAD"))
     public void apoli$setHolderOnTick(World world, Entity entity, int slot, boolean selected, CallbackInfo ci) {
-        if (!hasHolder()) ((MutableItemStack) this).setHolder(entity);
+        if (this.getHolder() == null) this.setHolder(entity);
     }
 
     @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     public void apoli$setHolderOnCopy(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
-        if (!hasHolder()) ((MutableItemStack) itemStack).setHolder(getHolder());
+        itemStack.setHolder(this.holder);
     }
 
     @Override
@@ -183,25 +189,6 @@ public abstract class ItemStackMixin implements MutableItemStack {
         setItem(stack.getItem());
         nbt = stack.getNbt();
         count = stack.getCount();
-    }
-
-    @Unique
-    private Entity apoli$holder;
-
-    @Override
-    public boolean hasHolder() {
-        return apoli$holder != null;
-    }
-
-    @Override
-    public Entity getHolder() {
-        return apoli$holder;
-    }
-
-    @Override
-    public ItemStack setHolder(Entity entity) {
-        if (!hasHolder()) apoli$holder = entity;
-        return (ItemStack) (Object) this;
     }
 
 }

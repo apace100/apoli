@@ -22,12 +22,15 @@ public class StackReferenceUtil implements StackReference {
 
     @Override
     public ItemStack get() {
-        return ((MutableItemStack) stackReference.get()).setHolder(entity);
+        ItemStack stack = stackReference.get();
+        stack.setHolder(entity);
+        return stack;
     }
 
     @Override
     public boolean set(ItemStack stack) {
-        return stackReference.set(((MutableItemStack) stack).setHolder(entity));
+        stack.setHolder(entity);
+        return stackReference.set(stack);
     }
 
 }
