@@ -2,6 +2,8 @@ package io.github.apace100.apoli.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
@@ -13,6 +15,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -22,380 +25,394 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class PowerCommand {
 
-	public static final Identifier COMMAND_POWER_SOURCE = Apoli.identifier("command");
+	private enum OptionType {
+		SPECIFIED,
+		NOT_SPECIFIED
+	}
 
 	public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-		// TODO: Clean up this mess.
 		dispatcher.register(
-			literal("power").requires(cs -> cs.hasPermissionLevel(2))
+			literal("power").requires(scs -> scs.hasPermissionLevel(2))
 				.then(literal("grant")
 					.then(argument("targets", EntityArgumentType.entities())
 						.then(argument("power", PowerTypeArgumentType.power())
-							.executes((command) -> {
-									int i = 0;
-									try {
-
-										Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-										PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
-										for(Entity target : targets) {
-											if(target instanceof LivingEntity) {
-												if(grantPower((LivingEntity)target, power)) {
-													i++;
-												}
-											}
-										}
-										if(i == 0) {
-											if(targets.size() == 1) {
-												command.getSource().sendError(Text.translatable("commands.apoli.grant.fail.single", targets.iterator().next().getDisplayName(), power.getName(), COMMAND_POWER_SOURCE));
-											} else {
-												command.getSource().sendError(Text.translatable("commands.apoli.grant.fail.multiple", targets.size(), power.getName(), COMMAND_POWER_SOURCE));
-											}
-										} else
-										if (targets.size() == 1 && i == 1) {
-											command.getSource().sendFeedback(Text.translatable("commands.apoli.grant.success.single", targets.iterator().next().getDisplayName(), power.getName()), true);
-										} else {
-											command.getSource().sendFeedback(Text.translatable("commands.apoli.grant.success.multiple", i, power.getName()), true);
-										}
-									} catch (Exception e) {
-										command.getSource().sendError(Text.literal(e.getMessage()));
-									}
-									return i;
-								}
-							)
-							.then(argument("source", IdentifierArgumentType.identifier())
-								.executes((command) -> {
-									int i = 0;
-									try {
-										Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-										PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
-										Identifier source = IdentifierArgumentType.getIdentifier(command, "source");
-										for(Entity target : targets) {
-											if(target instanceof LivingEntity) {
-												if(grantPower((LivingEntity)target, power, source)) {
-													i++;
-												}
-											}
-										}
-										if(i == 0) {
-											if(targets.size() == 1) {
-												command.getSource().sendError(Text.translatable("commands.apoli.grant.fail.single", targets.iterator().next().getDisplayName(), power.getName(), source));
-											} else {
-												command.getSource().sendError(Text.translatable("commands.apoli.grant.fail.multiple", targets.size(), power.getName(), source));
-											}
-										} else
-										if (targets.size() == 1 && i == 1) {
-											command.getSource().sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.single", targets.iterator().next().getDisplayName(), power.getName(), source), true);
-										} else {
-											command.getSource().sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.multiple", i, power.getName(), source), true);
-										}
-									} catch (Exception e) {
-										command.getSource().sendError(Text.literal(e.getMessage()));
-									}
-									return i;
-								})))))
+							.executes(context -> grantPower(context, OptionType.NOT_SPECIFIED)))
+						.then(argument("source", IdentifierArgumentType.identifier())
+							.executes(context -> grantPower(context, OptionType.SPECIFIED))))
+				)
 				.then(literal("revoke")
 					.then(argument("targets", EntityArgumentType.entities())
 						.then(argument("power", PowerTypeArgumentType.power())
-							.executes((command) -> {
-								int i = 0;
-								Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
-								try {
-									for (Entity target : targets) {
-										if (target instanceof LivingEntity) {
-											if (revokePower((LivingEntity) target, power)) {
-												i++;
-											}
-										}
-									}
-
-									if (i == 0) {
-										if(targets.size() == 1) {
-											command.getSource().sendError(Text.translatable("commands.apoli.revoke.fail.single", targets.iterator().next().getDisplayName(), power.getName(), COMMAND_POWER_SOURCE));
-										} else {
-											command.getSource().sendError(Text.translatable("commands.apoli.revoke.fail.multiple", power.getName(), COMMAND_POWER_SOURCE));
-										}
-									} else if (targets.size() == 1) {
-										command.getSource().sendFeedback(Text.translatable("commands.apoli.revoke.success.single", targets.iterator().next().getDisplayName(), power.getName()), false);
-									} else {
-										command.getSource().sendFeedback(Text.translatable("commands.apoli.revoke.success.multiple", i, power.getName()), false);
-									}
-								} catch (Exception e) {
-									command.getSource().sendError(Text.literal(e.getMessage()));
-								}
-								return i;
-							})
+							.executes(context -> revokePower(context, OptionType.NOT_SPECIFIED))
 							.then(argument("source", IdentifierArgumentType.identifier())
-								.executes((command) -> {
-									int i = 0;
-									Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-									PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
-									Identifier source = IdentifierArgumentType.getIdentifier(command, "source");
-									try {
-										for (Entity target : targets) {
-											if (target instanceof LivingEntity) {
-												if (revokePower((LivingEntity) target, power, source)) {
-													i++;
-												}
-											}
-										}
-
-										if (i == 0) {
-											if(targets.size() == 1) {
-												command.getSource().sendError(Text.translatable("commands.apoli.revoke.fail.single", targets.iterator().next().getDisplayName(), power.getName(), source));
-											} else {
-												command.getSource().sendError(Text.translatable("commands.apoli.revoke.fail.multiple", power.getName(), source));
-											}
-										} else if (targets.size() == 1) {
-											command.getSource().sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.single", targets.iterator().next().getDisplayName(), power.getName(), source), false);
-										} else {
-											command.getSource().sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.multiple", i, power.getName(), source), false);
-										}
-									} catch (Exception e) {
-										command.getSource().sendError(Text.literal(e.getMessage()));
-									}
-									return i;
-								})))))
+								.executes(context -> revokePower(context, OptionType.SPECIFIED)))))
+				)
 				.then(literal("revokeall")
 					.then(argument("targets", EntityArgumentType.entities())
 						.then(argument("source", IdentifierArgumentType.identifier())
-							.executes((command) -> {
-								int i = 0;
-								Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-								Identifier source = IdentifierArgumentType.getIdentifier(command, "source");
-								try {
-									for (Entity target : targets) {
-										if (target instanceof LivingEntity) {
-											i += revokeAllPowersFromSource((LivingEntity) target, source);
-										}
-									}
-
-									if (i == 0) {
-										if(targets.size() == 1) {
-											command.getSource().sendError(Text.translatable("commands.apoli.revoke_all.fail.single", targets.iterator().next().getDisplayName(), source));
-										} else {
-											command.getSource().sendError(Text.translatable("commands.apoli.revoke_all.fail.multiple", source));
-										}
-									} else if (targets.size() == 1) {
-										command.getSource().sendFeedback(Text.translatable("commands.apoli.revoke_all.success.single", targets.iterator().next().getDisplayName(), i, source), false);
-									} else {
-										command.getSource().sendFeedback(Text.translatable("commands.apoli.revoke_all.success.multiple", targets.size(), i, source), false);
-									}
-								} catch (Exception e) {
-									command.getSource().sendError(Text.literal(e.getMessage()));
-								}
-								return i;
-							}))))
+							.executes(PowerCommand::revokeAllPowers)))
+				)
 				.then(literal("list")
 					.then(argument("target", EntityArgumentType.entity())
-						.executes((command) -> {
-							int i = 0;
-							Entity target = EntityArgumentType.getEntity(command, "target");
-							if(target instanceof LivingEntity) {
-								PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-								StringBuilder powers = new StringBuilder();
-								for(PowerType<?> powerType : component.getPowerTypes(false)) {
-									if(i > 0)
-										powers.append(", ");
-									powers.append(powerType.getIdentifier().toString());
-									i++;
-								}
-								command.getSource().sendFeedback(Text.translatable("commands.apoli.list.pass", i, powers), false);
-							} else {
-								command.getSource().sendError(Text.translatable("commands.apoli.list.fail"));
-							}
-							return i;
-						})
+						.executes(context -> listPowers(context, OptionType.NOT_SPECIFIED))
 						.then(argument("subpowers", BoolArgumentType.bool())
-							.executes((command) -> {
-								int i = 0;
-								Entity target = EntityArgumentType.getEntity(command, "target");
-								boolean listSubpowers = BoolArgumentType.getBool(command, "subpowers");
-								if(target instanceof LivingEntity) {
-									PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-									StringBuilder powers = new StringBuilder();
-									for(PowerType<?> powerType : component.getPowerTypes(listSubpowers)) {
-										if(i > 0)
-											powers.append(", ");
-										powers.append(powerType.getIdentifier().toString());
-										i++;
-									}
-									command.getSource().sendFeedback(Text.translatable("commands.apoli.list.pass", i, powers), false);
-								} else {
-									command.getSource().sendError(Text.translatable("commands.apoli.list.fail"));
-								}
-								return i;
-							}))))
+							.executes(context -> listPowers(context, OptionType.SPECIFIED))))
+				)
 				.then(literal("has")
 					.then(argument("targets", EntityArgumentType.entities())
 						.then(argument("power", PowerTypeArgumentType.power())
-							.executes((command) -> {
-								int i = 0;
-								Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
-								for(Entity target : targets) {
-									if(target instanceof LivingEntity) {
-										if (hasPower((LivingEntity)target, power)) {
-											i++;
-										}
-									}
-								}
-								if (i == 0) {
-									command.getSource().sendError(Text.translatable("commands.execute.conditional.fail"));
-								} else if (targets.size() == 1) {
-									command.getSource().sendFeedback(Text.translatable("commands.execute.conditional.pass"), false);
-								} else {
-									command.getSource().sendFeedback(Text.translatable("commands.execute.conditional.pass_count", i), false);
-								}
-								return i;
-							}))))
+							.executes(PowerCommand::hasPower)))
+				)
 				.then(literal("sources")
 					.then(argument("target", EntityArgumentType.entity())
 						.then(argument("power", PowerTypeArgumentType.power())
-							.executes((command) -> {
-								int i = 0;
-								Entity target = EntityArgumentType.getEntity(command, "target");
-								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
-								if(target instanceof LivingEntity) {
-									PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-									StringBuilder sources = new StringBuilder();
-									for(Identifier source : component.getSources(power)) {
-										if(i > 0)
-											sources.append(", ");
-										sources.append(source.toString());
-										i++;
-									}
-									command.getSource().sendFeedback(Text.translatable("commands.apoli.sources.pass", target.getDisplayName(), i, power.getName(), sources), false);
-								} else {
-									command.getSource().sendError(Text.translatable("commands.apoli.sources.fail", target.getDisplayName(), power.getName()));
-								}
-								return i;
-							}))))
+							.executes(PowerCommand::getSourcesFromPower)))
+				)
 				.then(literal("remove")
 					.then(argument("targets", EntityArgumentType.entities())
 						.then(argument("power", PowerTypeArgumentType.power())
-							.executes((command) -> {
-								int i = 0;
-								Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-								PowerType<?> power = PowerTypeArgumentType.getPower(command, "power");
-								try {
-									for (Entity target : targets) {
-										if (target instanceof LivingEntity) {
-											if (revokePowerAllSources((LivingEntity) target, power)) {
-												i++;
-											}
-										}
-									}
-
-									if (i == 0) {
-										if(targets.size() == 1) {
-											command.getSource().sendError(Text.translatable("commands.apoli.remove.fail.single", targets.iterator().next().getDisplayName(), power.getName()));
-										} else {
-											command.getSource().sendError(Text.translatable("commands.apoli.remove.fail.multiple", power.getName()));
-										}
-									} else if (targets.size() == 1) {
-										command.getSource().sendFeedback(Text.translatable("commands.apoli.remove.success.single", targets.iterator().next().getDisplayName(), power.getName()), false);
-									} else {
-										command.getSource().sendFeedback(Text.translatable("commands.apoli.remove.success.multiple", i, power.getName()), false);
-									}
-								} catch (Exception e) {
-									command.getSource().sendError(Text.literal(e.getMessage()));
-								}
-								return i;
-							}))))
+							.executes(PowerCommand::removePower)))
+				)
 				.then(literal("clear")
 					.then(argument("targets", EntityArgumentType.entities())
-						.executes((command) -> {
-							int i = 0;
-							Collection<? extends Entity> targets = EntityArgumentType.getEntities(command, "targets");
-							try {
-								for (Entity target : targets) {
-									if (target instanceof LivingEntity) {
-										i += revokeAllPowers((LivingEntity) target);
-									}
-								}
-
-								if (i == 0) {
-									if(targets.size() == 1) {
-										command.getSource().sendError(Text.translatable("commands.apoli.clear.fail.single", targets.iterator().next().getDisplayName()));
-									} else {
-										command.getSource().sendError(Text.translatable("commands.apoli.clear.fail.multiple"));
-									}
-								} else if (targets.size() == 1) {
-									command.getSource().sendFeedback(Text.translatable("commands.apoli.clear.success.single", targets.iterator().next().getDisplayName(), i), false);
-								} else {
-									command.getSource().sendFeedback(Text.translatable("commands.apoli.clear.success.multiple", targets.size(), i), false);
-								}
-							} catch (Exception e) {
-								command.getSource().sendError(Text.literal(e.getMessage()));
-							}
-							return i;
-						}))));
-
+						.executes(PowerCommand::clearAllPowers))
+				)
+		);
 	}
 
-	private static boolean grantPower(LivingEntity entity, PowerType<?> power) {
-		return grantPower(entity, power, COMMAND_POWER_SOURCE);
-	}
+	private static int grantPower(CommandContext<ServerCommandSource> context, OptionType optionType) throws CommandSyntaxException {
 
-	private static boolean grantPower(LivingEntity entity, PowerType<?> power, Identifier source) {
-		PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-		boolean success = component.addPower(power, source);
-		if(success) {
-			component.sync();
-			return true;
+		ServerCommandSource serverCommandSource = context.getSource();
+		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
+		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Identifier powerSource = switch (optionType) {
+			case SPECIFIED -> IdentifierArgumentType.getIdentifier(context, "source");
+			case NOT_SPECIFIED -> Apoli.identifier("command");
+		};
+
+		List<Entity> nonLivingTargets = new ArrayList<>();
+		List<LivingEntity> livingTargets = new ArrayList<>();
+		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+
+		for (Entity target : targets) {
+
+			if (!(target instanceof LivingEntity livingTarget)) {
+				nonLivingTargets.add(target);
+				continue;
+			}
+
+			livingTargets.add(livingTarget);
+			PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
+
+			if (!powerHolderComponent.addPower(powerType, powerSource)) continue;
+
+			powerHolderComponent.sync();
+			processedLivingTargets.add(livingTarget);
+
 		}
-		return false;
+
+		if (!processedLivingTargets.isEmpty()) {
+			if (optionType == OptionType.NOT_SPECIFIED) {
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName()), true);
+				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
+			}
+			else {
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName(), powerSource), true);
+				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
+			}
+		}
+
+		else if (!livingTargets.isEmpty()) {
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.grant.fail.single", livingTargets.get(0).getDisplayName(), powerType.getName(), powerSource));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.grant.fail.multiple", livingTargets.size(), powerType.getName(), powerSource));
+		}
+
+		else if (!nonLivingTargets.isEmpty()) {
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entity", nonLivingTargets.get(0).getDisplayName()));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entities", nonLivingTargets.size()));
+		}
+
+		return processedLivingTargets.size();
+
 	}
 
-	private static boolean revokePower(LivingEntity entity, PowerType<?> power) {
-		return revokePower(entity, power, COMMAND_POWER_SOURCE);
+	private static int revokePower(CommandContext<ServerCommandSource> context, OptionType optionType) throws CommandSyntaxException {
+
+		ServerCommandSource serverCommandSource = context.getSource();
+		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
+		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Identifier powerSource = switch (optionType) {
+			case SPECIFIED -> IdentifierArgumentType.getIdentifier(context, "source");
+			case NOT_SPECIFIED -> Apoli.identifier("command");
+		};
+
+		List<Entity> nonLivingTargets = new ArrayList<>();
+		List<LivingEntity> livingTargets = new ArrayList<>();
+		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+
+		for (Entity target : targets) {
+
+			if (!(target instanceof LivingEntity livingTarget)) {
+				nonLivingTargets.add(target);
+				continue;
+			}
+
+			livingTargets.add(livingTarget);
+			PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
+
+			if (!(powerHolderComponent.hasPower(powerType, powerSource))) continue;
+
+			powerHolderComponent.removePower(powerType, powerSource);
+			powerHolderComponent.sync();
+			processedLivingTargets.add(livingTarget);
+
+		}
+
+		if (!processedLivingTargets.isEmpty()) {
+			if (optionType == OptionType.NOT_SPECIFIED) {
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName()), true);
+				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
+			}
+			else {
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName(), powerSource), true);
+				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
+			}
+		}
+
+		else if (!livingTargets.isEmpty()) {
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.fail.single", livingTargets.get(0).getDisplayName(), powerType.getName(), powerSource));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.fail.multiple", powerType.getName(), powerSource));
+		}
+
+		else if (!nonLivingTargets.isEmpty()) {
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entity", nonLivingTargets.get(0).getDisplayName()));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entities", nonLivingTargets.size()));
+		}
+
+		return processedLivingTargets.size();
+
 	}
 
-	private static boolean revokePower(LivingEntity entity, PowerType<?> power, Identifier source) {
-		PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-		if(component.hasPower(power, source)) {
-			component.removePower(power, source);
-			component.sync();
-			return true;
+	private static int revokeAllPowers(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+
+		ServerCommandSource serverCommandSource = context.getSource();
+		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
+		Identifier powerSource = IdentifierArgumentType.getIdentifier(context, "source");
+
+		int revokedPowers = 0;
+		List<Entity> nonLivingTargets = new ArrayList<>();
+		List<LivingEntity> livingTargets = new ArrayList<>();
+		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+
+		for (Entity target : targets) {
+
+			if (!(target instanceof LivingEntity livingTarget)) {
+				nonLivingTargets.add(target);
+				continue;
+			}
+
+			livingTargets.add(livingTarget);
+			PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(target);
+			int i = powerHolderComponent.removeAllPowersFromSource(powerSource);
+			if (i <= 0) continue;
+
+			powerHolderComponent.sync();
+			revokedPowers += i;
+			processedLivingTargets.add(livingTarget);
+
 		}
-		return false;
+
+		if (!processedLivingTargets.isEmpty()) {
+			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_all.success.single", processedLivingTargets.get(0).getDisplayName(), revokedPowers, powerSource), true);
+			else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_all.success.multiple", processedLivingTargets.size(), revokedPowers, powerSource), true);
+		}
+
+		else if (!livingTargets.isEmpty()) {
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.fail.single", livingTargets.get(0).getDisplayName(), powerSource));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.fail.multiple", powerSource));
+		}
+
+		else if (!nonLivingTargets.isEmpty()) {
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entity", nonLivingTargets.get(0).getDisplayName()));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entities", nonLivingTargets.size()));
+		}
+
+		return processedLivingTargets.size();
+
 	}
 
-	private static boolean revokePowerAllSources(LivingEntity entity, PowerType<?> power) {
-		PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-		List<Identifier> sources = component.getSources(power);
-		for(Identifier source : sources) {
-			component.removePower(power, source);
+	private static int listPowers(CommandContext<ServerCommandSource> context, OptionType optionType) throws CommandSyntaxException {
+
+		ServerCommandSource serverCommandSource = context.getSource();
+		Entity target = EntityArgumentType.getEntity(context, "target");
+		StringBuilder powers = new StringBuilder();
+
+		int powerCount = 0;
+
+		if (!(target instanceof LivingEntity livingEntity)) {
+			serverCommandSource.sendError(Text.translatable("commands.apoli.list.fail"));
+			return powerCount;
 		}
-		if(sources.size() > 0) {
-			component.sync();
+
+		PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingEntity);
+		for (PowerType<?> powerType : powerHolderComponent.getPowerTypes(optionType == OptionType.SPECIFIED)) {
+			if (powerCount > 0) powers.append(", ");
+			powers.append(powerType.getIdentifier().toString());
+			powerCount++;
 		}
-		return true;
+
+		serverCommandSource.sendFeedback(Text.translatable("commands.apoli.list.pass", powerCount, powers), true);
+		return powerCount;
+
 	}
 
-	private static int revokeAllPowers(LivingEntity entity) {
-		PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-		Set<PowerType<?>> powers = component.getPowerTypes(false);
-		for(PowerType<?> power : powers) {
-			revokePowerAllSources(entity, power);
+	private static int hasPower(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+
+		ServerCommandSource serverCommandSource = context.getSource();
+		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "entities");
+		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+
+		int hasPowerCount = 0;
+		for (Entity target : targets) {
+
+			if (!(target instanceof LivingEntity livingTarget)) continue;
+
+			PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
+			if (!powerHolderComponent.hasPower(powerType)) continue;
+			++hasPowerCount;
+
 		}
-		if(powers.size() > 0) {
-			component.sync();
-		}
-		return powers.size();
+
+		if (hasPowerCount == 1) serverCommandSource.sendFeedback(Text.translatable("commands.execute.conditional.pass_count", hasPowerCount), true);
+		else if (hasPowerCount > 1) serverCommandSource.sendFeedback(Text.translatable("commands.execute.conditional.pass", hasPowerCount), true);
+		else serverCommandSource.sendError(Text.translatable("commands.execute.conditional.fail"));
+
+		return hasPowerCount;
+
 	}
 
-	private static int revokeAllPowersFromSource(LivingEntity entity, Identifier source) {
-		PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-		int i = component.removeAllPowersFromSource(source);
-		if(i > 0) {
-			component.sync();
+	private static int getSourcesFromPower(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+
+		ServerCommandSource serverCommandSource = context.getSource();
+		Entity target = EntityArgumentType.getEntity(context, "target");
+		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		StringBuilder powerSources = new StringBuilder();
+
+		int powerSourceCount = 0;
+
+		if (!(target instanceof LivingEntity livingTarget)) {
+			serverCommandSource.sendError(Text.translatable("commands.apoli.sources.fail", target.getDisplayName(), powerType.getName()));
+			return powerSourceCount;
 		}
-		return i;
+
+		PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
+		for (Identifier powerSource : powerHolderComponent.getSources(powerType)) {
+			if (powerSourceCount > 0) powerSources.append(", ");
+			powerSources.append(powerSource.toString());
+			powerSourceCount++;
+		}
+
+		serverCommandSource.sendFeedback(Text.translatable("commands.apoli.sources.pass", livingTarget.getDisplayName(), powerSourceCount, powerSources), true);
+		return powerSourceCount;
+
 	}
 
-	private static boolean hasPower(LivingEntity entity, PowerType<?> powerType) {
-		return PowerHolderComponent.KEY.get(entity).hasPower(powerType);
+	private static int removePower(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+
+		ServerCommandSource serverCommandSource = context.getSource();
+		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
+		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+
+		List<Entity> nonLivingTargets = new ArrayList<>();
+		List<LivingEntity> livingTargets = new ArrayList<>();
+		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+
+		for (Entity target : targets) {
+
+			if (!(target instanceof LivingEntity livingTarget)) {
+				nonLivingTargets.add(target);
+				continue;
+			}
+
+			livingTargets.add(livingTarget);
+			PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
+			List<Identifier> powerSources = powerHolderComponent.getSources(powerType);
+			for (Identifier powerSource : powerSources) {
+				powerHolderComponent.removePower(powerType, powerSource);
+			}
+
+			if (!powerSources.isEmpty()) powerHolderComponent.sync();
+			processedLivingTargets.add(livingTarget);
+
+		}
+
+		if (!processedLivingTargets.isEmpty()) {
+			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.remove.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName()), true);
+			else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.remove.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
+		}
+
+		else if (!livingTargets.isEmpty()) {
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.single", livingTargets.get(0).getDisplayName(), powerType));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.multiple", powerType.getName()));
+		}
+
+		else if (!nonLivingTargets.isEmpty()) {
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entity", nonLivingTargets.get(0).getDisplayName()));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entities", nonLivingTargets.size()));
+		}
+
+		return processedLivingTargets.size();
+
 	}
+
+	private static int clearAllPowers(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+
+		ServerCommandSource serverCommandSource = context.getSource();
+		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
+		List<Entity> nonLivingTargets = new ArrayList<>();
+		List<LivingEntity> livingTargets = new ArrayList<>();
+		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+
+		int clearedPowers = 0;
+		for (Entity target : targets) {
+
+			if (!(target instanceof LivingEntity livingTarget)) {
+				nonLivingTargets.add(target);
+				continue;
+			}
+
+			livingTargets.add(livingTarget);
+			PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
+			Set<PowerType<?>> powerTypes = powerHolderComponent.getPowerTypes(false);
+
+			for (PowerType<?> powerType : powerTypes) {
+				List<Identifier> powerSources = powerHolderComponent.getSources(powerType);
+				powerSources.forEach(powerHolderComponent::removeAllPowersFromSource);
+			}
+
+			if (!powerTypes.isEmpty()) powerHolderComponent.sync();
+			clearedPowers += powerTypes.size();
+			processedLivingTargets.add(livingTarget);
+
+		}
+
+		if (!processedLivingTargets.isEmpty()) {
+			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.clear.success.single", processedLivingTargets.get(0).getDisplayName(), clearedPowers), true);
+			else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.clear.success.multiple", processedLivingTargets.size(), clearedPowers), true);
+		}
+
+		else if (!livingTargets.isEmpty()) {
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.clear.fail.single", livingTargets.get(0).getDisplayName()));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.clear.fail.multiple"));
+		}
+
+		else if (!nonLivingTargets.isEmpty()) {
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entity", nonLivingTargets.get(0).getDisplayName()));
+			else serverCommandSource.sendError(Text.translatable("commands.apoli.non_living_entities", nonLivingTargets.size()));
+		}
+
+		return clearedPowers;
+
+	}
+
 }

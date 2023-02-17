@@ -1,4 +1,7 @@
 {
+  "commands.apoli.non_living_entity": "Entity %s is not a living entity, thus cannot have powers.",
+  "commands.apoli.non_living_entities": "%s entities were not living entities, thus cannot have powers.",
+
   "commands.apoli.grant.success.single": "Entity %s was granted the power %s.",
   "commands.apoli.grant.success.multiple": "%s entities were granted the power %s.",
 
