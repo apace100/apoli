@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.util;
 
-import io.github.apace100.apoli.access.MutableItemStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
