@@ -221,7 +221,7 @@ public class ApoliDataTypes {
             return dataInst;
         });
 
-    public static final SerializableDataType<MobBehavior> MOB_BEHAVIOR = new SerializableDataType<>(MobBehavior.class, (buffer, mobBehaviour) -> mobBehaviour.send(buffer),
+    public static final SerializableDataType<MobBehavior> MOB_BEHAVIOR = new SerializableDataType<>(MobBehavior.class, (buffer, mobBehavior) -> mobBehavior.write(buffer),
             (buffer) -> {
                 Identifier type = buffer.readIdentifier();
                 BehaviorFactory factory = ApoliRegistries.BEHAVIOR_FACTORY.get(type);

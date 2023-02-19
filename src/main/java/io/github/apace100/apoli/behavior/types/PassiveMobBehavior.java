@@ -13,13 +13,13 @@ public class PassiveMobBehavior extends MobBehavior {
     }
 
     @Override
-    protected void setToDataInstance(SerializableData.Instance dataInstance) {
-        super.setToDataInstance(dataInstance);
+    public boolean isPassive(MobEntity mob, LivingEntity target) {
+        return true;
     }
 
     @Override
-    public boolean isPassive(MobEntity mob, LivingEntity target) {
-        return true;
+    protected void setToDataInstance(SerializableData.Instance dataInstance) {
+        super.setToDataInstance(dataInstance);
     }
 
     public static BehaviorFactory<?> createFactory() {

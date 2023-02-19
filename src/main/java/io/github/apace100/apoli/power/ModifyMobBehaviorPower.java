@@ -57,7 +57,7 @@ public class ModifyMobBehaviorPower extends Power {
         modifiableEntities.removeIf(mob -> mob.isDead() || mob.isRemoved());
 
         if (this.isActive()) {
-            for (Iterator<MobEntity> iterator = modifiableEntities.stream().filter(mob -> !modifiedEntities.contains(mob) && this.doesApply(entity, mob) && !mobBehavior.hasAppliedGoals(mob)).iterator(); iterator.hasNext();) {
+            for (Iterator<MobEntity> iterator = modifiableEntities.stream().filter(mob -> !modifiedEntities.contains(mob) && this.doesApply(entity, mob) && !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedTasks(mob)).iterator(); iterator.hasNext();) {
                 MobEntity mob = iterator.next();
                 if (MobBehavior.usesGoals(mob)) {
                     mobBehavior.initGoals(mob);
@@ -72,18 +72,11 @@ public class ModifyMobBehaviorPower extends Power {
             this.getMobBehavior().tickTasks(mob);
         });
 
-        for (Iterator<MobEntity> iterator = modifiedEntities.stream().filter(mob -> !this.doesApply(entity, mob) || !this.isActive()).iterator(); iterator.hasNext();) {
+        for (Iterator<MobEntity> iterator = modifiedEntities.stream().filter(mob -> mob.isDead() || mob.isRemoved() || !this.doesApply(entity, mob) || !this.isActive()).iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
             if (MobBehavior.usesGoals(mob)) {
-                if (this.getMobBehavior().isHostile(mob, entity) && (mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid())) {
-                    if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
-                        ((Angerable) mob).stopAnger();
-                    }
-                    mob.setTarget(null);
-                }
                 this.mobBehavior.removeGoals(mob);
             } else if (MobBehavior.usesBrain(mob)) {
-                Apoli.LOGGER.info("Removed tasks");
                 this.mobBehavior.removeTasks(mob);
             }
             this.mobBehavior.onRemoved(mob);

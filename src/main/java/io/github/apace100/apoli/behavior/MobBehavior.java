@@ -15,6 +15,7 @@ import net.minecraft.entity.ai.brain.MemoryModuleState;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Pair;
@@ -64,6 +65,12 @@ public class MobBehavior {
 
 
     public void removeGoals(MobEntity mob) {
+        if (this.isHostile(mob, mob.getTarget())) {
+            if (mob instanceof Angerable) {
+                ((Angerable) mob).stopAnger();
+            }
+            mob.setTarget(null);
+        }
         ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getTargetSelector().remove(pair.getRight()));
         ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().removeIf(pair -> pair.getLeft() == this);
         ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getGoalSelector().remove(pair.getRight()));
@@ -146,7 +153,7 @@ public class MobBehavior {
         this.factory = factory;
     }
 
-    public void send(PacketByteBuf buffer) {
+    public void write(PacketByteBuf buffer) {
         BehaviorFactory<?> factory = getFactory();
         buffer.writeIdentifier(factory.getSerializerId());
         SerializableData data = factory.getData();

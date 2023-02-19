@@ -33,14 +33,6 @@ public class FleeMobBehavior extends MobBehavior {
     }
 
     @Override
-    protected void setToDataInstance(SerializableData.Instance dataInstance) {
-        super.setToDataInstance(dataInstance);
-        dataInstance.set("distance", this.fleeDistance);
-        dataInstance.set("speed", this.speed);
-        dataInstance.set("fast_speed", this.fastSpeed);
-    }
-
-    @Override
     public void initGoals(MobEntity mob) {
         if (!(mob instanceof PathAwareEntity) || usesBrain(mob)) return;
         Goal fleeGoal = new FleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, speed, fastSpeed, entity -> biEntityPredicate.test(new Pair<>(entity, mob)));
@@ -94,6 +86,14 @@ public class FleeMobBehavior extends MobBehavior {
     @Override
     protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
         return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> FleeMobBehavior.shouldForgetAvoidTask(m, this), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
+    }
+
+    @Override
+    protected void setToDataInstance(SerializableData.Instance dataInstance) {
+        super.setToDataInstance(dataInstance);
+        dataInstance.set("distance", this.fleeDistance);
+        dataInstance.set("speed", this.speed);
+        dataInstance.set("fast_speed", this.fastSpeed);
     }
 
     public static BehaviorFactory<?> createFactory() {

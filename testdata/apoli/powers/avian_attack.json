@@ -1,0 +1,20 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "bientity_condition": {
+    "type": "apoli:target_condition",
+    "condition": {
+      "type": "apoli:entity_type",
+      "entity_type": "minecraft:chicken"
+    }
+  },
+  "behavior": {
+    "type": "apoli:hostile",
+    "modifier": {
+      "name": "Additional damage from avian attack:tm:",
+      "attribute": "minecraft:generic.attack_damage",
+      "operation": "addition",
+      "value": 9
+    }
+  },
+  "tick_rate": 1
+}
