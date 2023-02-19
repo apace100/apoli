@@ -28,7 +28,6 @@ public class MobBehavior {
     private BehaviorFactory<?> factory;
 
     protected int priority;
-    private final Set<MobEntity> taskAppliedEntities = new HashSet<>();
     protected Set<MobEntity> activeEntities = new HashSet<>();
     protected Predicate<Pair<LivingEntity, MobEntity>> biEntityPredicate;
 
@@ -36,47 +35,7 @@ public class MobBehavior {
         this.priority = priority;
     }
 
-    private BehaviorFactory<?> getFactory() {
-        return this.factory;
-    }
-
-    public void setFactory(BehaviorFactory<?> factory) {
-        this.factory = factory;
-    }
-
     public void initGoals(MobEntity mob) {
-    }
-
-    public void removeGoals(MobEntity mob) {
-        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getTargetSelector().remove(pair.getRight()));
-        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().removeIf(pair -> pair.getLeft() == this);
-        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getGoalSelector().remove(pair.getRight()));
-        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().removeIf(pair -> pair.getLeft() == this);
-    }
-
-    public void removeTasks(MobEntity mob) {
-        if (!usesBrain(mob) || this.tasksToApply().isEmpty()) return;
-        for (Activity activity : this.tasksToApply().keySet()) {
-            ((BrainAccessor)mob.getBrain()).getPossibleActivities().remove(activity);
-        }
-        taskAppliedEntities.remove(mob);
-        activeEntities.remove(mob);
-    }
-
-    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Maps.newHashMap();
-    }
-
-    public boolean hasAppliedGoals(MobEntity mob) {
-        return ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
-    }
-
-    public boolean hasAppliedTasks(MobEntity mob) {
-        return taskAppliedEntities.contains(mob);
-    }
-
-    public boolean isActive(MobEntity mob) {
-        return activeEntities.contains(mob);
     }
 
     public boolean isPassive(MobEntity mob, LivingEntity target) {
@@ -90,10 +49,55 @@ public class MobBehavior {
     public void onMobDamage(MobEntity mob, Entity attacker) {
     }
 
+    public void onAdded(MobEntity mob) {
+
+    }
+
+    public void onRemoved(MobEntity mob) {
+
+    }
+
     public void tick(MobEntity mob) {
     }
 
     protected void updateMemories(MobEntity mob, LivingEntity powerHolder) {
+    }
+
+
+    public void removeGoals(MobEntity mob) {
+        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getTargetSelector().remove(pair.getRight()));
+        ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().removeIf(pair -> pair.getLeft() == this);
+        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).forEach(pair -> ((MobEntityAccessor)mob).getGoalSelector().remove(pair.getRight()));
+        ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().removeIf(pair -> pair.getLeft() == this);
+    }
+
+    public void removeTasks(MobEntity mob) {
+        if (!usesBrain(mob) || this.tasksToApply().isEmpty()) return;
+        for (Activity activity : this.tasksToApply().keySet()) {
+            ((BrainAccessor)mob.getBrain()).getPossibleActivities().remove(activity);
+        }
+        activeEntities.remove(mob);
+    }
+
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
+        return Maps.newHashMap();
+    }
+
+    public boolean hasAppliedGoals(MobEntity mob) {
+        return ((ModifiableMobWithGoals)mob).getModifiedTargetSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0 || ((ModifiableMobWithGoals)mob).getModifiedGoalSelectorGoals().stream().filter(pair -> pair.getLeft() == this).toList().size() > 0;
+    }
+
+    public boolean hasAppliedTasks(MobEntity mob) {
+        boolean value = true;
+        for (Activity activity : this.tasksToApply().keySet()) {
+            if (!mob.getBrain().hasActivity(activity))
+                value = false;
+        }
+        return MobBehavior.usesBrain(mob) && value;
+    }
+
+    public boolean isActive(MobEntity mob) {
+        return activeEntities.contains(mob);
     }
 
     public void tickTasks(MobEntity mob) {
@@ -112,7 +116,6 @@ public class MobBehavior {
                 for (Map.Entry<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> entry : this.tasksToApply().entrySet()) {
                     ((BrainTaskAddition)mob.getBrain()).addToTaskList(entry.getKey(), this.priority, entry.getValue().getLeft(), entry.getValue().getRight());
                 }
-                taskAppliedEntities.add(mob);
             }
             updateMemories(mob, powerHolder);
         }
@@ -134,6 +137,14 @@ public class MobBehavior {
 
     protected void setToDataInstance(SerializableData.Instance dataInstance) {
         dataInstance.set("priority", this.priority);
+    }
+
+    private BehaviorFactory<?> getFactory() {
+        return this.factory;
+    }
+
+    public void setFactory(BehaviorFactory<?> factory) {
+        this.factory = factory;
     }
 
     public void send(PacketByteBuf buffer) {

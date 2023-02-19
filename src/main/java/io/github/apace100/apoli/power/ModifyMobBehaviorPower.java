@@ -13,6 +13,7 @@ import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.util.TypeFilter;
+import net.minecraft.util.function.LazyIterationConsumer;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,13 +44,14 @@ public class ModifyMobBehaviorPower extends Power {
 
     @Override
     public void tick() {
+        if (entity.world.isClient) return;
         if (entity.age % tickRate != 0) return;
 
         ((ServerWorldAccessor)entity.world).getEntityManager().getLookup().forEach(TypeFilter.instanceOf(MobEntity.class), mob -> {
             if (!mob.isDead() && !mob.isRemoved() && !this.modifiableEntities.contains(mob) && this.doesApply(entity, mob)) {
-                Apoli.LOGGER.info("Added mob to modifiable entities: " + mob.getDisplayName().getString());
                 modifiableEntities.add(mob);
             }
+            return LazyIterationConsumer.NextIteration.CONTINUE;
         });
 
         modifiableEntities.removeIf(mob -> mob.isDead() || mob.isRemoved());
@@ -60,7 +62,7 @@ public class ModifyMobBehaviorPower extends Power {
                 if (MobBehavior.usesGoals(mob)) {
                     mobBehavior.initGoals(mob);
                 }
-                Apoli.LOGGER.info("Added mob to modified entities: " + mob.getDisplayName().getString());
+                this.mobBehavior.onAdded(mob);
                 this.modifiedEntities.add(mob);
             }
         }
@@ -68,7 +70,6 @@ public class ModifyMobBehaviorPower extends Power {
         modifiedEntities.forEach(mob -> {
             this.getMobBehavior().tick(mob);
             this.getMobBehavior().tickTasks(mob);
-            Apoli.LOGGER.info("Ticked: " + mob.getDisplayName().getString());
         });
 
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().filter(mob -> !this.doesApply(entity, mob) || !this.isActive()).iterator(); iterator.hasNext();) {
@@ -81,9 +82,11 @@ public class ModifyMobBehaviorPower extends Power {
                     mob.setTarget(null);
                 }
                 this.mobBehavior.removeGoals(mob);
+            } else if (MobBehavior.usesBrain(mob)) {
+                Apoli.LOGGER.info("Removed tasks");
                 this.mobBehavior.removeTasks(mob);
-                Apoli.LOGGER.info("Removed from: " + mob.getDisplayName().getString());
             }
+            this.mobBehavior.onRemoved(mob);
         }
         modifiedEntities.removeIf(mob -> mob.isDead() || mob.isRemoved() || !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedTasks(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
     }

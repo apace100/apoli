@@ -2,6 +2,9 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.gson.JsonObject;
+import io.github.apace100.apoli.behavior.BehaviorFactory;
+import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -11,6 +14,7 @@ import io.github.apace100.apoli.power.factory.action.ActionTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.power.factory.condition.ConditionTypes;
+import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
@@ -23,21 +27,16 @@ import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.command.argument.ItemSlotArgumentType;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.stat.Stat;
-import net.minecraft.stat.StatType;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -221,6 +220,26 @@ public class ApoliDataTypes {
             dataInst.set("inverted", inst.isInverted());
             return dataInst;
         });
+
+    public static final SerializableDataType<MobBehavior> MOB_BEHAVIOR = new SerializableDataType<>(MobBehavior.class, (buffer, mobBehaviour) -> mobBehaviour.send(buffer),
+            (buffer) -> {
+                Identifier type = buffer.readIdentifier();
+                BehaviorFactory factory = ApoliRegistries.BEHAVIOR_FACTORY.get(type);
+                return factory.read(buffer);
+            },
+            (jsonElement) -> {
+                if(jsonElement.isJsonObject()) {
+                    JsonObject jo = jsonElement.getAsJsonObject();
+                    String type = JsonHelper.getString(jo, "type");
+                    try {
+                        BehaviorFactory factory = ApoliRegistries.BEHAVIOR_FACTORY.get(new Identifier(type));
+                        return factory.read(jo);
+                    } catch (NullPointerException e) {
+                        BehaviorFactory.throwExceptionMessages(jo);
+                    }
+                }
+                return null;
+            });
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));

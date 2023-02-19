@@ -3,7 +3,7 @@ package io.github.apace100.apoli.behavior;
 import io.github.apace100.apoli.behavior.types.FleeMobBehavior;
 import io.github.apace100.apoli.behavior.types.PassiveMobBehavior;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 
 public class MobBehaviors {
     public static void register() {
