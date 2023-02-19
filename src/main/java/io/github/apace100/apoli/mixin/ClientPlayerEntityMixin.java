@@ -33,8 +33,8 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @Final
     public ClientPlayNetworkHandler networkHandler;
 
-    public ClientPlayerEntityMixin(ClientWorld world, GameProfile profile, @Nullable PlayerPublicKey publicKey) {
-        super(world, profile, publicKey);
+    public ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {
+        super(world, profile);
     }
 
     @Inject(at = @At("HEAD"), method = "isSubmergedInWater", cancellable = true)

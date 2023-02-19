@@ -7,13 +7,14 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tag.TagKey;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.BuiltinRegistries;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class BiomeConditions {
             .add("category", SerializableDataTypes.STRING),
             (data, biome) -> {
                 Identifier tagId = Apoli.identifier("category/" + data.getString("category"));
-                TagKey<Biome> biomeTag = TagKey.of(Registry.BIOME_KEY, tagId);
+                TagKey<Biome> biomeTag = TagKey.of(RegistryKeys.BIOME, tagId);
                 return biome.isIn(biomeTag);
             }));
         register(new ConditionFactory<>(Apoli.identifier("precipitation"), new SerializableData()

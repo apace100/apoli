@@ -7,6 +7,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.condition.entity.BlockCollisionCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.ElytraFlightPossibleCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
 import io.github.apace100.apoli.power.factory.condition.entity.ScoreboardCondition;
@@ -47,9 +48,10 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
@@ -72,16 +74,7 @@ public class EntityConditions {
             (data, entity) -> ((List<ConditionFactory<Entity>.Instance>)data.get("conditions")).stream().anyMatch(
                 condition -> condition.test(entity)
             )));
-        register(new ConditionFactory<>(Apoli.identifier("block_collision"), new SerializableData()
-            .add("offset_x", SerializableDataTypes.FLOAT)
-            .add("offset_y", SerializableDataTypes.FLOAT)
-            .add("offset_z", SerializableDataTypes.FLOAT),
-            (data, entity) -> entity.world.getBlockCollisions(entity,
-                entity.getBoundingBox().offset(
-                    data.getFloat("offset_x") * entity.getBoundingBox().getXLength(),
-                    data.getFloat("offset_y") * entity.getBoundingBox().getYLength(),
-                    data.getFloat("offset_z") * entity.getBoundingBox().getZLength())
-            ).iterator().hasNext()));
+        register(BlockCollisionCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("brightness"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
@@ -248,7 +241,7 @@ public class EntityConditions {
         DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("dimension"), new SerializableData()
             .add("dimension", SerializableDataTypes.IDENTIFIER),
-            (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.WORLD_KEY, data.getId("dimension"))));
+            (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(RegistryKeys.WORLD, data.getId("dimension"))));
         register(new ConditionFactory<>(Apoli.identifier("xp_levels"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
@@ -290,7 +283,7 @@ public class EntityConditions {
                 Biome biome = biomeEntry.value();
                 ConditionFactory<RegistryEntry<Biome>>.Instance condition = data.get("condition");
                 if(data.isPresent("biome") || data.isPresent("biomes")) {
-                    Identifier biomeId = entity.world.getRegistryManager().get(Registry.BIOME_KEY).getId(biome);
+                    Identifier biomeId = entity.world.getRegistryManager().get(RegistryKeys.BIOME).getId(biome);
                     if(data.isPresent("biome") && biomeId.equals(data.getId("biome"))) {
                         return condition == null || condition.test(biomeEntry);
                     }

@@ -46,6 +46,9 @@
     ],
     "modmenu": {
       "badges": ["library"]
+    },
+    "lithium:options": {
+      "mixin.entity.collisions.suffocation": false
     }
   },
 
@@ -55,7 +58,7 @@
     "java": ">=17",
     "fabricloader": ">=0.13.3",
     "fabric": ">=0.54.0",
-    "minecraft": ">=1.19.1",
-    "calio": ">=1.7.0"
+    "minecraft": ">=1.19.3",
+    "calio": ">=1.9.0"
   }
 }

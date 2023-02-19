@@ -16,7 +16,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.RaycastContext;
 
 import java.util.List;

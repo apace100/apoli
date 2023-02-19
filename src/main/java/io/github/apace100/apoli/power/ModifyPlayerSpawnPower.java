@@ -8,12 +8,13 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Dismounting;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.structure.StructureStart;
-import net.minecraft.tag.TagKey;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Unit;
@@ -21,10 +22,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryEntryList;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
@@ -111,7 +112,7 @@ public class ModifyPlayerSpawnPower extends Power {
             }
 
             if(biomeId != null) {
-                Optional<Biome> biomeOptional = world.getRegistryManager().get(Registry.BIOME_KEY).getOrEmpty(biomeId);
+                Optional<Biome> biomeOptional = world.getRegistryManager().get(RegistryKeys.BIOME).getOrEmpty(biomeId);
                 if(biomeOptional.isPresent()) {
                     com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> biomePos =
                         world.locateBiome(b -> b.value() == biomeOptional.get(), spawnToDimPos, 6400, 8, 8);
@@ -153,7 +154,7 @@ public class ModifyPlayerSpawnPower extends Power {
     }
 
     private Pair<BlockPos, Structure> getStructureLocation(World world, RegistryKey<Structure> structure, TagKey<Structure> structureTag, RegistryKey<World> dimension) {
-        Registry<Structure> registry = world.getRegistryManager().get(Registry.STRUCTURE_KEY);
+        Registry<Structure> registry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
         RegistryEntryList<Structure> entryList = null;
         String structureOrTagName = "";
         if(structure != null) {
@@ -249,7 +250,7 @@ public class ModifyPlayerSpawnPower extends Power {
                 .add("dimension_distance_multiplier", SerializableDataTypes.FLOAT, 0F)
                 .add("biome", SerializableDataTypes.IDENTIFIER, null)
                 .add("spawn_strategy", SerializableDataTypes.STRING, "default")
-                .add("structure", SerializableDataType.registryKey(Registry.STRUCTURE_KEY), null)
+                .add("structure", SerializableDataType.registryKey(RegistryKeys.STRUCTURE), null)
                 .add("respawn_sound", SerializableDataTypes.SOUND_EVENT, null),
             data ->
                 (type, player) ->
