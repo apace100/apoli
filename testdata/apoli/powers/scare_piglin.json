@@ -10,9 +10,9 @@
   "behavior": {
     "type": "apoli:flee",
     "priority": 0,
-    "distance": 6.0,
-    "speed": 1.0,
-    "fast_speed": 1.2
+    "distance": 15.0,
+    "speed": 0.6,
+    "fast_speed": 1.0
   },
   "tick_rate": 1
 }

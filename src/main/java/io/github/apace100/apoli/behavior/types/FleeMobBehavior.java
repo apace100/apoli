@@ -55,17 +55,21 @@ public class FleeMobBehavior extends MobBehavior {
     @Override
     protected void updateMemories(MobEntity mob, LivingEntity powerHolder) {
         if (activeEntities.contains(mob) && mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET) && mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).isPresent()) {
-            if (mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get() != powerHolder) {
+            if (mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get() == powerHolder) {
+                if (mob.getBrain().hasMemoryModule(MemoryModuleType.WALK_TARGET) && mob.squaredDistanceTo(powerHolder) < 49.0) {
+                    mob.getNavigation().setSpeed(fastSpeed);
+                } else {
+                    mob.getNavigation().setSpeed(speed);
+                }
+            } else {
                 activeEntities.remove(mob);
             }
-            return;
-        }
-        if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
+        } else if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
             mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
             mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, powerHolder, 20L);
+            activeEntities.add(mob);
         }
-        activeEntities.add(mob);
     }
 
     private static boolean shouldForgetAvoidTask(LivingEntity entity, FleeMobBehavior behavior) {
@@ -92,33 +96,9 @@ public class FleeMobBehavior extends MobBehavior {
         return true;
     }
 
-    private SingleTickTask<PathAwareEntity> createFleeTask(float slowSpeed, float fastSpeed, int range) {
-        return TaskTriggerer.task(context -> context.group(context.queryMemoryOptional(MemoryModuleType.WALK_TARGET), context.queryMemoryValue(ApoliMemoryModuleTypes.AVOID_TARGET)).apply(context, (walkTarget, posSource) -> (world, entity, time) -> {
-            float speed = entity.squaredDistanceTo(context.getValue(posSource)) < 49.0 ? fastSpeed : slowSpeed;
-            Vec3d vec3d2;
-            Optional<WalkTarget> optional = context.getOptionalValue(walkTarget);
-            if (optional.isPresent()) {
-                return false;
-            }
-            Vec3d vec3d = entity.getPos();
-            Function<Entity, Vec3d> posGetter = Entity::getPos;
-            if (!vec3d.isInRange(vec3d2 = posGetter.apply(context.getValue(posSource)), range)) {
-                return false;
-            }
-            for (int j = 0; j < 10; ++j) {
-                Vec3d vec3d3;
-                vec3d3 = NoPenaltyTargeting.findFrom(entity, 16, 7, vec3d2);
-                if (vec3d3 == null) continue;
-                walkTarget.remember(new WalkTarget(vec3d3, speed, 0));
-                break;
-            }
-            return true;
-        }));
-    }
-
     @Override
     protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(createFleeTask((float)this.speed, (float)this.fastSpeed, (int)fleeDistance), ForgetTask.create((m) -> FleeMobBehavior.shouldForgetAvoidTask(m, this), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
+        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> FleeMobBehavior.shouldForgetAvoidTask(m, this), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
     }
 
     public static BehaviorFactory<?> createFactory() {
