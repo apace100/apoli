@@ -8,9 +8,7 @@ import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.NoPenaltyTargeting;
 import net.minecraft.entity.ai.brain.*;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.FleeEntityGoal;
@@ -18,11 +16,8 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.Vec3d;
 
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 
 public class FleeMobBehavior extends MobBehavior {
     private final float fleeDistance;

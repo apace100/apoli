@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.behavior;
 
 import com.google.common.collect.ImmutableList;
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.mixin.BrainAccessor;
