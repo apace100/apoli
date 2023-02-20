@@ -82,7 +82,7 @@ public class FleeMobBehavior extends MobBehavior {
                 new SerializableData()
                         .add("priority", SerializableDataTypes.INT, 0)
                         .add("distance", SerializableDataTypes.FLOAT)
-                        .add("speed", SerializableDataTypes.DOUBLE)
+                        .add("speed", SerializableDataTypes.DOUBLE, 1.0D)
                         .addFunctionedDefault("fast_speed", SerializableDataTypes.DOUBLE, data -> data.getDouble("speed")),
                 data -> new FleeMobBehavior(data.getInt("priority"), data.getFloat("distance"), data.getDouble("speed"), data.getDouble("fast_speed")));
     }

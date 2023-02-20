@@ -1,0 +1,22 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "bientity_condition": {
+    "type": "apoli:and",
+    "conditions": [
+      {
+        "type": "apoli:target_condition",
+        "condition": {
+          "type": "apoli:entity_type",
+          "entity_type": "minecraft:zombie"
+        }
+      }
+    ]
+  },
+  "behavior": {
+    "type": "apoli:follow",
+    "speed": 1.0,
+    "distance": 6.0,
+    "completion_range": 2
+  },
+  "tick_rate": 1
+}

@@ -1,0 +1,8 @@
+{
+  "entity_types": [
+    "minecraft:player"
+  ],
+  "powers": [
+    "apoli:custom_ai_test"
+  ]
+}
