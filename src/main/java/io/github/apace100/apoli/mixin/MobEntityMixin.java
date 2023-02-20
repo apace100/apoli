@@ -49,16 +49,6 @@ public abstract class MobEntityMixin extends LivingEntity {
         return target;
     }
 
-    @Override
-    protected void applyDamage(DamageSource source, float amount) {
-        if (source.getAttacker() != null) {
-            PowerHolderComponent.getPowers(source.getAttacker(), ModifyMobBehaviorPower.class).forEach(power -> {
-                power.getMobBehavior().onMobDamage((MobEntity)(Object)this, source.getAttacker());
-            });
-        }
-        super.applyDamage(source, amount);
-    }
-
     @Unique
     private final List<Pair<MobBehavior, Goal>> apoli$modifiedTargetSelectorGoals = new ArrayList<>();
     @Unique

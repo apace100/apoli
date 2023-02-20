@@ -40,10 +40,10 @@ public class FleeMobBehavior extends MobBehavior {
     }
 
     @Override
-    protected void updateMemories(MobEntity mob, LivingEntity powerHolder) {
+    protected void tickMemories(MobEntity mob, LivingEntity other) {
         if (activeEntities.contains(mob) && mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET) && mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).isPresent()) {
-            if (mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get() == powerHolder) {
-                if (mob.getBrain().hasMemoryModule(MemoryModuleType.WALK_TARGET) && mob.squaredDistanceTo(powerHolder) < 49.0) {
+            if (mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get() == other) {
+                if (mob.getBrain().hasMemoryModule(MemoryModuleType.WALK_TARGET) && mob.squaredDistanceTo(other) < 49.0) {
                     mob.getNavigation().setSpeed(fastSpeed);
                 } else {
                     mob.getNavigation().setSpeed(speed);
@@ -54,28 +54,9 @@ public class FleeMobBehavior extends MobBehavior {
         } else if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
             mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
-            mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, powerHolder, 20L);
+            mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, other, 20L);
             activeEntities.add(mob);
         }
-    }
-
-    private static boolean shouldForgetAvoidTask(LivingEntity entity, FleeMobBehavior behavior) {
-        if (!(entity instanceof MobEntity mob)) {
-            return true;
-        }
-        if (!behavior.isActive(mob)) {
-            return false;
-        }
-        Brain<?> brain = mob.getBrain();
-        if (!brain.hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
-            return true;
-        }
-        if (brain.getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).isPresent()) {
-            LivingEntity livingEntity = brain.getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get();
-            return !behavior.biEntityPredicate.test(new Pair<>(livingEntity, mob));
-        }
-
-        return true;
     }
 
     @Override
@@ -85,7 +66,7 @@ public class FleeMobBehavior extends MobBehavior {
 
     @Override
     protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> FleeMobBehavior.shouldForgetAvoidTask(m, this), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
+        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> MobBehavior.shouldForgetPowerHolder(m, this, ApoliMemoryModuleTypes.AVOID_TARGET), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
     }
 
     @Override

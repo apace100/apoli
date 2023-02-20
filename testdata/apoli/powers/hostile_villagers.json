@@ -4,17 +4,19 @@
     "type": "apoli:target_condition",
     "condition": {
       "type": "apoli:entity_type",
-      "entity_type": "minecraft:chicken"
+      "entity_type": "minecraft:villager"
     }
   },
   "behavior": {
     "type": "apoli:hostile",
+    "priority": 1,
     "modifier": {
-      "name": "Additional damage from avian attack:tm:",
+      "name": "Additional damage from hostile villagers",
       "attribute": "minecraft:generic.attack_damage",
       "operation": "addition",
-      "value": 9
-    }
+      "value": 2
+    },
+    "speed": 0.4
   },
   "tick_rate": 1
 }

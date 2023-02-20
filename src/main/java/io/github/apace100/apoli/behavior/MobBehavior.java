@@ -11,6 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.brain.Activity;
+import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleState;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.Task;
@@ -46,7 +47,7 @@ public class MobBehavior {
         return false;
     }
 
-    public void onMobDamage(MobEntity mob, Entity attacker) {
+    public void onAttacked(MobEntity mob, Entity attacker) {
     }
 
     public void onAdded(MobEntity mob) {
@@ -60,9 +61,9 @@ public class MobBehavior {
     public void tick(MobEntity mob) {
     }
 
-    protected void updateMemories(MobEntity mob, LivingEntity powerHolder) {
-    }
+    protected void tickMemories(MobEntity mob, LivingEntity other) {
 
+    }
 
     public void removeGoals(MobEntity mob) {
         if (this.isHostile(mob, mob.getTarget())) {
@@ -94,12 +95,15 @@ public class MobBehavior {
     }
 
     public boolean hasAppliedTasks(MobEntity mob) {
+        if (!MobBehavior.usesBrain(mob)) {
+            return false;
+        }
         boolean value = true;
         for (Activity activity : this.tasksToApply().keySet()) {
             if (!mob.getBrain().hasActivity(activity))
                 value = false;
         }
-        return MobBehavior.usesBrain(mob) && value;
+        return value;
     }
 
     public boolean isActive(MobEntity mob) {
@@ -114,8 +118,8 @@ public class MobBehavior {
                 potentialTargets.add(living);
             }
         }
-        LivingEntity powerHolder = mob.world.getClosestEntity(potentialTargets, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
-        if (powerHolder == null) {
+        LivingEntity other = mob.world.getClosestEntity(potentialTargets, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
+        if (other == null) {
             this.removeTasks(mob);
         } else {
             if (!this.hasAppliedTasks(mob)) {
@@ -123,7 +127,7 @@ public class MobBehavior {
                     ((BrainTaskAddition)mob.getBrain()).addToTaskList(entry.getKey(), this.priority, entry.getValue().getLeft(), entry.getValue().getRight());
                 }
             }
-            updateMemories(mob, powerHolder);
+            tickMemories(mob, other);
         }
     }
 
@@ -168,5 +172,24 @@ public class MobBehavior {
 
     public static boolean usesBrain(MobEntity mob) {
         return !((BrainAccessor)mob.getBrain()).getCoreActivities().isEmpty();
+    }
+
+    public static boolean shouldForgetPowerHolder(LivingEntity entity, MobBehavior behavior, MemoryModuleType<LivingEntity> memoryModuleType) {
+        if (!(entity instanceof MobEntity mob)) {
+            return true;
+        }
+        if (!behavior.isActive(mob)) {
+            return false;
+        }
+        Brain<?> brain = mob.getBrain();
+        if (!brain.hasMemoryModule(memoryModuleType)) {
+            return true;
+        }
+        if (brain.getOptionalMemory(memoryModuleType).isPresent()) {
+            LivingEntity livingEntity = brain.getOptionalMemory(memoryModuleType).get();
+            return !behavior.biEntityPredicate.test(new Pair<>(livingEntity, mob));
+        }
+
+        return true;
     }
 }
