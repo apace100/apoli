@@ -5,7 +5,6 @@ import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.access.ModifiableMobWithGoals;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
-import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -31,6 +30,7 @@ public class MobBehavior {
     protected int priority;
     protected Set<MobEntity> activeEntities = new HashSet<>();
     protected Predicate<Pair<LivingEntity, MobEntity>> biEntityPredicate;
+    private final List<LivingEntity> potentialTargets = new ArrayList<>();
 
     public MobBehavior(int priority) {
         this.priority = priority;
@@ -112,14 +112,9 @@ public class MobBehavior {
 
     public void tickTasks(MobEntity mob) {
         if (!usesBrain(mob) || this.tasksToApply().isEmpty()) return;
-        List<LivingEntity> potentialTargets = new ArrayList<>();
-        for (Entity entity : ((ServerWorldAccessor)mob.world).getEntityManager().getLookup().iterate()) {
-            if (entity instanceof LivingEntity living && biEntityPredicate.test(new Pair<>(living, mob))) {
-                potentialTargets.add(living);
-            }
-        }
-        LivingEntity other = mob.world.getClosestEntity(potentialTargets, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
-        if (other == null) {
+        this.potentialTargets.removeIf(potentialTarget -> !biEntityPredicate.test(new Pair<>(potentialTarget, mob)));
+        LivingEntity other = mob.world.getClosestEntity(this.potentialTargets, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
+        if (potentialTargets.isEmpty() || other == null) {
             this.removeTasks(mob);
         } else {
             if (!this.hasAppliedTasks(mob)) {
@@ -129,6 +124,14 @@ public class MobBehavior {
             }
             tickMemories(mob, other);
         }
+    }
+
+    public void addToPotentialTargets(LivingEntity entity) {
+        this.potentialTargets.add(entity);
+    }
+
+    public boolean isPotentialTarget(LivingEntity entity) {
+        return this.potentialTargets.contains(entity);
     }
 
     protected void addToGoalSelector(MobEntity mob, Goal goal) {

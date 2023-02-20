@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.behavior.goal.TargetFollowGoal;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.AttributeContainerAccessor;
 import io.github.apace100.apoli.mixin.DefaultAttributeContainerAccessor;
@@ -30,28 +31,26 @@ import java.util.function.Predicate;
 public class HostileMobBehavior extends MobBehavior {
     private final int attackCooldown;
     private final float speed;
+    private final boolean attacks;
     private final List<AttributedEntityAttributeModifier> modifiers = new ArrayList<>();
     private final Set<EntityAttribute> modifiedAttributes = new HashSet<>();
 
-    public HostileMobBehavior(int priority, int attackCooldown, float speed) {
+    public HostileMobBehavior(int priority, int attackCooldown, float speed, boolean attacks) {
         super(priority);
         this.attackCooldown = attackCooldown;
         this.speed = speed;
+        this.attacks = attacks;
     }
 
     @Override
     public void initGoals(MobEntity mob) {
         if (!(mob instanceof PathAwareEntity pathAware) || usesBrain(mob)) return;
-        this.addToGoalSelector(mob, new MeleeAttackGoal(pathAware, 1.0, false));
-        this.addToTargetSelector(mob, new ActiveTargetGoal<>(pathAware, LivingEntity.class, false, entity -> biEntityPredicate.test(new Pair<>(entity, mob))));
-    }
-
-    @Override
-    public void tick(MobEntity mob) {
-        if (!MobBehavior.usesGoals(mob)) return;
-        if (mob.getTarget() != null && biEntityPredicate.test(new Pair<>(mob.getTarget(), mob))) {
-            mob.getNavigation().setSpeed(speed);
+        if (attacks) {
+            this.addToGoalSelector(mob, new MeleeAttackGoal(pathAware, speed, false));
+        } else {
+            this.addToGoalSelector(mob, new TargetFollowGoal(pathAware, speed, false));
         }
+        this.addToTargetSelector(mob, new ActiveTargetGoal<>(pathAware, LivingEntity.class, false, entity -> biEntityPredicate.test(new Pair<>(entity, mob))));
     }
 
     @Override
@@ -64,10 +63,12 @@ public class HostileMobBehavior extends MobBehavior {
         if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.ATTACK_TARGET)) {
             mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-            mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, other, 200L);
+            if (this.attacks) {
+                mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, other, 200L);
+                mob.setAttacking(true);
+                mob.getBrain().doExclusively(ApoliActivities.FIGHT);
+            }
             mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(other, true));
-            mob.setAttacking(true);
-            mob.getBrain().doExclusively(ApoliActivities.FIGHT);
             activeEntities.add(mob);
         }
     }
@@ -80,9 +81,12 @@ public class HostileMobBehavior extends MobBehavior {
 
         mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
         mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-        mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, livingEntity, 200L);
+        if (this.attacks) {
+            mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, livingAttacker, 200L);
+            mob.setAttacking(true);
+            mob.getBrain().doExclusively(ApoliActivities.FIGHT);
+        }
         mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(livingEntity, true));
-        mob.getBrain().doExclusively(ApoliActivities.FIGHT);
     }
 
     @Override
@@ -91,7 +95,7 @@ public class HostileMobBehavior extends MobBehavior {
         DefaultAttributeContainer.Builder builder = DefaultAttributeContainer.builder();
 
         modifierMap.forEach((attribute, instance) -> builder.add(attribute, instance.getBaseValue()));
-        if (!modifierMap.containsKey(EntityAttributes.GENERIC_ATTACK_DAMAGE)) {
+        if (this.attacks && !modifierMap.containsKey(EntityAttributes.GENERIC_ATTACK_DAMAGE)) {
             builder.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.0);
             modifiedAttributes.add(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         }
@@ -121,17 +125,20 @@ public class HostileMobBehavior extends MobBehavior {
 
     @Override
     protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.FIGHT, new Pair<>(ImmutableList.of(createForgetTask(e -> MobBehavior.shouldForgetPowerHolder(e, this, ApoliMemoryModuleTypes.ATTACK_TARGET)), createAttackTask(this.attackCooldown), GoTowardsLookTargetTask.create(speed, 0)), ImmutableList.of(com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT), com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN, MemoryModuleState.VALUE_PRESENT))));
+        return Map.of(ApoliActivities.FIGHT, new Pair<>(ImmutableList.of(createForgetTask(e -> MobBehavior.shouldForgetPowerHolder(e, this, ApoliMemoryModuleTypes.ATTACK_TARGET)), createAttackTask(this.attackCooldown, this.attacks), GoTowardsLookTargetTask.create(speed, 0)), ImmutableList.of(com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT), com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN, MemoryModuleState.VALUE_PRESENT))));
     }
 
-    public static SingleTickTask<MobEntity> createAttackTask(int cooldown) {
+    public static SingleTickTask<MobEntity> createAttackTask(int cooldown, boolean attacks) {
         return TaskTriggerer.task(context -> context.group(context.queryMemoryOptional(MemoryModuleType.LOOK_TARGET), context.queryMemoryValue(ApoliMemoryModuleTypes.ATTACK_TARGET), context.queryMemoryAbsent(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN), context.queryMemoryValue(MemoryModuleType.VISIBLE_MOBS)).apply(context, (lookTarget, attackTarget, attackCoolingDown, visibleMobs) -> (world, entity, time) -> {
             LivingEntity livingEntity = context.getValue(attackTarget);
             if (entity.isInAttackRange(livingEntity) && context.getValue(visibleMobs).contains(livingEntity)) {
                 lookTarget.remember(new EntityLookTarget(livingEntity, true));
-                entity.swingHand(Hand.MAIN_HAND);
-                entity.tryAttack(livingEntity);
-                attackCoolingDown.remember(true, cooldown);
+                if (attacks) {
+                    entity.swingHand(Hand.MAIN_HAND);
+                    entity.tryAttack(livingEntity);
+                    attackCoolingDown.remember(true, cooldown);
+                }
+                entity.setTarget(livingEntity);
                 return true;
             }
             return false;
@@ -165,6 +172,7 @@ public class HostileMobBehavior extends MobBehavior {
             dataInstance.set("modifiers", null);
         }
         dataInstance.set("speed", speed);
+        dataInstance.set("attacks", attacks);
     }
 
     private void addModifier(AttributedEntityAttributeModifier modifier) {
@@ -178,9 +186,10 @@ public class HostileMobBehavior extends MobBehavior {
                         .add("attack_cooldown", SerializableDataTypes.INT, 20)
                         .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
                         .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
-                        .add("speed", SerializableDataTypes.FLOAT, 1.0F),
+                        .add("speed", SerializableDataTypes.FLOAT, 1.0F)
+                        .add("attacks", SerializableDataTypes.BOOLEAN, false),
                 data -> {
-                    HostileMobBehavior behavior = new HostileMobBehavior(data.getInt("priority"), data.getInt("attack_cooldown"), data.getFloat("speed"));
+                    HostileMobBehavior behavior = new HostileMobBehavior(data.getInt("priority"), data.getInt("attack_cooldown"), data.getFloat("speed"), data.getBoolean("attacks"));
                     if (data.isPresent("modifier")) {
                         behavior.addModifier(data.get("modifier"));
                     }

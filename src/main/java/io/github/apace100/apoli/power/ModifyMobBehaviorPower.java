@@ -62,6 +62,7 @@ public class ModifyMobBehaviorPower extends Power {
                 if (MobBehavior.usesGoals(mob)) {
                     mobBehavior.initGoals(mob);
                 }
+                mobBehavior.addToPotentialTargets(entity);
                 this.mobBehavior.onAdded(mob);
                 this.modifiedEntities.add(mob);
             }

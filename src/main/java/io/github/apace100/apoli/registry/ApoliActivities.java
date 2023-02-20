@@ -9,6 +9,7 @@ import net.minecraft.util.Identifier;
 public class ApoliActivities {
     public static final Activity AVOID = register(Apoli.identifier("avoid"));
     public static final Activity FIGHT = register(Apoli.identifier("fight"));
+    public static final Activity FOLLOW = register(Apoli.identifier("follow"));
 
     public static void register() {
 

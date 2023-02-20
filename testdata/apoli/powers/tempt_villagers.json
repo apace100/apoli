@@ -1,0 +1,34 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "bientity_condition": {
+    "type": "apoli:and",
+    "conditions": [
+      {
+        "type": "apoli:target_condition",
+        "condition": {
+          "type": "apoli:entity_type",
+          "entity_type": "minecraft:villager"
+        }
+      },
+      {
+        "type": "apoli:actor_condition",
+        "condition": {
+          "type": "apoli:equipped_item",
+          "equipment_slot": "mainhand",
+          "item_condition": {
+            "type": "apoli:ingredient",
+            "ingredient": {
+              "item": "minecraft:emerald"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "behavior": {
+    "type": "apoli:follow",
+    "speed": 0.45,
+    "completion_range": 2
+  },
+  "tick_rate": 1
+}
