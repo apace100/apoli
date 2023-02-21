@@ -333,7 +333,7 @@ public class PowerCommand {
 			powerSourceCount++;
 		}
 
-		if (powerSourceCount > 0) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.sources.pass", livingTarget.getDisplayName(), powerSourceCount, powerSources), true);
+		if (powerSourceCount > 0) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.sources.pass", livingTarget.getDisplayName(), powerSourceCount, powerType.getName(), powerSources), true);
 		else serverCommandSource.sendError(Text.translatable("commands.apoli.sources.fail", livingTarget.getDisplayName(), powerType.getName()));
 			
 		return powerSourceCount;
