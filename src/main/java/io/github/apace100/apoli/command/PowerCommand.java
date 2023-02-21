@@ -18,10 +18,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Identifier;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -93,9 +90,9 @@ public class PowerCommand {
 			case NOT_SPECIFIED -> Apoli.identifier("command");
 		};
 
-		List<Entity> nonLivingTargets = new ArrayList<>();
-		List<LivingEntity> livingTargets = new ArrayList<>();
-		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+		LinkedList<Entity> nonLivingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> livingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> processedLivingTargets = new LinkedList<>();
 
 		for (Entity target : targets) {
 
@@ -116,22 +113,22 @@ public class PowerCommand {
 
 		if (!processedLivingTargets.isEmpty()) {
 			if (optionType == OptionType.NOT_SPECIFIED) {
-				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName()), true);
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
 				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
 			}
 			else {
-				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName(), powerSource), true);
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource), true);
 				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
 			}
 		}
 
 		else if (!livingTargets.isEmpty()) {
-			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.grant.fail.single", livingTargets.get(0).getDisplayName(), powerType.getName(), powerSource));
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.grant.fail.single", livingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.grant.fail.multiple", livingTargets.size(), powerType.getName(), powerSource));
 		}
 
 		else if (!nonLivingTargets.isEmpty()) {
-			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.grant.invalid_entity", nonLivingTargets.get(0).getDisplayName()));
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.grant.invalid_entity", nonLivingTargets.getFirst().getDisplayName()));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.grant.invalid_entities", nonLivingTargets.size()));
 		}
 
@@ -149,9 +146,9 @@ public class PowerCommand {
 			case NOT_SPECIFIED -> Apoli.identifier("command");
 		};
 
-		List<Entity> nonLivingTargets = new ArrayList<>();
-		List<LivingEntity> livingTargets = new ArrayList<>();
-		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+		LinkedList<Entity> nonLivingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> livingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> processedLivingTargets = new LinkedList<>();
 
 		for (Entity target : targets) {
 
@@ -173,22 +170,22 @@ public class PowerCommand {
 
 		if (!processedLivingTargets.isEmpty()) {
 			if (optionType == OptionType.NOT_SPECIFIED) {
-				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName()), true);
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
 				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
 			}
 			else {
-				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName(), powerSource), true);
+				if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource), true);
 				else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
 			}
 		}
 
 		else if (!livingTargets.isEmpty()) {
-			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.fail.single", livingTargets.get(0).getDisplayName(), powerType.getName(), powerSource));
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.fail.single", livingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.fail.multiple", powerType.getName(), powerSource));
 		}
 
 		else if (!nonLivingTargets.isEmpty()) {
-			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.invalid_entity", nonLivingTargets.get(0).getDisplayName(), powerSource));
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.invalid_entity", nonLivingTargets.getFirst().getDisplayName(), powerSource));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.revoke.invalid_entities", nonLivingTargets.size(), powerSource));
 		}
 
@@ -203,9 +200,9 @@ public class PowerCommand {
 		Identifier powerSource = IdentifierArgumentType.getIdentifier(context, "source");
 
 		int revokedPowers = 0;
-		List<Entity> nonLivingTargets = new ArrayList<>();
-		List<LivingEntity> livingTargets = new ArrayList<>();
-		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+		LinkedList<Entity> nonLivingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> livingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> processedLivingTargets = new LinkedList<>();
 
 		for (Entity target : targets) {
 
@@ -226,17 +223,17 @@ public class PowerCommand {
 		}
 
 		if (!processedLivingTargets.isEmpty()) {
-			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_all.success.single", processedLivingTargets.get(0).getDisplayName(), revokedPowers, powerSource), true);
+			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_all.success.single", processedLivingTargets.getFirst().getDisplayName(), revokedPowers, powerSource), true);
 			else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.revoke_all.success.multiple", processedLivingTargets.size(), revokedPowers, powerSource), true);
 		}
 
 		else if (!livingTargets.isEmpty()) {
-			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.fail.single", livingTargets.get(0).getDisplayName(), powerSource));
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.fail.single", livingTargets.getFirst().getDisplayName(), powerSource));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.fail.multiple", powerSource));
 		}
 
 		else if (!nonLivingTargets.isEmpty()) {
-			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.invalid_entity", nonLivingTargets.get(0).getDisplayName(), powerSource));
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.invalid_entity", nonLivingTargets.getFirst().getDisplayName(), powerSource));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.revoke_all.invalid_entities", nonLivingTargets.size(), powerSource));
 		}
 
@@ -248,7 +245,7 @@ public class PowerCommand {
 
 		ServerCommandSource serverCommandSource = context.getSource();
 		Entity target = EntityArgumentType.getEntity(context, "target");
-		List<Text> powers = new ArrayList<>();
+		List<Text> powers = new LinkedList<>();
 
 		int powerCount = 0;
 
@@ -260,7 +257,7 @@ public class PowerCommand {
 		PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
 		for (PowerType<?> powerType : powerHolderComponent.getPowerTypes(optionType == OptionType.SPECIFIED)) {
 
-			List<Text> powerSources = new ArrayList<>();
+			List<Text> powerSources = new LinkedList<>();
             powerHolderComponent.getSources(powerType).forEach(powerSource -> powerSources.add(Text.of(powerSource.toString())));
 
             HoverEvent powerSourcesOnHover = new HoverEvent(
@@ -287,7 +284,7 @@ public class PowerCommand {
 		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
 		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
 
-		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+		List<LivingEntity> processedLivingTargets = new LinkedList<>();
 		for (Entity target : targets) {
 
 			if (!(target instanceof LivingEntity livingTarget)) continue;
@@ -346,9 +343,9 @@ public class PowerCommand {
 		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
 		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
 
-		List<Entity> nonLivingTargets = new ArrayList<>();
-		List<LivingEntity> livingTargets = new ArrayList<>();
-		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+		LinkedList<Entity> nonLivingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> livingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> processedLivingTargets = new LinkedList<>();
 
 		for (Entity target : targets) {
 
@@ -372,17 +369,17 @@ public class PowerCommand {
 		}
 
 		if (!processedLivingTargets.isEmpty()) {
-			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.remove.success.single", processedLivingTargets.get(0).getDisplayName(), powerType.getName()), true);
+			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.remove.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
 			else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.remove.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
 		}
 
 		else if (!livingTargets.isEmpty()) {
-			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.single", livingTargets.get(0).getDisplayName(), powerType.getName()));
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.single", livingTargets.getFirst().getDisplayName(), powerType.getName()));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.multiple", powerType.getName()));
 		}
 
 		else if (!nonLivingTargets.isEmpty()) {
-			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.remove.invalid_entity", nonLivingTargets.get(0).getDisplayName()));
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.remove.invalid_entity", nonLivingTargets.getFirst().getDisplayName()));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.remove.invalid_entities", nonLivingTargets.size()));
 		}
 
@@ -394,9 +391,9 @@ public class PowerCommand {
 
 		ServerCommandSource serverCommandSource = context.getSource();
 		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
-		List<Entity> nonLivingTargets = new ArrayList<>();
-		List<LivingEntity> livingTargets = new ArrayList<>();
-		List<LivingEntity> processedLivingTargets = new ArrayList<>();
+		LinkedList<Entity> nonLivingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> livingTargets = new LinkedList<>();
+		LinkedList<LivingEntity> processedLivingTargets = new LinkedList<>();
 
 		int clearedPowers = 0;
 		for (Entity target : targets) {
@@ -423,17 +420,17 @@ public class PowerCommand {
 		}
 
 		if (!processedLivingTargets.isEmpty()) {
-			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.clear.success.single", processedLivingTargets.get(0).getDisplayName(), clearedPowers), true);
+			if (processedLivingTargets.size() == 1) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.clear.success.single", processedLivingTargets.getFirst().getDisplayName(), clearedPowers), true);
 			else serverCommandSource.sendFeedback(Text.translatable("commands.apoli.clear.success.multiple", processedLivingTargets.size(), clearedPowers), true);
 		}
 
 		else if (!livingTargets.isEmpty()) {
-			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.clear.fail.single", livingTargets.get(0).getDisplayName()));
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.clear.fail.single", livingTargets.getFirst().getDisplayName()));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.clear.fail.multiple"));
 		}
 
 		else if (!nonLivingTargets.isEmpty()) {
-			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.clear.invalid_entity", nonLivingTargets.get(0).getDisplayName()));
+			if (nonLivingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.clear.invalid_entity", nonLivingTargets.getFirst().getDisplayName()));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.clear.invalid_entities", nonLivingTargets.size()));
 		}
 
