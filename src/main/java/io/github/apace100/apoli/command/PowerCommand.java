@@ -12,7 +12,10 @@ import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.Texts;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -245,7 +248,7 @@ public class PowerCommand {
 
 		ServerCommandSource serverCommandSource = context.getSource();
 		Entity target = EntityArgumentType.getEntity(context, "target");
-		StringBuilder powers = new StringBuilder();
+		List<Text> powers = new ArrayList<>();
 
 		int powerCount = 0;
 
@@ -256,12 +259,22 @@ public class PowerCommand {
 
 		PowerHolderComponent powerHolderComponent = PowerHolderComponent.KEY.get(livingTarget);
 		for (PowerType<?> powerType : powerHolderComponent.getPowerTypes(optionType == OptionType.SPECIFIED)) {
-			if (powerCount > 0) powers.append(", ");
-			powers.append(powerType.getIdentifier().toString());
+
+			List<Text> powerSources = new ArrayList<>();
+            powerHolderComponent.getSources(powerType).forEach(powerSource -> powerSources.add(Text.of(powerSource.toString())));
+
+            HoverEvent powerSourcesOnHover = new HoverEvent(
+                HoverEvent.Action.SHOW_TEXT,
+                Text.translatable(powerSources.size() == 1 ? "Source: %s" : "Sources: [%s]", Texts.join(powerSources, Text.of(", ")))
+            );
+
+			Text power = Text.literal(powerType.getIdentifier().toString()).setStyle(Style.EMPTY.withHoverEvent(powerSourcesOnHover));
+			powers.add(power);
 			powerCount++;
+
 		}
 
-		if (powerCount > 0) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.list.pass", livingTarget.getDisplayName(), powerCount, powers), true);
+		if (powerCount > 0) serverCommandSource.sendFeedback(Text.translatable("commands.apoli.list.pass", livingTarget.getDisplayName(), powerCount, Texts.join(powers, Text.of(", "))), true);
 		else serverCommandSource.sendError(Text.translatable("commands.apoli.list.fail", livingTarget.getDisplayName()));
 
 		return powerCount;
