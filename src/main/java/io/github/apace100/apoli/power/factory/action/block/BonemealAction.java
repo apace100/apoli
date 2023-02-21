@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.action.block;
+package io.github.apace100.apoli.power.factory.action.block;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -37,7 +37,7 @@ public class BonemealAction {
         }
     }
 
-    public static ActionFactory<Triple<World, BlockPos, Direction>> createFactory() {
+    public static ActionFactory<Triple<World, BlockPos, Direction>> getFactory() {
         return new ActionFactory<>(Apoli.identifier("bonemeal"),
                 new SerializableData()
                     .add("effects", SerializableDataTypes.BOOLEAN, true),
