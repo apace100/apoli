@@ -364,7 +364,7 @@ public class PowerCommand {
 		}
 
 		else if (!livingTargets.isEmpty()) {
-			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.single", livingTargets.get(0).getDisplayName(), powerType));
+			if (livingTargets.size() == 1) serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.single", livingTargets.get(0).getDisplayName(), powerType.getName()));
 			else serverCommandSource.sendError(Text.translatable("commands.apoli.remove.fail.multiple", powerType.getName()));
 		}
 
