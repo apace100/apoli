@@ -59,8 +59,7 @@ public class HostileMobBehavior extends MobBehavior {
             if (mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.ATTACK_TARGET).get() != other) {
                 activeEntities.remove(mob);
             }
-        }
-        if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.ATTACK_TARGET)) {
+        } else if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.ATTACK_TARGET)) {
             mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
             mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, other, 200L);

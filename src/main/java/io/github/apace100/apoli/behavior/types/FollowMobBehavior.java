@@ -43,8 +43,7 @@ public class FollowMobBehavior extends MobBehavior {
             if (mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).get() != other) {
                 activeEntities.remove(mob);
             }
-        }
-        if (biEntityPredicate.test(new Pair<>(other, mob)) && !activeEntities.contains(mob)) {
+        } else if (biEntityPredicate.test(new Pair<>(other, mob)) && !activeEntities.contains(mob)) {
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
             mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
             mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(other, true));
