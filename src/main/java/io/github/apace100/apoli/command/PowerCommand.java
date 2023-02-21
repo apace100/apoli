@@ -262,7 +262,7 @@ public class PowerCommand {
 
             HoverEvent powerSourcesOnHover = new HoverEvent(
                 HoverEvent.Action.SHOW_TEXT,
-                Text.translatable(powerSources.size() == 1 ? "Source: %s" : "Sources: [%s]", Texts.join(powerSources, Text.of(", ")))
+                Text.translatable(powerSources.size() == 1 ? "commands.apoli.list.source" : "commands.apoli.list.sources", Texts.join(powerSources, Text.of(", ")))
             );
 
 			Text power = Text.literal(powerType.getIdentifier().toString()).setStyle(Style.EMPTY.withHoverEvent(powerSourcesOnHover));

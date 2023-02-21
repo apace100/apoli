@@ -53,6 +53,9 @@
   "commands.apoli.list.pass": "Entity %s has %s powers: [%s]",
   "commands.apoli.list.fail": "Entity %s is not a living entity or did not have any powers.",
 
+  "commands.apoli.list.source": "Source: %s",
+  "commands.apoli.list.sources": "Sources: [%s]",
+
   "commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
   "commands.apoli.sources.fail": "Entity %s is not a living entity or did not have the power %s.",
 
