@@ -271,7 +271,7 @@ public class PowerCommand {
 	private static int hasPower(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
 
 		ServerCommandSource serverCommandSource = context.getSource();
-		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "entities");
+		Collection<? extends Entity> targets = EntityArgumentType.getEntities(context, "targets");
 		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
 
 		List<LivingEntity> processedLivingTargets = new ArrayList<>();
