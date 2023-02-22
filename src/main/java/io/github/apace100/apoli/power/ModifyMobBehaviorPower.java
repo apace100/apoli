@@ -81,7 +81,15 @@ public class ModifyMobBehaviorPower extends Power {
                 this.mobBehavior.removeTasks(mob);
             }
             this.mobBehavior.onRemoved(mob);
+
+            if (this.mobBehavior.isPassive(mob, mob.getTarget()) && MobBehavior.usesGoals(mob) && (mob.getTarget() == entity || mob instanceof Angerable angerable && angerable.getTarget() == entity)) {
+                if (mob instanceof Angerable) {
+                    ((Angerable) mob).stopAnger();
+                }
+                mob.setTarget(null);
+            }
         }
+
         modifiedEntities.removeIf(mob -> mob.isDead() || mob.isRemoved() || !mobBehavior.hasAppliedGoals(mob) && !mobBehavior.hasAppliedTasks(mob) && (!this.doesApply(entity, mob) || !this.isActive()));
     }
 
@@ -96,14 +104,19 @@ public class ModifyMobBehaviorPower extends Power {
         if (entity.world.isClient) return;
         for (Iterator<MobEntity> iterator = modifiedEntities.stream().iterator(); iterator.hasNext();) {
             MobEntity mob = iterator.next();
-            if (MobBehavior.usesGoals(mob) && mob.getTarget() == this.entity || mob instanceof Angerable && ((Angerable) mob).getAngryAt() == entity.getUuid()) {
-                if (mob instanceof Angerable && ((Angerable) mob).getTarget() == entity) {
+            if (MobBehavior.usesGoals(mob)) {
+                this.mobBehavior.removeGoals(mob);
+            } else if (MobBehavior.usesBrain(mob)) {
+                this.mobBehavior.removeTasks(mob);
+            }
+
+            if (this.mobBehavior.isPassive(mob, mob.getTarget()) && MobBehavior.usesGoals(mob) && (mob.getTarget() == entity || mob instanceof Angerable angerable && angerable.getTarget() == entity)) {
+                if (mob instanceof Angerable) {
                     ((Angerable) mob).stopAnger();
                 }
                 mob.setTarget(null);
             }
-            this.mobBehavior.removeGoals(mob);
-            this.mobBehavior.removeTasks(mob);
+            this.mobBehavior.onRemoved(mob);
         }
     }
 

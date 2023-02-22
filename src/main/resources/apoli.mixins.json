@@ -17,8 +17,6 @@
     "CraftingResultSlotMixin",
     "CraftingScreenHandlerAccessor",
     "CraftingScreenHandlerMixin",
-    "DefaultAttributeContainerAccessor",
-    "DefaultAttributeContainerBuilderAccessor",
     "EndermanEntityTeleportTowardsPlayerGoalMixin",
     "EntityAccessor",
     "EntityMixin",

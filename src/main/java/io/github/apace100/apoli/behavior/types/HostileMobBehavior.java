@@ -7,7 +7,6 @@ import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.behavior.goal.TargetFollowGoal;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.AttributeContainerAccessor;
-import io.github.apace100.apoli.mixin.DefaultAttributeContainerAccessor;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
@@ -20,6 +19,7 @@ import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.attribute.*;
+import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Hand;
@@ -27,13 +27,14 @@ import net.minecraft.util.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class HostileMobBehavior extends MobBehavior {
     private final int attackCooldown;
     private final float speed;
     private final boolean attacks;
     private final List<AttributedEntityAttributeModifier> modifiers = new ArrayList<>();
-    private final Set<EntityAttribute> modifiedAttributes = new HashSet<>();
+    private final HashMap<MobEntity, Set<EntityAttribute>> modifiedAttributes = new HashMap<>();
 
     public HostileMobBehavior(int priority, int attackCooldown, float speed, boolean attacks) {
         super(priority);
@@ -90,36 +91,35 @@ public class HostileMobBehavior extends MobBehavior {
 
     @Override
     public void onAdded(MobEntity mob) {
-        Map<EntityAttribute, EntityAttributeInstance> modifierMap = new HashMap<>(((DefaultAttributeContainerAccessor)((AttributeContainerAccessor)mob.getAttributes()).getFallback()).getInstances());
-        DefaultAttributeContainer.Builder builder = DefaultAttributeContainer.builder();
-
-        modifierMap.forEach((attribute, instance) -> builder.add(attribute, instance.getBaseValue()));
-        if (this.attacks && !modifierMap.containsKey(EntityAttributes.GENERIC_ATTACK_DAMAGE)) {
-            builder.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.0);
-            modifiedAttributes.add(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        }
         modifiers.forEach(modifier -> {
-            if (modifierMap.containsKey(modifier.getAttribute()) || modifier.getAttribute() == EntityAttributes.GENERIC_ATTACK_DAMAGE) return;
-            builder.add(modifier.getAttribute(), 0.0);
-            modifiedAttributes.add(modifier.getAttribute());
+            if (mob.getAttributes().getCustomInstance(modifier.getAttribute()) == null) {
+                ((AttributeContainerAccessor) mob.getAttributes()).getCustom().put(modifier.getAttribute(), new EntityAttributeInstance(modifier.getAttribute(), m -> {}));
+            }
+            mob.getAttributes().getCustomInstance(modifier.getAttribute()).addTemporaryModifier(modifier.getModifier());
         });
-        ((AttributeContainerAccessor)mob.getAttributes()).setFallback(builder.build());
-
-        modifiers.forEach(modifier -> mob.getAttributes().getCustomInstance(modifier.getAttribute()).addTemporaryModifier(modifier.getModifier()));
+        modifiedAttributes.put(mob, modifiers.stream().map(AttributedEntityAttributeModifier::getAttribute).collect(Collectors.toSet()));
+        if (mob.getAttributes().getCustomInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE) == null) {
+            ((AttributeContainerAccessor) mob.getAttributes()).getCustom().put(EntityAttributes.GENERIC_ATTACK_DAMAGE, new EntityAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE, m -> {}));
+            modifiedAttributes.get(mob).add(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        }
     }
 
     @Override
     public void onRemoved(MobEntity mob) {
-        modifiers.forEach(modifier -> mob.getAttributes().getCustomInstance(modifier.getAttribute()).removeModifier(modifier.getModifier()));
-
-        Map<EntityAttribute, EntityAttributeInstance> modifierMap = new HashMap<>(((DefaultAttributeContainerAccessor)((AttributeContainerAccessor)mob.getAttributes()).getFallback()).getInstances());
-        DefaultAttributeContainer.Builder builder = DefaultAttributeContainer.builder();
-
-        modifierMap.forEach((attribute, instance) -> {
-            if (modifiedAttributes.contains(attribute) && instance.getModifiers().isEmpty()) return;
-            builder.add(attribute, instance.getBaseValue());
+        modifiers.forEach(modifier -> {
+            mob.getAttributes().getCustomInstance(modifier.getAttribute()).removeModifier(modifier.getModifier());
+            if (modifiedAttributes.get(mob).contains(modifier.getAttribute()) && mob.getAttributes().getCustomInstance(modifier.getAttribute()).getModifiers().isEmpty()) {
+                ((AttributeContainerAccessor)mob.getAttributes()).getCustom().remove(modifier.getAttribute());
+            }
         });
-        ((AttributeContainerAccessor)mob.getAttributes()).setFallback(builder.build());
+        modifiedAttributes.remove(mob);
+
+        if (MobBehavior.usesGoals(mob) && (mob.getTarget() != null || mob instanceof Angerable angerable && angerable.getAngryAt() != null)) {
+            if (mob instanceof Angerable) {
+                ((Angerable) mob).stopAnger();
+            }
+            mob.setTarget(null);
+        }
     }
 
     @Override
