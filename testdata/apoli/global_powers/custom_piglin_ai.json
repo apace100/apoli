@@ -1,0 +1,8 @@
+{
+  "entity_types": [
+    "minecraft:piglin"
+  ],
+  "powers": [
+    "apoli:angry_piglin"
+  ]
+}
