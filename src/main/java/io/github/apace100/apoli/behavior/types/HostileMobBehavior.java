@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.behavior.types;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
@@ -14,6 +15,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.*;
+import net.minecraft.entity.ai.brain.sensor.Sensor;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
@@ -33,7 +35,7 @@ public class HostileMobBehavior extends MobBehavior {
     private final int attackCooldown;
     private final float speed;
 
-    private final List<AttributedEntityAttributeModifier> modifiers = new ArrayList<>();
+    private final Map<EntityAttribute, Set<EntityAttributeModifier>> modifiers = new HashMap<>();
     private final Set<EntityAttribute> modifiedAttributes = new HashSet<>();
 
     public HostileMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, int attackCooldown, float speed) {
@@ -52,32 +54,37 @@ public class HostileMobBehavior extends MobBehavior {
     }
 
     @Override
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
+        if (mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT)) {
+            return Maps.newHashMap();
+        }
+        return Map.of(ApoliActivities.FIGHT, new Pair<>(ImmutableList.of(ForgetTask.create(e -> MobBehavior.shouldForgetTarget((MobEntity)e, this, ApoliMemoryModuleTypes.ATTACK_TARGET), ApoliMemoryModuleTypes.ATTACK_TARGET), createAttackTask(this.attackCooldown), createFollowTask(this::doesApply, speed)), ImmutableList.of(com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT), com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN, MemoryModuleState.VALUE_PRESENT))));
+    }
+
+    @Override
     protected void tickMemories(LivingEntity target) {
-        if (mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.ATTACK_TARGET) && mob.getBrain().hasActivity(Activity.FIGHT)) {
+        if (!Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, target)) return;
+        if (!mob.getBrain().hasActivity(ApoliActivities.FIGHT) && mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) && (mob.getBrain().isMemoryInState(MemoryModuleType.ANGRY_AT, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ANGRY_AT, MemoryModuleState.VALUE_PRESENT) && LookTargetUtil.getEntity(mob, MemoryModuleType.ANGRY_AT).isPresent() && !doesApply(LookTargetUtil.getEntity(mob, MemoryModuleType.ANGRY_AT).get()))) {
+            mob.getBrain().remember(MemoryModuleType.ANGRY_AT, target.getUuid(), 600L);
+        } else if (!mob.getBrain().hasActivity(ApoliActivities.FIGHT) && (mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.ATTACK_TARGET).isPresent() && !doesApply(mob.getBrain().getOptionalMemory(MemoryModuleType.ATTACK_TARGET).get()))) {
             mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
-            mob.getBrain().remember(MemoryModuleType.ATTACK_TARGET, target);
-            mob.getBrain().doExclusively(ApoliActivities.FIGHT);
-            mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(target, true));
-        } else if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.ATTACK_TARGET)) {
+            mob.getBrain().remember(MemoryModuleType.ATTACK_TARGET, target, 600L);
+        } else if (mob.getBrain().hasActivity(ApoliActivities.FIGHT) && (mob.getBrain().isMemoryInState(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.ATTACK_TARGET).isPresent() && !doesApply(mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.ATTACK_TARGET).get()))) {
             mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-            mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, target, 200L);
-            mob.setAttacking(true);
-            mob.getBrain().doExclusively(ApoliActivities.FIGHT);
-            mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(target, true));
+            mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, target, 600L);
         }
     }
 
     @Override
     public void onAttacked(Entity attacker) {
-        if (!usesBrain() || !(attacker instanceof LivingEntity livingAttacker) || !doesApply(livingAttacker)) return;
+        if (!usesBrain() || !(attacker instanceof LivingEntity livingAttacker) || !Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, livingAttacker) || !mob.getBrain().hasActivity(ApoliActivities.FIGHT)) return;
         Optional<LivingEntity> optional = mob.getBrain().getOptionalRegisteredMemory(ApoliMemoryModuleTypes.ATTACK_TARGET);
         LivingEntity livingEntity = LookTargetUtil.getCloserEntity(mob, optional, livingAttacker);
 
         mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
         mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-        mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, livingAttacker, 200L);
-        mob.setAttacking(true);
+        mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, livingAttacker, 600L);
         mob.getBrain().doExclusively(ApoliActivities.FIGHT);
         mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(livingEntity, true));
     }
@@ -89,7 +96,9 @@ public class HostileMobBehavior extends MobBehavior {
 
     @Override
     public void onRemoved() {
-        removeModifiedAttributes(mob);
+        mob.getBrain().forget(MemoryModuleType.ANGRY_AT);
+        mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
+        mob.getBrain().forget(ApoliMemoryModuleTypes.ATTACK_TARGET);
 
         if (mob.getTarget() != null || mob instanceof Angerable angerable && angerable.getAngryAt() != null) {
             if (mob instanceof Angerable) {
@@ -97,16 +106,18 @@ public class HostileMobBehavior extends MobBehavior {
             }
             mob.setTarget(null);
         }
+
+        removeModifiedAttributes(mob);
     }
 
     private void addModifiedAttributes(MobEntity mob) {
-        modifiers.forEach(modifier -> {
-            if (mob.getAttributes().getCustomInstance(modifier.getAttribute()) == null) {
-                ((AttributeContainerAccessor) mob.getAttributes()).getCustom().put(modifier.getAttribute(), new EntityAttributeInstance(modifier.getAttribute(), m -> {}));
+        modifiers.forEach((attribute, modifiers) -> {
+            if (mob.getAttributes().getCustomInstance(attribute) == null) {
+                ((AttributeContainerAccessor) mob.getAttributes()).getCustom().put(attribute, new EntityAttributeInstance(attribute, m -> {}));
             }
-            mob.getAttributes().getCustomInstance(modifier.getAttribute()).addTemporaryModifier(modifier.getModifier());
+            modifiers.forEach(modifier -> mob.getAttributes().getCustomInstance(attribute).addTemporaryModifier(modifier));
         });
-        modifiedAttributes.addAll(modifiers.stream().map(AttributedEntityAttributeModifier::getAttribute).collect(Collectors.toSet()));
+        modifiedAttributes.addAll(modifiers.keySet());
         if (mob.getAttributes().getCustomInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE) == null) {
             ((AttributeContainerAccessor) mob.getAttributes()).getCustom().put(EntityAttributes.GENERIC_ATTACK_DAMAGE, new EntityAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE, m -> {}));
             modifiedAttributes.add(EntityAttributes.GENERIC_ATTACK_DAMAGE);
@@ -114,21 +125,17 @@ public class HostileMobBehavior extends MobBehavior {
     }
 
     private void removeModifiedAttributes(MobEntity mob) {
-        modifiers.forEach(modifier -> {
-            if (mob.getAttributes().getCustomInstance(modifier.getAttribute()) == null) return;
-            mob.getAttributes().getCustomInstance(modifier.getAttribute()).removeModifier(modifier.getModifier());
-            if (modifiedAttributes.contains(modifier.getAttribute()) && mob.getAttributes().getCustomInstance(modifier.getAttribute()).getModifiers().isEmpty()) {
-                ((AttributeContainerAccessor)mob.getAttributes()).getCustom().remove(modifier.getAttribute());
+        modifiedAttributes.forEach(attribute -> {
+            if (mob.getAttributes().getCustomInstance(attribute) == null) return;
+            if (modifiers.containsKey(attribute)) {
+                modifiers.get(attribute).forEach(modifier -> {
+                    mob.getAttributes().getCustomInstance(attribute).removeModifier(modifier);
+                });
+            }
+            if (mob.getAttributes().getCustomInstance(attribute).getModifiers().isEmpty()) {
+                ((AttributeContainerAccessor)mob.getAttributes()).getCustom().remove(attribute);
             }
         });
-    }
-
-    @Override
-    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        if (mob.getBrain().hasActivity(Activity.FIGHT)) {
-            return Map.of();
-        }
-        return Map.of(ApoliActivities.FIGHT, new Pair<>(ImmutableList.of(ForgetTask.create(e -> MobBehavior.shouldForgetTarget((MobEntity)e, this, ApoliMemoryModuleTypes.ATTACK_TARGET), ApoliMemoryModuleTypes.ATTACK_TARGET), createAttackTask(this.attackCooldown), createFollowTask(this::doesApply, speed)), ImmutableList.of(com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT), com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN, MemoryModuleState.VALUE_PRESENT))));
     }
 
     public static SingleTickTask<MobEntity> createAttackTask(int cooldown) {
@@ -137,6 +144,7 @@ public class HostileMobBehavior extends MobBehavior {
             if (entity.isInAttackRange(livingEntity) && context.getValue(visibleMobs).contains(livingEntity)) {
                 lookTarget.remember(new EntityLookTarget(livingEntity, true));
                 entity.swingHand(Hand.MAIN_HAND);
+                entity.setAttacking(true);
                 entity.tryAttack(livingEntity);
                 attackCoolingDown.remember(true, cooldown);
                 entity.setTarget(livingEntity);
@@ -157,7 +165,11 @@ public class HostileMobBehavior extends MobBehavior {
     }
 
     private void addModifier(AttributedEntityAttributeModifier modifier) {
-        this.modifiers.add(modifier);
+        this.modifiers.compute(modifier.getAttribute(), (attribute, set) -> {
+            Set<EntityAttributeModifier> newSet = set == null ? new HashSet<>() : set;
+            newSet.add(modifier.getModifier());
+            return newSet;
+        });
     }
 
     public static BehaviorFactory<?> createFactory() {

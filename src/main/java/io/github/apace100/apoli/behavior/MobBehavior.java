@@ -95,7 +95,7 @@ public class MobBehavior {
         this.tick();
         List<? extends LivingEntity> applicableEntities = (((ServerWorld)mob.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply));
         LivingEntity closestTarget = mob.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());;
-        if (closestTarget == null || closestTarget != previousTarget) {
+        if (closestTarget == null && previousTarget != null || closestTarget != previousTarget) {
             this.onRemoved();
         }
 
