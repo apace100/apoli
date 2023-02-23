@@ -3,6 +3,7 @@ package io.github.apace100.apoli.data;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.power.Active;
@@ -32,6 +33,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
@@ -44,6 +46,7 @@ import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ApoliDataTypes {
 
@@ -221,24 +224,33 @@ public class ApoliDataTypes {
             return dataInst;
         });
 
-    public static final SerializableDataType<MobBehavior> MOB_BEHAVIOR = new SerializableDataType<>(MobBehavior.class, (buffer, mobBehavior) -> mobBehavior.write(buffer),
+    public static final SerializableDataType<BehaviorFactory.Instance> MOB_BEHAVIOR = new SerializableDataType<>(BehaviorFactory.Instance.class, (buffer, mobBehavior) -> mobBehavior.write(buffer),
             (buffer) -> {
                 Identifier type = buffer.readIdentifier();
-                BehaviorFactory factory = ApoliRegistries.BEHAVIOR_FACTORY.get(type);
-                return factory.read(buffer);
+                Optional<BehaviorFactory> factory = ApoliRegistries.BEHAVIOR_FACTORY.getOrEmpty(type);
+                return factory.get().read(buffer);
             },
-            (jsonElement) -> {
-                if(jsonElement.isJsonObject()) {
-                    JsonObject jo = jsonElement.getAsJsonObject();
-                    String type = JsonHelper.getString(jo, "type");
-                    try {
-                        BehaviorFactory factory = ApoliRegistries.BEHAVIOR_FACTORY.get(new Identifier(type));
-                        return factory.read(jo);
-                    } catch (NullPointerException e) {
-                        BehaviorFactory.throwExceptionMessages(jo);
+            (json) -> {
+                    if(json.isJsonObject()) {
+                        JsonObject jo = json.getAsJsonObject();
+                        String type = JsonHelper.getString(jo, "type");
+                        Identifier id = Identifier.tryParse(type);
+                        if (id == null) {
+                            throw new JsonSyntaxException("Behavior json requires \"type\" identifier.");
+                        }
+                        Registry<BehaviorFactory> registry = ApoliRegistries.BEHAVIOR_FACTORY;
+                        Optional<BehaviorFactory> optionalBehavior = registry.getOrEmpty(id);
+                        if (optionalBehavior.isEmpty()) {
+                            if (NamespaceAlias.hasAlias(id)) {
+                                optionalBehavior = registry.getOrEmpty(NamespaceAlias.resolveAlias(id));
+                            }
+                            if (optionalBehavior.isEmpty()) {
+                                throw new JsonSyntaxException("Behavior json type \"" + id + "\" is not defined.");
+                            }
+                        }
+                        return optionalBehavior.get().read(jo);
                     }
-                }
-                return null;
+                    throw new JsonSyntaxException("Behavior has to be a JsonObject!");
             });
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,

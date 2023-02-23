@@ -1,27 +1,23 @@
 package io.github.apace100.apoli.behavior;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.NamespaceAlias;
 import io.github.apace100.calio.data.SerializableData;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
 
-import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class BehaviorFactory<T extends MobBehavior> {
     private final Identifier identifier;
     protected SerializableData data;
-    private final Function<SerializableData.Instance, T> factory;
+    private final BiFunction<SerializableData.Instance, MobEntity, T> factoryConstructor;
 
-    public BehaviorFactory(Identifier id, SerializableData data, Function<SerializableData.Instance, T> factory) {
+    public BehaviorFactory(Identifier id, SerializableData data, BiFunction<SerializableData.Instance, MobEntity, T> factoryConstructor) {
         this.identifier = id;
         this.data = data;
-        this.factory = factory;
+        this.factoryConstructor = factoryConstructor;
     }
 
     public Identifier getSerializerId() {
@@ -32,39 +28,29 @@ public class BehaviorFactory<T extends MobBehavior> {
         return this.data;
     }
 
-    public T read(JsonObject json) {
-        SerializableData.Instance dataInstance = data.read(json);
-        T mobBehaviour = factory.apply(dataInstance);
-        mobBehaviour.setFactory(this);
-        return mobBehaviour;
-    }
+    public class Instance implements Function<MobEntity, T> {
+        private final SerializableData.Instance dataInstance;
 
-    public T read(PacketByteBuf buffer) {
-        SerializableData.Instance dataInstance = data.read(buffer);
-        T mobBehaviour = factory.apply(dataInstance);
-        mobBehaviour.setFactory(this);
-        return mobBehaviour;
-    }
-
-    public static void throwExceptionMessages(JsonObject json) {
-        if(json.isJsonObject()) {
-            JsonObject jo = json.getAsJsonObject();
-            String type = JsonHelper.getString(jo, "type");
-            Identifier id = Identifier.tryParse(type);
-            if (id == null) {
-                throw new JsonSyntaxException("Behavior json requires \"type\" identifier.");
-            }
-            Registry<BehaviorFactory> registry = ApoliRegistries.BEHAVIOR_FACTORY;
-            Optional<BehaviorFactory> optionalCondition = registry.getOrEmpty(id);
-            if (optionalCondition.isEmpty()) {
-                if (NamespaceAlias.hasAlias(id)) {
-                    optionalCondition = registry.getOrEmpty(NamespaceAlias.resolveAlias(id));
-                }
-                if (optionalCondition.isEmpty()) {
-                    throw new JsonSyntaxException("Behavior json type \"" + id + "\" is not defined.");
-                }
-            }
+        private Instance(SerializableData.Instance data) {
+            this.dataInstance = data;
         }
-        throw new JsonSyntaxException("Behavior has to be a JsonObject!");
+
+        public void write(PacketByteBuf buffer) {
+            buffer.writeIdentifier(identifier);
+            data.write(buffer, dataInstance);
+        }
+
+        @Override
+        public T apply(MobEntity mob) {
+            return factoryConstructor.apply(dataInstance, mob);
+        }
+    }
+
+    public Instance read(JsonObject json) {
+        return new Instance(data.read(json));
+    }
+
+    public Instance read(PacketByteBuf buffer) {
+        return new Instance(data.read(buffer));
     }
 }

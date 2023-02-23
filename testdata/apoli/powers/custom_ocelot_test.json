@@ -117,5 +117,26 @@
       "type": "apoli:nbt",
       "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
     }
+  },
+  "behavior": {
+    "type": "apoli:modify_mob_behavior",
+    "behavior": {
+      "type": "apoli:hostile",
+      "bientity_condition": {
+        "type": "apoli:actor_condition",
+        "condition": {
+          "type": "apoli:and",
+          "conditions": [
+            {
+              "type": "apoli:nbt",
+              "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
+            }
+          ]
+        }
+      },
+      "attacks": false,
+      "speed": 1.0
+    },
+    "tick_rate": 1
   }
 }

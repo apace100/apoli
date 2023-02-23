@@ -25,8 +25,8 @@ public abstract class TrackTargetGoalMixin extends Goal {
 
     @Inject(method = "shouldContinue", at = @At(value = "HEAD"), locals = LocalCapture.CAPTURE_FAILHARD)
     public void modifyTarget(CallbackInfoReturnable<Boolean> cir) {
-        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(this.target, ModifyMobBehaviorPower.class);
-        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.doesApply(this.target, this.mob) && power.getMobBehavior().isPassive(this.mob, this.target));
+        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(this.mob, ModifyMobBehaviorPower.class);
+        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.getMobBehavior().isPassive(this.target));
 
         if (shouldMakePassive) {
             this.target = null;

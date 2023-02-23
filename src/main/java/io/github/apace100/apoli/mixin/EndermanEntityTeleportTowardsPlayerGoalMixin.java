@@ -22,8 +22,8 @@ public class EndermanEntityTeleportTowardsPlayerGoalMixin {
 
     @Inject(method = "canStart", at = @At("RETURN"))
     private void cancelStart(CallbackInfoReturnable<Boolean> cir) {
-        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(this.targetPlayer, ModifyMobBehaviorPower.class);
-        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.doesApply(this.targetPlayer, this.enderman) && power.getMobBehavior().isPassive(this.enderman, this.targetPlayer));
+        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(this.enderman, ModifyMobBehaviorPower.class);
+        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.getMobBehavior().isPassive(this.targetPlayer));
 
         if (shouldMakePassive) {
             this.targetPlayer = null;

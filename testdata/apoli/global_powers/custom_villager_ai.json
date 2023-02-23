@@ -1,0 +1,8 @@
+{
+  "entity_types": [
+    "minecraft:villager"
+  ],
+  "powers": [
+    "apoli:tempt_villagers"
+  ]
+}

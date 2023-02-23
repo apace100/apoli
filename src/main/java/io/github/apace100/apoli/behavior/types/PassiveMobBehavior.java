@@ -3,28 +3,28 @@ package io.github.apace100.apoli.behavior.types;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.util.Pair;
+
+import java.util.function.Predicate;
 
 public class PassiveMobBehavior extends MobBehavior {
-    public PassiveMobBehavior(int priority) {
-        super(priority);
+    public PassiveMobBehavior(MobEntity mob, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition) {
+        super(mob, 0, bientityCondition);
     }
 
     @Override
-    public boolean isPassive(MobEntity mob, LivingEntity target) {
-        return true;
-    }
-
-    @Override
-    protected void setToDataInstance(SerializableData.Instance dataInstance) {
-        super.setToDataInstance(dataInstance);
+    public boolean isPassive(LivingEntity target) {
+        return doesApply(target);
     }
 
     public static BehaviorFactory<?> createFactory() {
         return new BehaviorFactory<>(Apoli.identifier("passive"),
-                new SerializableData(),
-                data -> new PassiveMobBehavior(0));
+                new SerializableData()
+                        .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
+                (data, mob) -> new PassiveMobBehavior(mob, data.get("bientity_condition")));
     }
 }

@@ -71,9 +71,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "canTarget(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
     private void setCanTargetBasedOnPower(LivingEntity target, CallbackInfoReturnable<Boolean> cir) {
-        if (!((LivingEntity)(Object)this instanceof MobEntity mobEntity) || !MobBehavior.usesBrain(mobEntity)) return;
-        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(target, ModifyMobBehaviorPower.class);
-        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.doesApply(target, mobEntity) && power.getMobBehavior().isPassive(mobEntity, target));
+        if (!((LivingEntity)(Object)this instanceof MobEntity mobEntity)) return;
+        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(mobEntity, ModifyMobBehaviorPower.class);
+        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.getMobBehavior().isPassive(target) && power.getMobBehavior().usesBrain());
 
         if (shouldMakePassive) {
             cir.setReturnValue(false);
@@ -224,9 +224,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "damage", at = @At("RETURN"))
     private void runMobBehaviorDamageMethod(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (!((LivingEntity)(Object)this instanceof MobEntity mobEntity) || source.getAttacker() == null || !cir.getReturnValue()) return;
+        if (source.getAttacker() == null || !cir.getReturnValue()) return;
         PowerHolderComponent.getPowers(source.getAttacker(), ModifyMobBehaviorPower.class).forEach(power -> {
-            power.getMobBehavior().onAttacked(mobEntity, source.getAttacker());
+            power.getMobBehavior().onAttacked(source.getAttacker());
         });
     }
 

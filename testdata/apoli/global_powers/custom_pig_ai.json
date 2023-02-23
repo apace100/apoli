@@ -1,0 +1,8 @@
+{
+  "entity_types": [
+    "minecraft:pig"
+  ],
+  "powers": [
+    "apoli:angry_pigs"
+  ]
+}

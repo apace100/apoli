@@ -18,8 +18,8 @@ import java.util.List;
 public class WardenEntityMixin {
     @Inject(method = "isValidTarget", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;world:Lnet/minecraft/world/World;"), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void modifyTarget(Entity entity, CallbackInfoReturnable<Boolean> cir, LivingEntity livingEntity) {
-        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(livingEntity, ModifyMobBehaviorPower.class);
-        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.doesApply(livingEntity, (MobEntity)(Object)this) && power.getMobBehavior().isPassive((MobEntity)(Object)this, livingEntity));
+        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers((MobEntity)(Object)this, ModifyMobBehaviorPower.class);
+        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.getMobBehavior().isPassive(livingEntity));
 
         if (shouldMakePassive) {
             cir.setReturnValue(false);

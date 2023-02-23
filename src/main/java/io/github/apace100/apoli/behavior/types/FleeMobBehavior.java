@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
@@ -18,72 +19,62 @@ import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Pair;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class FleeMobBehavior extends MobBehavior {
     private final float fleeDistance;
     private final double speed;
     private final double fastSpeed;
 
-    public FleeMobBehavior(int priority, float fleeDistance, double slowSpeed, double fastSpeed) {
-        super(priority);
+    public FleeMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, float fleeDistance, double slowSpeed, double fastSpeed) {
+        super(mob, priority, bientityCondition);
         this.fleeDistance = fleeDistance;
         this.speed = slowSpeed;
         this.fastSpeed = fastSpeed;
-        biEntityPredicate = (pair) -> pair.getRight().getBoundingBox().intersects(pair.getLeft().getBoundingBox().expand(fleeDistance));
     }
 
     @Override
-    public void initGoals(MobEntity mob) {
-        if (!(mob instanceof PathAwareEntity) || usesBrain(mob)) return;
-        Goal fleeGoal = new FleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, speed, fastSpeed, entity -> biEntityPredicate.test(new Pair<>(entity, mob)));
-        this.addToGoalSelector(mob, fleeGoal);
+    public void initGoals() {
+        if (!(mob instanceof PathAwareEntity) || !usesGoals()) return;
+        Goal fleeGoal = new FleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, speed, fastSpeed, this::doesApply);
+        this.addToGoalSelector(fleeGoal);
     }
 
     @Override
-    protected void tickMemories(MobEntity mob, LivingEntity other) {
-        if (activeEntities.contains(mob) && mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET) && mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).isPresent()) {
-            if (mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get() == other) {
-                if (mob.getBrain().hasMemoryModule(MemoryModuleType.WALK_TARGET) && mob.squaredDistanceTo(other) < 49.0) {
+    protected void tickMemories(LivingEntity target) {
+        if (mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET) && mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).isPresent()) {
+            if (mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get() == target) {
+                if (mob.getBrain().hasMemoryModule(MemoryModuleType.WALK_TARGET) && mob.squaredDistanceTo(target) < 49.0) {
                     mob.getNavigation().setSpeed(fastSpeed);
                 } else {
                     mob.getNavigation().setSpeed(speed);
                 }
-            } else {
-                activeEntities.remove(mob);
             }
         } else if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
             mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
-            mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, other, 20L);
-            activeEntities.add(mob);
+            mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, target, 20L);
         }
     }
 
     @Override
-    public boolean isPassive(MobEntity mob, LivingEntity target) {
+    public boolean isPassive(LivingEntity target) {
         return true;
     }
 
     @Override
     protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> MobBehavior.shouldForgetPowerHolder(m, this, ApoliMemoryModuleTypes.AVOID_TARGET), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
-    }
-
-    @Override
-    protected void setToDataInstance(SerializableData.Instance dataInstance) {
-        super.setToDataInstance(dataInstance);
-        dataInstance.set("distance", this.fleeDistance);
-        dataInstance.set("speed", this.speed);
-        dataInstance.set("fast_speed", this.fastSpeed);
+        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> MobBehavior.shouldForgetTarget((MobEntity)m, this, ApoliMemoryModuleTypes.AVOID_TARGET), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(new com.mojang.datafixers.util.Pair<>(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT))));
     }
 
     public static BehaviorFactory<?> createFactory() {
         return new BehaviorFactory<>(Apoli.identifier("flee"),
                 new SerializableData()
                         .add("priority", SerializableDataTypes.INT, 0)
+                        .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
                         .add("distance", SerializableDataTypes.FLOAT)
                         .add("speed", SerializableDataTypes.DOUBLE, 1.0D)
                         .addFunctionedDefault("fast_speed", SerializableDataTypes.DOUBLE, data -> data.getDouble("speed")),
-                data -> new FleeMobBehavior(data.getInt("priority"), data.getFloat("distance"), data.getDouble("speed"), data.getDouble("fast_speed")));
+                (data, mob) -> new FleeMobBehavior(mob, data.getInt("priority"), data.get("bientity_condition"), data.getFloat("distance"), data.getDouble("speed"), data.getDouble("fast_speed")));
     }
 }

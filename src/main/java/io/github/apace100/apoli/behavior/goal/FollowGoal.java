@@ -16,10 +16,10 @@ public class FollowGoal extends Goal {
     protected final double speed;
     protected final double distance;
     protected final int completionRange;
-    protected final Predicate<Pair<LivingEntity, MobEntity>> predicate;
+    protected final Predicate<LivingEntity> predicate;
     private LivingEntity followTarget;
 
-    public FollowGoal(PathAwareEntity mob, double speed, double distance, int completionRange, Predicate<Pair<LivingEntity, MobEntity>> predicate) {
+    public FollowGoal(PathAwareEntity mob, double speed, double distance, int completionRange, Predicate<LivingEntity> predicate) {
         this.mob = mob;
         this.speed = speed;
         this.distance = distance;
@@ -30,7 +30,7 @@ public class FollowGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        LivingEntity livingEntity = mob.world.getClosestEntity(mob.world.getEntitiesByClass(LivingEntity.class, mob.getBoundingBox().expand(distance), living -> predicate.test(new Pair<>(living, mob))), TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
+        LivingEntity livingEntity = mob.world.getClosestEntity(mob.world.getEntitiesByClass(LivingEntity.class, mob.getBoundingBox().expand(distance), predicate), TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
         if (livingEntity == null) {
             return false;
         }
