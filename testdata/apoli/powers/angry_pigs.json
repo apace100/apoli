@@ -8,12 +8,6 @@
         "type": "apoli:power_active",
         "power": "apoli:anger_pigs"
       }
-    },
-    "modifier": {
-      "name": "Additional damage from hostile pigs",
-      "attribute": "minecraft:generic.attack_damage",
-      "operation": "addition",
-      "value": -1
     }
   }
 }
