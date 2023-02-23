@@ -69,6 +69,7 @@
     "GameRendererMixin",
     "InGameHudMixin",
     "InGameOverlayRendererMixin",
+    "ItemStackMixinClient",
     "LightmapTextureManagerMixin",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
