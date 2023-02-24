@@ -2,8 +2,9 @@
   "type": "apoli:modify_mob_behavior",
   "behavior": {
     "type": "apoli:follow",
+    "priority": 10,
     "speed": 1.0,
-    "distance": 6.0,
+    "distance": 12.0,
     "completion_range": 2
   },
   "tick_rate": 1

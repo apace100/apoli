@@ -39,7 +39,7 @@ public class FollowMobBehavior extends MobBehavior {
 
     @Override
     protected void tickMemories(LivingEntity target) {
-        if (mob.getBrain().hasMemoryModule(MemoryModuleType.LOOK_TARGET) && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).isPresent()) {
+        if ((mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).isPresent() && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).get() instanceof BlockPosLookTarget || mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).isPresent() && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).get() instanceof EntityLookTarget entityLookTarget && entityLookTarget.getEntity() instanceof LivingEntity living && !this.doesApply(living))) {
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
             mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
             mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(target, true));
@@ -53,16 +53,13 @@ public class FollowMobBehavior extends MobBehavior {
 
     public static SingleTickTask<LivingEntity> createFollowTask(Predicate<LivingEntity> predicate, float speed, float distance, int completionRange) {
         return TaskTriggerer.task(context -> context.group(context.queryMemoryAbsent(MemoryModuleType.WALK_TARGET), context.queryMemoryValue(MemoryModuleType.LOOK_TARGET)).apply(context, (walkTarget, lookTarget) -> (world, entity, time) -> {
-            if (!(entity instanceof MobEntity mob)) {
-                return false;
-            }
             if (!(context.getValue(lookTarget) instanceof EntityLookTarget entityLookTarget)) {
                 return false;
             }
             if (!(entityLookTarget.getEntity() instanceof LivingEntity living)) {
                 return false;
             }
-            if (!mob.isInRange(living, distance)) {
+            if (!entity.isInRange(living, distance)) {
                 return false;
             }
             if (!predicate.test(living)) {

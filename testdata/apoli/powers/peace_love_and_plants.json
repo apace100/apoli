@@ -1,0 +1,34 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "behavior": {
+    "type": "apoli:passive",
+    "bientity_condition": {
+      "type": "apoli:target_condition",
+      "condition": {
+        "type": "apoli:or",
+        "conditions": [
+          {
+            "type": "apoli:equipped_item",
+            "equipment_slot": "mainhand",
+            "item_condition": {
+              "type": "apoli:ingredient",
+              "ingredient": {
+                "tag": "minecraft:small_flowers"
+              }
+            }
+          },
+          {
+            "type": "apoli:equipped_item",
+            "equipment_slot": "offhand",
+            "item_condition": {
+              "type": "apoli:ingredient",
+              "ingredient": {
+                "tag": "minecraft:small_flowers"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

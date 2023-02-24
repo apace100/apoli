@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
+import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
+import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.TargetPredicate;
@@ -13,6 +15,7 @@ import net.minecraft.entity.ai.brain.MemoryModuleState;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
@@ -33,11 +36,14 @@ public class MobBehavior {
     private final List<Goal> modifiedGoalSelectorGoals = new ArrayList<>();
     private final List<Goal> modifiedTargetSelectorGoals = new ArrayList<>();
 
-
     public MobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition) {
         this.mob = mob;
         this.priority = priority;
         this.bientityCondition = bientityCondition;
+    }
+
+    public int getPriority() {
+        return priority;
     }
 
     public void initGoals() {
@@ -96,6 +102,7 @@ public class MobBehavior {
         List<? extends LivingEntity> applicableEntities = (((ServerWorld)mob.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply));
         LivingEntity closestTarget = mob.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());;
         if (closestTarget == null && previousTarget != null || closestTarget != previousTarget) {
+            this.resetAttackTargets();
             this.onRemoved();
         }
 
@@ -109,13 +116,34 @@ public class MobBehavior {
         previousTarget = closestTarget;
     }
 
+    protected void resetAttackTargets() {
+        mob.getBrain().forget(MemoryModuleType.ANGRY_AT);
+        mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
+        mob.getBrain().forget(ApoliMemoryModuleTypes.ATTACK_TARGET);
+
+        if (mob.getTarget() != null || mob instanceof Angerable angerable && angerable.getAngryAt() != null) {
+            if (mob instanceof Angerable) {
+                ((Angerable) mob).stopAnger();
+            }
+            mob.setTarget(null);
+        }
+    }
+
     protected void addToGoalSelector(Goal goal) {
-        ((MobEntityAccessor)mob).getGoalSelector().add(this.priority, goal);
+        this.addToGoalSelector(0, goal);
+    }
+
+    protected void addToGoalSelector(int priorityOffset, Goal goal) {
+        ((MobEntityAccessor)mob).getGoalSelector().add(this.priority + priorityOffset, goal);
         modifiedGoalSelectorGoals.add(goal);
     }
 
     protected void addToTargetSelector(Goal goal) {
-        ((MobEntityAccessor)mob).getTargetSelector().add(this.priority, goal);
+        this.addToTargetSelector(0, goal);
+    }
+
+    protected void addToTargetSelector(int priorityOffset, Goal goal) {
+        ((MobEntityAccessor)mob).getTargetSelector().add(this.priority + priorityOffset, goal);
         modifiedTargetSelectorGoals.add(goal);
     }
 

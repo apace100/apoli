@@ -5,15 +5,18 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.FleeEntityGoalAccessor;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.brain.*;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.FleeEntityGoal;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Pair;
@@ -37,6 +40,7 @@ public class FleeMobBehavior extends MobBehavior {
     public void initGoals() {
         if (!(mob instanceof PathAwareEntity) || !usesGoals()) return;
         Goal fleeGoal = new FleeEntityGoal<>((PathAwareEntity) mob, LivingEntity.class, fleeDistance, speed, fastSpeed, this::doesApply);
+        ((FleeEntityGoalAccessor)fleeGoal).setWithinRangePredicate(TargetPredicate.createNonAttackable().setBaseMaxDistance(fleeDistance).setPredicate(this::doesApply));
         this.addToGoalSelector(fleeGoal);
     }
 
@@ -50,7 +54,7 @@ public class FleeMobBehavior extends MobBehavior {
                     mob.getNavigation().setSpeed(speed);
                 }
             }
-        } else if (!mob.getBrain().hasMemoryModule(ApoliMemoryModuleTypes.AVOID_TARGET)) {
+        } else if ((mob.getBrain().isMemoryInState(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).isPresent() && !doesApply(mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.AVOID_TARGET).get()))) {
             mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
             mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
             mob.getBrain().remember(ApoliMemoryModuleTypes.AVOID_TARGET, target, 20L);
@@ -59,7 +63,7 @@ public class FleeMobBehavior extends MobBehavior {
 
     @Override
     public boolean isPassive(LivingEntity target) {
-        return true;
+        return doesApply(target);
     }
 
     @Override

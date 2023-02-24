@@ -16,6 +16,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -72,10 +73,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Inject(method = "canTarget(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
     private void setCanTargetBasedOnPower(LivingEntity target, CallbackInfoReturnable<Boolean> cir) {
         if (!((LivingEntity)(Object)this instanceof MobEntity mobEntity)) return;
-        List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(mobEntity, ModifyMobBehaviorPower.class);
-        boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.getMobBehavior().isPassive(target) && power.getMobBehavior().usesBrain());
-
-        if (shouldMakePassive) {
+        if (PowerHolderComponent.getPowers(mobEntity, ModifyMobBehaviorPower.class).stream().anyMatch(power -> power.getMobBehavior().isPassive(target) && power.getMobBehavior().doesApply(target))) {
             cir.setReturnValue(false);
         }
     }

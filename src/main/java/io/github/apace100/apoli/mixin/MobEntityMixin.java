@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.ModifiableMobWithGoals;
+import io.github.apace100.apoli.behavior.types.HostileMobBehavior;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import net.minecraft.entity.EntityType;
@@ -31,6 +32,7 @@ public abstract class MobEntityMixin extends LivingEntity {
         }
 
         List<ModifyMobBehaviorPower> modifyMobBehaviorPowers = PowerHolderComponent.getPowers(this, ModifyMobBehaviorPower.class);
+
         boolean shouldMakePassive = modifyMobBehaviorPowers.stream().anyMatch(power -> power.getMobBehavior().isPassive(target));
 
         if (shouldMakePassive) {

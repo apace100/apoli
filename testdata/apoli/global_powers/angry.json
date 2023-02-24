@@ -1,8 +1,9 @@
 {
   "entity_types": [
+    "minecraft:frog",
     "minecraft:piglin"
   ],
   "powers": [
-    "apoli:angry_piglin"
+    "apoli:angry"
   ]
 }

@@ -6,7 +6,6 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.behavior.BehaviorFactory;
 import io.github.apace100.apoli.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.AttributeContainerAccessor;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
@@ -19,7 +18,6 @@ import net.minecraft.entity.ai.brain.sensor.Sensor;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
@@ -29,14 +27,10 @@ import net.minecraft.util.Pair;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
-public class HostileMobBehavior extends MobBehavior {
+public class HostileMobBehavior extends AttributeMobBehavior {
     private final int attackCooldown;
     private final float speed;
-
-    private final Map<EntityAttribute, Set<EntityAttributeModifier>> modifiers = new HashMap<>();
-    private final Set<EntityAttribute> modifiedAttributes = new HashSet<>();
 
     public HostileMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, int attackCooldown, float speed) {
         super(mob, priority, bientityCondition);
@@ -89,55 +83,6 @@ public class HostileMobBehavior extends MobBehavior {
         mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(livingEntity, true));
     }
 
-    @Override
-    public void onAdded() {
-        addModifiedAttributes(mob);
-    }
-
-    @Override
-    public void onRemoved() {
-        mob.getBrain().forget(MemoryModuleType.ANGRY_AT);
-        mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-        mob.getBrain().forget(ApoliMemoryModuleTypes.ATTACK_TARGET);
-
-        if (mob.getTarget() != null || mob instanceof Angerable angerable && angerable.getAngryAt() != null) {
-            if (mob instanceof Angerable) {
-                ((Angerable) mob).stopAnger();
-            }
-            mob.setTarget(null);
-        }
-
-        removeModifiedAttributes(mob);
-    }
-
-    private void addModifiedAttributes(MobEntity mob) {
-        modifiers.forEach((attribute, modifiers) -> {
-            if (mob.getAttributes().getCustomInstance(attribute) == null) {
-                ((AttributeContainerAccessor) mob.getAttributes()).getCustom().put(attribute, new EntityAttributeInstance(attribute, m -> {}));
-            }
-            modifiers.forEach(modifier -> mob.getAttributes().getCustomInstance(attribute).addTemporaryModifier(modifier));
-        });
-        modifiedAttributes.addAll(modifiers.keySet());
-        if (mob.getAttributes().getCustomInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE) == null) {
-            ((AttributeContainerAccessor) mob.getAttributes()).getCustom().put(EntityAttributes.GENERIC_ATTACK_DAMAGE, new EntityAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE, m -> {}));
-            modifiedAttributes.add(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        }
-    }
-
-    private void removeModifiedAttributes(MobEntity mob) {
-        modifiedAttributes.forEach(attribute -> {
-            if (mob.getAttributes().getCustomInstance(attribute) == null) return;
-            if (modifiers.containsKey(attribute)) {
-                modifiers.get(attribute).forEach(modifier -> {
-                    mob.getAttributes().getCustomInstance(attribute).removeModifier(modifier);
-                });
-            }
-            if (mob.getAttributes().getCustomInstance(attribute).getModifiers().isEmpty()) {
-                ((AttributeContainerAccessor)mob.getAttributes()).getCustom().remove(attribute);
-            }
-        });
-    }
-
     public static SingleTickTask<MobEntity> createAttackTask(int cooldown) {
         return TaskTriggerer.task(context -> context.group(context.queryMemoryOptional(MemoryModuleType.LOOK_TARGET), context.queryMemoryValue(ApoliMemoryModuleTypes.ATTACK_TARGET), context.queryMemoryAbsent(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN), context.queryMemoryValue(MemoryModuleType.VISIBLE_MOBS)).apply(context, (lookTarget, attackTarget, attackCoolingDown, visibleMobs) -> (world, entity, time) -> {
             LivingEntity livingEntity = context.getValue(attackTarget);
@@ -162,14 +107,6 @@ public class HostileMobBehavior extends MobBehavior {
             walkTarget.remember(new WalkTarget(context.getValue(lookTarget), speed, (int)Math.sqrt(entity.getWidth() * 2.0f * (entity.getWidth() * 2.0f) + context.getValue(lookTarget).getWidth())));
             return true;
         }));
-    }
-
-    private void addModifier(AttributedEntityAttributeModifier modifier) {
-        this.modifiers.compute(modifier.getAttribute(), (attribute, set) -> {
-            Set<EntityAttributeModifier> newSet = set == null ? new HashSet<>() : set;
-            newSet.add(modifier.getModifier());
-            return newSet;
-        });
     }
 
     public static BehaviorFactory<?> createFactory() {

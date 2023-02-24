@@ -122,6 +122,7 @@
     "type": "apoli:modify_mob_behavior",
     "behavior": {
       "type": "apoli:hostile",
+      "priority": 12,
       "bientity_condition": {
         "type": "apoli:actor_condition",
         "condition": {

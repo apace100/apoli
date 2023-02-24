@@ -1,0 +1,8 @@
+{
+  "entity_types": [
+    "minecraft:creeper"
+  ],
+  "powers": [
+    "apoli:scared_by_feline"
+  ]
+}
