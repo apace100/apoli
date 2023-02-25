@@ -2,7 +2,7 @@
   "type": "apoli:modify_mob_behavior",
   "behavior": {
     "type": "apoli:follow",
-    "priority": 10,
+    "priority": -10,
     "speed": 0.45,
     "distance": 12.0,
     "completion_range": 2,

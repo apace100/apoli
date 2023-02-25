@@ -93,6 +93,17 @@
       "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
     }
   },
+  "model_color": {
+    "type": "apoli:model_color",
+    "red": 0.7,
+    "green": 0.7,
+    "blue": 0.7,
+    "alpha": 0.99,
+    "condition": {
+      "type": "apoli:nbt",
+      "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
+    }
+  },
   "immunity_to_magic_damage": {
     "type": "apoli:modify_damage_taken",
     "damage_condition": {
@@ -103,6 +114,10 @@
       "name": "Immunity to magic damage",
       "operation": "multiply_total",
       "value": -1.0
+    },
+    "condition": {
+      "type": "apoli:nbt",
+      "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
     }
   },
   "attributes": {
@@ -122,7 +137,7 @@
     "type": "apoli:modify_mob_behavior",
     "behavior": {
       "type": "apoli:hostile",
-      "priority": 12,
+      "priority": 0,
       "bientity_condition": {
         "type": "apoli:actor_condition",
         "condition": {

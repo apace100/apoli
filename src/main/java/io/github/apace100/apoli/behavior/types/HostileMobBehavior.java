@@ -18,6 +18,7 @@ import net.minecraft.entity.ai.brain.sensor.Sensor;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
@@ -36,6 +37,7 @@ public class HostileMobBehavior extends AttributeMobBehavior {
         super(mob, priority, bientityCondition);
         this.attackCooldown = attackCooldown;
         this.speed = speed;
+        addRequiredAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE);
     }
 
     @Override
@@ -44,7 +46,7 @@ public class HostileMobBehavior extends AttributeMobBehavior {
         if (mob instanceof PathAwareEntity pathAware && (!(mob instanceof Angerable) || !(mob instanceof HostileEntity))) {
             this.addToGoalSelector(new MeleeAttackGoal(pathAware, speed, false));
         }
-        this.addToTargetSelector(new ActiveTargetGoal<>(mob, LivingEntity.class, false, this::doesApply));
+        this.addToTargetSelector(new ActiveTargetGoal<>(mob, LivingEntity.class, false, living -> this.doesApply(living) && mob.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE)));
     }
 
     @Override
@@ -86,6 +88,9 @@ public class HostileMobBehavior extends AttributeMobBehavior {
     public static SingleTickTask<MobEntity> createAttackTask(int cooldown) {
         return TaskTriggerer.task(context -> context.group(context.queryMemoryOptional(MemoryModuleType.LOOK_TARGET), context.queryMemoryValue(ApoliMemoryModuleTypes.ATTACK_TARGET), context.queryMemoryAbsent(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN), context.queryMemoryValue(MemoryModuleType.VISIBLE_MOBS)).apply(context, (lookTarget, attackTarget, attackCoolingDown, visibleMobs) -> (world, entity, time) -> {
             LivingEntity livingEntity = context.getValue(attackTarget);
+            if (!entity.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE)) {
+                return false;
+            }
             if (entity.isInAttackRange(livingEntity) && context.getValue(visibleMobs).contains(livingEntity)) {
                 lookTarget.remember(new EntityLookTarget(livingEntity, true));
                 entity.swingHand(Hand.MAIN_HAND);
