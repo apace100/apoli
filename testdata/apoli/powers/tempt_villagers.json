@@ -3,7 +3,7 @@
   "behavior": {
     "type": "apoli:follow",
     "priority": -10,
-    "speed": 0.45,
+    "speed": 0.55,
     "distance": 12.0,
     "completion_range": 2,
     "bientity_condition": {
