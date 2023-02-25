@@ -1,10 +1,9 @@
-package io.github.apace100.apoli.behavior;
+package io.github.apace100.apoli.power.factory.behavior;
 
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.access.BrainTaskAddition;
 import io.github.apace100.apoli.mixin.BrainAccessor;
 import io.github.apace100.apoli.mixin.MobEntityAccessor;
-import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;

@@ -1,7 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.access.ModifiableMobWithGoals;
-import io.github.apace100.apoli.behavior.types.HostileMobBehavior;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyMobBehaviorPower;
 import net.minecraft.entity.EntityType;

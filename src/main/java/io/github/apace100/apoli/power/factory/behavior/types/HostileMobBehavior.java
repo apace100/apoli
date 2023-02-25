@@ -1,10 +1,10 @@
-package io.github.apace100.apoli.behavior.types;
+package io.github.apace100.apoli.power.factory.behavior.types;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.behavior.BehaviorFactory;
-import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;

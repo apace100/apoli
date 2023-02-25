@@ -1,14 +1,11 @@
-package io.github.apace100.apoli.behavior.types;
+package io.github.apace100.apoli.power.factory.behavior.types;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.behavior.BehaviorFactory;
-import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.brain.MemoryModuleType;
-import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Pair;
 

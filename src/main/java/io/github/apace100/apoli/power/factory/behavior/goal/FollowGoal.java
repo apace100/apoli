@@ -1,12 +1,9 @@
-package io.github.apace100.apoli.behavior.goal;
+package io.github.apace100.apoli.power.factory.behavior.goal;
 
-import io.github.apace100.apoli.Apoli;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.Pair;
 
 import java.util.EnumSet;
 import java.util.function.Predicate;

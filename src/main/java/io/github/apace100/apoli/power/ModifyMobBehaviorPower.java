@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.behavior.BehaviorFactory;
-import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;

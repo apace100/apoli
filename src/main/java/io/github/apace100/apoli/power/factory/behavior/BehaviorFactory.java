@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.behavior;
+package io.github.apace100.apoli.power.factory.behavior;
 
 import com.google.gson.JsonObject;
 import io.github.apace100.calio.data.SerializableData;

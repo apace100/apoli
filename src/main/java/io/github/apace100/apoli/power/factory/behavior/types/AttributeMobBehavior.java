@@ -1,7 +1,7 @@
-package io.github.apace100.apoli.behavior.types;
+package io.github.apace100.apoli.power.factory.behavior.types;
 
 import com.google.common.collect.Comparators;
-import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.mixin.AttributeContainerAccessor;
 import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
 import net.minecraft.entity.LivingEntity;

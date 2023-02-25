@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.registry;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
@@ -10,7 +10,6 @@ import io.github.apace100.calio.ClassUtil;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;

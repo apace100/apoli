@@ -1,9 +1,9 @@
-package io.github.apace100.apoli.behavior.types;
+package io.github.apace100.apoli.power.factory.behavior.types;
 
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.behavior.BehaviorFactory;
-import io.github.apace100.apoli.behavior.MobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.FleeEntityGoalAccessor;
 import io.github.apace100.apoli.registry.ApoliActivities;
@@ -16,7 +16,6 @@ import net.minecraft.entity.ai.brain.*;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.FleeEntityGoal;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Pair;
