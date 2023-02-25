@@ -59,7 +59,7 @@ public class HostileMobBehavior extends AttributeMobBehavior {
 
     @Override
     protected void tickMemories(LivingEntity target) {
-        if (!Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, target)) return;
+        if (!mob.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE) || !Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, target)) return;
         if (!mob.getBrain().hasActivity(ApoliActivities.FIGHT) && mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) && (mob.getBrain().isMemoryInState(MemoryModuleType.ANGRY_AT, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ANGRY_AT, MemoryModuleState.VALUE_PRESENT) && LookTargetUtil.getEntity(mob, MemoryModuleType.ANGRY_AT).isPresent() && !doesApply(LookTargetUtil.getEntity(mob, MemoryModuleType.ANGRY_AT).get()))) {
             mob.getBrain().remember(MemoryModuleType.ANGRY_AT, target.getUuid(), 600L);
         } else if (!mob.getBrain().hasActivity(ApoliActivities.FIGHT) && (mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.ATTACK_TARGET).isPresent() && !doesApply(mob.getBrain().getOptionalMemory(MemoryModuleType.ATTACK_TARGET).get()))) {
@@ -74,7 +74,7 @@ public class HostileMobBehavior extends AttributeMobBehavior {
 
     @Override
     public void onAttacked(Entity attacker) {
-        if (!usesBrain() || !(attacker instanceof LivingEntity livingAttacker) || !Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, livingAttacker) || !mob.getBrain().hasActivity(ApoliActivities.FIGHT)) return;
+        if (!usesBrain() || !mob.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE) || !(attacker instanceof LivingEntity livingAttacker) || !Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, livingAttacker) || !mob.getBrain().hasActivity(ApoliActivities.FIGHT)) return;
         Optional<LivingEntity> optional = mob.getBrain().getOptionalRegisteredMemory(ApoliMemoryModuleTypes.ATTACK_TARGET);
         LivingEntity livingEntity = LookTargetUtil.getCloserEntity(mob, optional, livingAttacker);
 
