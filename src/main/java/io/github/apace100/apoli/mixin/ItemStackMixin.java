@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -50,6 +51,8 @@ public abstract class ItemStackMixin implements MutableItemStack {
     private static boolean isSectionVisible(int flags, ItemStack.TooltipSection tooltipSection) {
         return (flags & tooltipSection.getFlag()) == 0;
     }
+
+    @Shadow public abstract int getMaxUseTime();
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 0, shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void addUnusableTooltip(@Nullable PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, List<Text> list) {
@@ -126,38 +129,90 @@ public abstract class ItemStackMixin implements MutableItemStack {
             .forEachOrdered(t -> t.addToTooltip(list));
     }
 
-    @Inject(at = @At("HEAD"), method = "use", cancellable = true)
-    public void use(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> info) {
+    @Unique
+    private ItemStack usedItemStack;
+
+    @Inject(method = "finishUsing", at = @At("HEAD"))
+    public void callActionOnUseFinishBefore(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
+        usedItemStack = ((ItemStack)(Object)this).copy();
+        if(user != null) {
+            ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, usedItemStack,
+                    ActionOnItemUsePower.TriggerType.FINISH, ActionOnItemUsePower.PriorityPhase.BEFORE);
+        }
+    }
+
+    @Inject(method = "finishUsing", at = @At("RETURN"))
+    public void callActionOnUseFinishAfter(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
+        if(user != null) {
+            ActionOnItemUsePower.executeActions(user, cir.getReturnValue(), usedItemStack,
+                    ActionOnItemUsePower.TriggerType.FINISH, ActionOnItemUsePower.PriorityPhase.AFTER);
+        }
+    }
+
+    @Inject(method = "use", at = @At("HEAD"), cancellable = true)
+    private void callActionOnUseInstantBefore(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         if(user != null) {
             PowerHolderComponent component = PowerHolderComponent.KEY.get(user);
             ItemStack stackInHand = user.getStackInHand(hand);
             for(PreventItemUsePower piup : component.getPowers(PreventItemUsePower.class)) {
                 if(piup.doesPrevent(stackInHand)) {
-                    info.setReturnValue(TypedActionResult.fail(stackInHand));
-                    break;
+                    cir.setReturnValue(TypedActionResult.fail(stackInHand));
+                    return;
                 }
+            }
+
+            if(getMaxUseTime() == 0) {
+                ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, (ItemStack)(Object)this,
+                        ActionOnItemUsePower.TriggerType.INSTANT, ActionOnItemUsePower.PriorityPhase.BEFORE);
+            } else {
+                ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, (ItemStack)(Object)this,
+                        ActionOnItemUsePower.TriggerType.START, ActionOnItemUsePower.PriorityPhase.BEFORE);
             }
         }
     }
 
-    @Unique
-    private ItemStack usedItemStack;
-
-    @Inject(method = "finishUsing", at = @At("HEAD"))
-    public void cacheUsedItemStack(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
-        usedItemStack = ((ItemStack)(Object)this).copy();
+    @Inject(method = "use", at = @At("RETURN"))
+    private void callActionOnUseInstantAfter(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
+        if(user != null) {
+            if(getMaxUseTime() == 0) {
+                ActionOnItemUsePower.executeActions(user, cir.getReturnValue().getValue(), cir.getReturnValue().getValue(),
+                        ActionOnItemUsePower.TriggerType.INSTANT, ActionOnItemUsePower.PriorityPhase.AFTER);
+            } else {
+                ActionOnItemUsePower.executeActions(user, cir.getReturnValue().getValue(), cir.getReturnValue().getValue(),
+                        ActionOnItemUsePower.TriggerType.START, ActionOnItemUsePower.PriorityPhase.AFTER);
+            }
+        }
     }
 
-    @Inject(method = "finishUsing", at = @At("RETURN"))
-    public void callActionOnUse(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
-        if(user instanceof PlayerEntity) {
-            ItemStack returnStack = cir.getReturnValue();
-            PowerHolderComponent component = PowerHolderComponent.KEY.get(user);
-            for(ActionOnItemUsePower p : component.getPowers(ActionOnItemUsePower.class)) {
-                if(p.doesApply(usedItemStack)) {
-                    p.executeActions(returnStack);
-                }
-            }
+    @Inject(method = "onStoppedUsing", at = @At("HEAD"))
+    private void callActionOnUseStopBefore(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
+        if(user != null) {
+            ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, (ItemStack)(Object)this,
+                    ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.BEFORE);
+        }
+    }
+
+    @Inject(method = "onStoppedUsing", at = @At("RETURN"))
+    private void callActionOnUseStopAfter(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
+        if(user != null) {
+            ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, (ItemStack)(Object)this,
+                    ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.AFTER);
+        }
+    }
+
+    @Inject(method = "usageTick", at = @At("HEAD"))
+    private void callActionOnUseDuringBefore(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
+        if(user != null) {
+            ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, (ItemStack)(Object)this,
+                    ActionOnItemUsePower.TriggerType.DURING, ActionOnItemUsePower.PriorityPhase.BEFORE);
+        }
+    }
+
+    @Inject(method = "usageTick", at = @At("RETURN"))
+    private void callActionOnUseDuringAfter(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
+        if(user != null) {
+            ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, (ItemStack)(Object)this,
+                    ActionOnItemUsePower.TriggerType.DURING, ActionOnItemUsePower.PriorityPhase.AFTER);
         }
     }
 

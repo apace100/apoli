@@ -1,7 +1,9 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.EndRespawningEntity;
+import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,5 +26,12 @@ public class ServerPlayNetworkHandlerMixin {
     @Inject(method = "onClientStatus", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/criterion/ChangedDimensionCriterion;trigger(Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/registry/RegistryKey;)V"))
     private void undoEndRespawnStatus(ClientStatusC2SPacket packet, CallbackInfo ci) {
         ((EndRespawningEntity)this.player).setEndRespawning(false);
+    }
+
+    @Inject(method = "onUpdateSelectedSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/c2s/play/UpdateSelectedSlotC2SPacket;getSelectedSlot()I", ordinal = 0))
+    private void callActionOnUseStop(UpdateSelectedSlotC2SPacket packet, CallbackInfo ci) {
+        if(player.isUsingItem()) {
+            ActionOnItemUsePower.executeActions(player, player.getActiveItem(), player.getActiveItem(), ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
+        }
     }
 }

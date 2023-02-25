@@ -1,0 +1,133 @@
+{
+  "type": "apoli:multiple",
+  "timer": {
+    "type": "apoli:resource",
+    "hud_render": {
+      "sprite_location": "test:textures/resource_bar.png",
+      "bar_index": 2,
+      "condition": {
+        "type": "apoli:resource",
+        "resource": "*:*_timer",
+        "comparison": ">",
+        "compare_to": 0
+      }
+    },
+    "min": 0,
+    "max": 30,
+    "max_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:change_resource",
+          "resource": "*:*_charge",
+          "change": 1
+        },
+        {
+          "type": "apoli:change_resource",
+          "resource": "*:*_timer",
+          "change": -30
+        },
+        {
+          "type": "apoli:play_sound",
+          "sound": "minecraft:block.enchantment_table.use"
+        }
+      ]
+    }
+  },
+  "charge": {
+    "type": "apoli:resource",
+    "hud_render": {
+      "sprite_location": "test:textures/resource_bar.png",
+      "bar_index": 4,
+      "condition": {
+        "type": "apoli:or",
+        "conditions": [
+          {
+            "type": "apoli:using_item",
+            "item_condition": {
+              "type": "apoli:ingredient",
+              "ingredient": {
+                "item": "minecraft:bow"
+              }
+            }
+          },
+          {
+            "type": "apoli:resource",
+            "resource": "*:*_charge",
+            "comparison": ">",
+            "compare_to": 0
+          }
+        ]
+      }
+    },
+    "min": 0,
+    "max": 7
+  },
+  "increase": {
+    "type": "apoli:action_on_item_use",
+    "trigger": "during",
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:bow"
+      }
+    },
+    "entity_action": {
+      "type": "apoli:if_else",
+      "condition": {
+        "type": "apoli:resource",
+        "resource": "*:*_charge",
+        "comparison": "<",
+        "compare_to": 7
+      },
+      "if_action": {
+        "type": "apoli:change_resource",
+        "resource": "*:*_timer",
+        "change": 1
+      }
+    }
+  },
+  "speed": {
+    "type": "apoli:modify_velocity",
+    "axes": ["x", "z"],
+    "modifier": {
+      "operation": "multiply_base",
+      "value": 0,
+      "resource": "*:*_charge",
+      "modifier": {
+        "operation": "multiply_base",
+        "value": 0.1
+      }
+    },
+    "entity_action": {
+      "type": "apoli:change_resource",
+      "resource": "*:*_charge",
+      "change": -7
+    }
+  },
+  "reset": {
+    "type": "apoli:action_on_item_use",
+    "trigger": "stop",
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:bow"
+      }
+    },
+    "entity_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:change_resource",
+          "resource": "*:*_charge",
+          "change": -7
+        },
+        {
+          "type": "apoli:change_resource",
+          "resource": "*:*_timer",
+          "change": -30
+        }
+      ]
+    }
+  }
+}
