@@ -1,9 +1,6 @@
 package io.github.apace100.apoli.power.factory.behavior;
 
-import io.github.apace100.apoli.power.factory.behavior.types.FleeMobBehavior;
-import io.github.apace100.apoli.power.factory.behavior.types.FollowMobBehavior;
-import io.github.apace100.apoli.power.factory.behavior.types.HostileMobBehavior;
-import io.github.apace100.apoli.power.factory.behavior.types.PassiveMobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.types.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import net.minecraft.registry.Registry;
 
@@ -12,6 +9,7 @@ public class MobBehaviors {
         register(FleeMobBehavior.createFactory());
         register(FollowMobBehavior.createFactory());
         register(HostileMobBehavior.createFactory());
+        register(LookMobBehavior.createFactory());
         register(PassiveMobBehavior.createFactory());
     }
 
