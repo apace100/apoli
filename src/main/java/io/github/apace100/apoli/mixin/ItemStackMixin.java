@@ -1,26 +1,17 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.util.ApoliConfigClient;
-import io.github.apace100.apoli.util.StackPowerUtil;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -28,11 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin implements MutableItemStack {
@@ -43,28 +29,16 @@ public abstract class ItemStackMixin implements MutableItemStack {
 
     @Shadow private int count;
 
-    @Inject(at = @At("HEAD"), method = "use", cancellable = true)
-    public void use(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> info) {
-        if(user != null) {
-            PowerHolderComponent component = PowerHolderComponent.KEY.get(user);
-            ItemStack stackInHand = user.getStackInHand(hand);
-            for(PreventItemUsePower piup : component.getPowers(PreventItemUsePower.class)) {
-                if(piup.doesPrevent(stackInHand)) {
-                    info.setReturnValue(TypedActionResult.fail(stackInHand));
-                    break;
-                }
-            }
-        }
-    }
+    @Shadow public abstract int getMaxUseTime();
 
     @Unique
-    private ItemStack usedItemStack;
+    private ItemStack apoli$usedItemStack;
 
     @Inject(method = "finishUsing", at = @At("HEAD"))
     public void callActionOnUseFinishBefore(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
-        usedItemStack = ((ItemStack)(Object)this).copy();
+        apoli$usedItemStack = ((ItemStack)(Object)this).copy();
         if(user != null) {
-            ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, usedItemStack,
+            ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, apoli$usedItemStack,
                     ActionOnItemUsePower.TriggerType.FINISH, ActionOnItemUsePower.PriorityPhase.BEFORE);
         }
     }
@@ -72,7 +46,7 @@ public abstract class ItemStackMixin implements MutableItemStack {
     @Inject(method = "finishUsing", at = @At("RETURN"))
     public void callActionOnUseFinishAfter(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
         if(user != null) {
-            ActionOnItemUsePower.executeActions(user, cir.getReturnValue(), usedItemStack,
+            ActionOnItemUsePower.executeActions(user, cir.getReturnValue(), apoli$usedItemStack,
                     ActionOnItemUsePower.TriggerType.FINISH, ActionOnItemUsePower.PriorityPhase.AFTER);
         }
     }
@@ -102,6 +76,10 @@ public abstract class ItemStackMixin implements MutableItemStack {
     @Inject(method = "use", at = @At("RETURN"))
     private void callActionOnUseInstantAfter(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         if(user != null) {
+            ActionResult ar = cir.getReturnValue().getResult();
+            if(!ar.isAccepted()) {
+                return;
+            }
             if(getMaxUseTime() == 0) {
                 ActionOnItemUsePower.executeActions(user, cir.getReturnValue().getValue(), cir.getReturnValue().getValue(),
                         ActionOnItemUsePower.TriggerType.INSTANT, ActionOnItemUsePower.PriorityPhase.AFTER);
