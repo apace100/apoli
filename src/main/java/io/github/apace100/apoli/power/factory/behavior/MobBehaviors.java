@@ -11,6 +11,7 @@ public class MobBehaviors {
         register(HostileMobBehavior.createFactory());
         register(LookMobBehavior.createFactory());
         register(PassiveMobBehavior.createFactory());
+        register(RevengeMobBehavior.createFactory());
     }
 
     private static void register(MobBehaviorFactory<?> serializer) {

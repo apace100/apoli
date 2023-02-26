@@ -30,17 +30,16 @@ public abstract class BrainMixin<E extends LivingEntity> {
 
     @Shadow public abstract void setTaskList(Activity activity, ImmutableList<? extends Pair<Integer, ? extends Task<? super E>>> indexedTasks, Set<Pair<MemoryModuleType<?>, MemoryModuleState>> requiredMemories, Set<MemoryModuleType<?>> forgettingMemories);
 
-    public void apoli$addToTaskList(Activity activity, int begin, ImmutableList<? extends Task<? super E>> tasks, ImmutableList<Pair<MemoryModuleType<?>, MemoryModuleState>> memoryTypes) {
+    public void apoli$addToTaskList(Activity activity, int begin, ImmutableList<? extends Task<? super E>> tasks, ImmutableList<MemoryModuleType<?>> memoryTypes) {
         this.possibleActivities.add(activity);
-        memoryTypes.forEach(memory -> this.memories.put(memory.getFirst(), Optional.empty()));
+        memoryTypes.forEach(memory -> this.memories.put(memory, Optional.empty()));
 
         Set<Pair<MemoryModuleType<?>, MemoryModuleState>> set = this.requiredActivityMemories.get(activity) == null ? new HashSet<>() : new HashSet<>(this.requiredActivityMemories.get(activity));
-        set.addAll(memoryTypes);
+        set.addAll((Collection<? extends Pair<MemoryModuleType<?>, MemoryModuleState>>) memoryTypes.stream().map(memoryModuleType -> Pair.of(memoryModuleType, MemoryModuleState.REGISTERED)).toList());
 
         Set<MemoryModuleType<?>> forgetSet = this.forgettingActivityMemories.get(activity) == null ? new HashSet<>() : new HashSet<>(this.forgettingActivityMemories.get(activity));
-        for (Pair<MemoryModuleType<?>, MemoryModuleState> pair : memoryTypes) {
-            forgetSet.add(pair.getFirst());
-        }
+        forgetSet.addAll(memoryTypes);
+
         List<Pair<Integer, ? extends Task<? super E>>> indexedTasks = new ArrayList<>();
         this.tasks.forEach((key, value) -> {
             if (!value.containsKey(activity)) return;

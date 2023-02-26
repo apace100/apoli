@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.behavior.types;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
@@ -18,6 +19,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.TypeFilter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -37,8 +39,8 @@ public class LookMobBehavior extends MobBehavior {
     }
 
     @Override
-    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.LOOK, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply), this::doesApply)), ImmutableList.of()));
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, List<MemoryModuleType<?>>>> tasksToApply() {
+        return Map.of(ApoliActivities.LOOK, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply), this::doesApply)), Lists.newArrayList()));
     }
 
     public static SingleTickTask<MobEntity> createRememberTask(Predicate<LivingEntity> predicate) {

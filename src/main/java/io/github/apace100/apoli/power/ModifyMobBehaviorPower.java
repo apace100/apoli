@@ -9,6 +9,8 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 
 public class ModifyMobBehaviorPower extends Power {
 
@@ -50,6 +52,14 @@ public class ModifyMobBehaviorPower extends Power {
 
     public MobBehavior getMobBehavior() {
         return mobBehavior;
+    }
+
+    public NbtElement toTag() {
+        return mobBehavior.toTag();
+    }
+
+    public void fromTag(NbtElement tag) {
+
     }
 
     public static PowerFactory createFactory() {

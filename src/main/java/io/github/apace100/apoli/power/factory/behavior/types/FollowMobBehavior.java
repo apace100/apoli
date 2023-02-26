@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.behavior.types;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
@@ -39,8 +40,8 @@ public class FollowMobBehavior extends MobBehavior {
     }
 
     @Override
-    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.FOLLOW, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply), this::doesApply), createFollowTask(this::doesApply, speed, distance, completionRange)), ImmutableList.of()));
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, List<MemoryModuleType<?>>>> tasksToApply() {
+        return Map.of(ApoliActivities.FOLLOW, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply), this::doesApply), createFollowTask(this::doesApply, speed, distance, completionRange)), Lists.newArrayList()));
     }
 
     public static SingleTickTask<MobEntity> createRememberTask(Predicate<LivingEntity> predicate) {

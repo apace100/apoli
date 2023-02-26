@@ -16,6 +16,8 @@ import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.TypeFilter;
@@ -49,8 +51,10 @@ public class MobBehavior {
     }
 
     public void applyActivities() {
-        for (Map.Entry<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> entry : this.tasksToApply().entrySet()) {
-            ((BrainTaskAddition)mob.getBrain()).addToTaskList(entry.getKey(), this.priority, entry.getValue().getLeft(), entry.getValue().getRight());
+        for (Map.Entry<Activity, Pair<ImmutableList<? extends Task<?>>, List<MemoryModuleType<?>>>> entry : this.tasksToApply().entrySet()) {
+            List<MemoryModuleType<?>> memoryList = entry.getValue().getRight();
+            memoryList.add(ApoliMemoryModuleTypes.BEHAVIOR_TARGET);
+            ((BrainTaskAddition)mob.getBrain()).addToTaskList(entry.getKey(), this.priority, entry.getValue().getLeft(), ImmutableList.copyOf(memoryList));
         }
     }
 
@@ -72,6 +76,14 @@ public class MobBehavior {
     public void tick() {
     }
 
+    public NbtElement toTag() {
+        return new NbtCompound();
+    }
+
+    public void fromTag(NbtElement tag) {
+
+    }
+
     public boolean doesApply(LivingEntity target) {
         return bientityCondition == null || bientityCondition.test(new Pair<>(mob, target));
     }
@@ -88,7 +100,7 @@ public class MobBehavior {
         }
     }
 
-    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, List<MemoryModuleType<?>>>> tasksToApply() {
         return Maps.newHashMap();
     }
 
@@ -108,6 +120,10 @@ public class MobBehavior {
         }
 
         previousTarget = closestTarget;
+    }
+
+    protected boolean hasMemoryModule(MemoryModuleType<?> type) {
+        return mob.getBrain().isMemoryInState(type, MemoryModuleState.REGISTERED) || mob.getBrain().isMemoryInState(type, MemoryModuleState.VALUE_PRESENT) || mob.getBrain().isMemoryInState(type, MemoryModuleState.VALUE_ABSENT);
     }
 
     protected void resetAttackTargets() {

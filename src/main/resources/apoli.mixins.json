@@ -46,6 +46,7 @@
     "PlayerScreenHandlerMixin",
     "RecipeManagerAccessor",
     "RecipeManagerMixin",
+    "RevengeGoalAccessor",
     "ServerPlayerEntityMixin",
     "ServerPlayerInteractionManagerAccessor",
     "ServerPlayerInteractionManagerMixin",
@@ -53,7 +54,6 @@
     "ServerWorldMixin",
     "StatusEffectInstanceMixin",
     "TaskTriggererAccessor",
-    "TrackTargetGoalMixin",
     "WardenEntityMixin",
     "WeightedListEntryAccessor"
   ],

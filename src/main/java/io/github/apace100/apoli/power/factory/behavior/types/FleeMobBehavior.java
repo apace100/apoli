@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.behavior.types;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
@@ -20,6 +21,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Pair;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -49,8 +51,8 @@ public class FleeMobBehavior extends MobBehavior {
     }
 
     @Override
-    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply, speed, fastSpeed), this::doesApply), GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> MobBehavior.shouldForgetTarget((MobEntity)m, this, ApoliMemoryModuleTypes.AVOID_TARGET), ApoliMemoryModuleTypes.AVOID_TARGET)), ImmutableList.of(com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.AVOID_TARGET, MemoryModuleState.REGISTERED))));
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, List<MemoryModuleType<?>>>> tasksToApply() {
+        return Map.of(ApoliActivities.AVOID, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply, speed, fastSpeed), this::doesApply), GoToRememberedPositionTask.createEntityBased(ApoliMemoryModuleTypes.AVOID_TARGET, (float)speed, (int)fleeDistance, true), ForgetTask.create((m) -> MobBehavior.shouldForgetTarget((MobEntity)m, this, ApoliMemoryModuleTypes.AVOID_TARGET), ApoliMemoryModuleTypes.AVOID_TARGET)), Lists.newArrayList(ApoliMemoryModuleTypes.AVOID_TARGET)));
     }
 
     public static SingleTickTask<MobEntity> createRememberTask(Predicate<LivingEntity> predicate, double speed, double fastSpeed) {

@@ -221,7 +221,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Inject(method = "damage", at = @At("RETURN"))
     private void runMobBehaviorDamageMethod(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (source.getAttacker() == null || !cir.getReturnValue()) return;
-        PowerHolderComponent.getPowers(source.getAttacker(), ModifyMobBehaviorPower.class).forEach(power -> {
+        PowerHolderComponent.getPowers(this, ModifyMobBehaviorPower.class).forEach(power -> {
             power.getMobBehavior().onAttacked(source.getAttacker());
         });
     }
