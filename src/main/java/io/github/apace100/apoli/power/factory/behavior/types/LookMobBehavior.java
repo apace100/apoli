@@ -1,18 +1,24 @@
 package io.github.apace100.apoli.power.factory.behavior.types;
 
+import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
-import io.github.apace100.apoli.power.factory.behavior.goal.LookAtTargetGoal;
+import io.github.apace100.apoli.registry.ApoliActivities;
+import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.brain.*;
+import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
+import net.minecraft.util.TypeFilter;
 
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class LookMobBehavior extends MobBehavior {
@@ -22,16 +28,28 @@ public class LookMobBehavior extends MobBehavior {
     }
 
     @Override
-    public void initGoals() {
-        if (!(mob instanceof PathAwareEntity pathAware) || !usesGoals()) return;
-        this.addToGoalSelector(new LookAtTargetGoal(pathAware, this::doesApply));
+    public void tick() {
+        if (!this.usesGoals()) return;
+        LivingEntity livingEntity = mob.world.getClosestEntity((((ServerWorld)mob.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply)), TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
+        if (livingEntity == null || !livingEntity.isAlive()) return;
+
+        mob.getLookControl().lookAt(livingEntity);
     }
 
     @Override
-    protected void tickMemories(LivingEntity target) {
-        if ((mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).isPresent() && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).get() instanceof BlockPosLookTarget || mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).isPresent() && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).get() instanceof EntityLookTarget entityLookTarget && entityLookTarget.getEntity() instanceof LivingEntity living && !this.doesApply(living))) {
-            mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(target, true));
-        }
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
+        return Map.of(ApoliActivities.LOOK, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply), this::doesApply)), ImmutableList.of()));
+    }
+
+    public static SingleTickTask<MobEntity> createRememberTask(Predicate<LivingEntity> predicate) {
+        return TaskTriggerer.task(context -> context.group(context.queryMemoryValue(ApoliMemoryModuleTypes.BEHAVIOR_TARGET), context.queryMemoryOptional(MemoryModuleType.LOOK_TARGET)).apply(context, (behaviorTarget, lookTarget) -> (world, entity, time) -> {
+            LivingEntity currentTarget = context.getValue(behaviorTarget);
+            if ((context.getOptionalValue(lookTarget).isEmpty() || context.getOptionalValue(lookTarget).isPresent() && context.getOptionalValue(lookTarget).get() instanceof BlockPosLookTarget || context.getOptionalValue(lookTarget).isPresent() && context.getOptionalValue(lookTarget).get() instanceof EntityLookTarget entityLookTarget && entityLookTarget.getEntity() instanceof LivingEntity living && !predicate.test(living))) {
+                entity.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(currentTarget, true));
+                return true;
+            }
+            return false;
+        }));
     }
 
     public static BehaviorFactory<?> createFactory() {

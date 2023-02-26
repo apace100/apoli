@@ -13,6 +13,7 @@ public class ApoliMemoryModuleTypes {
     public static final MemoryModuleType<LivingEntity> ATTACK_TARGET = register(Apoli.identifier("attack_target"));
     public static final MemoryModuleType<Boolean> ATTACK_COOLING_DOWN = register(Apoli.identifier("attack_cooling_down"));
     public static final MemoryModuleType<LivingEntity> AVOID_TARGET = register(Apoli.identifier("avoid_target"));
+    public static final MemoryModuleType<LivingEntity> BEHAVIOR_TARGET = register(Apoli.identifier("behavior_target"));
 
     public static void register() {
 

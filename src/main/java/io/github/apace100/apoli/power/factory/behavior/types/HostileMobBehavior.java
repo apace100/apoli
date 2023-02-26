@@ -41,7 +41,7 @@ public class HostileMobBehavior extends AttributeMobBehavior {
     }
 
     @Override
-    public void initGoals() {
+    public void applyGoals() {
         if (!usesGoals()) return;
         if (mob instanceof PathAwareEntity pathAware && (!(mob instanceof Angerable) || !(mob instanceof HostileEntity))) {
             this.addToGoalSelector(new MeleeAttackGoal(pathAware, speed, false));
@@ -54,35 +54,48 @@ public class HostileMobBehavior extends AttributeMobBehavior {
         if (mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT)) {
             return Maps.newHashMap();
         }
-        return Map.of(ApoliActivities.FIGHT, new Pair<>(ImmutableList.of(ForgetTask.create(e -> MobBehavior.shouldForgetTarget((MobEntity)e, this, ApoliMemoryModuleTypes.ATTACK_TARGET), ApoliMemoryModuleTypes.ATTACK_TARGET), createAttackTask(this.attackCooldown), createFollowTask(this::doesApply, speed)), ImmutableList.of(com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT), com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN, MemoryModuleState.VALUE_PRESENT))));
-    }
-
-    @Override
-    protected void tickMemories(LivingEntity target) {
-        if (!mob.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE) || !Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, target)) return;
-        if (!mob.getBrain().hasActivity(ApoliActivities.FIGHT) && mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) && (mob.getBrain().isMemoryInState(MemoryModuleType.ANGRY_AT, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ANGRY_AT, MemoryModuleState.VALUE_PRESENT) && LookTargetUtil.getEntity(mob, MemoryModuleType.ANGRY_AT).isPresent() && !doesApply(LookTargetUtil.getEntity(mob, MemoryModuleType.ANGRY_AT).get()))) {
-            mob.getBrain().remember(MemoryModuleType.ANGRY_AT, target.getUuid(), 600L);
-        } else if (!mob.getBrain().hasActivity(ApoliActivities.FIGHT) && (mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.ATTACK_TARGET).isPresent() && !doesApply(mob.getBrain().getOptionalMemory(MemoryModuleType.ATTACK_TARGET).get()))) {
-            mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
-            mob.getBrain().remember(MemoryModuleType.ATTACK_TARGET, target, 600L);
-        } else if (mob.getBrain().hasActivity(ApoliActivities.FIGHT) && (mob.getBrain().isMemoryInState(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.ATTACK_TARGET).isPresent() && !doesApply(mob.getBrain().getOptionalMemory(ApoliMemoryModuleTypes.ATTACK_TARGET).get()))) {
-            mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
-            mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-            mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, target, 600L);
-        }
+        return Map.of(ApoliActivities.FIGHT, new Pair<>(ImmutableList.of(ForgetTask.create(e -> MobBehavior.shouldForgetTarget((MobEntity)e, this, ApoliMemoryModuleTypes.ATTACK_TARGET), ApoliMemoryModuleTypes.ATTACK_TARGET), MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply), this::doesApply), createAttackTask(this.attackCooldown), createFollowTask(this::doesApply, speed)), ImmutableList.of(com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_TARGET, MemoryModuleState.REGISTERED), com.mojang.datafixers.util.Pair.of(ApoliMemoryModuleTypes.ATTACK_COOLING_DOWN, MemoryModuleState.REGISTERED))));
     }
 
     @Override
     public void onAttacked(Entity attacker) {
         if (!usesBrain() || !mob.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE) || !(attacker instanceof LivingEntity livingAttacker) || !Sensor.testAttackableTargetPredicateIgnoreVisibility(mob, livingAttacker) || !mob.getBrain().hasActivity(ApoliActivities.FIGHT)) return;
-        Optional<LivingEntity> optional = mob.getBrain().getOptionalRegisteredMemory(ApoliMemoryModuleTypes.ATTACK_TARGET);
-        LivingEntity livingEntity = LookTargetUtil.getCloserEntity(mob, optional, livingAttacker);
 
         mob.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
-        mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-        mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, livingAttacker, 600L);
-        mob.getBrain().doExclusively(ApoliActivities.FIGHT);
-        mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(livingEntity, true));
+        if (mob.getBrain().hasActivity(ApoliActivities.FIGHT)) {
+            Optional<LivingEntity> optional = mob.getBrain().getOptionalRegisteredMemory(ApoliMemoryModuleTypes.ATTACK_TARGET);
+            LivingEntity livingEntity = LookTargetUtil.getCloserEntity(mob, optional, livingAttacker);
+            mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
+            mob.getBrain().remember(ApoliMemoryModuleTypes.ATTACK_TARGET, livingEntity, 600L);
+        } else {
+            Optional<LivingEntity> optional = mob.getBrain().getOptionalRegisteredMemory(MemoryModuleType.ATTACK_TARGET);
+            LivingEntity livingEntity = LookTargetUtil.getCloserEntity(mob, optional, livingAttacker);
+            mob.getBrain().remember(MemoryModuleType.ATTACK_TARGET, livingEntity, 600L);
+        }
+    }
+
+    public static SingleTickTask<MobEntity> createRememberTask(Predicate<LivingEntity> predicate) {
+        return TaskTriggerer.task(context -> context.group(context.queryMemoryValue(ApoliMemoryModuleTypes.BEHAVIOR_TARGET), context.queryMemoryOptional(ApoliMemoryModuleTypes.ATTACK_TARGET), context.queryMemoryOptional(MemoryModuleType.ANGRY_AT), context.queryMemoryOptional(MemoryModuleType.ATTACK_TARGET)).apply(context, (behaviorTarget, apoliTarget, angryAt, attackTarget) -> (world, entity, time) -> {
+            LivingEntity currentTarget = context.getValue(behaviorTarget);
+            if (!entity.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE) || !Sensor.testAttackableTargetPredicateIgnoreVisibility(entity, currentTarget)) {
+                return false;
+            }
+
+            if (!entity.getBrain().hasActivity(ApoliActivities.FIGHT) && context.getOptionalValue(attackTarget).isEmpty() && (context.getOptionalValue(angryAt).isEmpty() || context.getOptionalValue(angryAt).isPresent() && LookTargetUtil.getEntity(entity, MemoryModuleType.ANGRY_AT).isPresent() && !predicate.test(LookTargetUtil.getEntity(entity, MemoryModuleType.ANGRY_AT).get()))) {
+                angryAt.remember(currentTarget.getUuid(), 600L);
+                return true;
+            } else if (!entity.getBrain().hasActivity(ApoliActivities.FIGHT) && (context.getOptionalValue(attackTarget).isEmpty() || context.getOptionalValue(attackTarget).isPresent() && !predicate.test(context.getOptionalValue(attackTarget).get()))) {
+                entity.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
+                attackTarget.remember(currentTarget, 600L);
+                return true;
+            } else if (entity.getBrain().hasActivity(ApoliActivities.FIGHT) && (context.getOptionalValue(apoliTarget).isEmpty() || context.getOptionalValue(apoliTarget).isPresent() && !predicate.test(context.getOptionalValue(apoliTarget).get()))) {
+                entity.getBrain().forget(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
+                entity.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
+                apoliTarget.remember(currentTarget, 600L);
+                return true;
+            }
+            return false;
+        }));
     }
 
     public static SingleTickTask<MobEntity> createAttackTask(int cooldown) {

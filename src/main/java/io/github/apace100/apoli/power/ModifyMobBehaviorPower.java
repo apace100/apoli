@@ -34,9 +34,9 @@ public class ModifyMobBehaviorPower extends Power {
     public void onAdded() {
         if (entity.world.isClient) return;
         if (mobBehavior.usesGoals()) {
-            mobBehavior.initGoals();
+            mobBehavior.applyGoals();
         } else if (mobBehavior.usesBrain()) {
-            mobBehavior.initActivities();
+            mobBehavior.applyActivities();
         }
     }
 

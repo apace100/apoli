@@ -52,6 +52,7 @@
     "ServerPlayNetworkHandlerMixin",
     "ServerWorldMixin",
     "StatusEffectInstanceMixin",
+    "TaskTriggererAccessor",
     "TrackTargetGoalMixin",
     "WardenEntityMixin",
     "WeightedListEntryAccessor"

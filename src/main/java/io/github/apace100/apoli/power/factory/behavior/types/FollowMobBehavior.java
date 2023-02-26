@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.power.factory.behavior.goal.FollowGoal;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliActivities;
+import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
@@ -32,23 +33,26 @@ public class FollowMobBehavior extends MobBehavior {
     }
 
     @Override
-    public void initGoals() {
+    public void applyGoals() {
         if (!(mob instanceof PathAwareEntity pathAware) || !usesGoals()) return;
         this.addToGoalSelector(new FollowGoal(pathAware, speed, distance, completionRange, this::doesApply));
     }
 
     @Override
-    protected void tickMemories(LivingEntity target) {
-        if ((mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_ABSENT) || mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).isPresent() && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).get() instanceof BlockPosLookTarget || mob.getBrain().isMemoryInState(MemoryModuleType.LOOK_TARGET, MemoryModuleState.VALUE_PRESENT) && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).isPresent() && mob.getBrain().getOptionalMemory(MemoryModuleType.LOOK_TARGET).get() instanceof EntityLookTarget entityLookTarget && entityLookTarget.getEntity() instanceof LivingEntity living && !this.doesApply(living))) {
-            mob.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
-            mob.getBrain().forget(MemoryModuleType.WALK_TARGET);
-            mob.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(target, true));
-        }
+    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
+        return Map.of(ApoliActivities.FOLLOW, new Pair<>(ImmutableList.of(MobBehavior.taskWithBehaviorTargetTask(createRememberTask(this::doesApply), this::doesApply), createFollowTask(this::doesApply, speed, distance, completionRange)), ImmutableList.of()));
     }
 
-    @Override
-    protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> tasksToApply() {
-        return Map.of(ApoliActivities.FOLLOW, new Pair<>(ImmutableList.of(createFollowTask(this::doesApply, speed, distance, completionRange)), ImmutableList.of()));
+    public static SingleTickTask<MobEntity> createRememberTask(Predicate<LivingEntity> predicate) {
+        return TaskTriggerer.task(context -> context.group(context.queryMemoryValue(ApoliMemoryModuleTypes.BEHAVIOR_TARGET), context.queryMemoryOptional(MemoryModuleType.LOOK_TARGET)).apply(context, (behaviorTarget, lookTarget) -> (world, entity, time) -> {
+            if ((context.getOptionalValue(lookTarget).isPresent() || context.getOptionalValue(lookTarget).isPresent() && context.getOptionalValue(lookTarget).get() instanceof BlockPosLookTarget || context.getOptionalValue(lookTarget).get() instanceof EntityLookTarget entityLookTarget && entityLookTarget.getEntity() instanceof LivingEntity living && !predicate.test(living))) {
+                entity.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
+                entity.getBrain().forget(MemoryModuleType.WALK_TARGET);
+                entity.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(context.getValue(behaviorTarget), true));
+                return true;
+            }
+            return false;
+        }));
     }
 
     public static SingleTickTask<LivingEntity> createFollowTask(Predicate<LivingEntity> predicate, float speed, float distance, int completionRange) {

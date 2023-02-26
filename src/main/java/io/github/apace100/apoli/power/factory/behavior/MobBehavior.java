@@ -12,7 +12,7 @@ import net.minecraft.entity.ai.brain.Activity;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleState;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
-import net.minecraft.entity.ai.brain.task.Task;
+import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
@@ -45,10 +45,10 @@ public class MobBehavior {
         return priority;
     }
 
-    public void initGoals() {
+    public void applyGoals() {
     }
 
-    public void initActivities() {
+    public void applyActivities() {
         for (Map.Entry<Activity, Pair<ImmutableList<? extends Task<?>>, ImmutableList<com.mojang.datafixers.util.Pair<MemoryModuleType<?>, MemoryModuleState>>>> entry : this.tasksToApply().entrySet()) {
             ((BrainTaskAddition)mob.getBrain()).addToTaskList(entry.getKey(), this.priority, entry.getValue().getLeft(), entry.getValue().getRight());
         }
@@ -76,10 +76,6 @@ public class MobBehavior {
         return bientityCondition == null || bientityCondition.test(new Pair<>(mob, target));
     }
 
-    protected void tickMemories(LivingEntity target) {
-
-    }
-
     public void removeGoals() {
         modifiedTargetSelectorGoals.forEach(goal -> ((MobEntityAccessor)mob).getTargetSelector().remove(goal));
         modifiedGoalSelectorGoals.forEach(goal -> ((MobEntityAccessor)mob).getGoalSelector().remove(goal));
@@ -99,7 +95,7 @@ public class MobBehavior {
     public void baseTick() {
         this.tick();
         List<? extends LivingEntity> applicableEntities = (((ServerWorld)mob.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply));
-        LivingEntity closestTarget = mob.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());;
+        LivingEntity closestTarget = mob.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
         if (closestTarget == null && previousTarget != null || closestTarget != previousTarget) {
             this.resetAttackTargets();
             this.onRemoved();
@@ -109,7 +105,6 @@ public class MobBehavior {
             if (closestTarget != previousTarget) {
                 this.onAdded();
             }
-            tickMemories(closestTarget);
         }
 
         previousTarget = closestTarget;
@@ -173,5 +168,20 @@ public class MobBehavior {
         }
 
         return true;
+    }
+
+    protected static SingleTickTask<MobEntity> taskWithBehaviorTargetTask(SingleTickTask<MobEntity> task, Predicate<LivingEntity> behaviorTargetPredicate) {
+        return Tasks.weighted(List.of(com.mojang.datafixers.util.Pair.of(createBehaviorTargetTask(behaviorTargetPredicate), 0), com.mojang.datafixers.util.Pair.of(task, 1)), CompositeTask.Order.ORDERED, CompositeTask.RunMode.TRY_ALL);
+    }
+
+    private static SingleTickTask<MobEntity> createBehaviorTargetTask(Predicate<LivingEntity> predicate) {
+        return TaskTriggerer.task(context -> context.group(context.queryMemoryAbsent(ApoliMemoryModuleTypes.BEHAVIOR_TARGET)).apply(context, (behaviorTarget) -> (world, entity, time) -> {
+            List<? extends LivingEntity> applicableEntities = (((ServerWorld)entity.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), predicate));
+            LivingEntity closestTarget = entity.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), entity, entity.getX(), entity.getY(), entity.getZ());
+
+            behaviorTarget.remember(closestTarget, 1L);
+
+            return true;
+        }));
     }
 }
