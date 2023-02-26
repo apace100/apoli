@@ -8,34 +8,56 @@
   "commands.apoli.grant.fail.single": "Entity %s already had the power %s from source %s.",
   "commands.apoli.grant.fail.multiple": "All %s entities already had the power %s from source %s.",
 
+  "commands.apoli.grant.invalid_entity": "Entity %s is not a living entity, thus cannot be granted powers.",
+  "commands.apoli.grant.invalid_entities": "%s entities are not living entities, thus cannot be granted powers.",
+
   "commands.apoli.revoke.success.single": "Entity %s had the power %s revoked.",
   "commands.apoli.revoke.success.multiple": "%s entities had the power %s revoked.",
-  "commands.apoli.revoke.fail.single": "Entity %s did not have the power %s from source %s.",
-  "commands.apoli.revoke.fail.multiple": "No entity had the power %s from source %s.",
 
   "commands.apoli.revoke_from_source.success.single": "Entity %s had the power %s revoked from source %s.",
   "commands.apoli.revoke_from_source.success.multiple": "%s entities had the power %s revoked from source %s.",
 
+  "commands.apoli.revoke.fail.single": "Entity %s did not have the power %s from source %s.",
+  "commands.apoli.revoke.fail.multiple": "No entity had the power %s from source %s.",
+
+  "commands.apoli.revoke.invalid_entity": "Entity %s is not a living entity, thus no power was revoked from source %s.",
+  "commands.apoli.revoke.invalid_entities": "%s entities are not living entities, thus no power was revoked from source %s.",
+
   "commands.apoli.revoke_all.success.single": "Entity %s had %s powers revoked from source %s.",
   "commands.apoli.revoke_all.success.multiple": "%s entities had %s powers revoked from source %s.",
+
   "commands.apoli.revoke_all.fail.single": "Entity %s did not have any power from source %s.",
   "commands.apoli.revoke_all.fail.multiple": "No entity had any power from source %s.",
 
+  "commands.apoli.revoke_all.invalid_entity": "Entity %s is not a living entity, thus no powers were revoked from source %s.",
+  "commands.apoli.revoke_all.invalid_entities": "%s entities are not living entities, thus no powers were revoked from source %s.",
+
   "commands.apoli.remove.success.single": "Entity %s had the power %s removed.",
   "commands.apoli.remove.success.multiple": "%s entities had the power %s removed.",
+
   "commands.apoli.remove.fail.single": "Entity %s did not have the power %s.",
   "commands.apoli.remove.fail.multiple": "No entity had the power %s.",
 
+  "commands.apoli.remove.invalid_entity": "Entity %s is not a living entity, thus no power was removed.",
+  "commands.apoli.remove.invalid_entities": "%s entities are not living entities, thus no power was removed.",
+
   "commands.apoli.clear.success.single": "Entity %s had %s powers cleared.",
   "commands.apoli.clear.success.multiple": "%s entities had in total %s powers cleared.",
+
   "commands.apoli.clear.fail.single": "Entity %s did not have any power to clear.",
   "commands.apoli.clear.fail.multiple": "No entity had any power to clear.",
 
-  "commands.apoli.list.pass": "The entity has %s powers: [%s]",
-  "commands.apoli.list.fail": "The entity is not a living entity, thus can't have any powers.",
+  "commands.apoli.clear.invalid_entity": "Entity %s is not a living entity, thus no powers were cleared.",
+  "commands.apoli.clear.invalid_entities": "%s entities were not living entities, thus no powers were cleared.",
+
+  "commands.apoli.list.pass": "Entity %s has %s powers: [%s]",
+  "commands.apoli.list.fail": "Entity %s is not a living entity or did not have any powers.",
+
+  "commands.apoli.list.source": "Source: %s",
+  "commands.apoli.list.sources": "Sources: [%s]",
 
   "commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
-  "commands.apoli.sources.fail": "Entity %s is not a living entity or does not have the power %s.",
+  "commands.apoli.sources.fail": "Entity %s is not a living entity or did not have the power %s.",
 
   "commands.apoli.resource.invalid_entity": "The entity is not a living entity, thus can't have any powers.",
 
