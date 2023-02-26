@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.action.entity;
+package io.github.apace100.apoli.power.factory.action.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -15,9 +15,8 @@ public class EnderChestAction {
     private static final Text TITLE = Text.translatable("container.enderchest");
 
     public static void action(SerializableData.Instance data, Entity entity) {
-        if (!(entity instanceof PlayerEntity)) return;
+        if (!(entity instanceof PlayerEntity player)) return;
 
-        PlayerEntity player = (PlayerEntity) entity;
         EnderChestInventory enderChestContainer = player.getEnderChestInventory();
 
         player.openHandledScreen(
@@ -30,7 +29,7 @@ public class EnderChestAction {
         player.incrementStat(Stats.OPEN_ENDERCHEST);
     }
 
-    public static ActionFactory<Entity> createFactory() {
+    public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(Apoli.identifier("ender_chest"),
                 new SerializableData(),
                 EnderChestAction::action

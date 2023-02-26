@@ -1,0 +1,6 @@
+[
+  {
+    "function": "minecraft:set_potion",
+    "id": "minecraft:long_regeneration"
+  }
+]
