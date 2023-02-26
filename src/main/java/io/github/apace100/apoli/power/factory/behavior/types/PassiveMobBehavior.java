@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.power.factory.behavior.types;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.calio.data.SerializableData;
@@ -21,8 +21,8 @@ public class PassiveMobBehavior extends MobBehavior {
         return doesApply(target);
     }
 
-    public static BehaviorFactory<?> createFactory() {
-        return new BehaviorFactory<>(Apoli.identifier("passive"),
+    public static MobBehaviorFactory<?> createFactory() {
+        return new MobBehaviorFactory<>(Apoli.identifier("passive"),
                 new SerializableData()
                         .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
                 (data, mob) -> new PassiveMobBehavior(mob, data.get("bientity_condition")));

@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class MobBehavior {
-    private BehaviorFactory<?> factory;
+    private MobBehaviorFactory<?> factory;
 
     protected final MobEntity mob;
     protected final int priority;
@@ -141,11 +141,11 @@ public class MobBehavior {
         modifiedTargetSelectorGoals.add(goal);
     }
 
-    public BehaviorFactory<?> getFactory() {
+    public MobBehaviorFactory<?> getFactory() {
         return this.factory;
     }
 
-    public void setFactory(BehaviorFactory<?> factory) {
+    public void setFactory(MobBehaviorFactory<?> factory) {
         this.factory = factory;
     }
 

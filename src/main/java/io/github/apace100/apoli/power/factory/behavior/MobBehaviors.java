@@ -13,7 +13,7 @@ public class MobBehaviors {
         register(PassiveMobBehavior.createFactory());
     }
 
-    private static void register(BehaviorFactory<?> serializer) {
+    private static void register(MobBehaviorFactory<?> serializer) {
         Registry.register(ApoliRegistries.BEHAVIOR_FACTORY, serializer.getSerializerId(), serializer);
     }
 }

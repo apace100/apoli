@@ -9,12 +9,12 @@ import net.minecraft.util.Identifier;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class BehaviorFactory<T extends MobBehavior> {
+public class MobBehaviorFactory<T extends MobBehavior> {
     private final Identifier identifier;
     protected SerializableData data;
     private final BiFunction<SerializableData.Instance, MobEntity, T> factoryConstructor;
 
-    public BehaviorFactory(Identifier id, SerializableData data, BiFunction<SerializableData.Instance, MobEntity, T> factoryConstructor) {
+    public MobBehaviorFactory(Identifier id, SerializableData data, BiFunction<SerializableData.Instance, MobEntity, T> factoryConstructor) {
         this.identifier = id;
         this.data = data;
         this.factoryConstructor = factoryConstructor;

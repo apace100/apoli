@@ -3,7 +3,7 @@ package io.github.apace100.apoli.power.factory.behavior.types;
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
@@ -52,8 +52,8 @@ public class LookMobBehavior extends MobBehavior {
         }));
     }
 
-    public static BehaviorFactory<?> createFactory() {
-        return new BehaviorFactory<>(Apoli.identifier("look"),
+    public static MobBehaviorFactory<?> createFactory() {
+        return new MobBehaviorFactory<>(Apoli.identifier("look"),
                 new SerializableData()
                         .add("priority", SerializableDataTypes.INT, 0)
                         .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),

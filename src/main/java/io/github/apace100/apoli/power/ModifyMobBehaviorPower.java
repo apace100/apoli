@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
@@ -63,7 +63,7 @@ public class ModifyMobBehaviorPower extends Power {
                                 Apoli.LOGGER.warn("Tried applying ModifyMobBehavior power with id '{}' to non mob, the power will not do anything.", type.getIdentifier());
                                 return new Power(type, entity);
                             }
-                            return new ModifyMobBehaviorPower(type, entity, ((BehaviorFactory.Instance)data.get("behavior")).apply(mob), data.getInt("tick_rate"));
+                            return new ModifyMobBehaviorPower(type, entity, ((MobBehaviorFactory.Instance)data.get("behavior")).apply(mob), data.getInt("tick_rate"));
                         });
     }
 }

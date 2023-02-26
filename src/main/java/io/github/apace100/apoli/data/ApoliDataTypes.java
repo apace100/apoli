@@ -4,7 +4,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -223,10 +223,10 @@ public class ApoliDataTypes {
             return dataInst;
         });
 
-    public static final SerializableDataType<BehaviorFactory.Instance> MOB_BEHAVIOR = new SerializableDataType<>(BehaviorFactory.Instance.class, (buffer, mobBehavior) -> mobBehavior.write(buffer),
+    public static final SerializableDataType<MobBehaviorFactory.Instance> MOB_BEHAVIOR = new SerializableDataType<>(MobBehaviorFactory.Instance.class, (buffer, mobBehavior) -> mobBehavior.write(buffer),
             (buffer) -> {
                 Identifier type = buffer.readIdentifier();
-                Optional<BehaviorFactory> factory = ApoliRegistries.BEHAVIOR_FACTORY.getOrEmpty(type);
+                Optional<MobBehaviorFactory> factory = ApoliRegistries.BEHAVIOR_FACTORY.getOrEmpty(type);
                 return factory.get().read(buffer);
             },
             (json) -> {
@@ -237,8 +237,8 @@ public class ApoliDataTypes {
                         if (id == null) {
                             throw new JsonSyntaxException("Behavior json requires \"type\" identifier.");
                         }
-                        Registry<BehaviorFactory> registry = ApoliRegistries.BEHAVIOR_FACTORY;
-                        Optional<BehaviorFactory> optionalBehavior = registry.getOrEmpty(id);
+                        Registry<MobBehaviorFactory> registry = ApoliRegistries.BEHAVIOR_FACTORY;
+                        Optional<MobBehaviorFactory> optionalBehavior = registry.getOrEmpty(id);
                         if (optionalBehavior.isEmpty()) {
                             if (NamespaceAlias.hasAlias(id)) {
                                 optionalBehavior = registry.getOrEmpty(NamespaceAlias.resolveAlias(id));

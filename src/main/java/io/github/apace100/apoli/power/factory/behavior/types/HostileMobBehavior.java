@@ -3,7 +3,7 @@ package io.github.apace100.apoli.power.factory.behavior.types;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.factory.behavior.BehaviorFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliActivities;
@@ -127,8 +127,8 @@ public class HostileMobBehavior extends AttributeMobBehavior {
         }));
     }
 
-    public static BehaviorFactory<?> createFactory() {
-        return new BehaviorFactory<>(Apoli.identifier("hostile"),
+    public static MobBehaviorFactory<?> createFactory() {
+        return new MobBehaviorFactory<>(Apoli.identifier("hostile"),
                 new SerializableData()
                         .add("priority", SerializableDataTypes.INT, 0)
                         .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
