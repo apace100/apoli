@@ -153,6 +153,13 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         return modified;
     }
 
+    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLandingPos()Lnet/minecraft/util/math/BlockPos;"))
+    private void forceGrounded(MovementType movementType, Vec3d movement, CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower((Entity)(Object)this, GroundedPower.class)) {
+            this.onGround = true;
+        }
+    }
+
     @Override
     public boolean isSubmergedInLoosely(TagKey<Fluid> tag) {
         if(tag == null || submergedFluidTag == null) {
