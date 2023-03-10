@@ -27,13 +27,13 @@ public class ResourceCondition {
         PowerHolderComponent.KEY.maybeGet(entity).ifPresent(
             phc -> {
 
-                int a = 0;
+                Integer a = null;
                 Power power = phc.getPower(powerType);
 
                 if (power instanceof VariableIntPower vip) a = vip.getValue();
                 else if (power instanceof CooldownPower cp) a = cp.getRemainingTicks();
 
-                bl.set(comparison.compare(a, b));
+                if (a != null) bl.set(comparison.compare(a, b));
 
             }
         );
