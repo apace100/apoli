@@ -7,10 +7,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.power.factory.condition.entity.BlockCollisionCondition;
-import io.github.apace100.apoli.power.factory.condition.entity.ElytraFlightPossibleCondition;
-import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
-import io.github.apace100.apoli.power.factory.condition.entity.ScoreboardCondition;
+import io.github.apace100.apoli.power.factory.condition.entity.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
@@ -128,20 +125,7 @@ public class EntityConditions {
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.DOUBLE),
             (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely(data.get("fluid")), data.getDouble("compare_to"))));
-        register(new ConditionFactory<>(Apoli.identifier("power"), new SerializableData()
-            .add("power", SerializableDataTypes.IDENTIFIER)
-            .add("source", SerializableDataTypes.IDENTIFIER, null),
-            (data, entity) -> {
-                try {
-                    PowerType<?> powerType = PowerTypeRegistry.get(data.getId("power"));
-                    if(data.isPresent("source")) {
-                        return PowerHolderComponent.KEY.get(entity).hasPower(powerType, data.getId("source"));
-                    }
-                    return PowerHolderComponent.KEY.get(entity).hasPower(powerType);
-                } catch(IllegalArgumentException e) {
-                    return false;
-                }
-            }));
+        register(PowerCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("food_level"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
@@ -185,21 +169,7 @@ public class EntityConditions {
                 return ((Comparison)data.get("comparison")).compare(attrValue, data.getDouble("compare_to"));
             }));
         register(new ConditionFactory<>(Apoli.identifier("swimming"), new SerializableData(), (data, entity) -> entity.isSwimming()));
-        register(new ConditionFactory<>(Apoli.identifier("resource"), new SerializableData()
-            .add("resource", ApoliDataTypes.POWER_TYPE)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT),
-            (data, entity) -> {
-                int resourceValue = 0;
-                PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                Power p = component.getPower((PowerType<?>)data.get("resource"));
-                if(p instanceof VariableIntPower) {
-                    resourceValue = ((VariableIntPower)p).getValue();
-                } else if(p instanceof CooldownPower) {
-                    resourceValue = ((CooldownPower)p).getRemainingTicks();
-                }
-                return ((Comparison)data.get("comparison")).compare(resourceValue, data.getInt("compare_to"));
-            }));
+        register(ResourceCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("air"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
