@@ -1,0 +1,16 @@
+{
+  "type": "apoli:simple",
+  "loading_condition": {
+    "type": "apoli:or",
+    "conditions": [
+      {
+        "type": "apoli:mod_present",
+        "id": "apoli"
+      },
+      {
+        "type": "apoli:datapack_present",
+        "namespace": "golemancy"
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power;
 
 import com.google.gson.*;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -14,6 +15,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -21,6 +23,7 @@ import java.util.function.BiFunction;
 public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResourceReloadListener {
 
     public static final Set<Identifier> DEPENDENCIES = new HashSet<>();
+    public static final Set<String> LOADED_DATAPACK_NAMESPACES = new HashSet<>();
 
     private static final Identifier MULTIPLE = Apoli.identifier("multiple");
     private static final Identifier SIMPLE = Apoli.identifier("simple");
@@ -39,6 +42,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
     protected void apply(Map<Identifier, List<JsonElement>> loader, ResourceManager manager, Profiler profiler) {
         PowerTypeRegistry.reset();
         LOADING_PRIORITIES.clear();
+        LOADED_DATAPACK_NAMESPACES.clear();
+        LOADED_DATAPACK_NAMESPACES.addAll(manager.getAllNamespaces());
         PowerReloadCallback.EVENT.invoker().onPowerReload();
         PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
         loader.forEach((id, jel) -> {
@@ -60,6 +65,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                                 || entry.getKey().equals("description")
                                 || entry.getKey().equals("hidden")
                                 || entry.getKey().equals("condition")
+                                || entry.getKey().equals("loading_condition")
                                 || entry.getKey().toString().startsWith("$")
                                 || ADDITIONAL_DATA.containsKey(entry.getKey())) {
                                 continue;
@@ -74,9 +80,11 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                             }
                         }
                         MultiplePowerType superPower = (MultiplePowerType) readPower(id, je, false, MultiplePowerType::new);
-                        superPower.setSubPowers(subPowers);
-                        handleAdditionalData(id, factoryId, false, jo, superPower);
-                        PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, false, jo, superPower);
+                        if (superPower != null) {
+                            superPower.setSubPowers(subPowers);
+                            handleAdditionalData(id, factoryId, false, jo, superPower);
+                            PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, false, jo, superPower);
+                        }
                     } else {
                         readPower(id, je, false);
                     }
@@ -87,6 +95,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         });
         PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
         LOADING_PRIORITIES.clear();
+        LOADED_DATAPACK_NAMESPACES.clear();
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
         Apoli.LOGGER.info("Finished loading powers from data files. Registry contains " + PowerTypeRegistry.size() + " powers.");
@@ -96,10 +105,30 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         readPower(id, je, isSubPower, PowerType::new);
     }
 
+    private boolean isLoadingConditionAllowed(Identifier id, JsonElement je, int priority) {
+        try {
+            boolean bl = ApoliDataTypes.LOADING_CONDITION.read(je).test();
+            if (!bl && PowerTypeRegistry.contains(id) && LOADING_PRIORITIES.get(id) < priority) {
+                PowerTypeRegistry.remove(id);
+            }
+            return bl;
+        } catch (Exception e) {
+            Apoli.LOGGER.error("There was a problem reading loading condition on power " + id.toString() + " (power won't be loaded): " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Nullable
     private PowerType readPower(Identifier id, JsonElement je, boolean isSubPower,
                                 BiFunction<Identifier, PowerFactory.Instance, PowerType> powerTypeFactory) {
         JsonObject jo = je.getAsJsonObject();
         Identifier factoryId = Identifier.tryParse(JsonHelper.getString(jo, "type"));
+
+        int priority = JsonHelper.getInt(jo, "loading_priority", 0);
+        if (jo.has("loading_condition") && !isLoadingConditionAllowed(id, jo.get("loading_condition"), priority)) {
+            return null;
+        }
+
         if(isMultiple(factoryId)) {
             factoryId = SIMPLE;
             if(isSubPower) {
@@ -118,7 +147,6 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         }
         PowerFactory.Instance factoryInstance = optionalFactory.get().read(jo);
         PowerType type = powerTypeFactory.apply(id, factoryInstance);
-        int priority = JsonHelper.getInt(jo, "loading_priority", 0);
         String name = JsonHelper.getString(jo, "name", "");
         String description = JsonHelper.getString(jo, "description", "");
         boolean hidden = JsonHelper.getBoolean(jo, "hidden", false);

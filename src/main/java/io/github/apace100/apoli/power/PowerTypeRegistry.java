@@ -26,6 +26,10 @@ public class PowerTypeRegistry {
         return register(id, powerType);
     }
 
+    protected static void remove(Identifier id) {
+        idToPower.remove(id);
+    }
+
     public static int size() {
         return idToPower.size();
     }

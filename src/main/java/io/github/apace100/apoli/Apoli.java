@@ -108,6 +108,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		DamageConditions.register();
 		FluidConditions.register();
 		BiomeConditions.register();
+		LoadingConditions.register();
 		EntityActions.register();
 		ItemActions.register();
 		BlockActions.register();

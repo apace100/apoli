@@ -11,6 +11,7 @@ import io.github.apace100.apoli.power.factory.action.ActionTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.power.factory.condition.ConditionTypes;
+import io.github.apace100.apoli.power.factory.condition.LoadingConditionFactory;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
@@ -87,6 +88,12 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<ConditionFactory<RegistryEntry<Biome>>.Instance>> BIOME_CONDITIONS =
         SerializableDataType.list(BIOME_CONDITION);
+
+    public static final SerializableDataType<LoadingConditionFactory.Instance> LOADING_CONDITION =
+            new SerializableDataType<>(LoadingConditionFactory.Instance.class, null, null, LoadingConditionFactory::read);
+
+    public static final SerializableDataType<List<LoadingConditionFactory.Instance>> LOADING_CONDITIONS =
+            SerializableDataType.list(LOADING_CONDITION);
 
     public static final SerializableDataType<ActionFactory<Entity>.Instance> ENTITY_ACTION =
         action(ClassUtil.castClass(ActionFactory.Instance.class), ActionTypes.ENTITY);
