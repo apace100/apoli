@@ -72,8 +72,10 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                             }
                             Identifier subId = new Identifier(id.toString() + "_" + entry.getKey());
                             try {
-                                readPower(subId, entry.getValue(), true);
-                                subPowers.add(subId);
+                                PowerType subPower = readPower(subId, entry.getValue(), true);
+                                if (subPower != null) {
+                                    subPowers.add(subId);
+                                }
                             } catch (Exception e) {
                                 Apoli.LOGGER.error("There was a problem reading sub-power \"" +
                                     subId.toString() + "\" in power file \"" + id.toString() + "\": " + e.getMessage());
@@ -101,8 +103,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         Apoli.LOGGER.info("Finished loading powers from data files. Registry contains " + PowerTypeRegistry.size() + " powers.");
     }
 
-    private void readPower(Identifier id, JsonElement je, boolean isSubPower) {
-        readPower(id, je, isSubPower, PowerType::new);
+    private PowerType readPower(Identifier id, JsonElement je, boolean isSubPower) {
+        return readPower(id, je, isSubPower, PowerType::new);
     }
 
     private boolean isLoadingConditionAllowed(Identifier id, JsonElement je, int priority) {
