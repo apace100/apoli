@@ -9,8 +9,8 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.registry.Registries;
 
 public class ModifyMobBehaviorPower extends Power {
 
@@ -59,7 +59,7 @@ public class ModifyMobBehaviorPower extends Power {
     }
 
     public void fromTag(NbtElement tag) {
-
+        this.mobBehavior.fromTag(tag);
     }
 
     public static PowerFactory createFactory() {
@@ -70,7 +70,9 @@ public class ModifyMobBehaviorPower extends Power {
                 data ->
                         (type, entity) -> {
                             if (!(entity instanceof MobEntity mob)) {
-                                Apoli.LOGGER.warn("Tried applying ModifyMobBehavior power with id '{}' to non mob, the power will not do anything.", type.getIdentifier());
+                                if (entity != null) {
+                                    Apoli.LOGGER.warn("Tried applying ModifyMobBehavior power with id '{}' to an entity with the type '{}', which is not a mob. This power will not do anything.", type.getIdentifier(), Registries.ENTITY_TYPE.getId(entity.getType()));
+                                }
                                 return new Power(type, entity);
                             }
                             return new ModifyMobBehaviorPower(type, entity, ((MobBehaviorFactory.Instance)data.get("behavior")).apply(mob), data.getInt("tick_rate"));
