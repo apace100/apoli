@@ -46,7 +46,7 @@ public class FollowMobBehavior extends MobBehavior {
 
     public static SingleTickTask<MobEntity> createRememberTask(Predicate<LivingEntity> predicate) {
         return TaskTriggerer.task(context -> context.group(context.queryMemoryValue(ApoliMemoryModuleTypes.BEHAVIOR_TARGET), context.queryMemoryOptional(MemoryModuleType.LOOK_TARGET)).apply(context, (behaviorTarget, lookTarget) -> (world, entity, time) -> {
-            if ((context.getOptionalValue(lookTarget).isPresent() || context.getOptionalValue(lookTarget).isPresent() && context.getOptionalValue(lookTarget).get() instanceof BlockPosLookTarget || context.getOptionalValue(lookTarget).get() instanceof EntityLookTarget entityLookTarget && entityLookTarget.getEntity() instanceof LivingEntity living && !predicate.test(living))) {
+            if ((context.getOptionalValue(lookTarget).isPresent() && context.getOptionalValue(lookTarget).get() instanceof BlockPosLookTarget || context.getOptionalValue(lookTarget).get() instanceof EntityLookTarget entityLookTarget && entityLookTarget.getEntity() instanceof LivingEntity living && !predicate.test(living))) {
                 entity.getBrain().forget(MemoryModuleType.ATTACK_TARGET);
                 entity.getBrain().forget(MemoryModuleType.WALK_TARGET);
                 entity.getBrain().remember(MemoryModuleType.LOOK_TARGET, new EntityLookTarget(context.getValue(behaviorTarget), true));
