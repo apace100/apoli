@@ -21,7 +21,6 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.TypeFilter;
-import org.spongepowered.include.com.google.common.collect.Maps;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -101,7 +100,7 @@ public class MobBehavior {
     }
 
     protected Map<Activity, Pair<ImmutableList<? extends Task<?>>, List<MemoryModuleType<?>>>> tasksToApply() {
-        return Maps.newHashMap();
+        return new HashMap<>();
     }
 
     public void baseTick() {
