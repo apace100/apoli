@@ -6,6 +6,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.goal.ConditionedLookAtEntityGoal;
 import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
@@ -30,12 +31,8 @@ public class LookMobBehavior extends MobBehavior {
     }
 
     @Override
-    public void tick() {
-        if (!this.usesGoals()) return;
-        LivingEntity livingEntity = mob.world.getClosestEntity((((ServerWorld)mob.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply)), TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
-        if (livingEntity == null || !livingEntity.isAlive()) return;
-
-        mob.getLookControl().lookAt(livingEntity);
+    public void applyGoals() {
+        this.addToGoalSelector(new ConditionedLookAtEntityGoal(mob, this::doesApply));
     }
 
     @Override
