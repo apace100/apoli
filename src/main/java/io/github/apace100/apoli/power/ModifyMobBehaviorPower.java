@@ -66,7 +66,7 @@ public class ModifyMobBehaviorPower extends Power {
         return new PowerFactory<>(Apoli.identifier("modify_mob_behavior"),
                 new SerializableData()
                         .add("behavior", ApoliDataTypes.MOB_BEHAVIOR)
-                        .add("tick_rate", SerializableDataTypes.INT, 10),
+                        .add("tick_rate", SerializableDataTypes.INT, 1),
                 data ->
                         (type, entity) -> {
                             if (!(entity instanceof MobEntity mob)) {
