@@ -123,6 +123,7 @@ public class PowerFactories {
         register(ModifyVelocityPower::createFactory);
         register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
         register(ActionOnItemUsePower::createFactory);
+        register(PreventItemPickupPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

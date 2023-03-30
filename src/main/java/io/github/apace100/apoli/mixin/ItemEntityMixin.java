@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.power.ActionOnItemPickupPower;
+import io.github.apace100.apoli.power.PreventItemPickupPower;
 import io.github.apace100.apoli.power.Prioritized;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -30,7 +32,7 @@ public abstract class ItemEntityMixin extends Entity {
         super(type, world);
     }
 
-    @Inject(method = "onPlayerCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;insertStack(Lnet/minecraft/item/ItemStack;)Z"))
+    @Inject(method = "onPlayerCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;insertStack(Lnet/minecraft/item/ItemStack;)Z"), cancellable = true)
     private void apoli$onItemPickup(PlayerEntity player, CallbackInfo ci) {
 
         AtomicReference<Entity> throwerEntity = new AtomicReference<>();
@@ -42,6 +44,25 @@ public abstract class ItemEntityMixin extends Entity {
                 throwerEntity.set(serverWorld.getEntity(throwerUUID));
                 if (throwerEntity.get() != null) break;
             }
+        }
+
+        Prioritized.CallInstance<PreventItemPickupPower> pippci = new Prioritized.CallInstance<>();
+        pippci.add(player, PreventItemPickupPower.class, p -> p.doesPrevent(stack, throwerEntity.get()));
+        int preventItemPickupPowers = 0;
+
+        for (int i = pippci.getMaxPriority(); i >= pippci.getMinPriority(); i--) {
+
+            if (!pippci.hasPowers(i)) continue;
+            List<PreventItemPickupPower> pipps = pippci.getPowers(i);
+
+            preventItemPickupPowers += pipps.size();
+            pipps.forEach(p -> p.executeActions(stack, throwerEntity.get()));
+
+        }
+
+        if (preventItemPickupPowers > 0) {
+            ci.cancel();
+            return;
         }
 
         Prioritized.CallInstance<ActionOnItemPickupPower> aoippci = new Prioritized.CallInstance<>();
