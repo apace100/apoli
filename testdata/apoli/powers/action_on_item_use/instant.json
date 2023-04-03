@@ -1,0 +1,68 @@
+{
+  "type": "apoli:multiple",
+  "count": {
+    "type": "apoli:resource",
+    "min": 0,
+    "max": 7,
+    "max_action": {
+      "type": "apoli:change_resource",
+      "resource": "*:*_state",
+      "change": 1
+    },
+    "min_action": {
+      "type": "apoli:change_resource",
+      "resource": "*:*_state",
+      "change": -1
+    }
+  },
+  "state": {
+    "type": "apoli:resource",
+    "min": 0,
+    "max": 1
+  },
+  "prevent": {
+    "type": "apoli:prevent_item_use",
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:ender_pearl"
+      }
+    },
+    "condition": {
+      "type": "apoli:resource",
+      "resource": "*:*_state",
+      "comparison": "==",
+      "compare_to": 1
+    }
+  },
+  "increase": {
+    "type": "apoli:action_on_item_use",
+    "trigger": "instant",
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:ender_pearl"
+      }
+    },
+    "entity_action": {
+      "type": "apoli:change_resource",
+      "resource": "*:*_count",
+      "change": 1
+    }
+  },
+  "decrease": {
+    "type": "apoli:action_over_time",
+    "interval": 15,
+    "entity_action": {
+      "type": "apoli:change_resource",
+      "resource": "*:*_count",
+      "change": -1
+    },
+    "condition": {
+      "type": "apoli:resource",
+      "resource": "*:*_state",
+      "comparison": "==",
+      "compare_to": 1
+    }
+  }
+}

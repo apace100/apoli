@@ -1,0 +1,31 @@
+{
+  "type": "apoli:multiple",
+  "start": {
+    "type": "apoli:action_on_item_use",
+    "trigger": "start",
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:shield"
+      }
+    },
+    "entity_action": {
+      "type": "apoli:execute_command",
+      "command": "attribute @s minecraft:generic.movement_speed modifier add 1cc989b0-be82-4666-bd59-f80a64787678 FastShieldPower 5 multiply"
+    }
+  },
+  "stop": {
+    "type": "apoli:action_on_item_use",
+    "trigger": "stop",
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:shield"
+      }
+    },
+    "entity_action": {
+      "type": "apoli:execute_command",
+      "command": "attribute @s minecraft:generic.movement_speed modifier remove 1cc989b0-be82-4666-bd59-f80a64787678"
+    }
+  }
+}

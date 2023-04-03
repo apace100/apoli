@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.action.entity;
+package io.github.apace100.apoli.power.factory.action.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
@@ -29,7 +29,7 @@ public class AreaOfEffectAction {
         }
     }
 
-    public static ActionFactory<Entity> createFactory() {
+    public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(Apoli.identifier("area_of_effect"),
             new SerializableData()
                 .add("radius", SerializableDataTypes.DOUBLE, 16D)
