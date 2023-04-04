@@ -454,6 +454,8 @@ public class EntityActions {
         register(ModifyDeathTicksAction.getFactory());
         register(ModifyResourceAction.getFactory());
         register(ModifyStatAction.getFactory());
+        register(GrantAdvancementAction.getFactory());
+        register(RevokeAdvancementAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {

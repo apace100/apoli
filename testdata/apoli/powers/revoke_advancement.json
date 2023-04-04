@@ -1,0 +1,12 @@
+{
+  "comment": "Revokes an advancment.",
+
+  "type": "apoli:active_self",
+  "entity_action": {
+    "type": "apoli:revoke_advancement",
+    "advancement": "minecraft:adventure/arbalistic"
+  },
+  "key": {
+    "key": "key.pickItem"
+  }
+}

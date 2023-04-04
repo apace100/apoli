@@ -1,0 +1,12 @@
+{
+  "comment": "Grants an advancment.",
+
+  "type": "apoli:active_self",
+  "entity_action": {
+    "type": "apoli:grant_advancement",
+    "advancement": "minecraft:adventure/arbalistic"
+  },
+  "key": {
+    "key": "key.pickItem"
+  }
+}
