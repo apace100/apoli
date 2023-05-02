@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -39,6 +40,48 @@ public class InventoryUtil {
         if (slots.isEmpty()) slots.addAll(ItemSlotArgumentTypeAccessor.getSlotMappings().values());
 
         return slots;
+
+    }
+
+    public static boolean checkInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
+
+        AtomicInteger matches = new AtomicInteger();
+
+        Predicate<ItemStack> itemCondition = data.get("item_condition");
+        Set<Integer> slots = getSlots(data);
+        Comparison comparison = data.get("comparison");
+        int compareTo = data.get("compare_to");
+
+        if (inventoryPower == null) slots.forEach(
+            slot -> {
+
+                StackReference stackReference = entity.getStackReference(slot);
+                if (stackReference == StackReference.EMPTY) return;
+
+                ItemStack stack = stackReference.get();
+                if (itemCondition == null || stack.isEmpty()) return;
+                else if (!itemCondition.test(stack)) return;
+
+                matches.incrementAndGet();
+
+            }
+        );
+
+        else slots.forEach(
+            slot -> {
+
+                if (slot < 0 || slot >= inventoryPower.size()) return;
+
+                ItemStack stack = inventoryPower.getStack(slot);
+                if (itemCondition == null || stack.isEmpty()) return;
+                else if (!itemCondition.test(stack)) return;
+
+                matches.incrementAndGet();
+
+            }
+        );
+
+        return comparison.compare(matches.get(), compareTo);
 
     }
 
