@@ -51,7 +51,7 @@ public class ModifyFoodPower extends Power {
     }
 
     public boolean doesApply(ItemStack stack) {
-        return applicableFood.test(stack);
+        return applicableFood == null || applicableFood.test(stack);
     }
 
     public ItemStack getConsumedItemStack(ItemStack stack) {
