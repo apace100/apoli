@@ -455,6 +455,8 @@ public class EntityActions {
         register(ModifyResourceAction.getFactory());
         register(ModifyStatAction.getFactory());
         register(SelectorAction.getFactory());
+        register(GrantAdvancementAction.getFactory());
+        register(RevokeAdvancementAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
