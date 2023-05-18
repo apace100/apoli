@@ -1,9 +1,6 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.factory.action.entity.AreaOfEffectAction;
-import io.github.apace100.apoli.power.factory.action.entity.CraftingTableAction;
-import io.github.apace100.apoli.power.factory.action.entity.EnderChestAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
@@ -35,7 +32,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
-//import net.minecraft.util.math.Vec3f;
 
 import java.util.LinkedList;
 import java.util.List;
