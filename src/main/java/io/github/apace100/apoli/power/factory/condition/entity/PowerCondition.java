@@ -9,8 +9,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.jetbrains.annotations.Nullable;
 
 public class PowerCondition {
 
@@ -19,13 +18,14 @@ public class PowerCondition {
         PowerType<?> powerType = data.get("power");
         Identifier powerSource = data.get("source");
 
-        AtomicBoolean bl = new AtomicBoolean(false);
-        PowerHolderComponent.KEY.maybeGet(entity).ifPresent(
-            phc -> bl.set(powerSource != null ? phc.hasPower(powerType, powerSource) : phc.hasPower(powerType))
-        );
+        return PowerHolderComponent.KEY.maybeGet(entity)
+            .map(component -> hasPower(component, powerType, powerSource))
+            .orElse(false);
 
-        return bl.get();
+    }
 
+    private static boolean hasPower(PowerHolderComponent component, PowerType<?> powerType, @Nullable Identifier powerSource) {
+        return powerSource != null ? component.hasPower(powerType, powerSource) : component.hasPower(powerType);
     }
 
     public static ConditionFactory<Entity> getFactory() {

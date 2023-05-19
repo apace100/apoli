@@ -13,32 +13,29 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class ResourceCondition {
 
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
         PowerType<?> powerType = data.get("resource");
         Comparison comparison = data.get("comparison");
-        int b = data.get("compare_to");
+        int compareTo = data.get("compare_to");
 
-        AtomicBoolean bl = new AtomicBoolean(false);
-        PowerHolderComponent.KEY.maybeGet(entity).ifPresent(
-            phc -> {
+        return PowerHolderComponent.KEY.maybeGet(entity)
+            .map(component -> comparePowerValue(component, powerType, comparison, compareTo))
+            .orElse(false);
 
-                Integer a = null;
-                Power power = phc.getPower(powerType);
+    }
 
-                if (power instanceof VariableIntPower vip) a = vip.getValue();
-                else if (power instanceof CooldownPower cp) a = cp.getRemainingTicks();
+    private static boolean comparePowerValue(PowerHolderComponent component, PowerType<?> powerType, Comparison comparison, int compareTo) {
 
-                if (a != null) bl.set(comparison.compare(a, b));
+        Integer powerValue = null;
+        Power power = component.getPower(powerType);
 
-            }
-        );
+        if (power instanceof VariableIntPower vip) powerValue = vip.getValue();
+        else if (power instanceof CooldownPower cp) powerValue = cp.getRemainingTicks();
 
-        return bl.get();
+        return powerValue != null && comparison.compare(powerValue, compareTo);
 
     }
 
