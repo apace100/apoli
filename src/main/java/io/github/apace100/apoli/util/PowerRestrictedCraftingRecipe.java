@@ -14,6 +14,7 @@ import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.recipe.SpecialCraftingRecipe;
 import net.minecraft.recipe.SpecialRecipeSerializer;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -38,13 +39,13 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
     }
 
     @Override
-    public ItemStack craft(CraftingInventory inv) {
+    public ItemStack craft(CraftingInventory inv, DynamicRegistryManager registryManager) {
         PlayerEntity player = getPlayerFromInventory(inv);
         if(player != null) {
             Optional<Recipe<CraftingInventory>> optional = getRecipes(inv).stream().filter(r -> r.matches(inv, player.world)).findFirst();
             if(optional.isPresent()) {
                 Recipe<CraftingInventory> recipe = optional.get();
-                return recipe.craft(inv);
+                return recipe.craft(inv, registryManager);
             }
         }
         return ItemStack.EMPTY;

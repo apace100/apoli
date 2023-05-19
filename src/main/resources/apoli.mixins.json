@@ -8,6 +8,8 @@
     "AbstractBlockStateMixin",
     "ArgumentTypesMixin",
     "ArmorItemMixin",
+    "BiomeBuilderMixin",
+    "BiomeMixin",
     "BlockItemMixin",
     "CraftingInventoryAccessor",
     "CraftingInventoryMixin",

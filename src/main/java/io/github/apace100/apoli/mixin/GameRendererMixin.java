@@ -108,13 +108,15 @@ public abstract class GameRendererMixin {
         }, OverlayPower::render);
     }
 
-    @Inject(
+    // TODO: remove completely if hud with shader works properly
+    //  (commented because `RenderSystem#enableTexture` doesn't exist anymore
+    /*@Inject(
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getFramebuffer()Lnet/minecraft/client/gl/Framebuffer;"),
         method = "render"
     )
     private void fixHudWithShaderEnabled(float tickDelta, long nanoTime, boolean renderLevel, CallbackInfo info) {
         RenderSystem.enableTexture();
-    }
+    }*/
 
     @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)
     private void disableShaderToggle(CallbackInfo ci) {
