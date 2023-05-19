@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -43,45 +42,44 @@ public class InventoryUtil {
 
     }
 
-    public static boolean checkInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
-
-        AtomicInteger matches = new AtomicInteger();
+    public static int checkInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
 
         Predicate<ItemStack> itemCondition = data.get("item_condition");
         Set<Integer> slots = getSlots(data);
-        Comparison comparison = data.get("comparison");
-        int compareTo = data.get("compare_to");
+        int matches = 0;
 
-        if (inventoryPower == null) slots.forEach(
-            slot -> {
+        if (inventoryPower == null) {
+            for (int slot : slots) {
 
                 StackReference stackReference = entity.getStackReference(slot);
-                if (stackReference == StackReference.EMPTY) return;
+                if (stackReference == StackReference.EMPTY) {
+                    continue;
+                }
 
                 ItemStack stack = stackReference.get();
-                if (itemCondition == null || stack.isEmpty()) return;
-                else if (!itemCondition.test(stack)) return;
-
-                matches.incrementAndGet();
+                if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(stack))) {
+                    matches++;
+                }
 
             }
-        );
+        }
 
-        else slots.forEach(
-            slot -> {
+        else {
+            for (int slot : slots) {
 
-                if (slot < 0 || slot >= inventoryPower.size()) return;
+                if (slot < 0 || slot >= inventoryPower.size()) {
+                    continue;
+                }
 
                 ItemStack stack = inventoryPower.getStack(slot);
-                if (itemCondition == null || stack.isEmpty()) return;
-                else if (!itemCondition.test(stack)) return;
-
-                matches.incrementAndGet();
+                if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(stack))) {
+                    matches++;
+                }
 
             }
-        );
+        }
 
-        return comparison.compare(matches.get(), compareTo);
+        return matches;
 
     }
 
