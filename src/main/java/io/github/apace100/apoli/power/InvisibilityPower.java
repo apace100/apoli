@@ -7,7 +7,6 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Pair;
 
 import java.util.function.Predicate;
@@ -26,7 +25,7 @@ public class InvisibilityPower extends Power {
         this.renderOutline = renderOutline;
     }
 
-    public boolean doesApply(PlayerEntity viewer) {
+    public boolean doesApply(Entity viewer) {
         return biEntityCondition == null || biEntityCondition.test(new Pair<>(viewer, entity));
     }
 
