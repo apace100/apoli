@@ -475,8 +475,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Shadow public abstract AttributeContainer getAttributes();
 
-    @Shadow public abstract float getArmorVisibility();
-
     @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){
         if (!onGround)
@@ -493,12 +491,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Redirect(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
     private boolean invisibilityException(LivingEntity instance) {
-
         if (apoli$invisibilityActor == null || !PowerHolderComponent.hasPower(this, InvisibilityPower.class)) return instance.isInvisible();
-
-        if (PowerHolderComponent.hasPower(this, InvisibilityPower.class, p -> !p.doesApply(apoli$invisibilityActor))) return true;
-        else return false;
-
+        return PowerHolderComponent.hasPower(this, InvisibilityPower.class, p -> p.doesApply(apoli$invisibilityActor));
     }
 
     @Unique
