@@ -77,19 +77,19 @@ public class DamageSourceDescription {
     }
 
     public DamageSource create(DamageSources damageSources) {
-        DamageSource damageSource = damageSources.create(damageType);
+        DamageSource damageSource = damageSources.create(getDamageType(damageSources));
         overwriteDamageSourceMessageKey(damageSource);
         return damageSource;
     }
 
     public DamageSource create(DamageSources damageSources, Entity attacker) {
-        DamageSource damageSource = damageSources.create(damageType, attacker);
+        DamageSource damageSource = damageSources.create(getDamageType(damageSources), attacker);
         overwriteDamageSourceMessageKey(damageSource);
         return damageSource;
     }
 
     public DamageSource create(DamageSources damageSources, Entity source, Entity attacker) {
-        DamageSource damageSource = damageSources.create(damageType, source, attacker);
+        DamageSource damageSource = damageSources.create(getDamageType(damageSources), source, attacker);
         overwriteDamageSourceMessageKey(damageSource);
         return damageSource;
     }

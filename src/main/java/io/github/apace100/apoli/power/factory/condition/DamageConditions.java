@@ -74,8 +74,6 @@ public class DamageConditions {
             (data, dmg) -> dmg.getLeft().isIn(DamageTypeTags.BYPASSES_SHIELD)));
         register(new ConditionFactory<>(Apoli.identifier("out_of_world"), new SerializableData(),
             (data, dmg) -> dmg.getLeft().isIn(DamageTypeTags.BYPASSES_INVULNERABILITY)));
-        register(new ConditionFactory<>(Apoli.identifier("out_of_world"), new SerializableData(),
-                (data, dmg) -> dmg.getLeft().isIn(DamageTypeTags.BYPASSES_INVULNERABILITY)));
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
                 .add("tag", SerializableDataType.tag(RegistryKeys.DAMAGE_TYPE)),
                 (data, dmg) -> dmg.getLeft().isIn(data.get("tag"))));

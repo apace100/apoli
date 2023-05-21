@@ -108,16 +108,6 @@ public abstract class GameRendererMixin {
         }, OverlayPower::render);
     }
 
-    // TODO: remove completely if hud with shader works properly
-    //  (commented because `RenderSystem#enableTexture` doesn't exist anymore
-    /*@Inject(
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getFramebuffer()Lnet/minecraft/client/gl/Framebuffer;"),
-        method = "render"
-    )
-    private void fixHudWithShaderEnabled(float tickDelta, long nanoTime, boolean renderLevel, CallbackInfo info) {
-        RenderSystem.enableTexture();
-    }*/
-
     @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)
     private void disableShaderToggle(CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
@@ -127,22 +117,6 @@ public abstract class GameRendererMixin {
             }
         });
     }
-/*
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setCameraEntity(Lnet/minecraft/entity/Entity;)V"))
-    private void updateShaderPowers(CallbackInfo ci) {
-        if(OriginComponent.hasPower(client.getCameraEntity(), ShaderPower.class)) {
-            OriginComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
-                Identifier shaderLoc = shaderPower.getShaderLocation();
-                loadShader(shaderLoc);
-                currentlyLoadedShader = shaderLoc;
-            });
-        } else {
-            this.shader.close();
-            this.shader = null;
-            this.shadersEnabled = false;
-            currentlyLoadedShader = null;
-        }
-    }*/
 
     // NightVisionPower
     @Inject(at = @At("HEAD"), method = "getNightVisionStrength", cancellable = true)
@@ -222,11 +196,4 @@ public abstract class GameRendererMixin {
         BlockPos.stream(cameraBox).forEach(p -> set.add(p.toImmutable()));
         return set;
     }
-    /* TODO: make this overlay independent of phasing power
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"))
-    private void drawPhantomizedOverlay(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
-        if(PowerHolderComponent.getPowers(this.client.player, PhasingPower.class).size() > 0 && !this.client.player.hasStatusEffect(StatusEffects.NAUSEA)) {
-            this.method_31136(OriginsClient.config.phantomizedOverlayStrength);
-        }
-    }*/
 }
