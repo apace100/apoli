@@ -17,6 +17,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.registry.Registry;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 public class DamageConditions {
 
@@ -45,11 +46,18 @@ public class DamageConditions {
             .add("name", SerializableDataTypes.STRING),
             (data, dmg) -> dmg.getLeft().getName().equals(data.getString("name"))));
         register(new ConditionFactory<>(Apoli.identifier("projectile"), new SerializableData()
-            .add("projectile", SerializableDataTypes.ENTITY_TYPE, null),
+            .add("projectile", SerializableDataTypes.ENTITY_TYPE, null)
+            .add("projectile_condition", ApoliDataTypes.ENTITY_CONDITION, null),
             (data, dmg) -> {
                 if(dmg.getLeft().isIn(DamageTypeTags.IS_PROJECTILE)) {
                     Entity projectile = dmg.getLeft().getSource();
-                    return projectile != null && (!data.isPresent("projectile") || projectile.getType() == (EntityType<?>) data.get("projectile"));
+                    if(projectile != null) {
+                        if(data.isPresent("projectile") && projectile.getType() != data.get("projectile")) {
+                            return false;
+                        }
+                        Predicate<Entity> projectileCondition = data.get("projectile_condition");
+                        return projectileCondition == null || projectileCondition.test(projectile);
+                    }
                 }
                 return false;
             }));
