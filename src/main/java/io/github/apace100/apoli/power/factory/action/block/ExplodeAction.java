@@ -42,12 +42,12 @@ public class ExplodeAction {
         if(indestructible != null) {
             ExplosionBehavior eb = getExplosionBehaviour(block.getLeft(), indestructible);
             explode(block.getLeft(), null,
-                DamageSource.explosion(null),
+                block.getLeft().getDamageSources().explosion(null),
                 eb, block.getMiddle().getX() + 0.5, block.getMiddle().getY() + 0.5, block.getMiddle().getZ() + 0.5,
                 data.getFloat("power"), data.getBoolean("create_fire"),
                 data.get("destruction_type"));
         } else {
-            explode(block.getLeft(),null, DamageSource.explosion(null), null,
+            explode(block.getLeft(),null, block.getLeft().getDamageSources().explosion(null), null,
                     block.getMiddle().getX() + 0.5, block.getMiddle().getY() + 0.5, block.getMiddle().getZ() + 0.5,
                     data.getFloat("power"), data.getBoolean("create_fire"),
                     data.get("destruction_type"));

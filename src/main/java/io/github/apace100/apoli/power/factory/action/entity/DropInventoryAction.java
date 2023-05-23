@@ -7,12 +7,12 @@ import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 
-import static io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import static io.github.apace100.apoli.util.InventoryUtil.dropInventory;
 
 public class DropInventoryAction {

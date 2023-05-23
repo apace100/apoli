@@ -60,9 +60,9 @@ public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
                 }
                 int w = (int)(fill * barWidth);
                 drawTexture(matrices, x, y - 2, 0, v, w, barHeight);
-                setZOffset(getZOffset() + 1);
+                //setZOffset(getZOffset() + 1);
                 drawTexture(matrices, x - iconSize - 2, y - 2, 73, v, iconSize, iconSize);
-                setZOffset(getZOffset() - 1);
+                //setZOffset(getZOffset() - 1);
                 y -= 8;
             }
         }
