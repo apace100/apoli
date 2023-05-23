@@ -50,7 +50,7 @@ public class ModifyCraftingPower extends ValueModifyingPower {
             }
         }
         if(itemCondition != null) {
-            if(!itemCondition.test(recipe.craft(inventory))) {
+            if(!itemCondition.test(recipe.craft(inventory, entity.world.getRegistryManager()))) {
                 return false;
             }
         }
@@ -69,7 +69,7 @@ public class ModifyCraftingPower extends ValueModifyingPower {
         if(newStack != null) {
             stack = newStack.copy();
         } else {
-            stack = recipe.craft(inventory);
+            stack = recipe.craft(inventory, entity.world.getRegistryManager());
         }
         if(itemAction != null) {
             itemAction.accept(new Pair<>(entity.world, stack));
