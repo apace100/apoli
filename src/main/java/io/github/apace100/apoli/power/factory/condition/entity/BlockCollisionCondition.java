@@ -26,8 +26,8 @@ public class BlockCollisionCondition {
         if (data.isPresent("block_condition")) {
 
             Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
-            BlockPos minBlockPos = new BlockPos(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
-            BlockPos maxBlockPos = new BlockPos(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
+            BlockPos minBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
+            BlockPos maxBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
             BlockPos.Mutable mutableBlockPos = new BlockPos.Mutable();
             int matchingBlocks = 0;
 

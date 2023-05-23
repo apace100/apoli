@@ -88,7 +88,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sun"), new SerializableData(), (data, entity) -> {
             if (entity.world.isDay() && !((EntityAccessor) entity).callIsBeingRainedOn()) {
                 float f = entity.getBrightnessAtEyes();
-                BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
+                BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
                 return f > 0.5F && entity.world.isSkyVisible(blockPos);
             }
             return false;
@@ -97,7 +97,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("invisible"), new SerializableData(), (data, entity) -> entity.isInvisible()));
         register(new ConditionFactory<>(Apoli.identifier("on_fire"), new SerializableData(), (data, entity) -> entity.isOnFire()));
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sky"), new SerializableData(), (data, entity) -> {
-            BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
+            BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
             return entity.world.isSkyVisible(blockPos);
         }));
         register(new ConditionFactory<>(Apoli.identifier("sneaking"), new SerializableData(), (data, entity) -> entity.isSneaking()));
@@ -164,7 +164,7 @@ public class EntityConditions {
             .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null),
             (data, entity) -> entity.isOnGround() &&
                 (!data.isPresent("block_condition") || ((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")).test(
-                    new CachedBlockPosition(entity.world, new BlockPos(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ()), true)))));
+                    new CachedBlockPosition(entity.world, BlockPos.ofFloored(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ()), true)))));
         register(new ConditionFactory<>(Apoli.identifier("equipped_item"), new SerializableData()
             .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
             .add("item_condition", ApoliDataTypes.ITEM_CONDITION),
@@ -362,8 +362,8 @@ public class EntityConditions {
                 }
                 int count = 0;
                 Box box = entity.getBoundingBox();
-                BlockPos blockPos = new BlockPos(box.minX + 0.001D, box.minY + 0.001D, box.minZ + 0.001D);
-                BlockPos blockPos2 = new BlockPos(box.maxX - 0.001D, box.maxY - 0.001D, box.maxZ - 0.001D);
+                BlockPos blockPos = BlockPos.ofFloored(box.minX + 0.001D, box.minY + 0.001D, box.minZ + 0.001D);
+                BlockPos blockPos2 = BlockPos.ofFloored(box.maxX - 0.001D, box.maxY - 0.001D, box.maxZ - 0.001D);
                 BlockPos.Mutable mutable = new BlockPos.Mutable();
                 for(int i = blockPos.getX(); i <= blockPos2.getX() && count < stopAt; ++i) {
                     for(int j = blockPos.getY(); j <= blockPos2.getY() && count < stopAt; ++j) {
