@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.action.block.BonemealAction;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.action.block.AreaOfEffectAction;
 import io.github.apace100.apoli.power.factory.action.block.ExplodeAction;
 import io.github.apace100.apoli.power.factory.action.block.ModifyBlockStateAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
@@ -87,6 +88,7 @@ public class BlockActions {
         register(BonemealAction.getFactory());
         register(ModifyBlockStateAction.getFactory());
         register(ExplodeAction.getFactory());
+        register(AreaOfEffectAction.getFactory());
     }
 
     private static void register(ActionFactory<Triple<World, BlockPos, Direction>> actionFactory) {
