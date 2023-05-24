@@ -73,7 +73,7 @@ public class ReplaceLootTablePower extends Power {
             return false;
         }
         if(blockCondition != null && lootContext.hasParameter(LootContextParameters.ORIGIN)) {
-            BlockPos blockPos = new BlockPos(lootContext.get(LootContextParameters.ORIGIN));
+            BlockPos blockPos = BlockPos.ofFloored(lootContext.get(LootContextParameters.ORIGIN));
             CachedBlockPosition cbp = new CachedBlockPosition(lootContext.getWorld(), blockPos, true);
             if(!blockCondition.test(cbp)) {
                 return false;

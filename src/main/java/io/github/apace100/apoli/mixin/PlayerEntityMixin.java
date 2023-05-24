@@ -13,6 +13,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
@@ -141,22 +142,17 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     @Inject(method = "damage", at = @At(value = "RETURN", ordinal = 3), cancellable = true)
     private void allowDamageIfModifyingPowersExist(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+
         boolean hasModifyingPower = false;
 
-        if(source.getAttacker() != null) {
-            if(!source.isProjectile()) {
-                hasModifyingPower = PowerHolderComponent.getPowers(source.getAttacker(), ModifyDamageDealtPower.class).size() > 0;
-            } else {
-                hasModifyingPower = PowerHolderComponent.getPowers(source.getAttacker(), ModifyProjectileDamagePower.class).size() > 0;
-            }
+        if (source.getAttacker() != null) {
+            if (source.isIn(DamageTypeTags.IS_PROJECTILE)) hasModifyingPower = PowerHolderComponent.hasPower(source.getAttacker(), ModifyProjectileDamagePower.class, mpdp -> mpdp.doesApply(source, amount, this));
+            else hasModifyingPower = PowerHolderComponent.hasPower(source.getAttacker(), ModifyDamageDealtPower.class, mddp -> mddp.doesApply(source, amount, this));
         }
 
-        hasModifyingPower |=
-            PowerHolderComponent.getPowers(this, ModifyDamageTakenPower.class).size() > 0;
+        hasModifyingPower |= PowerHolderComponent.hasPower(this, ModifyDamageTakenPower.class, mdtp -> mdtp.doesApply(source, amount));
+        if (hasModifyingPower) cir.setReturnValue(super.damage(source, amount));
 
-        if(hasModifyingPower) {
-            cir.setReturnValue(super.damage(source, amount));
-        }
     }
 
     @Inject(method = "interact", at = @At("RETURN"), cancellable = true)

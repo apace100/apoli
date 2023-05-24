@@ -96,7 +96,7 @@ public class ModifyPlayerSpawnPower extends Power {
 
                 case "default":
                     if(dimensionDistanceMultiplier != 0) {
-                        spawnToDimPos = new BlockPos(regularSpawn.getX() * dimensionDistanceMultiplier, regularSpawn.getY(), regularSpawn.getZ() * dimensionDistanceMultiplier);
+                        spawnToDimPos = BlockPos.ofFloored(regularSpawn.getX() * dimensionDistanceMultiplier, regularSpawn.getY(), regularSpawn.getZ() * dimensionDistanceMultiplier);
                     } else {
                         spawnToDimPos = new BlockPos(regularSpawn.getX(), regularSpawn.getY(), regularSpawn.getZ());
                     }
@@ -105,7 +105,7 @@ public class ModifyPlayerSpawnPower extends Power {
                 default:
                     Apoli.LOGGER.warn("This case does nothing. The game crashes if there is no spawn strategy set");
                     if(dimensionDistanceMultiplier != 0) {
-                        spawnToDimPos = new BlockPos(regularSpawn.getX() * dimensionDistanceMultiplier, regularSpawn.getY(), regularSpawn.getZ() * dimensionDistanceMultiplier);
+                        spawnToDimPos = BlockPos.ofFloored(regularSpawn.getX() * dimensionDistanceMultiplier, regularSpawn.getY(), regularSpawn.getZ() * dimensionDistanceMultiplier);
                     } else {
                         spawnToDimPos = new BlockPos(regularSpawn.getX(), regularSpawn.getY(), regularSpawn.getZ());
                     }
@@ -143,10 +143,10 @@ public class ModifyPlayerSpawnPower extends Power {
             }
 
             if(tpPos != null) {
-                mutable = new BlockPos(tpPos.x, tpPos.y, tpPos.z).mutableCopy();
+                mutable = BlockPos.ofFloored(tpPos.x, tpPos.y, tpPos.z).mutableCopy();
                 BlockPos spawnLocation = mutable;
                 world.getChunkManager().addTicket(ChunkTicketType.START, new ChunkPos(spawnLocation), 11, Unit.INSTANCE);
-                return new Pair(world, spawnLocation);
+                return new Pair<>(world, spawnLocation);
             }
             return null;
         }

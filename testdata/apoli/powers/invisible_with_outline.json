@@ -1,5 +1,8 @@
 {
   "type": "apoli:invisibility",
   "render_armor": false,
-  "render_outline": true
+  "render_outline": true,
+  "condition": {
+    "type": "apoli:glowing"
+  }
 }

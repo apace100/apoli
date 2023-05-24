@@ -2,7 +2,6 @@ package io.github.apace100.apoli.component;
 
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.global.GlobalPowerSetUtil;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
@@ -176,7 +175,6 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     @Override
     public void readFromNbt(NbtCompound compoundTag) {
         this.fromTag(compoundTag, true);
-        GlobalPowerSetUtil.applyGlobalPowers(owner);
     }
 
     private void fromTag(NbtCompound compoundTag, boolean callPowerOnAdd) {

@@ -1,8 +1,9 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.action.block.BonemealAction;
+import io.github.apace100.apoli.power.factory.action.block.BonemealAction;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.action.block.AreaOfEffectAction;
 import io.github.apace100.apoli.power.factory.action.block.ExplodeAction;
 import io.github.apace100.apoli.power.factory.action.block.ModifyBlockStateAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
@@ -53,14 +54,14 @@ public class BlockActions {
         register(new ActionFactory<>(Apoli.identifier("set_block"), new SerializableData()
             .add("block", SerializableDataTypes.BLOCK_STATE),
             (data, block) -> {
-                BlockState actualState = (BlockState)data.get("block");
+                BlockState actualState = data.get("block");
                 //actualState = Block.postProcessState(actualState, block.getLeft(), block.getMiddle());
                 block.getLeft().setBlockState(block.getMiddle(), actualState);
             }));
         register(new ActionFactory<>(Apoli.identifier("add_block"), new SerializableData()
             .add("block", SerializableDataTypes.BLOCK_STATE),
             (data, block) -> {
-                BlockState actualState = (BlockState)data.get("block");
+                BlockState actualState = data.get("block");
                 BlockPos pos = block.getMiddle().offset(block.getRight());
                 //actualState = Block.postProcessState(actualState, block.getLeft(), pos);
                 block.getLeft().setBlockState(pos, actualState);
@@ -84,9 +85,10 @@ public class BlockActions {
                     server.getCommandManager().executeWithPrefix(source, data.getString("command"));
                 }
             }));
-        register(BonemealAction.createFactory());
+        register(BonemealAction.getFactory());
         register(ModifyBlockStateAction.getFactory());
         register(ExplodeAction.getFactory());
+        register(AreaOfEffectAction.getFactory());
     }
 
     private static void register(ActionFactory<Triple<World, BlockPos, Direction>> actionFactory) {

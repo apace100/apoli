@@ -78,7 +78,7 @@ public class ItemOnItemPower extends Power {
         if(newStack != null || resultItemAction != null) {
             PlayerEntity player = (PlayerEntity)entity;
             if(slot.getStack().isEmpty()) {
-                slot.setStack(stack);
+                slot.setStackNoCallbacks(stack);
             } else {
                 player.getInventory().offerOrDrop(stack);
             }
