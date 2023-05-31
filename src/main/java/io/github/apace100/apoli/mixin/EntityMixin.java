@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
@@ -14,6 +15,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
@@ -66,6 +68,17 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow @Nullable protected Set<TagKey<Fluid>> submergedFluidTag;
 
     @Shadow protected Object2DoubleMap<TagKey<Fluid>> fluidHeight;
+
+    @Shadow public abstract Iterable<ItemStack> getItemsEquipped();
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void setItemStackEntities(CallbackInfo ci) {
+        for (ItemStack stack : getItemsEquipped()) {
+            if (((EntityLinkedItemStack)stack).getEntity() == null) {
+                ((EntityLinkedItemStack) stack).setEntity((Entity)(Object)this);
+            }
+        }
+    }
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {

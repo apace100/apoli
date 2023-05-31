@@ -429,11 +429,11 @@ public class EntityConditions {
                     switch(calculation) {
                         case "sum":
                             for(ItemStack stack : enchantment.getEquipment(le).values()) {
-                                value += EnchantmentHelper.getLevel(enchantment, stack);
+                                value += ModifyEnchantmentLevelPower.getLevel(enchantment, stack);
                             }
                             break;
                         case "max":
-                            value = EnchantmentHelper.getEquipmentLevel(enchantment, le);
+                            value = ModifyEnchantmentLevelPower.getEquipmentLevel(enchantment, le);
                             break;
                         default:
                             Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");

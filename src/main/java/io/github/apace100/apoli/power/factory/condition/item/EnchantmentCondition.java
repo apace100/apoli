@@ -2,12 +2,12 @@ package io.github.apace100.apoli.power.factory.condition.item;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 
 public class EnchantmentCondition {
@@ -18,8 +18,8 @@ public class EnchantmentCondition {
         Comparison comparison = data.get("comparison");
         int compareTo = data.get("compare_to");
 
-        if (enchantment != null) return comparison.compare(EnchantmentHelper.getLevel(enchantment, stack), compareTo);
-        else return comparison.compare(EnchantmentHelper.get(stack).size(), compareTo);
+        if (enchantment != null) return comparison.compare(ModifyEnchantmentLevelPower.getLevel(enchantment, stack), compareTo);
+        else return comparison.compare(ModifyEnchantmentLevelPower.get(stack).size(), compareTo);
 
     }
 
