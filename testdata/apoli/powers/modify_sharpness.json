@@ -12,15 +12,23 @@
     }
   ],
   "item_condition": {
-    "type": "apoli:and",
+    "type": "apoli:or",
     "conditions": [
       {
-        "type": "apoli:amount",
-        "comparison": ">=",
-        "compare_to": 3
+        "type": "apoli:and",
+        "conditions": [
+          {
+            "type": "apoli:amount",
+            "comparison": ">=",
+            "compare_to": 3
+          },
+          {
+            "type": "apoli:meat"
+          }
+        ]
       },
       {
-        "type": "apoli:meat"
+        "type": "origins:empty"
       }
     ]
   }
