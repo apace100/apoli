@@ -87,9 +87,9 @@ public class RaycastCondition {
 
     private static double getBlockReach(SerializableData.Instance data, Entity entity) {
         if (!data.isPresent("block_distance") && !data.isPresent("distance")) {
-            double base = (entity instanceof PlayerEntity player && player.getAbilities().creativeMode) ? 6 : 3;
+            double base = (entity instanceof PlayerEntity player && player.getAbilities().creativeMode) ? 5.0 : 4.5;
             return (entity instanceof LivingEntity living && FabricLoader.getInstance().isModLoaded("reach-entity-attributes")) ?
-                    ReachEntityAttributes.getAttackRange(living, base) : base;
+                    ReachEntityAttributes.getReachDistance(living, base) : base;
         }
         return data.isPresent("block_distance") ? data.getDouble("block_distance") : data.getDouble("distance");
     }
