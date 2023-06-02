@@ -14,7 +14,7 @@ import net.minecraft.util.Identifier;
 
 public class RemovePowerLootFunction extends ConditionalLootFunction {
 
-    public static final LootFunctionType TYPE = new LootFunctionType(new Serializer());
+    public static final LootFunctionType TYPE = new LootFunctionType(new io.github.apace100.apoli.util.RemovePowerLootFunction.Serializer());
 
     private final EquipmentSlot slot;
     private final Identifier powerId;
@@ -34,7 +34,7 @@ public class RemovePowerLootFunction extends ConditionalLootFunction {
         return stack;
     }
 
-    public static Builder<?> builder(EquipmentSlot slot, Identifier powerId) {
+    public static net.minecraft.loot.function.ConditionalLootFunction.Builder<?> builder(EquipmentSlot slot, Identifier powerId) {
         return builder((conditions) -> new RemovePowerLootFunction(conditions, slot, powerId));
     }
 

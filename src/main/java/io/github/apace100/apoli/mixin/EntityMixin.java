@@ -109,11 +109,11 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;<init>(DDD)V"), method = "pushOutOfBlocks", cancellable = true)
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;ofFloored(DDD)Lnet/minecraft/util/math/BlockPos;"), method = "pushOutOfBlocks", cancellable = true)
     protected void pushOutOfBlocks(double x, double y, double z, CallbackInfo info) {
         List<PhasingPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, PhasingPower.class);
         if(powers.size() > 0) {
-            if(powers.stream().anyMatch(phasingPower -> phasingPower.doesApply(new BlockPos(x, y, z)))) {
+            if(powers.stream().anyMatch(phasingPower -> phasingPower.doesApply(BlockPos.ofFloored(x, y, z)))) {
                 info.cancel();
             }
         }
@@ -151,6 +151,13 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
             PowerHolderComponent.modify((Entity)(Object)this, ModifyVelocityPower.class, original.z, p -> p.axes.contains(Direction.Axis.Z), null)
         );
         return modified;
+    }
+
+    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLandingPos()Lnet/minecraft/util/math/BlockPos;"))
+    private void forceGrounded(MovementType movementType, Vec3d movement, CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower((Entity)(Object)this, GroundedPower.class)) {
+            this.onGround = true;
+        }
     }
 
     @Override

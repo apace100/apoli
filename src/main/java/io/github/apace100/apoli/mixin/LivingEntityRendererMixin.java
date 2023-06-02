@@ -37,14 +37,14 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
             cir.setReturnValue(true);
         }
     }
-    
-    @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getRenderLayer(Lnet/minecraft/entity/LivingEntity;ZZZ)Lnet/minecraft/client/render/RenderLayer;"), ordinal = 2)
+
+    @ModifyVariable(method = "render", at = @At(value = "STORE"), ordinal = 2)
     private boolean preventOutlineRendering(boolean original, LivingEntity livingEntity) {
         List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(livingEntity, InvisibilityPower.class);
         if(invisibilityPowers.size() > 0 && invisibilityPowers.stream().noneMatch(InvisibilityPower::shouldRenderOutline)) {
-            return original;
+            return false;
         }
-        return false;
+        return original;
     }
 
     @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexConsumerProvider;getBuffer(Lnet/minecraft/client/render/RenderLayer;)Lnet/minecraft/client/render/VertexConsumer;", shift = At.Shift.BEFORE))

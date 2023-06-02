@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.item.EnchantmentCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.StackPowerUtil;
@@ -66,14 +67,7 @@ public class ItemConditions {
                 }
                 return ((Comparison)data.get("comparison")).compare(harvestLevel, data.getInt("compare_to"));
             }));
-        register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()
-            .add("enchantment", SerializableDataTypes.ENCHANTMENT)
-            .add("compare_to", SerializableDataTypes.INT)
-            .add("comparison", ApoliDataTypes.COMPARISON),
-            (data, stack) -> {
-                int enchantLevel = EnchantmentHelper.getLevel(data.get("enchantment"), stack);
-                return ((Comparison)data.get("comparison")).compare(enchantLevel, data.getInt("compare_to"));
-            }));
+        register(EnchantmentCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("meat"), new SerializableData(),
             (data, stack) -> stack.isFood() && stack.getItem().getFoodComponent().isMeat()));
         register(new ConditionFactory<>(Apoli.identifier("nbt"), new SerializableData()

@@ -23,6 +23,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.Identifier;
@@ -191,7 +192,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         float newValue = originalValue;
         LivingEntity thisAsLiving = (LivingEntity)(Object)this;
         if(source.getAttacker() != null) {
-            if (!source.isProjectile()) {
+            if (!source.isIn(DamageTypeTags.IS_PROJECTILE)) {
                 newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPower.class, originalValue,
                     p -> p.doesApply(source, originalValue, thisAsLiving), p -> p.executeActions(thisAsLiving));
             } else {
@@ -233,7 +234,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
                 this.damageArmor(source, amount);
             }
             if(apoli$shouldApplyArmor.get()) {
-                if(!apoli$shouldDamageArmor.isPresent()) {
+                if(apoli$shouldDamageArmor.isEmpty()) {
                     this.damageArmor(source, amount);
                 }
                 float damageLeft = DamageUtil.getDamageLeft(amount, this.getArmor(), (float)this.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS));
@@ -243,7 +244,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             }
         } else {
             if(apoli$shouldDamageArmor.isPresent()) {
-                if(apoli$shouldDamageArmor.get() && source.bypassesArmor()) {
+                if(apoli$shouldDamageArmor.get() && source.isIn(DamageTypeTags.BYPASSES_ARMOR)) {
                     this.damageArmor(source, amount);
                 }
             }
@@ -478,8 +479,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         this.applyFoodEffects(stack, world, targetEntity);
     }
 
-    @Shadow public float airStrafingSpeed;
-
     @Shadow @Nullable private LivingEntity attacker;
 
     @Shadow protected abstract void applyFoodEffects(ItemStack stack, World world, LivingEntity targetEntity);
@@ -492,10 +491,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Shadow public abstract AttributeContainer getAttributes();
 
-    @Inject(method = "getMovementSpeed(F)F", at = @At("RETURN"), cancellable = true)
-    private void modifyFlySpeed(float slipperiness, CallbackInfoReturnable<Float> cir){
-        if (!onGround)
-            cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, airStrafingSpeed));
+    @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
+    private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
+        cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
     }
 
     @Unique

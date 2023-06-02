@@ -92,5 +92,8 @@
 
   "text.autoconfig.power_config.option.tooltips": "Tooltips",
   "text.autoconfig.power_config.option.tooltips.showUsabilityHints": "Show Usability Hints",
-  "text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compact Usability Hints"
+  "text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compact Usability Hints",
+
+  "death.attack.genericDamageOverTime": "%1$s died to a damage over time effect",
+  "death.attack.genericDamageOverTime.player": "%1$s died to a damage over time effect whilst fighting %2$s"
 }
