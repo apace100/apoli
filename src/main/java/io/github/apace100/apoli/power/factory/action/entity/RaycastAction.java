@@ -44,7 +44,7 @@ public class RaycastAction {
             space.toGlobal(vector3f, entity);
             direction = new Vec3d(vector3f);
         }
-        Vec3d target = new Vec3d(0, 0, 0);
+        Vec3d target = origin.add(direction.multiply(getBlockReach(data, entity)));
 
         data.<Consumer<Entity>>ifPresent("before_action", action -> action.accept(entity));
 
