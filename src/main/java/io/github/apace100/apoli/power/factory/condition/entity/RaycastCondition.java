@@ -35,7 +35,7 @@ public class RaycastCondition {
         if (data.isPresent("direction")) {
             direction = data.get("direction");
             Space space = data.get("space");
-            Vector3f vector3f = new Vector3f(MathHelper.clamp((float)direction.getX(), -1.0F, 1.0F), MathHelper.clamp((float) direction.getY(), -1.0F, 1.0F), MathHelper.clamp((float) direction.getZ(), -1.0F, 1.0F));
+            Vector3f vector3f = new Vector3f((float)direction.getX(), (float) direction.getY(), (float) direction.getZ()).normalize();
             space.toGlobal(vector3f, entity);
             direction = new Vec3d(vector3f);
         }
