@@ -127,6 +127,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         Identifier factoryId = new Identifier(JsonHelper.getString(jo, "type"));
         int priority = JsonHelper.getInt(jo, "loading_priority", 0);
         if (!isResourceConditionValid(id, jo, priority)) {
+            LOADING_PRIORITIES.put(id, priority);
             return null;
         }
 
