@@ -18,6 +18,7 @@ public class PowerTypeRegistry {
         if(idToPower.containsKey(id)) {
             throw new IllegalArgumentException("Duplicate power type id tried to register: '" + id.toString() + "'");
         }
+        disabledPowers.remove(id);
         idToPower.put(id, powerType);
         return powerType;
     }
@@ -39,7 +40,7 @@ public class PowerTypeRegistry {
         idToPower.remove(id);
     }
 
-    public static boolean wasDisabled(Identifier id) {
+    public static boolean isDisabled(Identifier id) {
         return disabledPowers.contains(id);
     }
 
