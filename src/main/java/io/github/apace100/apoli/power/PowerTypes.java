@@ -108,7 +108,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
 
         boolean result = ApoliResourceConditions.test(id, jo);
         if (!result && PowerTypeRegistry.contains(id) && getLoadingPriority(id) < priority) {
-            PowerTypeRegistry.remove(id);
+            PowerTypeRegistry.disable(id);
         }
 
         return result;
