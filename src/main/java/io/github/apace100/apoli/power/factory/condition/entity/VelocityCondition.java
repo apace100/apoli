@@ -41,7 +41,7 @@ public class VelocityCondition {
         return new ConditionFactory<>(
             Apoli.identifier("velocity"),
             new SerializableData()
-                .add("axes", SerializableDataTypes.AXIS_SET)
+                .add("axes", SerializableDataTypes.AXIS_SET, EnumSet.allOf(Direction.Axis.class))
                 .add("compare_to", SerializableDataTypes.DOUBLE)
                 .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN_OR_EQUAL),
             VelocityCondition::condition
