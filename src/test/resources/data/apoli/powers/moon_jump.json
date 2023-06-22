@@ -1,0 +1,53 @@
+{
+  "type": "apoli:multiple",
+  "falling": {
+    "type": "apoli:modify_velocity",
+    "modifier": {
+      "value": -0.75,
+      "operation": "multiply_total"
+    },
+    "axes": [
+      "y"
+    ],
+    "condition": {
+      "type": "apoli:velocity",
+      "axes": [
+        "y"
+      ],
+      "compare_to": 0,
+      "comparison": "<"
+    }
+  },
+  "upwards": {
+    "type": "apoli:modify_velocity",
+    "modifier": {
+      "value": -0.5,
+      "operation": "multiply_total"
+    },
+    "axes": [
+      "y"
+    ],
+    "condition": {
+      "type": "apoli:velocity",
+      "axes": [
+        "y"
+      ],
+      "compare_to": 0,
+      "comparison": ">"
+    }
+  },
+  "jump_height": {
+    "type": "apoli:modify_jump",
+    "modifier": {
+      "operation": "addition",
+      "value": 1.0
+    }
+  },
+  "fall_damage_immunity": {
+    "type": "apoli:invulnerability",
+    "damage_condition": {
+      "type": "apoli:name",
+      "name": "fall"
+    }
+  }
+}

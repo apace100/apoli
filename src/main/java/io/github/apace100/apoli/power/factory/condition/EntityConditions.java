@@ -7,10 +7,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.power.factory.condition.entity.BlockCollisionCondition;
-import io.github.apace100.apoli.power.factory.condition.entity.ElytraFlightPossibleCondition;
-import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
-import io.github.apace100.apoli.power.factory.condition.entity.ScoreboardCondition;
+import io.github.apace100.apoli.power.factory.condition.entity.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
@@ -547,6 +544,7 @@ public class EntityConditions {
             }));
         register(RaycastCondition.getFactory());
         register(ElytraFlightPossibleCondition.getFactory());
+        register(VelocityCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
