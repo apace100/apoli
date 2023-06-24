@@ -37,7 +37,7 @@ public abstract class AbstractBlockStateMixin {
         if(context instanceof EntityShapeContext) {
             if(((EntityShapeContext)context).getEntity() != null) {
                 Entity entity = ((EntityShapeContext)context).getEntity();
-                if(PowerHolderComponent.getPowers(entity, PreventBlockSelectionPower.class).stream().anyMatch(p -> p.doesPrevent(entity.world, pos))) {
+                if(PowerHolderComponent.getPowers(entity, PreventBlockSelectionPower.class).stream().anyMatch(p -> p.doesPrevent(entity.getWorld(), pos))) {
                     cir.setReturnValue(VoxelShapes.empty());
                 }
             }

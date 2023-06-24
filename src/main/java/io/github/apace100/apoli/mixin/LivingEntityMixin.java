@@ -114,7 +114,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "setAttacker", at = @At("TAIL"))
     private void syncAttacker(LivingEntity attacker, CallbackInfo ci) {
-        if(!world.isClient) {
+        if(!getWorld().isClient) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
             buf.writeInt(getId());
             if(this.attacker == null) {
@@ -321,9 +321,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // SPRINT_JUMP
-    @ModifyVariable(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getVelocity()Lnet/minecraft/util/math/Vec3d;"), ordinal = 0)
-    private double modifyJumpVelocity(double original) {
-        return PowerHolderComponent.modify(this, ModifyJumpPower.class, (float)original, p -> {
+    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
+    private float modifyJumpVelocity(LivingEntity entity) {
+        return PowerHolderComponent.modify(this, ModifyJumpPower.class, this.getJumpVelocity(), p -> {
             p.executeAction();
             return true;
         });
@@ -391,9 +391,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-    @ModifyVariable(method = "travel", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;onGround:Z", opcode = Opcodes.GETFIELD, ordinal = 2))
+    @ModifyVariable(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isOnGround()Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
-        return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(world, getVelocityAffectingPos()));
+        return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
     @Inject(method = "pushAway", at = @At("HEAD"), cancellable = true)

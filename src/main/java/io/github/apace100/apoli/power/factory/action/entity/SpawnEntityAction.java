@@ -18,9 +18,9 @@ public class SpawnEntityAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
 
-        if (entity.world.isClient) return;
+        if (entity.getWorld().isClient) return;
 
-        ServerWorld serverWorld = (ServerWorld) entity.world;
+        ServerWorld serverWorld = (ServerWorld) entity.getWorld();
         EntityType<?> entityType = data.get("entity_type");
         NbtCompound entityNbt = data.get("tag");
 
