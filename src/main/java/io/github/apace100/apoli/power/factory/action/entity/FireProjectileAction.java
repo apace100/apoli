@@ -23,9 +23,9 @@ public class FireProjectileAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
 
-        if (entity.world.isClient) return;
+        if (entity.getWorld().isClient) return;
 
-        ServerWorld serverWorld = (ServerWorld) entity.world;
+        ServerWorld serverWorld = (ServerWorld) entity.getWorld();
         int count = data.get("count");
 
         for (int i = 0; i < count; i++) {

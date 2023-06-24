@@ -78,15 +78,15 @@ public class ActiveCooldownPower extends CooldownPower implements Active {
                         data.getInt("cooldown"),
                         (HudRender) data.get("hud_render"),
                         e -> {
-                            if (!e.world.isClient && e instanceof PlayerEntity) {
+                            if (!e.getWorld().isClient && e instanceof PlayerEntity) {
                                 PlayerEntity p = (PlayerEntity) e;
                                 p.addVelocity(0, data.getFloat("speed"), 0);
                                 p.velocityModified = true;
                                 if (soundEvent != null) {
-                                    p.world.playSound((PlayerEntity) null, p.getX(), p.getY(), p.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (p.getRandom().nextFloat() * 0.4F + 0.8F));
+                                    p.getWorld().playSound((PlayerEntity) null, p.getX(), p.getY(), p.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (p.getRandom().nextFloat() * 0.4F + 0.8F));
                                 }
                                 for (int i = 0; i < 4; ++i) {
-                                    ((ServerWorld) p.world).spawnParticles(ParticleTypes.CLOUD, p.getX(), p.getRandomBodyY(), p.getZ(), 8, p.getRandom().nextGaussian(), 0.0D, p.getRandom().nextGaussian(), 0.5);
+                                    ((ServerWorld) p.getWorld()).spawnParticles(ParticleTypes.CLOUD, p.getX(), p.getRandomBodyY(), p.getZ(), 8, p.getRandom().nextGaussian(), 0.0D, p.getRandom().nextGaussian(), 0.5);
                                 }
                             }
                         });

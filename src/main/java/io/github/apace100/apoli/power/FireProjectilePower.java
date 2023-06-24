@@ -98,9 +98,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
-                        entity.world.playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                        entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
                     }
-                    if(!entity.world.isClient) {
+                    if(!entity.getWorld().isClient) {
                         fireProjectile();
                     }
                 }
@@ -112,9 +112,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
             }
             else if(interval == 0 && finishedStartDelay) {
                 if(soundEvent != null) {
-                    entity.world.playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                    entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
                 }
-                if(!entity.world.isClient) {
+                if(!entity.getWorld().isClient) {
                     for(; shotProjectiles < projectileCount; shotProjectiles++) {
                         fireProjectile();
                     }
@@ -127,9 +127,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
-                        entity.world.playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                        entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
                     }
-                    if(!entity.world.isClient) {
+                    if(!entity.getWorld().isClient) {
                         fireProjectile();
                     }
                 }
@@ -144,9 +144,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
 
     private void fireProjectile() {
 
-        if (entityType == null || entity.world.isClient) return;
+        if (entityType == null || entity.getWorld().isClient) return;
 
-        ServerWorld serverWorld = (ServerWorld) entity.world;
+        ServerWorld serverWorld = (ServerWorld) entity.getWorld();
         float yaw = entity.getYaw();
         float pitch = entity.getPitch();
 

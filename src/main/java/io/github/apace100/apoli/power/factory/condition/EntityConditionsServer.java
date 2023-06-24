@@ -21,7 +21,7 @@ public final class EntityConditionsServer {
                 if(entity instanceof ServerPlayerEntity) {
                     ServerPlayerInteractionManagerAccessor interactionMngr = ((ServerPlayerInteractionManagerAccessor)((ServerPlayerEntity)entity).interactionManager);
                     if(interactionMngr.getMining()) {
-                        return ((PlayerEntity)entity).canHarvest(entity.world.getBlockState(interactionMngr.getMiningPos()));
+                        return ((PlayerEntity)entity).canHarvest(entity.getWorld().getBlockState(interactionMngr.getMiningPos()));
                     }
                 }
                 return false;

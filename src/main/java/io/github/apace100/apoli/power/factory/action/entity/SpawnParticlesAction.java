@@ -11,10 +11,10 @@ import net.minecraft.util.math.Vec3d;
 public class SpawnParticlesAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
-        if(entity.world.isClient) {
+        if(entity.getWorld().isClient) {
             return;
         }
-        ServerWorld serverWorld = (ServerWorld) entity.world;
+        ServerWorld serverWorld = (ServerWorld) entity.getWorld();
         int count = data.get("count");
         if(count <= 0)
             return;

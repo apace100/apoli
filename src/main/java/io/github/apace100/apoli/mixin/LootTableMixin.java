@@ -49,7 +49,7 @@ public class LootTableMixin implements IdentifiedLootTable {
         return apoli$id;
     }
 
-    @Inject(method = "generateUnprocessedLoot", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At("HEAD"), cancellable = true)
     private void modifyLootTable(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
         if(((ReplacingLootContext)context).isReplaced((LootTable)(Object)this)) {
             return;
@@ -85,7 +85,7 @@ public class LootTableMixin implements IdentifiedLootTable {
             LootTable replacement = null;
             for (ReplaceLootTablePower power : powers) {
                 Identifier id = power.getReplacement(apoli$id);
-                replacement = apoli$lootManager.getTable(id);
+                replacement = apoli$lootManager.getLootTable(id);
                 ReplaceLootTablePower.addToStack(replacement);
             }
             ((ReplacingLootContext)context).setReplaced((LootTable)(Object)this);
@@ -95,12 +95,12 @@ public class LootTableMixin implements IdentifiedLootTable {
         }
     }
 
-    @Inject(method = "generateUnprocessedLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markActive(Lnet/minecraft/loot/LootTable;)Z"))
+    @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markActive(Lnet/minecraft/loot/context/LootContext$Entry;)Z"))
     private void popReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
         ReplaceLootTablePower.pop();
     }
 
-    @Inject(method = "generateUnprocessedLoot", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markInactive(Lnet/minecraft/loot/LootTable;)V"))
+    @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markInactive(Lnet/minecraft/loot/context/LootContext$Entry;)V"))
     private void restoreReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
         ReplaceLootTablePower.restore();
     }
