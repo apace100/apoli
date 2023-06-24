@@ -45,12 +45,12 @@ public class ActionOnBlockUsePower extends ActiveInteractionPower {
         if(!directions.contains(direction)) {
             return false;
         }
-        return blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.world, blockPos, true));
+        return blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), blockPos, true));
     }
 
     public ActionResult executeAction(BlockPos blockPos, Direction direction, Hand hand) {
         if(blockAction != null) {
-            blockAction.accept(Triple.of(entity.world, blockPos, direction));
+            blockAction.accept(Triple.of(entity.getWorld(), blockPos, direction));
         }
         if(entityAction != null) {
             entityAction.accept(entity);

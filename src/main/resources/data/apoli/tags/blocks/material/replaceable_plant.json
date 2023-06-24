@@ -1,0 +1,53 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:dead_bush",
+      "required": false
+    },
+    {
+      "id": "minecraft:fern",
+      "required": false
+    },
+    {
+      "id": "minecraft:glow_lichen",
+      "required": false
+    },
+    {
+      "id": "minecraft:grass",
+      "required": false
+    },
+    {
+      "id": "minecraft:hanging_roots",
+      "required": false
+    },
+    {
+      "id": "minecraft:large_fern",
+      "required": false
+    },
+    {
+      "id": "minecraft:lilac",
+      "required": false
+    },
+    {
+      "id": "minecraft:peony",
+      "required": false
+    },
+    {
+      "id": "minecraft:rose_bush",
+      "required": false
+    },
+    {
+      "id": "minecraft:sunflower",
+      "required": false
+    },
+    {
+      "id": "minecraft:tall_grass",
+      "required": false
+    },
+    {
+      "id": "minecraft:vine",
+      "required": false
+    }
+  ]
+}

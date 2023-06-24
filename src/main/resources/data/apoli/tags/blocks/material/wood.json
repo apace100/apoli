@@ -1,0 +1,817 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:acacia_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:acacia_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_mosaic",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_mosaic_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_mosaic_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:barrel",
+      "required": false
+    },
+    {
+      "id": "minecraft:bee_nest",
+      "required": false
+    },
+    {
+      "id": "minecraft:beehive",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:black_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:black_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:blue_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:blue_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:bookshelf",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_mushroom_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:campfire",
+      "required": false
+    },
+    {
+      "id": "minecraft:cartography_table",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:chest",
+      "required": false
+    },
+    {
+      "id": "minecraft:chiseled_bookshelf",
+      "required": false
+    },
+    {
+      "id": "minecraft:composter",
+      "required": false
+    },
+    {
+      "id": "minecraft:crafting_table",
+      "required": false
+    },
+    {
+      "id": "minecraft:crimson_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:crimson_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:cyan_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:cyan_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:daylight_detector",
+      "required": false
+    },
+    {
+      "id": "minecraft:fletching_table",
+      "required": false
+    },
+    {
+      "id": "minecraft:gray_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:gray_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:green_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:green_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:jukebox",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:lectern",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_blue_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_blue_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_gray_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_gray_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:lime_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:lime_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:loom",
+      "required": false
+    },
+    {
+      "id": "minecraft:magenta_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:magenta_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_roots",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:mushroom_stem",
+      "required": false
+    },
+    {
+      "id": "minecraft:note_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:orange_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:orange_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:pink_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:pink_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:purple_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:purple_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_mushroom_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:smithing_table",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_campfire",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_fence",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_fence_gate",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_planks",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_wall_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_acacia_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_acacia_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_bamboo_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_birch_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_birch_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_cherry_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_cherry_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_dark_oak_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_dark_oak_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_jungle_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_jungle_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_mangrove_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_mangrove_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_oak_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_oak_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_spruce_log",
+      "required": false
+    },
+    {
+      "id": "minecraft:stripped_spruce_wood",
+      "required": false
+    },
+    {
+      "id": "minecraft:trapped_chest",
+      "required": false
+    },
+    {
+      "id": "minecraft:warped_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:warped_wall_hanging_sign",
+      "required": false
+    },
+    {
+      "id": "minecraft:white_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:white_wall_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:yellow_banner",
+      "required": false
+    },
+    {
+      "id": "minecraft:yellow_wall_banner",
+      "required": false
+    }
+  ]
+}

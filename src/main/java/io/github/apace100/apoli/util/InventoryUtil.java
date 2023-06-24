@@ -103,7 +103,7 @@ public class InventoryUtil {
                 if (!(itemCondition == null || itemCondition.test(itemStack))) return;
 
                 if (entityAction != null) entityAction.accept(entity);
-                itemAction.accept(new Pair<>(entity.world, itemStack));
+                itemAction.accept(new Pair<>(entity.getWorld(), itemStack));
 
             }
         );
@@ -119,7 +119,7 @@ public class InventoryUtil {
                     if (!(itemCondition == null || itemCondition.test(itemStack))) return;
 
                     if (entityAction != null) entityAction.accept(entity);
-                    itemAction.accept(new Pair<>(entity.world, itemStack));
+                    itemAction.accept(new Pair<>(entity.getWorld(), itemStack));
 
                 }
             );
@@ -156,7 +156,7 @@ public class InventoryUtil {
                 }
 
                 stackReference.set(stackAfterReplacement);
-                if (itemAction != null) itemAction.accept(new Pair<>(entity.world, stackAfterReplacement));
+                if (itemAction != null) itemAction.accept(new Pair<>(entity.getWorld(), stackAfterReplacement));
 
             }
         );
@@ -178,7 +178,7 @@ public class InventoryUtil {
                     }
 
                     inventoryPower.setStack(slot, stackAfterReplacement);
-                    if (itemAction != null) itemAction.accept(new Pair<>(entity.world, stackAfterReplacement));
+                    if (itemAction != null) itemAction.accept(new Pair<>(entity.getWorld(), stackAfterReplacement));
 
                 }
             );
@@ -210,7 +210,7 @@ public class InventoryUtil {
                 if (!(itemCondition == null || itemCondition.test(itemStack))) return;
 
                 if (entityAction != null) entityAction.accept(entity);
-                if (itemAction != null) itemAction.accept(new Pair<>(entity.world, itemStack));
+                if (itemAction != null) itemAction.accept(new Pair<>(entity.getWorld(), itemStack));
 
                 if (amount != 0) {
 
@@ -242,7 +242,7 @@ public class InventoryUtil {
                     if (!(itemCondition == null || itemCondition.test(itemStack))) return;
 
                     if (entityAction != null) entityAction.accept(entity);
-                    if (itemAction != null) itemAction.accept(new Pair<>(entity.world, itemStack));
+                    if (itemAction != null) itemAction.accept(new Pair<>(entity.getWorld(), itemStack));
 
                     if (amount != 0) {
 
@@ -269,10 +269,10 @@ public class InventoryUtil {
     public static void throwItem(Entity thrower, ItemStack itemStack, boolean throwRandomly, boolean retainOwnership) {
 
         if (itemStack.isEmpty()) return;
-        if (thrower instanceof PlayerEntity playerEntity && playerEntity.world.isClient) playerEntity.swingHand(Hand.MAIN_HAND);
+        if (thrower instanceof PlayerEntity playerEntity && playerEntity.getWorld().isClient) playerEntity.swingHand(Hand.MAIN_HAND);
 
         double yOffset = thrower.getEyeY() - 0.30000001192092896D;
-        ItemEntity itemEntity = new ItemEntity(thrower.world, thrower.getX(), yOffset, thrower.getZ(), itemStack);
+        ItemEntity itemEntity = new ItemEntity(thrower.getWorld(), thrower.getX(), yOffset, thrower.getZ(), itemStack);
         itemEntity.setPickupDelay(40);
 
         Random random = new Random();
@@ -301,7 +301,7 @@ public class InventoryUtil {
             );
         }
 
-        thrower.world.spawnEntity(itemEntity);
+        thrower.getWorld().spawnEntity(itemEntity);
 
     }
 

@@ -64,8 +64,8 @@ public final class MiscUtil {
             double e = playerEntity.getEyeY() + (double)(((float)((i >> 1) % 2) - 0.5F) * 0.1F);
             double f = playerEntity.getZ() + (double)(((float)((i >> 2) % 2) - 0.5F) * playerEntity.getWidth() * 0.8F);
             mutable.set(d, e, f);
-            BlockState blockState = playerEntity.world.getBlockState(mutable);
-            if (blockState.getRenderType() != BlockRenderType.INVISIBLE && blockState.shouldBlockVision(playerEntity.world, mutable)) {
+            BlockState blockState = playerEntity.getWorld().getBlockState(mutable);
+            if (blockState.getRenderType() != BlockRenderType.INVISIBLE && blockState.shouldBlockVision(playerEntity.getWorld(), mutable)) {
                 return blockState;
             }
         }

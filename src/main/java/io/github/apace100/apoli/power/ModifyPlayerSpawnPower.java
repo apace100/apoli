@@ -84,7 +84,7 @@ public class ModifyPlayerSpawnPower extends Power {
     @Override
     public void onRemoved() {
 
-        if (entity.world.isClient || !(entity instanceof PlayerEntity playerEntity)) return;
+        if (entity.getWorld().isClient || !(entity instanceof PlayerEntity playerEntity)) return;
 
         ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) playerEntity;
         if (serverPlayerEntity.isDisconnected() || serverPlayerEntity.getSpawnPointPosition() == null || !serverPlayerEntity.isSpawnForced()) return;
@@ -95,7 +95,7 @@ public class ModifyPlayerSpawnPower extends Power {
 
     public void teleportToModifiedSpawn() {
 
-        if (entity.world.isClient || !(entity instanceof PlayerEntity playerEntity)) return;
+        if (entity.getWorld().isClient || !(entity instanceof PlayerEntity playerEntity)) return;
 
         ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) playerEntity;
         Pair<ServerWorld, BlockPos> newSpawn = getSpawn(false);
@@ -116,7 +116,7 @@ public class ModifyPlayerSpawnPower extends Power {
 
     public Pair<ServerWorld, BlockPos> getSpawn(boolean isSpawnObstructed) {
 
-        if (entity.world.isClient || !(entity instanceof PlayerEntity playerEntity)) return null;
+        if (entity.getWorld().isClient || !(entity instanceof PlayerEntity playerEntity)) return null;
 
         ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) playerEntity;
         MinecraftServer server = serverPlayerEntity.getServer();

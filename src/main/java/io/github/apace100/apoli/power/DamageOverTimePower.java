@@ -75,7 +75,7 @@ public class DamageOverTimePower extends Power {
         if(inDamageTicks - getDamageBegin() >= 0) {
             if((inDamageTicks - getDamageBegin()) % damageTickInterval == 0) {
                 DamageSource source = getDamageSource(entity.getDamageSources());
-                entity.damage(source, entity.world.getDifficulty() == Difficulty.EASY ? damageAmountEasy : damageAmount);
+                entity.damage(source, entity.getWorld().getDifficulty() == Difficulty.EASY ? damageAmountEasy : damageAmount);
             }
         }
         inDamageTicks++;

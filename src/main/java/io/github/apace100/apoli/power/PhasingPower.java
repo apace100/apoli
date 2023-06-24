@@ -34,7 +34,7 @@ public class PhasingPower extends Power {
     }
 
     public boolean doesApply(BlockPos pos) {
-        return isBlacklist != blocks.test(new CachedBlockPosition(entity.world, pos, true));
+        return isBlacklist != blocks.test(new CachedBlockPosition(entity.getWorld(), pos, true));
     }
 
     public boolean shouldPhaseDown(Entity entity) {

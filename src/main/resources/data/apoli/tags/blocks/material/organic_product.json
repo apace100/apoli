@@ -1,0 +1,49 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:clay",
+      "required": false
+    },
+    {
+      "id": "minecraft:honey_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:honeycomb_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:infested_chiseled_stone_bricks",
+      "required": false
+    },
+    {
+      "id": "minecraft:infested_cobblestone",
+      "required": false
+    },
+    {
+      "id": "minecraft:infested_cracked_stone_bricks",
+      "required": false
+    },
+    {
+      "id": "minecraft:infested_deepslate",
+      "required": false
+    },
+    {
+      "id": "minecraft:infested_mossy_stone_bricks",
+      "required": false
+    },
+    {
+      "id": "minecraft:infested_stone",
+      "required": false
+    },
+    {
+      "id": "minecraft:infested_stone_bricks",
+      "required": false
+    },
+    {
+      "id": "minecraft:slime_block",
+      "required": false
+    }
+  ]
+}

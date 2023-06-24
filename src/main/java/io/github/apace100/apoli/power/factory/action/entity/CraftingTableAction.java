@@ -18,7 +18,7 @@ public class CraftingTableAction {
         if (!(entity instanceof PlayerEntity player)) return;
 
         player.openHandledScreen(new SimpleNamedScreenHandlerFactory((syncId, inventory, _player) ->
-            new CraftingScreenHandler(syncId, inventory, ScreenHandlerContext.create(_player.world, _player.getBlockPos())), TITLE));
+            new CraftingScreenHandler(syncId, inventory, ScreenHandlerContext.create(_player.getWorld(), _player.getBlockPos())), TITLE));
 
         player.incrementStat(Stats.INTERACT_WITH_CRAFTING_TABLE);
     }
