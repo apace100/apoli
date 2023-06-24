@@ -142,26 +142,7 @@ public class EntityActions {
                 method.accept(vec.x, vec.y, vec.z);
                 entity.velocityModified = true;
             }));
-        register(new ActionFactory<>(Apoli.identifier("spawn_entity"), new SerializableData()
-            .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
-            .add("tag", SerializableDataTypes.NBT, null)
-            .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            (data, entity) -> {
-                Entity e = ((EntityType<?>)data.get("entity_type")).create(entity.world);
-                if(e != null) {
-                    e.refreshPositionAndAngles(entity.getPos().x, entity.getPos().y, entity.getPos().z, entity.getYaw(), entity.getPitch());
-                    if(data.isPresent("tag")) {
-                        NbtCompound mergedTag = e.writeNbt(new NbtCompound());
-                        mergedTag.copyFrom(data.get("tag"));
-                        e.readNbt(mergedTag);
-                    }
-
-                    entity.world.spawnEntity(e);
-                    if(data.isPresent("entity_action")) {
-                        ((ActionFactory<Entity>.Instance)data.get("entity_action")).accept(e);
-                    }
-                }
-            }));
+        register(SpawnEntityAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("gain_air"), new SerializableData()
             .add("value", SerializableDataTypes.INT),
             (data, entity) -> {
@@ -456,6 +437,7 @@ public class EntityActions {
         register(ModifyDeathTicksAction.getFactory());
         register(ModifyResourceAction.getFactory());
         register(ModifyStatAction.getFactory());
+        register(FireProjectileAction.getFactory());
         register(SelectorAction.getFactory());
         register(GrantAdvancementAction.getFactory());
         register(RevokeAdvancementAction.getFactory());
