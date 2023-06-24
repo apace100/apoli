@@ -85,6 +85,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                         MultiplePowerType<?> superPower = (MultiplePowerType) readPower(id, je, false, MultiplePowerType::new);
                         if (superPower != null) {
                             superPower.setSubPowers(subPowers);
+                        } else {
+                            subPowers.forEach(PowerTypeRegistry::disable);
                         }
                         handleAdditionalData(id, factoryId, false, jo, superPower);
                         PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, false, jo, superPower);
@@ -104,15 +106,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         Apoli.LOGGER.info("Finished loading powers from data files. Registry contains " + PowerTypeRegistry.size() + " powers.");
     }
 
-    private boolean isResourceConditionValid(Identifier id, JsonObject jo, int priority) {
-
-        boolean result = ApoliResourceConditions.test(id, jo);
-        if (!result && PowerTypeRegistry.contains(id) && getLoadingPriority(id) < priority) {
-            PowerTypeRegistry.disable(id);
-        }
-
-        return result;
-
+    private boolean isResourceConditionValid(Identifier id, JsonObject jo) {
+        return ApoliResourceConditions.test(id, jo);
     }
 
     @Nullable
@@ -126,8 +121,11 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         JsonObject jo = je.getAsJsonObject();
         Identifier factoryId = new Identifier(JsonHelper.getString(jo, "type"));
         int priority = JsonHelper.getInt(jo, "loading_priority", 0);
-        if (!isResourceConditionValid(id, jo, priority)) {
-            LOADING_PRIORITIES.put(id, priority);
+
+        if (!isResourceConditionValid(id, jo)) {
+            if(!PowerTypeRegistry.contains(id)) {
+                PowerTypeRegistry.disable(id);
+            }
             return null;
         }
 

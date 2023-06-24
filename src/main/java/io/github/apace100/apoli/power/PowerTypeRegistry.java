@@ -1,18 +1,16 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.PowerClearCallback;
 import net.minecraft.util.Identifier;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class PowerTypeRegistry {
 
-    private static HashMap<Identifier, PowerType> idToPower = new HashMap<>();
-    private static Set<Identifier> disabledPowers = new HashSet<>();
+    private static final HashMap<Identifier, PowerType> idToPower = new HashMap<>();
+    private static final Set<Identifier> disabledPowers = new HashSet<>();
 
     public static PowerType register(Identifier id, PowerType powerType) {
         if(idToPower.containsKey(id)) {
@@ -78,11 +76,15 @@ public class PowerTypeRegistry {
 
     public static void clear() {
         PowerClearCallback.EVENT.invoker().onPowerClear();
-        disabledPowers.clear();
         idToPower.clear();
+    }
+    
+    public static void clearDisabledPowers() {
+        disabledPowers.clear();
     }
 
     public static void reset() {
         clear();
+        clearDisabledPowers();
     }
 }
