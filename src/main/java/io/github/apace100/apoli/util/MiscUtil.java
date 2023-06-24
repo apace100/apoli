@@ -8,22 +8,20 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageSources;
 import net.minecraft.entity.damage.DamageType;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
-import javax.annotation.Nullable;
 import java.util.function.Predicate;
 
 public final class MiscUtil {
@@ -49,7 +47,7 @@ public final class MiscUtil {
 
         if (entityNbt == null && entityToSpawn instanceof MobEntity mobToSpawn) mobToSpawn.initialize(
             serverWorld,
-            serverWorld.getLocalDifficulty(new BlockPos(pos)),
+            serverWorld.getLocalDifficulty(BlockPos.ofFloored(pos)),
             SpawnReason.COMMAND,
             null,
             null
