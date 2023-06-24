@@ -4,16 +4,21 @@ import io.github.apace100.apoli.integration.PowerClearCallback;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class PowerTypeRegistry {
+
     private static HashMap<Identifier, PowerType> idToPower = new HashMap<>();
+    private static Set<Identifier> disabledPowers = new HashSet<>();
 
     public static PowerType register(Identifier id, PowerType powerType) {
         if(idToPower.containsKey(id)) {
             throw new IllegalArgumentException("Duplicate power type id tried to register: '" + id.toString() + "'");
         }
+        disabledPowers.remove(id);
         idToPower.put(id, powerType);
         return powerType;
     }
@@ -24,6 +29,19 @@ public class PowerTypeRegistry {
             idToPower.remove(id);
         }
         return register(id, powerType);
+    }
+
+    protected static void disable(Identifier id) {
+        remove(id);
+        disabledPowers.add(id);
+    }
+
+    protected static void remove(Identifier id) {
+        idToPower.remove(id);
+    }
+
+    public static boolean isDisabled(Identifier id) {
+        return disabledPowers.contains(id);
     }
 
     public static int size() {
@@ -60,6 +78,7 @@ public class PowerTypeRegistry {
 
     public static void clear() {
         PowerClearCallback.EVENT.invoker().onPowerClear();
+        disabledPowers.clear();
         idToPower.clear();
     }
 
