@@ -123,6 +123,7 @@ public class PowerFactories {
         register(ReplaceLootTablePower::createFactory);
         register(ModifyVelocityPower::createFactory);
         register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
+        register(ModifyBouncinessPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

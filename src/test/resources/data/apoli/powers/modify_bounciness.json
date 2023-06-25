@@ -1,0 +1,7 @@
+{
+  "type": "apoli:modify_bounciness",
+  "modifier": {
+    "operation": "addition",
+    "value": 1.0
+  }
+}

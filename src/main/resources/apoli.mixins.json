@@ -10,6 +10,7 @@
     "BiomeBuilderMixin",
     "BiomeMixin",
     "BlockItemMixin",
+    "BlockMixin",
     "CraftingInventoryAccessor",
     "CraftingInventoryMixin",
     "CraftingResultSlotMixin",

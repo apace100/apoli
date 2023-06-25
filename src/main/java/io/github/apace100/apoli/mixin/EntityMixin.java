@@ -67,6 +67,13 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Shadow protected Object2DoubleMap<TagKey<Fluid>> fluidHeight;
 
+    @Inject(method = "bypassesLandingEffects", at = @At("RETURN"), cancellable = true)
+    private void overrideDefaultLandingBehavior(CallbackInfoReturnable<Boolean> cir) {
+        if (PowerHolderComponent.hasPower((Entity)(Object)this, ModifyBouncinessPower.class)) {
+            cir.setReturnValue(true);
+        }
+    }
+
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
         if(PowerHolderComponent.hasPower((Entity)(Object)this, IgnoreWaterPower.class)) {

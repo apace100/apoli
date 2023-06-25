@@ -91,6 +91,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		Registry.register(Registries.LOOT_CONDITION_TYPE, Apoli.identifier("power"), PowerLootCondition.TYPE);
 
 		ApoliClassData.registerAll();
+		BouncinessMultiplierRegistry.registerAll();
 
 		ModifierOperations.registerAll();
 
