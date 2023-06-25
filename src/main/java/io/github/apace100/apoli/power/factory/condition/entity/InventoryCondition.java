@@ -23,13 +23,14 @@ public class InventoryCondition {
 
         Set<InventoryUtil.InventoryType> inventoryTypes = data.get("inventory_types");
         Comparison comparison = data.get("comparison");
+        InventoryUtil.ProcessMode processMode = data.get("process_mode");
 
         boolean result = false;
         int compareTo = data.get("compare_to");
         int matches = 0;
 
         if (inventoryTypes.contains(InventoryUtil.InventoryType.INVENTORY)) {
-            matches += InventoryUtil.checkInventory(data, entity, null);
+            matches += InventoryUtil.checkInventory(data, entity, null, processMode.getProcessor());
             result = comparison.compare(matches, compareTo);
         }
         if (inventoryTypes.contains(InventoryUtil.InventoryType.POWER)) {
@@ -49,7 +50,7 @@ public class InventoryCondition {
                 return result;
             }
 
-            matches += InventoryUtil.checkInventory(data, entity, inventoryPower);
+            matches += InventoryUtil.checkInventory(data, entity, inventoryPower, processMode.getProcessor());
             result = comparison.compare(matches, compareTo);
 
         }
@@ -63,6 +64,7 @@ public class InventoryCondition {
             Apoli.identifier("inventory"),
             new SerializableData()
                 .add("inventory_types", ApoliDataTypes.INVENTORY_TYPE_SET, EnumSet.of(InventoryUtil.InventoryType.INVENTORY))
+                .add("process_mode", ApoliDataTypes.PROCESS_MODE, InventoryUtil.ProcessMode.ITEMS)
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("slots", ApoliDataTypes.ITEM_SLOTS, null)
                 .add("slot", ApoliDataTypes.ITEM_SLOT, null)

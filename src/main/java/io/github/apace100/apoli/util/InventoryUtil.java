@@ -19,7 +19,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class InventoryUtil {
@@ -27,6 +29,21 @@ public class InventoryUtil {
     public enum InventoryType {
         INVENTORY,
         POWER
+    }
+
+    public enum ProcessMode {
+        STACKS(stack -> 1),
+        ITEMS(ItemStack::getCount);
+
+        private final Function<ItemStack, Integer> processor;
+
+        ProcessMode(Function<ItemStack, Integer> processor) {
+            this.processor = processor;
+        }
+
+        public Function<ItemStack, Integer> getProcessor() {
+            return processor;
+        }
     }
 
     public static Set<Integer> getSlots(SerializableData.Instance data) {
@@ -42,7 +59,7 @@ public class InventoryUtil {
 
     }
 
-    public static int checkInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
+    public static int checkInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower, Function<ItemStack, Integer> processor) {
 
         Predicate<ItemStack> itemCondition = data.get("item_condition");
         Set<Integer> slots = getSlots(data);
@@ -58,7 +75,7 @@ public class InventoryUtil {
 
                 ItemStack stack = stackReference.get();
                 if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(stack))) {
-                    matches++;
+                    matches += processor.apply(stack);
                 }
 
             }
@@ -73,7 +90,7 @@ public class InventoryUtil {
 
                 ItemStack stack = inventoryPower.getStack(slot);
                 if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(stack))) {
-                    matches++;
+                    matches += processor.apply(stack);
                 }
 
             }
@@ -83,7 +100,11 @@ public class InventoryUtil {
 
     }
 
-    public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
+    public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower, Function<ItemStack, Integer> processor, int limit) {
+
+        if(limit <= 0) {
+            limit = Integer.MAX_VALUE;
+        }
 
         Set<Integer> slots = getSlots(data);
 
@@ -91,38 +112,62 @@ public class InventoryUtil {
         Predicate<ItemStack> itemCondition = data.get("item_condition");
         ActionFactory<Pair<World, ItemStack>>.Instance itemAction = data.get("item_action");
 
-        if (inventoryPower == null) slots.forEach(
-            slot -> {
+        int counter = 0;
+
+        if (inventoryPower == null) {
+            for(int slot : slots) {
 
                 StackReference stackReference = entity.getStackReference(slot);
-                if (stackReference == StackReference.EMPTY) return;
+                if (stackReference == StackReference.EMPTY) continue;
 
                 ItemStack itemStack = stackReference.get();
-                if (itemStack.isEmpty()) return;
+                if (itemStack.isEmpty()) continue;
 
-                if (!(itemCondition == null || itemCondition.test(itemStack))) return;
+                if (!(itemCondition == null || itemCondition.test(itemStack))) continue;
 
                 if (entityAction != null) entityAction.accept(entity);
-                itemAction.accept(new Pair<>(entity.getWorld(), itemStack));
 
-            }
-        );
-
-        else {
-            slots.removeIf(slot -> slot < 0 || slot >= inventoryPower.size());
-            slots.forEach(
-                slot -> {
-
-                    ItemStack itemStack = inventoryPower.getStack(slot);
-                    if (itemStack.isEmpty()) return;
-
-                    if (!(itemCondition == null || itemCondition.test(itemStack))) return;
-
-                    if (entityAction != null) entityAction.accept(entity);
+                int amount = processor.apply(itemStack);
+                for(int i = 0; i < amount; i++) {
                     itemAction.accept(new Pair<>(entity.getWorld(), itemStack));
 
+                    counter += 1;
+
+                    if(counter >= limit) {
+                        break;
+                    }
                 }
-            );
+
+                if(counter >= limit) {
+                    break;
+                }
+            }
+        } else {
+            slots.removeIf(slot -> slot < 0 || slot >= inventoryPower.size());
+            for(int slot : slots) {
+
+                ItemStack itemStack = inventoryPower.getStack(slot);
+                if (itemStack.isEmpty()) continue;
+
+                if (!(itemCondition == null || itemCondition.test(itemStack))) continue;
+
+                if (entityAction != null) entityAction.accept(entity);
+
+                int amount = processor.apply(itemStack);
+                for(int i = 0; i < amount; i++) {
+                    itemAction.accept(new Pair<>(entity.getWorld(), itemStack));
+
+                    counter += 1;
+
+                    if(counter >= limit) {
+                        break;
+                    }
+                }
+
+                if(counter >= limit) {
+                    break;
+                }
+            }
         }
 
     }
