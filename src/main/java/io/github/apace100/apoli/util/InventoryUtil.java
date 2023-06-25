@@ -42,6 +42,47 @@ public class InventoryUtil {
 
     }
 
+    public static int checkInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
+
+        Predicate<ItemStack> itemCondition = data.get("item_condition");
+        Set<Integer> slots = getSlots(data);
+        int matches = 0;
+
+        if (inventoryPower == null) {
+            for (int slot : slots) {
+
+                StackReference stackReference = entity.getStackReference(slot);
+                if (stackReference == StackReference.EMPTY) {
+                    continue;
+                }
+
+                ItemStack stack = stackReference.get();
+                if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(stack))) {
+                    matches++;
+                }
+
+            }
+        }
+
+        else {
+            for (int slot : slots) {
+
+                if (slot < 0 || slot >= inventoryPower.size()) {
+                    continue;
+                }
+
+                ItemStack stack = inventoryPower.getStack(slot);
+                if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(stack))) {
+                    matches++;
+                }
+
+            }
+        }
+
+        return matches;
+
+    }
+
     public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
 
         Set<Integer> slots = getSlots(data);

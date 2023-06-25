@@ -41,6 +41,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.EnumSet;
 import java.util.List;
 
 public class ApoliDataTypes {
@@ -118,6 +119,10 @@ public class ApoliDataTypes {
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
 
     public static final SerializableDataType<ResourceOperation> RESOURCE_OPERATION = SerializableDataType.enumValue(ResourceOperation.class);
+
+    public static final SerializableDataType<InventoryUtil.InventoryType> INVENTORY_TYPE = SerializableDataType.enumValue(InventoryUtil.InventoryType.class);
+
+    public static final SerializableDataType<EnumSet<InventoryUtil.InventoryType>> INVENTORY_TYPE_SET = SerializableDataType.enumSet(InventoryUtil.InventoryType.class, INVENTORY_TYPE);
 
     public static final SerializableDataType<AttributedEntityAttributeModifier> ATTRIBUTED_ATTRIBUTE_MODIFIER = SerializableDataType.compound(
         AttributedEntityAttributeModifier.class,
