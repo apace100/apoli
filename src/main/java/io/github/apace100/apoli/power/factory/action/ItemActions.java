@@ -5,6 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.action.item.HolderAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
@@ -163,6 +164,7 @@ public class ItemActions {
                     stack.setRepairCost(0);
                 }
             }));
+        register(HolderAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<World, ItemStack>> actionFactory) {

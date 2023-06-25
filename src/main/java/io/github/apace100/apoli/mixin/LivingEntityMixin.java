@@ -6,6 +6,7 @@ import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import io.netty.buffer.Unpooled;
@@ -503,5 +504,10 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Override
     public void setOriginalFoodStack(ItemStack original) {
         apoli$originalFoodStack = original;
+    }
+
+    @Inject(method = "baseTick", at = @At("TAIL"))
+    private void updateItemStackHolder(CallbackInfo ci) {
+        InventoryUtil.forEachStack(this, stack -> stack.setHolder(this));
     }
 }

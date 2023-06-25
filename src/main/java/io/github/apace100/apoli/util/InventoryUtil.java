@@ -1,5 +1,8 @@
 package io.github.apace100.apoli.util;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -14,12 +17,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -63,6 +63,7 @@ public class InventoryUtil {
 
         Predicate<ItemStack> itemCondition = data.get("item_condition");
         Set<Integer> slots = getSlots(data);
+        deduplicateSlots(entity, slots);
         int matches = 0;
 
         if (inventoryPower == null) {
@@ -107,6 +108,7 @@ public class InventoryUtil {
         }
 
         Set<Integer> slots = getSlots(data);
+        deduplicateSlots(entity, slots);
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<ItemStack> itemCondition = data.get("item_condition");
@@ -172,9 +174,12 @@ public class InventoryUtil {
 
     }
 
+
+
     public static void replaceInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
 
         Set<Integer> slots = getSlots(data);
+        deduplicateSlots(entity, slots);
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<ItemStack> itemCondition = data.get("item_condition");
@@ -234,6 +239,7 @@ public class InventoryUtil {
     public static void dropInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
 
         Set<Integer> slots = getSlots(data);
+        deduplicateSlots(entity, slots);
 
         int amount = data.getInt("amount");
         boolean throwRandomly = data.getBoolean("throw_randomly");
@@ -350,4 +356,43 @@ public class InventoryUtil {
 
     }
 
+    public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
+        Set<Integer> slots = Sets.newHashSet(ItemSlotArgumentTypeAccessor.getSlotMappings().values());
+        deduplicateSlots(entity, slots);
+
+        for(int slot : slots) {
+            StackReference stackReference = entity.getStackReference(slot);
+            if (stackReference == StackReference.EMPTY) continue;
+
+            ItemStack itemStack = stackReference.get();
+            if (itemStack.isEmpty()) continue;
+            itemStackConsumer.accept(itemStack);
+        }
+
+        Optional<PowerHolderComponent> optionalPowerHolderComponent = PowerHolderComponent.KEY.maybeGet(entity);
+        if(optionalPowerHolderComponent.isPresent()) {
+            PowerHolderComponent phc = optionalPowerHolderComponent.get();
+            List<InventoryPower> inventoryPowers = phc.getPowers(InventoryPower.class);
+            for(InventoryPower inventoryPower : inventoryPowers) {
+                for(int index = 0; index < inventoryPower.size(); index++) {
+                    ItemStack stack = inventoryPower.getStack(index);
+                    if(stack.isEmpty()) {
+                        continue;
+                    }
+                    itemStackConsumer.accept(stack);
+                }
+            }
+        }
+    }
+
+    private static void deduplicateSlots(Entity entity, Set<Integer> slots) {
+        if(entity instanceof PlayerEntity player) {
+            int selectedSlot = player.getInventory().selectedSlot;
+            Integer hotbarSlot = ItemSlotArgumentTypeAccessor.getSlotMappings().get("hotbar." + selectedSlot);
+            if(slots.contains(hotbarSlot)) {
+                Integer mainHandSlot = ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand");
+                slots.remove(mainHandSlot);
+            }
+        }
+    }
 }
