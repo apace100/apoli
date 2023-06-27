@@ -1,0 +1,397 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:acacia_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:activator_rail",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:black_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:blue_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:comparator",
+      "required": false
+    },
+    {
+      "id": "minecraft:creeper_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:creeper_wall_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:crimson_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:cyan_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:detector_rail",
+      "required": false
+    },
+    {
+      "id": "minecraft:dragon_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:dragon_wall_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_rod",
+      "required": false
+    },
+    {
+      "id": "minecraft:flower_pot",
+      "required": false
+    },
+    {
+      "id": "minecraft:gray_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:green_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:ladder",
+      "required": false
+    },
+    {
+      "id": "minecraft:lever",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_blue_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_gray_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:lime_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:magenta_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:orange_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:piglin_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:piglin_wall_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:pink_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:player_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:player_wall_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:polished_blackstone_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_acacia_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_allium",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_azalea_bush",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_azure_bluet",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_bamboo",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_birch_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_blue_orchid",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_brown_mushroom",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_cactus",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_cherry_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_cornflower",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_crimson_fungus",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_crimson_roots",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_dandelion",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_dark_oak_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_dead_bush",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_fern",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_flowering_azalea_bush",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_jungle_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_lily_of_the_valley",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_mangrove_propagule",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_oak_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_orange_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_oxeye_daisy",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_pink_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_poppy",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_red_mushroom",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_red_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_spruce_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_torchflower",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_warped_fungus",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_warped_roots",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_white_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:potted_wither_rose",
+      "required": false
+    },
+    {
+      "id": "minecraft:powered_rail",
+      "required": false
+    },
+    {
+      "id": "minecraft:purple_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:rail",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:redstone_torch",
+      "required": false
+    },
+    {
+      "id": "minecraft:redstone_wall_torch",
+      "required": false
+    },
+    {
+      "id": "minecraft:redstone_wire",
+      "required": false
+    },
+    {
+      "id": "minecraft:repeater",
+      "required": false
+    },
+    {
+      "id": "minecraft:scaffolding",
+      "required": false
+    },
+    {
+      "id": "minecraft:skeleton_skull",
+      "required": false
+    },
+    {
+      "id": "minecraft:skeleton_wall_skull",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_torch",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_wall_torch",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:stone_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:torch",
+      "required": false
+    },
+    {
+      "id": "minecraft:tripwire",
+      "required": false
+    },
+    {
+      "id": "minecraft:tripwire_hook",
+      "required": false
+    },
+    {
+      "id": "minecraft:wall_torch",
+      "required": false
+    },
+    {
+      "id": "minecraft:warped_button",
+      "required": false
+    },
+    {
+      "id": "minecraft:white_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:wither_skeleton_skull",
+      "required": false
+    },
+    {
+      "id": "minecraft:wither_skeleton_wall_skull",
+      "required": false
+    },
+    {
+      "id": "minecraft:yellow_candle",
+      "required": false
+    },
+    {
+      "id": "minecraft:zombie_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:zombie_wall_head",
+      "required": false
+    }
+  ]
+}

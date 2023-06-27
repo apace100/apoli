@@ -86,7 +86,7 @@ public class RaycastAction {
             }
             if(data.isPresent("block_action") && hitResult instanceof BlockHitResult bhr) {
                 ActionFactory<Triple<World, BlockPos, Direction>>.Instance blockAction = data.get("block_action");
-                Triple<World, BlockPos, Direction> blockActionContext = Triple.of(entity.world, bhr.getBlockPos(), bhr.getSide());
+                Triple<World, BlockPos, Direction> blockActionContext = Triple.of(entity.getWorld(), bhr.getBlockPos(), bhr.getSide());
                 blockAction.accept(blockActionContext);
             }
             if(data.isPresent("bientity_action") && hitResult instanceof EntityHitResult ehr) {
@@ -104,7 +104,7 @@ public class RaycastAction {
     }
 
     private static void executeStepCommands(Entity entity, Vec3d origin, Vec3d target, String command, double step) {
-        MinecraftServer server = entity.world.getServer();
+        MinecraftServer server = entity.getWorld().getServer();
         if(server != null) {
             Vec3d direction = target.subtract(origin).normalize();
             double length = origin.distanceTo(target);
@@ -114,11 +114,11 @@ public class RaycastAction {
                     Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
                     origin.add(direction.multiply(current)),
                     entity.getRotationClient(),
-                    entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
+                    entity.getWorld() instanceof ServerWorld ? (ServerWorld)entity.getWorld() : null,
                     Apoli.config.executeCommand.permissionLevel,
                     entity.getName().getString(),
                     entity.getDisplayName(),
-                    entity.world.getServer(),
+                    entity.getWorld().getServer(),
                     entity);
                 server.getCommandManager().executeWithPrefix(source, command);
             }
@@ -126,18 +126,18 @@ public class RaycastAction {
     }
 
     private static void executeCommandAtHit(Entity entity, Vec3d hitPosition, String command) {
-        MinecraftServer server = entity.world.getServer();
+        MinecraftServer server = entity.getWorld().getServer();
         if(server != null) {
             boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
             ServerCommandSource source = new ServerCommandSource(
                 Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
                 hitPosition,
                 entity.getRotationClient(),
-                entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
+                entity.getWorld() instanceof ServerWorld ? (ServerWorld)entity.getWorld() : null,
                 Apoli.config.executeCommand.permissionLevel,
                 entity.getName().getString(),
                 entity.getDisplayName(),
-                entity.world.getServer(),
+                entity.getWorld().getServer(),
                 entity);
             server.getCommandManager().executeWithPrefix(source, command);
         }
@@ -145,7 +145,7 @@ public class RaycastAction {
 
     private static BlockHitResult performBlockRaycast(Entity source, Vec3d origin, Vec3d target, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling) {
         RaycastContext context = new RaycastContext(origin, target, shapeType, fluidHandling, source);
-        return source.world.raycast(context);
+        return source.getWorld().raycast(context);
     }
 
     private static EntityHitResult performEntityRaycast(Entity source, Vec3d origin, Vec3d target, ConditionFactory<Pair<Entity, Entity>>.Instance biEntityCondition) {

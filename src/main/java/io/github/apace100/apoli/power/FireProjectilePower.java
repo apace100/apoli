@@ -2,28 +2,32 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.EyeHeightAccess;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.HudRender;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ExplosiveProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtLong;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.random.Random;
+
+import java.util.Optional;
+import java.util.function.Consumer;
 
 public class FireProjectilePower extends ActiveCooldownPower {
 
-    private final EntityType entityType;
+    private final EntityType<?> entityType;
     private final int projectileCount;
     private final int interval;
     private final int startDelay;
@@ -31,12 +35,14 @@ public class FireProjectilePower extends ActiveCooldownPower {
     private final float divergence;
     private final SoundEvent soundEvent;
     private final NbtCompound tag;
+    private final Consumer<Entity> projectileAction;
+    private final Consumer<Entity> shooterAction;
 
     private boolean isFiringProjectiles;
     private boolean finishedStartDelay;
     private int shotProjectiles;
 
-    public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag) {
+    public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType<?> entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag, Consumer<Entity> projectileAction, Consumer<Entity> shooterAction) {
         super(type, entity, cooldownDuration, hudRender, null);
         this.entityType = entityType;
         this.projectileCount = projectileCount;
@@ -46,6 +52,8 @@ public class FireProjectilePower extends ActiveCooldownPower {
         this.divergence = divergence;
         this.soundEvent = soundEvent;
         this.tag = tag;
+        this.projectileAction = projectileAction;
+        this.shooterAction = shooterAction;
         this.setTicking(true);
     }
 
@@ -90,9 +98,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
-                        entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                        entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
                     }
-                    if(!entity.world.isClient) {
+                    if(!entity.getWorld().isClient) {
                         fireProjectile();
                     }
                 }
@@ -104,9 +112,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
             }
             else if(interval == 0 && finishedStartDelay) {
                 if(soundEvent != null) {
-                    entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                    entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
                 }
-                if(!entity.world.isClient) {
+                if(!entity.getWorld().isClient) {
                     for(; shotProjectiles < projectileCount; shotProjectiles++) {
                         fireProjectile();
                     }
@@ -119,9 +127,9 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 shotProjectiles += 1;
                 if(shotProjectiles <= projectileCount) {
                     if(soundEvent != null) {
-                        entity.world.playSound((PlayerEntity)null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
+                        entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), soundEvent, SoundCategory.NEUTRAL, 0.5F, 0.4F / (entity.getRandom().nextFloat() * 0.4F + 0.8F));
                     }
-                    if(!entity.world.isClient) {
+                    if(!entity.getWorld().isClient) {
                         fireProjectile();
                     }
                 }
@@ -135,46 +143,70 @@ public class FireProjectilePower extends ActiveCooldownPower {
     }
 
     private void fireProjectile() {
-        if(entityType != null) {
-            Entity entity = entityType.create(this.entity.world);
-            if(entity == null) {
-                return;
+
+        if (entityType == null || entity.getWorld().isClient) return;
+
+        ServerWorld serverWorld = (ServerWorld) entity.getWorld();
+        float yaw = entity.getYaw();
+        float pitch = entity.getPitch();
+
+        Optional<Entity> opt$entityToSpawn = MiscUtil.getEntityWithPassengers(
+            serverWorld,
+            entityType,
+            tag,
+            entity.getPos().add(0, entity.getEyeHeight(entity.getPose()), 0),
+            yaw,
+            pitch
+        );
+
+        if (opt$entityToSpawn.isEmpty()) return;
+
+        Vec3d rotationVector = entity.getRotationVector();
+        Vec3d velocity = entity.getVelocity();
+        Entity entityToSpawn = opt$entityToSpawn.get();
+        Random random = serverWorld.getRandom();
+
+        if (entityToSpawn instanceof ProjectileEntity projectileToSpawn) {
+
+            if (projectileToSpawn instanceof ExplosiveProjectileEntity explosiveProjectileToSpawn) {
+                explosiveProjectileToSpawn.powerX = rotationVector.x * speed;
+                explosiveProjectileToSpawn.powerY = rotationVector.y * speed;
+                explosiveProjectileToSpawn.powerZ = rotationVector.z * speed;
             }
-            Vec3d rotationVector = this.entity.getRotationVector();
-            float yaw = this.entity.getYaw();
-            float pitch = this.entity.getPitch();
-            Vec3d spawnPos = this.entity.getPos().add(0, ((EyeHeightAccess) this.entity).callGetEyeHeight(this.entity.getPose(), this.entity.getDimensions(this.entity.getPose())), 0).add(rotationVector);
-            entity.refreshPositionAndAngles(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), pitch, yaw);
-            if(entity instanceof ProjectileEntity) {
-                if(entity instanceof ExplosiveProjectileEntity) {
-                    ExplosiveProjectileEntity explosiveProjectileEntity = (ExplosiveProjectileEntity)entity;
-                    explosiveProjectileEntity.powerX = rotationVector.x * speed;
-                    explosiveProjectileEntity.powerY = rotationVector.y * speed;
-                    explosiveProjectileEntity.powerZ = rotationVector.z * speed;
-                }
-                ProjectileEntity projectile = (ProjectileEntity)entity;
-                projectile.setOwner(this.entity);
-                projectile.setVelocity(this.entity, pitch, yaw, 0F, speed, divergence);
-            } else {
-                float f = -MathHelper.sin(yaw * 0.017453292F) * MathHelper.cos(pitch * 0.017453292F);
-                float g = -MathHelper.sin(pitch * 0.017453292F);
-                float h = MathHelper.cos(yaw * 0.017453292F) * MathHelper.cos(pitch * 0.017453292F);
-                Vec3d vec3d = (new Vec3d(f, g, h)).normalize().add(this.entity.getRandom().nextGaussian() * 0.007499999832361937D * (double)divergence, this.entity.getRandom().nextGaussian() * 0.007499999832361937D * (double)divergence, this.entity.getRandom().nextGaussian() * 0.007499999832361937D * (double)divergence).multiply((double)speed);
-                entity.setVelocity(vec3d);
-                Vec3d entityVelo = this.entity.getVelocity();
-                entity.setVelocity(entity.getVelocity().add(entityVelo.x, this.entity.isOnGround() ? 0.0D : entityVelo.y, entityVelo.z));
-            }
-            if(tag != null) {
-                NbtCompound mergedTag = entity.writeNbt(new NbtCompound());
-                mergedTag.copyFrom(tag);
-                entity.readNbt(mergedTag);
-            }
-            this.entity.world.spawnEntity(entity);
+
+            projectileToSpawn.setOwner(entity);
+            projectileToSpawn.setVelocity(entity, pitch, yaw, 0F, speed, divergence);
+
         }
+
+        else {
+
+            float  f = 0.017453292F;
+            double g = 0.007499999832361937D;
+
+            float h = -MathHelper.sin(yaw * f) * MathHelper.cos(pitch * f);
+            float i = -MathHelper.sin(pitch * f);
+            float j =  MathHelper.cos(yaw * f) * MathHelper.cos(pitch * f);
+
+            Vec3d vec3d = new Vec3d(h, i, j)
+                .normalize()
+                .add(random.nextGaussian() * g * divergence, random.nextGaussian() * g * divergence, random.nextGaussian() * g * divergence)
+                .multiply(speed);
+
+            entityToSpawn.setVelocity(vec3d);
+            entityToSpawn.addVelocity(velocity.x, entity.isOnGround() ? 0.0D : velocity.y, velocity.z);
+
+        }
+
+        serverWorld.spawnNewEntityAndPassengers(entityToSpawn);
+        if (projectileAction != null) projectileAction.accept(entityToSpawn);
+        if (shooterAction != null) shooterAction.accept(entity);
+
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("fire_projectile"),
+        return new PowerFactory<>(
+            Apoli.identifier("fire_projectile"),
             new SerializableData()
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("count", SerializableDataTypes.INT, 1)
@@ -186,23 +218,32 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("tag", SerializableDataTypes.NBT, null)
-                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
-            data ->
-                (type, player) -> {
-                    FireProjectilePower power = new FireProjectilePower(type, player,
-                        data.getInt("cooldown"),
-                        (HudRender)data.get("hud_render"),
-                        (EntityType)data.get("entity_type"),
-                        data.getInt("count"),
-                        data.getInt("interval"),
-                        data.getInt("start_delay"),
-                        data.getFloat("speed"),
-                        data.getFloat("divergence"),
-                        (SoundEvent)data.get("sound"),
-                        (NbtCompound)data.get("tag"));
-                    power.setKey((Active.Key)data.get("key"));
-                    return power;
-                })
-            .allowCondition();
+                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key())
+                .add("projectile_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("shooter_action", ApoliDataTypes.ENTITY_ACTION, null),
+            data -> (powerType, livingEntity) -> {
+
+                FireProjectilePower fpp = new FireProjectilePower(
+                    powerType,
+                    livingEntity,
+                    data.get("cooldown"),
+                    data.get("hud_render"),
+                    data.get("entity_type"),
+                    data.get("count"),
+                    data.get("interval"),
+                    data.get("start_delay"),
+                    data.get("speed"),
+                    data.get("divergence"),
+                    data.get("sound"),
+                    data.get("tag"),
+                    data.get("projectile_action"),
+                    data.get("shooter_action")
+                );
+
+                fpp.setKey(data.get("key"));
+                return fpp;
+
+            }
+        ).allowCondition();
     }
 }

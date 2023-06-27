@@ -24,7 +24,7 @@ import java.util.function.Predicate;
 public class ExplodeAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
-        if(entity.world.isClient) {
+        if(entity.getWorld().isClient) {
             return;
         }
 
@@ -38,14 +38,14 @@ public class ExplodeAction {
         }
 
         if(indestructible != null) {
-            ExplosionBehavior eb = getExplosionBehaviour(entity.world, indestructible);
-            entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
+            ExplosionBehavior eb = getExplosionBehaviour(entity.getWorld(), indestructible);
+            entity.getWorld().createExplosion(data.getBoolean("damage_self") ? null : entity,
                 null,
                 eb, entity.getX(), entity.getY(), entity.getZ(),
                 data.getFloat("power"), data.getBoolean("create_fire"),
                 data.get("destruction_type"));
         } else {
-            explode(entity.world, data.getBoolean("damage_self") ? null : entity, null, null,
+            explode(entity.getWorld(), data.getBoolean("damage_self") ? null : entity, null, null,
                 entity.getX(), entity.getY(), entity.getZ(),
                 data.getFloat("power"), data.getBoolean("create_fire"),
                 data.get("destruction_type"));
