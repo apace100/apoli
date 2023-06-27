@@ -1,4 +1,2 @@
 jdk:
   - openjdk17
-env:
-  ENVIRONMENT: "production"

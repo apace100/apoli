@@ -39,7 +39,7 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
 
     public void executeActions(ItemStack stack) {
         if(itemAction != null) {
-            itemAction.accept(new Pair<>(entity.world, stack));
+            itemAction.accept(new Pair<>(entity.getWorld(), stack));
         }
         if(entityAction != null) {
             entityAction.accept(entity);
@@ -64,7 +64,7 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
     }
 
     public static void executeActions(Entity user, ItemStack useStack, ItemStack checkStack, TriggerType triggerType, PriorityPhase phase) {
-        if(user.world.isClient) {
+        if(user.getWorld().isClient) {
             return;
         }
         ActionOnItemUsePower.CallInstance<ActionOnItemUsePower> callInstance = new ActionOnItemUsePower.CallInstance<>();

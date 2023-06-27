@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
@@ -24,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ItemStack.class)
-public abstract class ItemStackMixin implements MutableItemStack {
+public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedItemStack {
 
     @Shadow @Deprecated private Item item;
 
@@ -34,14 +35,34 @@ public abstract class ItemStackMixin implements MutableItemStack {
 
     @Shadow public abstract int getMaxUseTime();
 
+    @Shadow public abstract @Nullable Entity getHolder();
+
     @Unique
     private ItemStack apoli$usedItemStack;
 
-    @Shadow @Nullable public abstract Entity getHolder();
+    @Unique
+    private Entity apoli$holdingEntity;
 
-    @Shadow public abstract void setHolder(@Nullable Entity holder);
+    @Override
+    public Entity getEntity() {
+        Entity vanillaHolder = getHolder();
+        if(vanillaHolder == null) {
+            return apoli$holdingEntity;
+        }
+        return vanillaHolder;
+    }
 
-    @Shadow @Nullable private Entity holder;
+    @Override
+    public void setEntity(Entity entity) {
+        this.apoli$holdingEntity = entity;
+    }
+
+    @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void copyNewParams(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
+        if (this.apoli$holdingEntity != null) {
+            ((EntityLinkedItemStack)itemStack).setEntity(apoli$holdingEntity);
+        }
+    }
 
     @Inject(method = "finishUsing", at = @At("HEAD"))
     public void callActionOnUseFinishBefore(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir) {
@@ -131,16 +152,6 @@ public abstract class ItemStackMixin implements MutableItemStack {
         }
     }
 
-    @Inject(method = "inventoryTick", at = @At("HEAD"))
-    public void apoli$setHolderOnTick(World world, Entity entity, int slot, boolean selected, CallbackInfo ci) {
-        if (this.getHolder() == null) this.setHolder(entity);
-    }
-
-    @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
-    public void apoli$setHolderOnCopy(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
-        itemStack.setHolder(this.holder);
-    }
-
     @Override
     public void setItem(Item item) {
         this.item = item;
@@ -152,5 +163,4 @@ public abstract class ItemStackMixin implements MutableItemStack {
         nbt = stack.getNbt();
         count = stack.getCount();
     }
-
 }

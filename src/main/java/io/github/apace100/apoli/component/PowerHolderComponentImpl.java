@@ -194,6 +194,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 for (int i = 0; i < powerList.size(); i++) {
                     NbtCompound powerTag = powerList.getCompound(i);
                     Identifier powerTypeId = Identifier.tryParse(powerTag.getString("Type"));
+                    if(callPowerOnAdd && PowerTypeRegistry.isDisabled(powerTypeId)) {
+                        continue;
+                    }
                     NbtList sources = (NbtList) powerTag.get("Sources");
                     List<Identifier> list = new LinkedList<>();
                     if(sources != null) {
@@ -233,6 +236,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                                     }
                                 }
                             } catch (IllegalArgumentException e) {
+                                if(callPowerOnAdd && PowerTypeRegistry.isDisabled(subPowerId)) {
+                                    continue;
+                                }
                                 Apoli.LOGGER.warn("Multiple power type read from data contained unregistered sub-type: \"" + subPowerId + "\".");
                             }
                         }

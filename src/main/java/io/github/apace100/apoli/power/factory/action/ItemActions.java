@@ -5,7 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.action.item.ModifyAction;
+import io.github.apace100.apoli.power.factory.action.item.HolderAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
@@ -16,11 +16,13 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootDataType;
+import net.minecraft.loot.LootManager;
 import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.loot.function.LootFunction;
-import net.minecraft.loot.function.LootFunctionManager;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.server.MinecraftServer;
@@ -56,7 +58,26 @@ public class ItemActions {
             (data, worldAndStack) -> {
                 worldAndStack.getRight().decrement(data.getInt("amount"));
             }));
-        register(ModifyAction.getFactory());
+        register(new ActionFactory<>(Apoli.identifier("modify"), new SerializableData()
+            .add("modifier", SerializableDataTypes.IDENTIFIER),
+            (data, worldAndStack) -> {
+                MinecraftServer server = worldAndStack.getLeft().getServer();
+                if(server != null) {
+                    Identifier id = data.getId("modifier");
+                    LootManager lootManager = server.getLootManager();
+                    LootFunction lootFunction = lootManager.getElement(LootDataType.ITEM_MODIFIERS, id);
+                    if (lootFunction == null) {
+                        Apoli.LOGGER.info("Unknown item modifier used in `modify` action: " + id);
+                        return;
+                    }
+                    ServerWorld serverWorld = server.getOverworld();
+                    ItemStack stack = worldAndStack.getRight();
+                    LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(serverWorld).add(LootContextParameters.ORIGIN, new Vec3d(0, 0,0)).build(LootContextTypes.COMMAND);
+                    LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(null);
+                    ItemStack newStack = lootFunction.apply(stack, lootContext);
+                    ((MutableItemStack)stack).setFrom(newStack);
+                }
+            }));
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1)
             .add("ignore_unbreaking", SerializableDataTypes.BOOLEAN, false),
@@ -143,6 +164,7 @@ public class ItemActions {
                     stack.setRepairCost(0);
                 }
             }));
+        register(HolderAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<World, ItemStack>> actionFactory) {

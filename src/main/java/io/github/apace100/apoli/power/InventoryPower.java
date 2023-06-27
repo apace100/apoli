@@ -80,7 +80,7 @@ public class InventoryPower extends Power implements Active, Inventory {
         if(!isActive()) {
             return;
         }
-        if(!entity.world.isClient && entity instanceof PlayerEntity playerEntity) {
+        if(!entity.getWorld().isClient && entity instanceof PlayerEntity playerEntity) {
             playerEntity.openHandledScreen(new SimpleNamedScreenHandlerFactory(containerScreen, containerTitle));
         }
     }
