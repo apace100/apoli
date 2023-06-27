@@ -14,7 +14,7 @@ public class InSnowCondition {
 		BlockPos downBlockPos = entity.getBlockPos();
 		BlockPos upBlockPos = BlockPos.ofFloored(downBlockPos.getX(), entity.getBoundingBox().maxY, downBlockPos.getX());
 
-		return ((WeatherView) entity.world).inSnow(downBlockPos, upBlockPos);
+		return ((WeatherView) entity.getWorld()).inSnow(downBlockPos, upBlockPos);
 
 	}
 
