@@ -1,0 +1,229 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:acacia_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:allium",
+      "required": false
+    },
+    {
+      "id": "minecraft:attached_melon_stem",
+      "required": false
+    },
+    {
+      "id": "minecraft:attached_pumpkin_stem",
+      "required": false
+    },
+    {
+      "id": "minecraft:azalea",
+      "required": false
+    },
+    {
+      "id": "minecraft:azure_bluet",
+      "required": false
+    },
+    {
+      "id": "minecraft:beetroots",
+      "required": false
+    },
+    {
+      "id": "minecraft:big_dripleaf",
+      "required": false
+    },
+    {
+      "id": "minecraft:big_dripleaf_stem",
+      "required": false
+    },
+    {
+      "id": "minecraft:birch_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:blue_orchid",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_mushroom",
+      "required": false
+    },
+    {
+      "id": "minecraft:carrots",
+      "required": false
+    },
+    {
+      "id": "minecraft:cave_vines",
+      "required": false
+    },
+    {
+      "id": "minecraft:cave_vines_plant",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:chorus_flower",
+      "required": false
+    },
+    {
+      "id": "minecraft:chorus_plant",
+      "required": false
+    },
+    {
+      "id": "minecraft:cocoa",
+      "required": false
+    },
+    {
+      "id": "minecraft:cornflower",
+      "required": false
+    },
+    {
+      "id": "minecraft:crimson_fungus",
+      "required": false
+    },
+    {
+      "id": "minecraft:dandelion",
+      "required": false
+    },
+    {
+      "id": "minecraft:dark_oak_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:flowering_azalea",
+      "required": false
+    },
+    {
+      "id": "minecraft:jungle_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:lily_of_the_valley",
+      "required": false
+    },
+    {
+      "id": "minecraft:lily_pad",
+      "required": false
+    },
+    {
+      "id": "minecraft:mangrove_propagule",
+      "required": false
+    },
+    {
+      "id": "minecraft:melon_stem",
+      "required": false
+    },
+    {
+      "id": "minecraft:moss_carpet",
+      "required": false
+    },
+    {
+      "id": "minecraft:nether_wart",
+      "required": false
+    },
+    {
+      "id": "minecraft:oak_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:orange_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:oxeye_daisy",
+      "required": false
+    },
+    {
+      "id": "minecraft:pink_petals",
+      "required": false
+    },
+    {
+      "id": "minecraft:pink_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:poppy",
+      "required": false
+    },
+    {
+      "id": "minecraft:potatoes",
+      "required": false
+    },
+    {
+      "id": "minecraft:pumpkin_stem",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_mushroom",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:small_dripleaf",
+      "required": false
+    },
+    {
+      "id": "minecraft:spore_blossom",
+      "required": false
+    },
+    {
+      "id": "minecraft:spruce_sapling",
+      "required": false
+    },
+    {
+      "id": "minecraft:sugar_cane",
+      "required": false
+    },
+    {
+      "id": "minecraft:sweet_berry_bush",
+      "required": false
+    },
+    {
+      "id": "minecraft:torchflower",
+      "required": false
+    },
+    {
+      "id": "minecraft:torchflower_crop",
+      "required": false
+    },
+    {
+      "id": "minecraft:twisting_vines",
+      "required": false
+    },
+    {
+      "id": "minecraft:twisting_vines_plant",
+      "required": false
+    },
+    {
+      "id": "minecraft:warped_fungus",
+      "required": false
+    },
+    {
+      "id": "minecraft:weeping_vines",
+      "required": false
+    },
+    {
+      "id": "minecraft:weeping_vines_plant",
+      "required": false
+    },
+    {
+      "id": "minecraft:wheat",
+      "required": false
+    },
+    {
+      "id": "minecraft:white_tulip",
+      "required": false
+    },
+    {
+      "id": "minecraft:wither_rose",
+      "required": false
+    }
+  ]
+}

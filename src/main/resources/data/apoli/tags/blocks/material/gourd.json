@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:carved_pumpkin",
+      "required": false
+    },
+    {
+      "id": "minecraft:jack_o_lantern",
+      "required": false
+    },
+    {
+      "id": "minecraft:melon",
+      "required": false
+    },
+    {
+      "id": "minecraft:pumpkin",
+      "required": false
+    }
+  ]
+}

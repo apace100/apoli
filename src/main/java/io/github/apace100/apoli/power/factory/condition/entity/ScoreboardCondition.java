@@ -21,7 +21,7 @@ public class ScoreboardCondition {
             else name = entity.getUuidAsString();
         }
 
-        Scoreboard scoreboard = entity.world.getScoreboard();
+        Scoreboard scoreboard = entity.getWorld().getScoreboard();
         ScoreboardObjective scoreboardObjective = scoreboard.getObjective(data.getString("objective"));
         if (scoreboard.playerHasObjective(name, scoreboardObjective)) {
             int score = scoreboard.getPlayerScore(name, scoreboardObjective).getScore();

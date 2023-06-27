@@ -31,7 +31,7 @@ public class ActionOnWakeUp extends Power {
     }
 
     public boolean doesApply(BlockPos pos) {
-        CachedBlockPosition cbp = new CachedBlockPosition(entity.world, pos, true);
+        CachedBlockPosition cbp = new CachedBlockPosition(entity.getWorld(), pos, true);
         return doesApply(cbp);
     }
 
@@ -41,7 +41,7 @@ public class ActionOnWakeUp extends Power {
 
     public void executeActions(BlockPos pos, Direction dir) {
         if(blockAction != null) {
-            blockAction.accept(Triple.of(entity.world, pos, dir));
+            blockAction.accept(Triple.of(entity.getWorld(), pos, dir));
         }
         if(entityAction != null) {
             entityAction.accept(entity);

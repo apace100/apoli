@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:moving_piston",
+      "required": false
+    },
+    {
+      "id": "minecraft:piston",
+      "required": false
+    },
+    {
+      "id": "minecraft:piston_head",
+      "required": false
+    },
+    {
+      "id": "minecraft:sticky_piston",
+      "required": false
+    }
+  ]
+}
