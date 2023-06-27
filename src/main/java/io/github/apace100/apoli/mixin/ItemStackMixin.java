@@ -59,8 +59,9 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
     @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void copyNewParams(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
-        if (this.apoli$holdingEntity != null) {
-            ((EntityLinkedItemStack)itemStack).setEntity(apoli$holdingEntity);
+        Entity entity = getEntity();
+        if (entity != null) {
+            ((EntityLinkedItemStack)itemStack).setEntity(entity);
         }
     }
 

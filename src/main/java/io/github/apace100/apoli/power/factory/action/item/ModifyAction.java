@@ -8,9 +8,12 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootDataType;
 import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.function.LootFunction;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -26,27 +29,43 @@ public class ModifyAction {
         MinecraftServer server = worldAndStack.getLeft().getServer();
         if (server == null) return;
 
-        Identifier id = data.get("modifier");
-        LootFunction lootFunction = server.getItemModifierManager().get(id);
-        if (lootFunction == null) {
-            Apoli.LOGGER.warn("Unknown \"" + id + "\" item modifier used in `modify` item action type!");
+        Identifier itemModifierId = data.get("modifier");
+        LootFunction itemModifier = server.getLootManager().getElement(LootDataType.ITEM_MODIFIERS, itemModifierId);
+        if (itemModifier == null) {
+            Apoli.LOGGER.warn("Unknown item modifier (\"" + itemModifierId + "\") used in `modify` item action type");
             return;
         }
 
-        Vec3d pos = data.get("position");
-        BlockPos blockPos = new BlockPos(pos);
+        RegistryKey<World> dimension = data.get("dimension");
+        ServerWorld world = server.getWorld(dimension);
+        if (world == null) {
+            Apoli.LOGGER.warn("Unknown dimension (\"" + dimension.getValue() + "\") used in `modify` item action type!");
+        }
+
         ItemStack stack = worldAndStack.getRight();
         Entity stackHolder = stack.getHolder();
-        ServerWorld serverWorld = stackHolder != null ? (ServerWorld) stackHolder.getWorld() : server.getOverworld();
-        LootContext lootContext = new LootContext.Builder(serverWorld)
-            .parameter(LootContextParameters.ORIGIN, pos)
-            .parameter(LootContextParameters.TOOL, stack)
-            .optionalParameter(LootContextParameters.THIS_ENTITY, stackHolder)
-            .optionalParameter(LootContextParameters.BLOCK_STATE, serverWorld.getBlockState(blockPos))
-            .optionalParameter(LootContextParameters.BLOCK_ENTITY, serverWorld.getBlockEntity(blockPos))
-            .build(ApoliLootContextTypes.ANY);
+        if (stackHolder != null) {
+            Apoli.LOGGER.warn("Using the dimension of the stack holder instead.");
+            world = (ServerWorld) stackHolder.getWorld();
+        } else {
+            Apoli.LOGGER.warn("Using the `minecraft:overworld` dimension instead.");
+            world = server.getOverworld();
+        }
 
-        ItemStack newStack = lootFunction.apply(stack, lootContext);
+        Vec3d pos = data.isPresent("position") ? data.get("position") : world.getSpawnPos().toCenterPos();
+        BlockPos blockPos = BlockPos.ofFloored(pos);
+
+        LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(world)
+            .add(LootContextParameters.ORIGIN, pos)
+            .add(LootContextParameters.TOOL, stack)
+            .addOptional(LootContextParameters.THIS_ENTITY, stackHolder)
+            .addOptional(LootContextParameters.BLOCK_STATE, world.getBlockState(blockPos))
+            .addOptional(LootContextParameters.BLOCK_ENTITY, world.getBlockEntity(blockPos))
+            .build(ApoliLootContextTypes.ANY);
+        LootContext lootContext = new LootContext.Builder(lootContextParameterSet)
+            .build(null);
+
+        ItemStack newStack = itemModifier.apply(stack, lootContext);
         ((MutableItemStack) stack).setFrom(newStack);
 
     }
@@ -56,7 +75,8 @@ public class ModifyAction {
             Apoli.identifier("modify"),
             new SerializableData()
                 .add("modifier", SerializableDataTypes.IDENTIFIER)
-                .add("position", SerializableDataTypes.VECTOR, new Vec3d(0, 0, 0)),
+                .add("position", SerializableDataTypes.VECTOR, null)
+                .add("dimension", SerializableDataTypes.DIMENSION, World.OVERWORLD),
             ModifyAction::action
         );
     }
