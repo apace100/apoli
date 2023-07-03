@@ -9,8 +9,7 @@ import io.github.apace100.apoli.util.HudRender;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.FluidTags;
@@ -20,11 +19,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
+public class PowerHudRenderer implements GameHudRender {
 
     @Override
     @Environment(EnvType.CLIENT)
-    public void render(MatrixStack matrices, float delta) {
+    public void render(DrawContext context, float delta) {
         MinecraftClient client = MinecraftClient.getInstance();
         PowerHolderComponent component = PowerHolderComponent.KEY.get(client.player);
         int x = client.getWindow().getScaledWidth() / 2 + 20 + ((ApoliConfigClient)Apoli.config).resourcesAndCooldowns.hudOffsetX;
@@ -42,27 +41,27 @@ public class PowerHudRenderer extends DrawableHelper implements GameHudRender {
         List<HudRendered> hudPowers = component.getPowers().stream().filter(p -> p instanceof HudRendered).map(p -> (HudRendered)p).sorted(
             Comparator.comparing(hudRenderedA -> hudRenderedA.getRenderSettings().getSpriteLocation())
         ).collect(Collectors.toList());
-        Identifier lastLocation = null;
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        //Identifier lastLocation = null;
+        //RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         for (HudRendered hudPower : hudPowers) {
             HudRender render = hudPower.getRenderSettings();
             if(render.shouldRender(client.player) && hudPower.shouldRender()) {
                 Identifier currentLocation = render.getSpriteLocation();
-                if(currentLocation != lastLocation) {
+                /*if(currentLocation != lastLocation) {
                     RenderSystem.setShaderTexture(0, currentLocation);
                     lastLocation = currentLocation;
-                }
-                drawTexture(matrices, x, y, 0, 0, barWidth, 5);
+                }*/
+                context.drawTexture(currentLocation, x, y, 0, 0, barWidth, 5);
                 int v = 8 + render.getBarIndex() * 10;
                 float fill = hudPower.getFill();
                 if(render.isInverted()) {
                     fill = 1f - fill;
                 }
                 int w = (int)(fill * barWidth);
-                drawTexture(matrices, x, y - 2, 0, v, w, barHeight);
-                setZOffset(getZOffset() + 1);
-                drawTexture(matrices, x - iconSize - 2, y - 2, 73, v, iconSize, iconSize);
-                setZOffset(getZOffset() - 1);
+                context.drawTexture(currentLocation, x, y - 2, 0, v, w, barHeight);
+                //setZOffset(getZOffset() + 1);
+                context.drawTexture(currentLocation, x - iconSize - 2, y - 2, 73, v, iconSize, iconSize);
+                //setZOffset(getZOffset() - 1);
                 y -= 8;
             }
         }

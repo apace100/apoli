@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.MultiJsonDataLoader;
 import io.github.apace100.calio.data.SerializableData;
@@ -16,6 +17,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class GlobalPowerSetLoader extends JsonDataLoader implements IdentifiableResourceReloadListener {
 
@@ -40,6 +42,14 @@ public class GlobalPowerSetLoader extends JsonDataLoader implements Identifiable
             if(json.isJsonObject()) {
                 SerializableData.Instance data = GlobalPowerSet.DATA.read(json.getAsJsonObject());
                 GlobalPowerSet gps = GlobalPowerSet.FACTORY.fromData(data);
+                List<PowerType<?>> invalidPowerTypes = gps.validate();
+                if(invalidPowerTypes.size() > 0) {
+                    Apoli.LOGGER.error("Global power set \"{}\" contained invalid powers: {}",
+                            id, invalidPowerTypes.stream()
+                                    .map(PowerType::getIdentifier)
+                                    .map(Identifier::toString)
+                                    .collect(Collectors.joining(", ")));
+                }
                 ALL.add(gps);
             }
         });

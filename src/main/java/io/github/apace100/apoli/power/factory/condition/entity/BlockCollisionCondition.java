@@ -26,8 +26,8 @@ public class BlockCollisionCondition {
         if (data.isPresent("block_condition")) {
 
             Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
-            BlockPos minBlockPos = new BlockPos(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
-            BlockPos maxBlockPos = new BlockPos(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
+            BlockPos minBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
+            BlockPos maxBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
             BlockPos.Mutable mutableBlockPos = new BlockPos.Mutable();
             int matchingBlocks = 0;
 
@@ -35,7 +35,7 @@ public class BlockCollisionCondition {
                 for (int y = minBlockPos.getY(); y <= maxBlockPos.getY(); y++) {
                     for (int z = minBlockPos.getZ(); z <= maxBlockPos.getZ(); z++) {
                         mutableBlockPos.set(x, y, z);
-                        if (blockCondition.test(new CachedBlockPosition(entity.world, mutableBlockPos, true))) matchingBlocks++;
+                        if (blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) matchingBlocks++;
                     }
                 }
             }
@@ -44,7 +44,7 @@ public class BlockCollisionCondition {
 
         }
 
-        else return entity.world
+        else return entity.getWorld()
             .getBlockCollisions(entity, offsetEntityBoundingBox)
             .iterator()
             .hasNext();

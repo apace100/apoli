@@ -14,6 +14,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.BlockPos;
 import org.joml.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.profiler.Profiler;
@@ -67,7 +68,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void getEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f positionMatrix, CallbackInfo ci, Profiler profiler, boolean bl, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f2, boolean bl2, Frustum frustum, float unknownFloat, boolean unknownBoolean, boolean bl4, VertexConsumerProvider.Immediate immediate, Iterator var26, Entity entity) {
+    private void getEntity(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f positionMatrix, CallbackInfo ci, Profiler profiler, Vec3d vec3d, double d, double e, double f, Matrix4f matrix4f, boolean bl, Frustum frustum, float g, boolean bl2, boolean bl3, VertexConsumerProvider.Immediate immediate, Iterator var25, Entity entity) {
         this.renderEntity = entity;
     }
 

@@ -9,6 +9,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -43,14 +44,14 @@ public class ModifyCraftingPower extends ValueModifyingPower {
         this.blockAction = blockAction;
     }
 
-    public boolean doesApply(CraftingInventory inventory, Recipe<CraftingInventory> recipe) {
+    public boolean doesApply(CraftingInventory inventory, CraftingRecipe recipe) {
         if(recipeIdentifier != null) {
             if(!recipe.getId().equals(recipeIdentifier)) {
                 return false;
             }
         }
         if(itemCondition != null) {
-            if(!itemCondition.test(recipe.craft(inventory))) {
+            if(!itemCondition.test(recipe.craft(inventory, entity.getWorld().getRegistryManager()))) {
                 return false;
             }
         }
@@ -61,25 +62,25 @@ public class ModifyCraftingPower extends ValueModifyingPower {
         if(lateItemAction == null) {
             return;
         }
-        lateItemAction.accept(new Pair<>(entity.world, output));
+        lateItemAction.accept(new Pair<>(entity.getWorld(), output));
     }
 
-    public ItemStack getNewResult(CraftingInventory inventory, Recipe<CraftingInventory> recipe) {
+    public ItemStack getNewResult(CraftingInventory inventory, CraftingRecipe recipe) {
         ItemStack stack;
         if(newStack != null) {
             stack = newStack.copy();
         } else {
-            stack = recipe.craft(inventory);
+            stack = recipe.craft(inventory, entity.getWorld().getRegistryManager());
         }
         if(itemAction != null) {
-            itemAction.accept(new Pair<>(entity.world, stack));
+            itemAction.accept(new Pair<>(entity.getWorld(), stack));
         }
         return stack;
     }
 
     public void executeActions(Optional<BlockPos> craftingBlockPos) {
         if(craftingBlockPos.isPresent() && blockAction != null) {
-            blockAction.accept(Triple.of(entity.world, craftingBlockPos.get(), Direction.UP));
+            blockAction.accept(Triple.of(entity.getWorld(), craftingBlockPos.get(), Direction.UP));
         }
         if(entityAction != null) {
             entityAction.accept(entity);

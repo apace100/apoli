@@ -32,13 +32,13 @@ public final class EntityConditionsClient {
                 if(entity instanceof ServerPlayerEntity) {
                     ServerPlayerInteractionManagerAccessor interactionMngr = ((ServerPlayerInteractionManagerAccessor)((ServerPlayerEntity)entity).interactionManager);
                     if(interactionMngr.getMining()) {
-                        return ((PlayerEntity)entity).canHarvest(entity.world.getBlockState(interactionMngr.getMiningPos()));
+                        return ((PlayerEntity)entity).canHarvest(entity.getWorld().getBlockState(interactionMngr.getMiningPos()));
                     }
                 } else
                 if(entity instanceof ClientPlayerEntity) {
                     ClientPlayerInteractionManagerAccessor interactionMngr = (ClientPlayerInteractionManagerAccessor) MinecraftClient.getInstance().interactionManager;
                     if(interactionMngr.getBreakingBlock()) {
-                        return ((PlayerEntity)entity).canHarvest(entity.world.getBlockState(interactionMngr.getCurrentBreakingPos()));
+                        return ((PlayerEntity)entity).canHarvest(entity.getWorld().getBlockState(interactionMngr.getCurrentBreakingPos()));
                     }
                 }
                 return false;

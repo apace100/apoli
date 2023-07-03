@@ -57,7 +57,7 @@ public class ItemOnItemPower extends Power {
         if(newStack != null) {
             stack = newStack.copy();
             if(resultItemAction != null) {
-                resultItemAction.accept(new Pair<>(entity.world, stack));
+                resultItemAction.accept(new Pair<>(entity.getWorld(), stack));
             }
         } else {
             if(resultFromOnStack > 0) {
@@ -66,19 +66,19 @@ public class ItemOnItemPower extends Power {
                 stack = on;
             }
             if(resultItemAction != null) {
-                resultItemAction.accept(new Pair<>(entity.world, stack));
+                resultItemAction.accept(new Pair<>(entity.getWorld(), stack));
             }
         }
         if(usingItemAction != null) {
-            usingItemAction.accept(new Pair<>(entity.world, using));
+            usingItemAction.accept(new Pair<>(entity.getWorld(), using));
         }
         if(onItemAction != null) {
-            onItemAction.accept(new Pair<>(entity.world, on));
+            onItemAction.accept(new Pair<>(entity.getWorld(), on));
         }
         if(newStack != null || resultItemAction != null) {
             PlayerEntity player = (PlayerEntity)entity;
             if(slot.getStack().isEmpty()) {
-                slot.setStack(stack);
+                slot.setStackNoCallbacks(stack);
             } else {
                 player.getInventory().offerOrDrop(stack);
             }

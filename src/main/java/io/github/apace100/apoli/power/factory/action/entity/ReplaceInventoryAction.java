@@ -7,13 +7,13 @@ import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 
-import static io.github.apace100.apoli.util.InventoryUtil.*;
+import static io.github.apace100.apoli.util.InventoryUtil.replaceInventory;
 
 public class ReplaceInventoryAction {
 
@@ -46,7 +46,7 @@ public class ReplaceInventoryAction {
     public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(Apoli.identifier("replace_inventory"),
             new SerializableData()
-                .add("inventory_type", SerializableDataType.enumValue(InventoryType.class), InventoryType.INVENTORY)
+                .add("inventory_type", ApoliDataTypes.INVENTORY_TYPE, InventoryType.INVENTORY)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)

@@ -13,6 +13,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
@@ -145,7 +146,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         boolean hasModifyingPower = false;
 
         if (source.getAttacker() != null) {
-            if (source.isProjectile()) hasModifyingPower = PowerHolderComponent.hasPower(source.getAttacker(), ModifyProjectileDamagePower.class, mpdp -> mpdp.doesApply(source, amount, this));
+            if (source.isIn(DamageTypeTags.IS_PROJECTILE)) hasModifyingPower = PowerHolderComponent.hasPower(source.getAttacker(), ModifyProjectileDamagePower.class, mpdp -> mpdp.doesApply(source, amount, this));
             else hasModifyingPower = PowerHolderComponent.hasPower(source.getAttacker(), ModifyDamageDealtPower.class, mddp -> mddp.doesApply(source, amount, this));
         }
 
@@ -202,7 +203,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
     private void sendPlayerDismountPacket(CallbackInfo ci) {
-        if(!world.isClient && getVehicle() instanceof PlayerEntity) {
+        if(!getWorld().isClient && getVehicle() instanceof PlayerEntity) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
             buf.writeInt(getId());
             ServerPlayNetworking.send((ServerPlayerEntity) getVehicle(), ModPackets.PLAYER_DISMOUNT, buf);

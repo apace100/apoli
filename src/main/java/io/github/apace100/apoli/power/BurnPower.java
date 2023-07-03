@@ -13,6 +13,7 @@ public class BurnPower extends Power {
 
     public BurnPower(PowerType<?> type, LivingEntity entity, int refreshInterval, int burnDuration) {
         super(type, entity);
+        if(refreshInterval <= 0) refreshInterval = 1;
         this.refreshInterval = refreshInterval;
         this.burnDuration = burnDuration;
         this.setTicking();

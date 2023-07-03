@@ -14,6 +14,7 @@ public class ExhaustOverTimePower extends Power {
 
     public ExhaustOverTimePower(PowerType<?> type, LivingEntity entity, int exhaustInterval, float exhaustion) {
         super(type, entity);
+        if(exhaustInterval <= 0) exhaustInterval = 1;
         this.exhaustInterval = exhaustInterval;
         this.exhaustion = exhaustion;
         this.setTicking();

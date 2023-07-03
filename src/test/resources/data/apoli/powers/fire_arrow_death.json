@@ -1,0 +1,22 @@
+{
+  "type": "apoli:modify_damage_taken",
+  "modifier": {
+    "operation": "set_total",
+    "value": 40
+  },
+  "damage_condition": {
+    "type": "apoli:projectile",
+    "projectile_condition": {
+      "type": "apoli:and",
+      "conditions": [
+        {
+          "type": "apoli:entity_type",
+          "entity_type": "minecraft:arrow"
+        },
+        {
+          "type": "apoli:on_fire"
+        }
+      ]
+    }
+  }
+}

@@ -8,12 +8,14 @@ import io.github.apace100.apoli.mixin.PlayerScreenHandlerAccessor;
 import io.github.apace100.apoli.power.RecipePower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.recipe.SpecialCraftingRecipe;
 import net.minecraft.recipe.SpecialRecipeSerializer;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -33,18 +35,28 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
     }
 
     @Override
-    public boolean matches(CraftingInventory inv, World world) {
-        return getRecipes(inv).stream().anyMatch(r -> r.matches(inv, world));
+    public boolean matches(RecipeInputInventory inventory, World world) {
+        if (inventory instanceof CraftingInventory craftingInventory)
+        {
+            return getRecipes(craftingInventory).stream().anyMatch(r -> r.matches(craftingInventory, world));
+        }
+
+        return false;
     }
 
     @Override
-    public ItemStack craft(CraftingInventory inv) {
-        PlayerEntity player = getPlayerFromInventory(inv);
-        if(player != null) {
-            Optional<Recipe<CraftingInventory>> optional = getRecipes(inv).stream().filter(r -> r.matches(inv, player.world)).findFirst();
-            if(optional.isPresent()) {
-                Recipe<CraftingInventory> recipe = optional.get();
-                return recipe.craft(inv);
+    public ItemStack craft(RecipeInputInventory inventory, DynamicRegistryManager registryManager) {
+        if (inventory instanceof CraftingInventory craftingInventory)
+        {
+            PlayerEntity player = getPlayerFromInventory(craftingInventory);
+            if (player != null)
+            {
+                Optional<Recipe<CraftingInventory>> optional = getRecipes(craftingInventory).stream().filter(r -> r.matches(craftingInventory, player.getWorld())).findFirst();
+                if (optional.isPresent())
+                {
+                    Recipe<CraftingInventory> recipe = optional.get();
+                    return recipe.craft(craftingInventory, registryManager);
+                }
             }
         }
         return ItemStack.EMPTY;
