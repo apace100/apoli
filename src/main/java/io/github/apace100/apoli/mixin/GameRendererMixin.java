@@ -94,7 +94,7 @@ public abstract class GameRendererMixin {
     private void renderOverlayPowers(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         boolean hudHidden = this.client.options.hudHidden;
         boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
-        PowerHolderComponent.withPower(client.getCameraEntity(), OverlayPower.class, p -> {
+        PowerHolderComponent.withPowers(client.getCameraEntity(), OverlayPower.class, p -> {
             if(p.getDrawPhase() != OverlayPower.DrawPhase.ABOVE_HUD) {
                 return false;
             }

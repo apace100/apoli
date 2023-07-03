@@ -30,7 +30,7 @@ public class InGameHudMixin {
     private void renderOnHud(DrawContext context, float tickDelta, CallbackInfo ci) {
         boolean hudHidden = client.options.hudHidden;
         boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
-        PowerHolderComponent.withPower(client.getCameraEntity(), OverlayPower.class, p -> {
+        PowerHolderComponent.withPowers(client.getCameraEntity(), OverlayPower.class, p -> {
             if(p.getDrawPhase() != OverlayPower.DrawPhase.BELOW_HUD) {
                 return false;
             }
