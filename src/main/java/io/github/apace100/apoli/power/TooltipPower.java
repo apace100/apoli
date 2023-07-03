@@ -20,9 +20,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 
 public class TooltipPower extends Power {
@@ -32,13 +32,13 @@ public class TooltipPower extends Power {
     private final int tickRate;
     private final int order;
 
-    private List<Text> replacementTexts;
+    private List<Text> tooltipTexts;
     private Integer initialTicks;
 
     public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition, Text text, List<Text> texts, int tickRate, int order) {
         super(type, entity);
         this.texts = new LinkedList<>();
-        this.replacementTexts = new LinkedList<>();
+        this.tooltipTexts = new LinkedList<>();
         if (text != null) {
             this.texts.add(text);
         }
@@ -66,11 +66,11 @@ public class TooltipPower extends Power {
             }
 
             List<Text> parsedTexts = parseTexts();
-            if (parsedTexts.isEmpty() || Objects.equals(replacementTexts, parsedTexts)) {
+            if (parsedTexts.isEmpty() || !Collections.disjoint(tooltipTexts, parsedTexts)) {
                 return;
             }
 
-            replacementTexts = parsedTexts;
+            tooltipTexts = parsedTexts;
             PowerHolderComponent.syncPower(entity, this.getType());
 
         } else if (initialTicks != null) {
@@ -83,14 +83,14 @@ public class TooltipPower extends Power {
     public NbtElement toTag() {
 
         NbtCompound rootNbt = new NbtCompound();
-        NbtList replacementTextsNbt = new NbtList();
+        NbtList tooltipTextsNbt = new NbtList();
 
-        for (Text replacementText : replacementTexts) {
-            NbtString replacementTextNbt = NbtString.of(Text.Serializer.toJson(replacementText));
-            replacementTextsNbt.add(replacementTextNbt);
+        for (Text tooltipText : tooltipTexts) {
+            NbtString tooltipTextNbt = NbtString.of(Text.Serializer.toJson(tooltipText));
+            tooltipTextsNbt.add(tooltipTextNbt);
         }
 
-        rootNbt.put("ReplacementTexts", replacementTextsNbt);
+        rootNbt.put("Tooltips", tooltipTextsNbt);
         return rootNbt;
 
     }
@@ -98,16 +98,13 @@ public class TooltipPower extends Power {
     @Override
     public void fromTag(NbtElement tag) {
 
-        if (!(tag instanceof NbtCompound rootNbt)) {
-            return;
-        }
+        tooltipTexts.clear();
+        NbtCompound rootNbt = (NbtCompound) tag;
+        NbtList tooltipTextsNbt = rootNbt.getList("Tooltips", NbtElement.STRING_TYPE);
 
-        replacementTexts.clear();
-        NbtList replacementTextsNbt = rootNbt.getList("ReplacementTexts", NbtElement.STRING_TYPE);
-
-        for (int i = 0; i < replacementTextsNbt.size(); i++) {
-            Text replacementText = Text.Serializer.fromJson(replacementTextsNbt.getString(i));
-            replacementTexts.add(replacementText);
+        for (int i = 0; i < tooltipTextsNbt.size(); i++) {
+            Text tooltipText = Text.Serializer.fromJson(tooltipTextsNbt.getString(i));
+            tooltipTexts.add(tooltipText);
         }
 
     }
@@ -117,7 +114,7 @@ public class TooltipPower extends Power {
     }
 
     public void addToTooltip(List<Text> tooltip) {
-        tooltip.addAll(replacementTexts);
+        tooltip.addAll(tooltipTexts);
     }
 
     public boolean doesApply(ItemStack stack) {
@@ -152,7 +149,7 @@ public class TooltipPower extends Power {
                 parsedTexts.add(parsedText);
 
             } catch (CommandSyntaxException e) {
-                Apoli.LOGGER.warn("Power {} could not parse replacement text at index {}: {}", this.getType().getIdentifier(), i, e.getMessage());
+                Apoli.LOGGER.warn("Power {} could not parse tooltip text at index {}: {}", this.getType().getIdentifier(), i, e.getMessage());
             }
         }
 
