@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -19,14 +20,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Mixin(ItemEntity.class)
 public abstract class ItemEntityMixin extends Entity {
 
     @Shadow public abstract ItemStack getStack();
 
-    @Shadow @Nullable public abstract UUID getThrower();
+    @Shadow @Nullable private UUID thrower;
 
     public ItemEntityMixin(EntityType<?> type, World world) {
         super(type, world);
@@ -35,28 +35,39 @@ public abstract class ItemEntityMixin extends Entity {
     @Inject(method = "onPlayerCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;insertStack(Lnet/minecraft/item/ItemStack;)Z"), cancellable = true)
     private void apoli$onItemPickup(PlayerEntity player, CallbackInfo ci) {
 
-        AtomicReference<Entity> throwerEntity = new AtomicReference<>();
-        UUID throwerUUID = this.getThrower();
         ItemStack stack = this.getStack();
+        UUID throwerUUID = this.thrower;
 
-        if (this.getServer() != null && throwerUUID != null) {
-            for (ServerWorld serverWorld : this.getServer().getWorlds()) {
-                throwerEntity.set(serverWorld.getEntity(throwerUUID));
-                if (throwerEntity.get() != null) break;
+        MinecraftServer server = this.getServer();
+        if (server == null) {
+            return;
+        }
+
+        Entity throwerEntity = null;
+        if (throwerUUID != null) {
+            for (ServerWorld world : server.getWorlds()) {
+                if ((throwerEntity = world.getEntity(throwerUUID)) != null) {
+                    break;
+                }
             }
         }
 
-        Prioritized.CallInstance<PreventItemPickupPower> pippci = new Prioritized.CallInstance<>();
-        pippci.add(player, PreventItemPickupPower.class, p -> p.doesPrevent(stack, throwerEntity.get()));
+        final Entity finalThrowerEntity = throwerEntity;
+
         int preventItemPickupPowers = 0;
+        Prioritized.CallInstance<PreventItemPickupPower> pippci = new Prioritized.CallInstance<>();
+        pippci.add(player, PreventItemPickupPower.class, p -> p.doesPrevent(stack, finalThrowerEntity));
 
         for (int i = pippci.getMaxPriority(); i >= pippci.getMinPriority(); i--) {
 
-            if (!pippci.hasPowers(i)) continue;
+            if (!pippci.hasPowers(i)) {
+                continue;
+            }
+
             List<PreventItemPickupPower> pipps = pippci.getPowers(i);
 
             preventItemPickupPowers += pipps.size();
-            pipps.forEach(p -> p.executeActions(stack, throwerEntity.get()));
+            pipps.forEach(p -> p.executeActions(stack, finalThrowerEntity));
 
         }
 
@@ -66,11 +77,10 @@ public abstract class ItemEntityMixin extends Entity {
         }
 
         Prioritized.CallInstance<ActionOnItemPickupPower> aoippci = new Prioritized.CallInstance<>();
-        aoippci.add(player, ActionOnItemPickupPower.class, p -> p.doesApply(stack, throwerEntity.get()));
+        aoippci.add(player, ActionOnItemPickupPower.class, p -> p.doesApply(stack, finalThrowerEntity));
 
         for (int i = aoippci.getMaxPriority(); i >= aoippci.getMinPriority(); i--) {
-            if (!aoippci.hasPowers(i)) continue;
-            aoippci.getPowers(i).forEach(p -> p.executeActions(stack, throwerEntity.get()));
+            aoippci.getPowers(i).forEach(p -> p.executeActions(stack, finalThrowerEntity));
         }
 
     }

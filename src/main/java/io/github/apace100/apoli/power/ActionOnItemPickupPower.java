@@ -44,7 +44,7 @@ public class ActionOnItemPickupPower extends Power implements Prioritized<Action
     }
 
     public void executeActions(ItemStack stack, Entity thrower) {
-        if (itemAction != null) itemAction.accept(new Pair<>(entity.world, stack));
+        if (itemAction != null) itemAction.accept(new Pair<>(entity.getWorld(), stack));
         if (biEntityAction != null) biEntityAction.accept(new Pair<>(thrower, entity));
     }
 
