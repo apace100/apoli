@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 @Environment(EnvType.CLIENT)
 @Mixin(GameRenderer.class)
@@ -94,18 +95,21 @@ public abstract class GameRendererMixin {
     private void renderOverlayPowers(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         boolean hudHidden = this.client.options.hudHidden;
         boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
-        PowerHolderComponent.withPowers(client.getCameraEntity(), OverlayPower.class, p -> {
-            if(p.getDrawPhase() != OverlayPower.DrawPhase.ABOVE_HUD) {
+        List<OverlayPower> overlays = PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class);
+        overlays.sort(Comparator.comparing(OverlayPower::getPriority));
+        Predicate<OverlayPower> overlayPredicate = overlay -> {
+            if(overlay.getDrawPhase() != OverlayPower.DrawPhase.ABOVE_HUD) {
                 return false;
             }
-            if(hudHidden && p.doesHideWithHud()) {
+            if(hudHidden && overlay.doesHideWithHud()) {
                 return false;
             }
-            if(thirdPerson && !p.shouldBeVisibleInThirdPerson()) {
+            if(thirdPerson && !overlay.shouldBeVisibleInThirdPerson()) {
                 return false;
             }
             return true;
-        }, OverlayPower::render);
+        };
+        overlays.stream().filter(overlayPredicate).forEach(OverlayPower::render);
     }
 
     @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)
