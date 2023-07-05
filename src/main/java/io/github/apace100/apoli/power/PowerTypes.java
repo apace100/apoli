@@ -145,7 +145,33 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                 throw new JsonSyntaxException("Power type \"" + factoryId + "\" is not defined.");
             }
         }
-        PowerFactory.Instance factoryInstance = optionalFactory.get().read(jo);
+
+        if(!PowerTypeRegistry.contains(id)) {
+            PowerType<?> type = loadPowerType(id, optionalFactory.get(), jo, isSubPower, powerTypeFactory);
+            PowerTypeRegistry.register(id, type);
+            LOADING_PRIORITIES.put(id, priority);
+            if(!(type instanceof MultiplePowerType<?>)) {
+                handleAdditionalData(id, factoryId, isSubPower, jo, type);
+                PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
+            }
+            return type;
+        } else {
+            if(LOADING_PRIORITIES.get(id) < priority) {
+                PowerType<?> type = loadPowerType(id, optionalFactory.get(), jo, isSubPower, powerTypeFactory);
+                PowerTypeRegistry.update(id, type);
+                LOADING_PRIORITIES.put(id, priority);
+                if(!(type instanceof MultiplePowerType<?>)) {
+                    handleAdditionalData(id, factoryId, isSubPower, jo, type);
+                    PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
+                }
+                return type;
+            }
+        }
+        return null;
+    }
+
+    private PowerType<?> loadPowerType(Identifier id, PowerFactory<?> powerFactory, JsonObject jo, boolean isSubPower, BiFunction<Identifier, PowerFactory.Instance, PowerType> powerTypeFactory) {
+        PowerFactory.Instance factoryInstance = powerFactory.read(jo);
         PowerType type = powerTypeFactory.apply(id, factoryInstance);
         String name = JsonHelper.getString(jo, "name", "");
         String description = JsonHelper.getString(jo, "description", "");
@@ -154,23 +180,6 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
             type.setHidden();
         }
         type.setTranslationKeys(name, description);
-        if(!PowerTypeRegistry.contains(id)) {
-            PowerTypeRegistry.register(id, type);
-            LOADING_PRIORITIES.put(id, priority);
-            if(!(type instanceof MultiplePowerType<?>)) {
-                handleAdditionalData(id, factoryId, isSubPower, jo, type);
-                PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
-            }
-        } else {
-            if(LOADING_PRIORITIES.get(id) < priority) {
-                PowerTypeRegistry.update(id, type);
-                LOADING_PRIORITIES.put(id, priority);
-                if(!(type instanceof MultiplePowerType<?>)) {
-                    handleAdditionalData(id, factoryId, isSubPower, jo, type);
-                    PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
-                }
-            }
-        }
         return type;
     }
 
