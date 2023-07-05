@@ -55,6 +55,7 @@ public class ConditionType<T> {
             }
             ConditionFactory<T>.Instance condition = optionalCondition.get().read(obj);
             PostConditionLoadCallback.EVENT.invoker().onPostConditionLoad(type, conditionRegistry, optionalCondition.get().data.read(obj), condition, obj);
+            return condition;
         }
         throw new JsonSyntaxException(conditionTypeName + " has to be a JsonObject!");
     }
