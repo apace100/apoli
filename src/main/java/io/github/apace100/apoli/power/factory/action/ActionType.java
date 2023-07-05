@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power.factory.action;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import io.github.apace100.apoli.integration.PostActionLoadCallback;
+import io.github.apace100.apoli.integration.PreActionLoadCallback;
 import io.github.apace100.apoli.util.NamespaceAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
@@ -37,6 +39,7 @@ public class ActionType<T> {
     public ActionFactory<T>.Instance read(JsonElement jsonElement) {
         if(jsonElement.isJsonObject()) {
             JsonObject obj = jsonElement.getAsJsonObject();
+            PreActionLoadCallback.EVENT.invoker().onPreActionLoad(actionFactoryRegistry, obj);
             if(!obj.has("type")) {
                 throw new JsonSyntaxException(actionTypeName + " json requires \"type\" identifier.");
             }
@@ -51,7 +54,9 @@ public class ActionType<T> {
                     throw new JsonSyntaxException(actionTypeName + " json type \"" + type.toString() + "\" is not defined.");
                 }
             }
-            return optionalAction.get().read(obj);
+            ActionFactory<T>.Instance actioh = optionalAction.get().read(obj);
+            PostActionLoadCallback.EVENT.invoker().onPostActionLoad(type, actionFactoryRegistry, optionalAction.get().data.read(obj), actioh, obj);
+            return actioh;
         }
         throw new JsonSyntaxException(actionTypeName + " has to be a JsonObject!");
     }

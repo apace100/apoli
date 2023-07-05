@@ -3,6 +3,10 @@ package io.github.apace100.apoli.power.factory.condition;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import io.github.apace100.apoli.integration.PostActionLoadCallback;
+import io.github.apace100.apoli.integration.PostConditionLoadCallback;
+import io.github.apace100.apoli.integration.PreActionLoadCallback;
+import io.github.apace100.apoli.integration.PreConditionLoadCallback;
 import io.github.apace100.apoli.util.NamespaceAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
@@ -34,6 +38,7 @@ public class ConditionType<T> {
     public ConditionFactory<T>.Instance read(JsonElement jsonElement) {
         if(jsonElement.isJsonObject()) {
             JsonObject obj = jsonElement.getAsJsonObject();
+            PreConditionLoadCallback.EVENT.invoker().onPreConditionLoad(conditionRegistry, obj);
             if(!obj.has("type")) {
                 throw new JsonSyntaxException(conditionTypeName + " json requires \"type\" identifier.");
             }
@@ -48,7 +53,8 @@ public class ConditionType<T> {
                     throw new JsonSyntaxException(conditionTypeName + " json type \"" + type.toString() + "\" is not defined.");
                 }
             }
-            return optionalCondition.get().read(obj);
+            ConditionFactory<T>.Instance condition = optionalCondition.get().read(obj);
+            PostConditionLoadCallback.EVENT.invoker().onPostConditionLoad(type, conditionRegistry, optionalCondition.get().data.read(obj), condition, obj);
         }
         throw new JsonSyntaxException(conditionTypeName + " has to be a JsonObject!");
     }
