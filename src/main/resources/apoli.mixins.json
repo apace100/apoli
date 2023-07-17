@@ -49,8 +49,7 @@
     "ServerPlayNetworkHandlerMixin",
     "ServerWorldMixin",
     "StatusEffectInstanceMixin",
-    "WeightedListEntryAccessor",
-    "WorldMixin"
+    "WeightedListEntryAccessor"
   ],
   "client": [
     "BackgroundRendererMixin",
