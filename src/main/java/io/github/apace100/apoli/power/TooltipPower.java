@@ -35,7 +35,7 @@ public class TooltipPower extends Power {
     private List<Text> tooltipTexts;
     private Integer initialTicks;
 
-    public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition, Text text, List<Text> texts, int tickRate, int order) {
+    public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition, Text text, List<Text> texts, boolean shouldResolve, int tickRate, int order) {
         super(type, entity);
         this.texts = new LinkedList<>();
         this.tooltipTexts = new LinkedList<>();
@@ -48,7 +48,9 @@ public class TooltipPower extends Power {
         this.itemCondition = itemCondition;
         this.tickRate = tickRate <= 0 ? 1 : tickRate;
         this.order = order;
-        this.setTicking(true);
+        if (shouldResolve) {
+            this.setTicking(true);
+        }
     }
 
     @Override
@@ -164,6 +166,7 @@ public class TooltipPower extends Power {
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("text", SerializableDataTypes.TEXT, null)
                 .add("texts", SerializableDataTypes.TEXTS, null)
+                .add("should_resolve", SerializableDataTypes.BOOLEAN, false)
                 .add("tick_rate", SerializableDataTypes.INT, 20)
                 .add("order", SerializableDataTypes.INT, 0),
             data -> (powerType, livingEntity) -> new TooltipPower(
@@ -172,6 +175,7 @@ public class TooltipPower extends Power {
                 data.get("item_condition"),
                 data.get("text"),
                 data.get("texts"),
+                data.get("should_resolve"),
                 data.get("tick_rate"),
                 data.get("order")
             )
