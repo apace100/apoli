@@ -67,7 +67,7 @@ public abstract class ItemEntityMixin extends Entity {
             List<PreventItemPickupPower> pipps = pippci.getPowers(i);
 
             preventItemPickupPowers += pipps.size();
-            pipps.forEach(p -> p.executeActions(stack, finalThrowerEntity));
+            pipps.forEach(p -> p.executeActions((ItemEntity) (Object) this, finalThrowerEntity));
 
         }
 
