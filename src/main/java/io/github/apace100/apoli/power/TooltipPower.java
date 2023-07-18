@@ -29,6 +29,7 @@ public class TooltipPower extends Power {
 
     private final Predicate<ItemStack> itemCondition;
     private final List<Text> texts;
+    private final boolean shouldResolve;
     private final int tickRate;
     private final int order;
 
@@ -46,6 +47,7 @@ public class TooltipPower extends Power {
             this.texts.addAll(texts);
         }
         this.itemCondition = itemCondition;
+        this.shouldResolve = shouldResolve;
         this.tickRate = tickRate <= 0 ? 1 : tickRate;
         this.order = order;
         if (shouldResolve) {
@@ -116,7 +118,7 @@ public class TooltipPower extends Power {
     }
 
     public void addToTooltip(List<Text> tooltip) {
-        tooltip.addAll(tooltipTexts);
+        tooltip.addAll(shouldResolve ? tooltipTexts : texts);
     }
 
     public boolean doesApply(ItemStack stack) {
