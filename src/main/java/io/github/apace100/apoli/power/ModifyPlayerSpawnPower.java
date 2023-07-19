@@ -26,15 +26,11 @@ import net.minecraft.util.Unit;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.gen.structure.Structure;
 import org.apache.commons.lang3.function.TriFunction;
 
-import java.util.Iterator;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 public class ModifyPlayerSpawnPower extends Power {
 
@@ -116,7 +112,6 @@ public class ModifyPlayerSpawnPower extends Power {
     }
 
     public Pair<ServerWorld, BlockPos> getSpawn(boolean isSpawnObstructed) {
-        Apoli.LOGGER.info("getSpawn");
         if (entity.getWorld().isClient || !(entity instanceof PlayerEntity playerEntity)) return null;
 
         ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) playerEntity;
