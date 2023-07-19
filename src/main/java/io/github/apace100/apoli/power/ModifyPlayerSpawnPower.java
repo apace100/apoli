@@ -23,17 +23,18 @@ import net.minecraft.structure.StructureStart;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Unit;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.gen.structure.Structure;
 import org.apache.commons.lang3.function.TriFunction;
 
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class ModifyPlayerSpawnPower extends Power {
 
@@ -115,7 +116,7 @@ public class ModifyPlayerSpawnPower extends Power {
     }
 
     public Pair<ServerWorld, BlockPos> getSpawn(boolean isSpawnObstructed) {
-
+        Apoli.LOGGER.info("getSpawn");
         if (entity.getWorld().isClient || !(entity instanceof PlayerEntity playerEntity)) return null;
 
         ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) playerEntity;
@@ -162,21 +163,18 @@ public class ModifyPlayerSpawnPower extends Power {
             Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at biome \"{}\" as it's not registered in dimension \"{}\".", this.getType().getIdentifier(), entity.getEntityName(), biomeId, dimension.getValue());
             return Optional.empty();
         }
-
         com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> targetBiomePos = targetDimension.locateBiome(
                 biome -> biome.value() == targetBiome.get(),
                 originPos,
                 6400,
-                8,
-                8
+                64,
+                64
         );
-
         if (targetBiomePos != null) return Optional.of(targetBiomePos.getFirst());
         else {
             Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at biome \"{}\" as it couldn't be found in dimension \"{}\".", this.getType().getIdentifier(), entity.getEntityName(), biomeId, dimension.getValue());
             return Optional.empty();
         }
-
     }
 
     private Optional<Pair<BlockPos, Structure>> getStructurePos(World world, RegistryKey<Structure> structure, TagKey<Structure> structureTag, RegistryKey<World> dimension) {
