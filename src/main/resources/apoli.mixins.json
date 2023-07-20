@@ -6,6 +6,7 @@
   "mixins": [
     "AbstractBlockMixin",
     "AbstractBlockStateMixin",
+    "AdvancementCommandAccessor",
     "ArgumentTypesMixin",
     "BiomeBuilderMixin",
     "BiomeMixin",

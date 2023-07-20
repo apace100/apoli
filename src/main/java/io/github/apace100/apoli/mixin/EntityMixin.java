@@ -7,24 +7,29 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -107,6 +112,11 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         if(PowerHolderComponent.hasPower((Entity)(Object)this, InvisibilityPower.class)) {
             info.setReturnValue(true);
         }
+    }
+
+    @Inject(method = "isInvisibleTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getScoreboardTeam()Lnet/minecraft/scoreboard/AbstractTeam;"), cancellable = true)
+    private void invisibilityException(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
+        if (PowerHolderComponent.hasPower((Entity) (Object) this, InvisibilityPower.class, p -> !p.doesApply(player))) cir.setReturnValue(false);
     }
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;ofFloored(DDD)Lnet/minecraft/util/math/BlockPos;"), method = "pushOutOfBlocks", cancellable = true)
@@ -192,4 +202,55 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     public boolean isMoving() {
         return isMoving;
     }
+
+    @Environment(EnvType.CLIENT)
+    @Inject(method = "getTeamColorValue", at = @At("RETURN"), cancellable = true)
+    private void modifyGlowingColorFromPower(CallbackInfoReturnable<Integer> cir) {
+
+/*
+
+        Advised by @EdwinMindcraft: a solution making the hook limited to WorldRenderer ONLY.
+        Remove this comment when run into unexpected call to Entity#getTeamColorValue to fix the problem.
+
+        StackWalker walker = StackWalker.getInstance(Set.of(StackWalker.Option.RETAIN_CLASS_REFERENCE), 2);
+        boolean calledByWorldRenderer = walker.walk(s -> s.map(StackWalker.StackFrame::getDeclaringClass).anyMatch(cls -> cls == WorldRenderer.class));
+        if (!calledByWorldRenderer) {
+            return;
+        }
+
+*/
+
+        Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
+        Entity renderEntity = (Entity) (Object) this;
+        AbstractTeam abstractTeam = renderEntity.getScoreboardTeam();
+        boolean isUsingTeam = abstractTeam != null && abstractTeam.getColor().getColorValue() != null;
+        int colorAmount = 0;
+        float r = 0.0F;
+        float g = 0.0F;
+        float b = 0.0F;
+
+        for (EntityGlowPower power : PowerHolderComponent.getPowers(cameraEntity, EntityGlowPower.class)) {
+            if (power.doesApply(renderEntity) && !(isUsingTeam && power.usesTeams())) {
+                colorAmount++;
+                r += power.getRed();
+                g += power.getGreen();
+                b += power.getBlue();
+            }
+        }
+
+        for (SelfGlowPower power : PowerHolderComponent.getPowers(renderEntity, SelfGlowPower.class)) {
+            if (!(isUsingTeam && power.usesTeams())) {
+                colorAmount++;
+                r += power.getRed();
+                g += power.getGreen();
+                b += power.getBlue();
+            }
+        }
+
+        if(colorAmount > 0) {
+            cir.setReturnValue(MathHelper.packRgb(r / colorAmount, g / colorAmount, b / colorAmount));
+        }
+
+    }
+
 }

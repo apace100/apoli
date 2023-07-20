@@ -80,6 +80,8 @@
   "tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)",
   "tooltip.apoli.unusable.toot_horn.multiple": "Untootable (%s)",
 
+  "text.apoli.cannot_sleep": "You cannot sleep",
+
   "text.autoconfig.power_config.title": "Apoli Power Config",
 
   "text.autoconfig.power_config.option.resourcesAndCooldowns": "Resources & Cooldowns",

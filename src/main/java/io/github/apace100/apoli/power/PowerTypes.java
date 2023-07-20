@@ -6,7 +6,7 @@ import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ApoliResourceConditions;
-import io.github.apace100.apoli.util.NamespaceAlias;
+import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.MultiJsonDataLoader;
 import io.github.apace100.calio.data.SerializableData;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
@@ -138,11 +138,11 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         }
         Optional<PowerFactory> optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(factoryId);
         if(optionalFactory.isEmpty()) {
-            if(NamespaceAlias.hasAlias(factoryId)) {
-                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(NamespaceAlias.resolveAlias(factoryId));
+            if(IdentifierAlias.hasAlias(factoryId)) {
+                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(IdentifierAlias.resolveAlias(factoryId));
             }
             if(optionalFactory.isEmpty()) {
-                throw new JsonSyntaxException("Power type \"" + factoryId + "\" is not defined.");
+                throw new JsonSyntaxException("Power type \"" + factoryId + "\" is not registered.");
             }
         }
 
@@ -187,8 +187,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         if(MULTIPLE.equals(id)) {
             return true;
         }
-        if(NamespaceAlias.hasAlias(id)) {
-            return MULTIPLE.equals(NamespaceAlias.resolveAlias(id));
+        if(IdentifierAlias.hasAlias(id)) {
+            return MULTIPLE.equals(IdentifierAlias.resolveAlias(id));
         }
         return false;
     }
