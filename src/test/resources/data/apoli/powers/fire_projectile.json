@@ -8,6 +8,7 @@
       "bar_index": 6
     },
     "entity_type": "minecraft:arrow",
+    "tag": "{Passengers:[{id:\"minecraft:chicken\"}]}",
     "sound": "minecraft:entity.ender_pearl.throw",
     "speed": 1.5,
     "divergence": 1,

@@ -59,6 +59,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
     public List<PowerType<?>> validate() {
         List<PowerType<?>> invalid = powerTypes.stream().filter(pt -> !PowerTypeRegistry.contains(pt.getIdentifier())).collect(Collectors.toList());
         powerTypes.removeAll(invalid);
+        invalid.removeIf(pt -> PowerTypeRegistry.isDisabled(pt.getIdentifier()));
         return invalid;
     }
 

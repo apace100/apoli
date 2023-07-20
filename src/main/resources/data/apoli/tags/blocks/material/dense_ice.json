@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:blue_ice",
+      "required": false
+    },
+    {
+      "id": "minecraft:packed_ice",
+      "required": false
+    }
+  ]
+}

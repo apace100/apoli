@@ -14,6 +14,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -34,16 +35,32 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
     @Shadow public abstract int getMaxUseTime();
 
-    @Unique
-    private Entity apoli$entity;
+    @Shadow public abstract @Nullable Entity getHolder();
 
     @Unique
     private ItemStack apoli$usedItemStack;
 
+    @Unique
+    private Entity apoli$holdingEntity;
+
+    @Override
+    public Entity getEntity() {
+        Entity vanillaHolder = getHolder();
+        if(vanillaHolder == null) {
+            return apoli$holdingEntity;
+        }
+        return vanillaHolder;
+    }
+
+    @Override
+    public void setEntity(Entity entity) {
+        this.apoli$holdingEntity = entity;
+    }
+
     @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void copyNewParams(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
-        if (this.apoli$entity != null) {
-            ((EntityLinkedItemStack)itemStack).setEntity(apoli$entity);
+        if (this.apoli$holdingEntity != null) {
+            ((EntityLinkedItemStack)itemStack).setEntity(apoli$holdingEntity);
         }
     }
 
@@ -145,15 +162,5 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
         setItem(stack.getItem());
         nbt = stack.getNbt();
         count = stack.getCount();
-    }
-
-    @Override
-    public Entity getEntity() {
-        return this.apoli$entity;
-    }
-
-    @Override
-    public void setEntity(Entity entity) {
-        this.apoli$entity = entity;
     }
 }
