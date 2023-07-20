@@ -6,6 +6,7 @@ import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import io.netty.buffer.Unpooled;
@@ -123,7 +124,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "setAttacker", at = @At("TAIL"))
     private void syncAttacker(LivingEntity attacker, CallbackInfo ci) {
-        if(!world.isClient) {
+        if(!getWorld().isClient) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
             buf.writeInt(getId());
             if(this.attacker == null) {
@@ -338,9 +339,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // SPRINT_JUMP
-    @ModifyVariable(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getVelocity()Lnet/minecraft/util/math/Vec3d;"), ordinal = 0)
-    private double modifyJumpVelocity(double original) {
-        return PowerHolderComponent.modify(this, ModifyJumpPower.class, (float)original, p -> {
+    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
+    private float modifyJumpVelocity(LivingEntity entity) {
+        return PowerHolderComponent.modify(this, ModifyJumpPower.class, this.getJumpVelocity(), p -> {
             p.executeAction();
             return true;
         });
@@ -408,9 +409,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-    @ModifyVariable(method = "travel", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;onGround:Z", opcode = Opcodes.GETFIELD, ordinal = 2))
+    @ModifyVariable(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isOnGround()Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
-        return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(world, getVelocityAffectingPos()));
+        return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
     @Inject(method = "pushAway", at = @At("HEAD"), cancellable = true)
@@ -496,6 +497,15 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
     }
 
+    @Redirect(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
+    private boolean invisibilityException(LivingEntity instance, Entity entity) {
+        if (entity == null || !PowerHolderComponent.hasPower(this, InvisibilityPower.class)) {
+            return instance.isInvisible();
+        } else {
+            return PowerHolderComponent.hasPower(this, InvisibilityPower.class, p -> p.doesApply(entity));
+        }
+    }
+
     @Unique
     private List<ModifyFoodPower> apoli$currentModifyFoodPowers = new LinkedList<>();
 
@@ -520,5 +530,10 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Override
     public void setOriginalFoodStack(ItemStack original) {
         apoli$originalFoodStack = original;
+    }
+
+    @Inject(method = "baseTick", at = @At("TAIL"))
+    private void updateItemStackHolder(CallbackInfo ci) {
+        InventoryUtil.forEachStack(this, stack -> stack.setHolder(this));
     }
 }

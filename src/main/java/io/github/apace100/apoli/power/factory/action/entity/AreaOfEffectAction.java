@@ -20,7 +20,7 @@ public class AreaOfEffectAction {
         double radius = data.get("radius");
         double diameter = radius * 2;
 
-        for (Entity check : entity.world.getNonSpectatingEntities(Entity.class, Box.of(entity.getLerpedPos(1F), diameter, diameter, diameter))) {
+        for (Entity check : entity.getWorld().getNonSpectatingEntities(Entity.class, Box.of(entity.getLerpedPos(1F), diameter, diameter, diameter))) {
             if (check == entity && !includeTarget)
                 continue;
             Pair<Entity, Entity> actorTargetPair = new Pair<>(entity, check);

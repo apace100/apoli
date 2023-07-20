@@ -33,7 +33,6 @@ public class ModifyResourceAction {
                 cp.modify(targetRemainingTicks - cp.getRemainingTicks());
                 PowerHolderComponent.syncPower(entity, powerType);
             }
-            living.deathTime = (int)data.<Modifier>get("modifier").apply(entity, living.deathTime);
         }
     }
 

@@ -66,6 +66,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         super(entityType, world);
     }
 
+    @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
+    private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
+        cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
+    }
+
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private ItemStack modifyEatenItemStack(ItemStack original) {
         List<ModifyFoodPower> mfps = PowerHolderComponent.getPowers(this, ModifyFoodPower.class);
@@ -203,7 +208,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
     private void sendPlayerDismountPacket(CallbackInfo ci) {
-        if(!world.isClient && getVehicle() instanceof PlayerEntity) {
+        if(!getWorld().isClient && getVehicle() instanceof PlayerEntity) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
             buf.writeInt(getId());
             ServerPlayNetworking.send((ServerPlayerEntity) getVehicle(), ModPackets.PLAYER_DISMOUNT, buf);

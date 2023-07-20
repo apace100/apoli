@@ -6,6 +6,7 @@
   "mixins": [
     "AbstractBlockMixin",
     "AbstractBlockStateMixin",
+    "AdvancementCommandAccessor",
     "ArgumentTypesMixin",
     "AttributeContainerAccessor",
     "BiomeBuilderMixin",
@@ -38,7 +39,9 @@
     "LookAtEntityGoalAccessor",
     "LootContextBuilderMixin",
     "LootContextMixin",
-    "LootManagerMixin",
+    "LootContextParameterSetBuilderMixin",
+    "LootContextParameterSetMixin",
+    "LootDataLookupMixin",
     "LootTableMixin",
     "MobEntityAccessor",
     "MobEntityMixin",

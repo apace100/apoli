@@ -2,9 +2,6 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -14,12 +11,10 @@ import io.github.apace100.apoli.power.factory.action.ActionTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.power.factory.condition.ConditionTypes;
-import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableData.Instance;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.ArgumentWrapper;
@@ -35,9 +30,8 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registry;
+import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -47,8 +41,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
 
 public class ApoliDataTypes {
 
@@ -125,6 +119,12 @@ public class ApoliDataTypes {
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
 
     public static final SerializableDataType<ResourceOperation> RESOURCE_OPERATION = SerializableDataType.enumValue(ResourceOperation.class);
+
+    public static final SerializableDataType<InventoryUtil.InventoryType> INVENTORY_TYPE = SerializableDataType.enumValue(InventoryUtil.InventoryType.class);
+
+    public static final SerializableDataType<EnumSet<InventoryUtil.InventoryType>> INVENTORY_TYPE_SET = SerializableDataType.enumSet(InventoryUtil.InventoryType.class, INVENTORY_TYPE);
+
+    public static final SerializableDataType<InventoryUtil.ProcessMode> PROCESS_MODE = SerializableDataType.enumValue(InventoryUtil.ProcessMode.class);
 
     public static final SerializableDataType<AttributedEntityAttributeModifier> ATTRIBUTED_ATTRIBUTE_MODIFIER = SerializableDataType.compound(
         AttributedEntityAttributeModifier.class,
@@ -226,35 +226,6 @@ public class ApoliDataTypes {
             return dataInst;
         });
 
-    public static final SerializableDataType<MobBehaviorFactory.Instance> MOB_BEHAVIOR = new SerializableDataType<>(MobBehaviorFactory.Instance.class, (buffer, mobBehavior) -> mobBehavior.write(buffer),
-            (buffer) -> {
-                Identifier type = buffer.readIdentifier();
-                Optional<MobBehaviorFactory> factory = ApoliRegistries.BEHAVIOR_FACTORY.getOrEmpty(type);
-                return factory.get().read(buffer);
-            },
-            (json) -> {
-                    if(json.isJsonObject()) {
-                        JsonObject jo = json.getAsJsonObject();
-                        String type = JsonHelper.getString(jo, "type");
-                        Identifier id = Identifier.tryParse(type);
-                        if (id == null) {
-                            throw new JsonSyntaxException("Behavior json requires \"type\" identifier.");
-                        }
-                        Registry<MobBehaviorFactory> registry = ApoliRegistries.BEHAVIOR_FACTORY;
-                        Optional<MobBehaviorFactory> optionalBehavior = registry.getOrEmpty(id);
-                        if (optionalBehavior.isEmpty()) {
-                            if (NamespaceAlias.hasAlias(id)) {
-                                optionalBehavior = registry.getOrEmpty(NamespaceAlias.resolveAlias(id));
-                            }
-                            if (optionalBehavior.isEmpty()) {
-                                throw new JsonSyntaxException("Behavior json type \"" + id + "\" is not defined.");
-                            }
-                        }
-                        return optionalBehavior.get().read(jo);
-                    }
-                    throw new JsonSyntaxException("Behavior has to be a JsonObject!");
-            });
-
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
 
@@ -277,6 +248,17 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<DamageSourceDescription> DAMAGE_SOURCE_DESCRIPTION = SerializableDataType.compound(DamageSourceDescription.class,
             DamageSourceDescription.DATA, DamageSourceDescription::fromData, DamageSourceDescription::toData);
+
+    public static final SerializableDataType<LegacyMaterial> LEGACY_MATERIAL = SerializableDataType.wrap(
+            LegacyMaterial.class, SerializableDataTypes.STRING,
+            LegacyMaterial::getMaterial, LegacyMaterial::new
+    );
+
+    public static final SerializableDataType<AdvancementCommand.Operation> ADVANCEMENT_OPERATION = SerializableDataType.enumValue(AdvancementCommand.Operation.class);
+
+    public static final SerializableDataType<AdvancementCommand.Selection> ADVANCEMENT_SELECTION = SerializableDataType.enumValue(AdvancementCommand.Selection.class);
+
+    public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

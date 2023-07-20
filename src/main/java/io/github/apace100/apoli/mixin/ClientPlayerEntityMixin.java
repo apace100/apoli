@@ -65,7 +65,7 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
         return PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, playerAbilities.getFlySpeed());
     }
 
-    @ModifyVariable(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;onGround:Z", ordinal = 0), ordinal = 4)
+    @ModifyVariable(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isOnGround()Z", ordinal = 0), ordinal = 4)
     private boolean modifySprintAbility(boolean original) {
         boolean prevent = PowerHolderComponent.hasPower(this, PreventSprintingPower.class);
         return !prevent && original;

@@ -5,6 +5,7 @@ import io.github.apace100.apoli.power.ModifyCraftingPower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.CraftingResultInventory;
+import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -25,11 +26,11 @@ public class CraftingScreenHandlerMixin {
 
     @Shadow @Final private ScreenHandlerContext context;
 
-    @Shadow @Final private CraftingInventory input;
+    @Shadow @Final private RecipeInputInventory input;
 
     @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/recipe/RecipeManager;getFirstMatch(Lnet/minecraft/recipe/RecipeType;Lnet/minecraft/inventory/Inventory;Lnet/minecraft/world/World;)Ljava/util/Optional;"))
-    private static void clearPowerCraftingInventory(ScreenHandler handler, World world, PlayerEntity player, CraftingInventory craftingInventory, CraftingResultInventory resultInventory, CallbackInfo ci) {
-        ((PowerCraftingInventory)craftingInventory).setPower(null);
+    private static void clearPowerCraftingInventory(ScreenHandler handler, World world, PlayerEntity player, RecipeInputInventory inventory, CraftingResultInventory resultInventory, CallbackInfo ci) {
+        if (inventory instanceof CraftingInventory craftingInventory) ((PowerCraftingInventory)craftingInventory).setPower(null);
     }
 
     @Inject(method = "canUse", at = @At("HEAD"), cancellable = true)

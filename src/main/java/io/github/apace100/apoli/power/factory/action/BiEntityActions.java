@@ -34,7 +34,7 @@ public class BiEntityActions {
         register(IfElseListAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, ApoliDataTypes.BIENTITY_CONDITION));
         register(DelayAction.getFactory(ApoliDataTypes.BIENTITY_ACTION));
         register(NothingAction.getFactory());
-        register(SideAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, entities -> !entities.getLeft().world.isClient));
+        register(SideAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, entities -> !entities.getLeft().getWorld().isClient));
 
         register(new ActionFactory<>(Apoli.identifier("invert"), new SerializableData()
             .add("action", ApoliDataTypes.BIENTITY_ACTION),
@@ -55,7 +55,7 @@ public class BiEntityActions {
         register(new ActionFactory<>(Apoli.identifier("mount"), new SerializableData(),
             (data, entities) -> {
                 entities.getLeft().startRiding(entities.getRight(), true);
-                if(!entities.getLeft().world.isClient && entities.getRight() instanceof PlayerEntity) {
+                if(!entities.getLeft().getWorld().isClient && entities.getRight() instanceof PlayerEntity) {
                     PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
                     buf.writeInt(entities.getLeft().getId());
                     buf.writeInt(entities.getRight().getId());
@@ -86,7 +86,7 @@ public class BiEntityActions {
             (data, entities) -> {
                 Entity actor = entities.getLeft(), target = entities.getRight();
                 if (target instanceof PlayerEntity
-                    && (target.world.isClient ?
+                    && (target.getWorld().isClient ?
                         !data.getBoolean("client") : !data.getBoolean("server")))
                     return;
                 Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
