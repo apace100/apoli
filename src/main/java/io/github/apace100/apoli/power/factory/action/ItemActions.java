@@ -1,28 +1,42 @@
 package io.github.apace100.apoli.power.factory.action;
 
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.action.item.HolderAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootDataType;
+import net.minecraft.loot.LootManager;
 import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.loot.function.LootFunction;
-import net.minecraft.loot.function.LootFunctionManager;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.World;
+
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class ItemActions {
 
@@ -37,6 +51,7 @@ public class ItemActions {
             Pair::getRight));
         register(DelayAction.getFactory(ApoliDataTypes.ITEM_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.ITEM_ACTION, worldAndStack -> !worldAndStack.getLeft().isClient));
 
         register(new ActionFactory<>(Apoli.identifier("consume"), new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1),
@@ -49,16 +64,17 @@ public class ItemActions {
                 MinecraftServer server = worldAndStack.getLeft().getServer();
                 if(server != null) {
                     Identifier id = data.getId("modifier");
-                    LootFunctionManager lootFunctionManager = server.getItemModifierManager();
-                    LootFunction lootFunction = lootFunctionManager.get(id);
+                    LootManager lootManager = server.getLootManager();
+                    LootFunction lootFunction = lootManager.getElement(LootDataType.ITEM_MODIFIERS, id);
                     if (lootFunction == null) {
                         Apoli.LOGGER.info("Unknown item modifier used in `modify` action: " + id);
                         return;
                     }
                     ServerWorld serverWorld = server.getOverworld();
                     ItemStack stack = worldAndStack.getRight();
-                    LootContext.Builder builder = (new LootContext.Builder(serverWorld)).parameter(LootContextParameters.ORIGIN, new Vec3d(0, 0, 0));
-                    ItemStack newStack = lootFunction.apply(stack, builder.build(LootContextTypes.COMMAND));
+                    LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(serverWorld).add(LootContextParameters.ORIGIN, new Vec3d(0, 0,0)).build(LootContextTypes.COMMAND);
+                    LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(null);
+                    ItemStack newStack = lootFunction.apply(stack, lootContext);
                     ((MutableItemStack)stack).setFrom(newStack);
                 }
             }));
@@ -93,6 +109,62 @@ public class ItemActions {
                     }
                 }
             }));
+        register(new ActionFactory<>(Apoli.identifier("merge_nbt"), new SerializableData()
+            .add("nbt", SerializableDataTypes.STRING),
+            (data, worldAndStack) -> {
+                String nbtString = data.get("nbt");
+                try {
+                    NbtCompound nbt = new StringNbtReader(new StringReader(nbtString)).parseCompound();
+                    worldAndStack.getRight().getOrCreateNbt().copyFrom(nbt);
+                } catch (CommandSyntaxException e) {
+                    Apoli.LOGGER.error("Failed `merge_nbt` item action due to malformed nbt string: \"" + nbtString + "\"");
+                }
+            }));
+        register(new ActionFactory<>(Apoli.identifier("remove_enchantment"), new SerializableData()
+            .add("enchantment", SerializableDataTypes.ENCHANTMENT, null)
+            .add("enchantments", SerializableDataType.list(SerializableDataTypes.ENCHANTMENT), null)
+            .add("levels", SerializableDataTypes.INT, null)
+            .add("reset_repair_cost", SerializableDataTypes.BOOLEAN, false),
+            (data, worldAndStack) -> {
+                ItemStack stack = worldAndStack.getRight();
+                if(!stack.hasNbt()) {
+                    return;
+                }
+                List<Enchantment> enchs = new LinkedList<>();
+                data.<Enchantment>ifPresent("enchantment", enchs::add);
+                data.<List<Enchantment>>ifPresent("enchantments", enchs::addAll);
+                int levels = -1;
+                if(data.isPresent("levels")) {
+                    levels = data.getInt("levels");
+                }
+                Map<Enchantment, Integer> enchants = EnchantmentHelper.get(stack);
+                if(enchs.size() > 0) {
+                    for(Enchantment ench : enchs) {
+                        if(enchants.containsKey(ench)) {
+                            int newLevel = levels == -1 ? 0 : enchants.get(ench) - data.getInt("levels");
+                            if(newLevel <= 0) {
+                                enchants.remove(ench);
+                            } else {
+                                enchants.put(ench, newLevel);
+                            }
+                        }
+                    }
+                } else {
+                    Map<Enchantment, Integer> newEnchants = new LinkedHashMap<>();
+                    for(Enchantment e : enchants.keySet()) {
+                        int newLevel = levels == -1 ? 0 : enchants.get(e) - data.getInt("levels");
+                        if(newLevel > 0) {
+                            newEnchants.put(e, newLevel);
+                        }
+                    }
+                    enchants = newEnchants;
+                }
+                EnchantmentHelper.set(enchants, stack);
+                if(data.getBoolean("reset_repair_cost") && !stack.hasEnchantments()) {
+                    stack.setRepairCost(0);
+                }
+            }));
+        register(HolderAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<World, ItemStack>> actionFactory) {

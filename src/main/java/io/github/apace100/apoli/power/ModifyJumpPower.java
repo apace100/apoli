@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -31,18 +32,16 @@ public class ModifyJumpPower extends ValueModifyingPower {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("modify_jump"),
             new SerializableData()
-                .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
-                .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null)
+                .add("modifier", Modifier.DATA_TYPE, null)
+                .add("modifiers", Modifier.LIST_TYPE, null)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
             data ->
                 (type, player) -> {
-                    ModifyJumpPower power = new ModifyJumpPower(type, player, (ActionFactory<Entity>.Instance)data.get("entity_action"));
-                    if(data.isPresent("modifier")) {
-                        power.addModifier(data.getModifier("modifier"));
-                    }
-                    if(data.isPresent("modifiers")) {
-                        ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
-                    }
+                    ModifyJumpPower power = new ModifyJumpPower(type, player, data.get("entity_action"));
+                    data.ifPresent("modifier", power::addModifier);
+                    data.<List<Modifier>>ifPresent("modifiers",
+                        mods -> mods.forEach(power::addModifier)
+                    );
                     return power;
                 })
             .allowCondition();

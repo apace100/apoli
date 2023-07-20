@@ -1,0 +1,117 @@
+{
+  "type": "apoli:multiple",
+  "modify": {
+    "type": "apoli:modify_damage_taken",
+    "modifier": {
+      "operation": "addition",
+      "resource": "*:*_resource",
+      "value": 0,
+      "modifier": [
+        {
+          "operation": "addition",
+          "value": -3
+        },
+        {
+          "operation": "min_total",
+          "value": 0
+        }
+      ]
+    }
+  },
+  "resource": {
+    "type": "apoli:resource",
+    "min": 0,
+    "max": 7,
+    "start_value": 0,
+    "hud_render": {
+      "sprite_location": "apoli:resource_bar.png",
+      "bar_index": 3
+    }
+  },
+  "cycle": {
+    "type": "apoli:action_over_time",
+    "interval": 30,
+    "entity_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:modify_resource",
+          "resource": "*:*_resource",
+          "modifier": {
+            "operation": "addition",
+            "resource": "*:*_change",
+            "value": 0
+          }
+        },
+        {
+          "type": "apoli:if_else_list",
+          "actions": [
+            {
+              "condition": {
+                "type": "apoli:and",
+                "conditions": [
+                  {
+                    "type": "apoli:resource",
+                    "resource": "*:*_resource",
+                    "comparison": "==",
+                    "compare_to": 0
+                  },
+                  {
+                    "type": "apoli:resource",
+                    "resource": "*:*_change",
+                    "comparison": "==",
+                    "compare_to": -1
+                  }
+                ]
+              },
+              "action": {
+                "type": "apoli:modify_resource",
+                "resource": "*:*_change",
+                "modifier": {
+                  "operation": "set_total",
+                  "value": 1
+                }
+              }
+            },
+            {
+              "condition": {
+                "type": "apoli:and",
+                "conditions": [
+                  {
+                    "type": "apoli:resource",
+                    "resource": "*:*_resource",
+                    "comparison": "==",
+                    "compare_to": 7
+                  },
+                  {
+                    "type": "apoli:resource",
+                    "resource": "*:*_change",
+                    "comparison": "==",
+                    "compare_to": 1
+                  }
+                ]
+              },
+              "action": {
+                "type": "apoli:modify_resource",
+                "resource": "*:*_change",
+                "modifier": {
+                  "operation": "set_total",
+                  "value": -1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "change": {
+    "type": "apoli:resource",
+    "min": -1,
+    "max": 1,
+    "start_value": 1,
+    "hud_render": {
+      "should_render": false
+    }
+  }
+}

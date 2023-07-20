@@ -1,0 +1,13 @@
+{
+    "type": "apoli:active_self",
+    "entity_action": {
+        "type": "apoli:drop_inventory",
+        "inventory_type": "inventory"
+    },
+    "key": {
+        "key": "key.jump"
+    },
+    "condition": {
+        "type": "apoli:on_block"
+    }
+}

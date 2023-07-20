@@ -95,10 +95,10 @@ public class ConditionedAttributePower extends Power {
                 (type, player) -> {
                     ConditionedAttributePower ap = new ConditionedAttributePower(type, player, data.getInt("tick_rate"), data.getBoolean("update_health"));
                     if(data.isPresent("modifier")) {
-                        ap.addModifier((AttributedEntityAttributeModifier)data.get("modifier"));
+                        ap.addModifier(data.get("modifier"));
                     }
                     if(data.isPresent("modifiers")) {
-                        List<AttributedEntityAttributeModifier> modifierList = (List<AttributedEntityAttributeModifier>)data.get("modifiers");
+                        List<AttributedEntityAttributeModifier> modifierList = data.get("modifiers");
                         modifierList.forEach(ap::addModifier);
                     }
                     return ap;

@@ -50,7 +50,7 @@ public class ServerPlayerInteractionManagerMixin {
         return original;
     }
 
-    @Inject(method = "tryBreakBlock", at = @At(value = "RETURN", ordinal = 4), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "tryBreakBlock", at = @At(value = "RETURN", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILHARD)
     private void actionOnBlockBreak(BlockPos pos, CallbackInfoReturnable<Boolean> cir, BlockState blockState, BlockEntity blockEntity, Block block, boolean bl, ItemStack itemStack, ItemStack itemStack2, boolean bl2) {
         PowerHolderComponent.getPowers(player, ActionOnBlockBreakPower.class).stream().filter(p -> p.doesApply(savedBlockPosition))
             .forEach(aobbp -> aobbp.executeActions(bl && bl2, pos, null));

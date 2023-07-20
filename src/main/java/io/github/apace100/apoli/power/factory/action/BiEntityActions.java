@@ -19,8 +19,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.registry.Registry;
+import org.joml.Vector3f;
+import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.util.TriConsumer;
 
 public class BiEntityActions {
@@ -34,6 +34,7 @@ public class BiEntityActions {
         register(IfElseListAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, ApoliDataTypes.BIENTITY_CONDITION));
         register(DelayAction.getFactory(ApoliDataTypes.BIENTITY_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.BIENTITY_ACTION, entities -> !entities.getLeft().getWorld().isClient));
 
         register(new ActionFactory<>(Apoli.identifier("invert"), new SerializableData()
             .add("action", ApoliDataTypes.BIENTITY_ACTION),
@@ -54,7 +55,7 @@ public class BiEntityActions {
         register(new ActionFactory<>(Apoli.identifier("mount"), new SerializableData(),
             (data, entities) -> {
                 entities.getLeft().startRiding(entities.getRight(), true);
-                if(!entities.getLeft().world.isClient && entities.getRight() instanceof PlayerEntity) {
+                if(!entities.getLeft().getWorld().isClient && entities.getRight() instanceof PlayerEntity) {
                     PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
                     buf.writeInt(entities.getLeft().getId());
                     buf.writeInt(entities.getRight().getId());
@@ -85,15 +86,15 @@ public class BiEntityActions {
             (data, entities) -> {
                 Entity actor = entities.getLeft(), target = entities.getRight();
                 if (target instanceof PlayerEntity
-                    && (target.world.isClient ?
+                    && (target.getWorld().isClient ?
                         !data.getBoolean("client") : !data.getBoolean("server")))
                     return;
-                Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
+                Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 TriConsumer<Float, Float, Float> method = target::addVelocity;
                 if(data.getBoolean("set"))
                     method = target::setVelocity;
                 Space.transformVectorToBase(target.getPos().subtract(actor.getPos()), vec, actor.getYaw(), true); // vector normalized by method
-                method.accept(vec.getX(), vec.getY(), vec.getZ());
+                method.accept(vec.x, vec.y, vec.z);
                 target.velocityModified = true;
             }));
         register(DamageAction.getFactory());

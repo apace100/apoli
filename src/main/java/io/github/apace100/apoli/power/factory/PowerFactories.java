@@ -2,10 +2,11 @@ package io.github.apace100.apoli.power.factory;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.factory.action.entity.GrantAdvancementAction;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.ladysnake.pal.VanillaAbilities;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 
 public class PowerFactories {
 
@@ -40,13 +41,11 @@ public class PowerFactories {
         register(RestrictArmorPower::createFactory);
         register(ConditionedRestrictArmorPower::createFactory);
         register(StackingStatusEffectPower::createFactory);
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifySwimSpeedPower::new, Apoli.identifier("modify_swim_speed")));
+        register(ModifySwimSpeedPower::createFactory);
         register(DamageOverTimePower::createFactory);
         register(() -> Power.createSimpleFactory(SwimmingPower::new, Apoli.identifier("swimming")));
         register(() -> Power.createSimpleFactory(FireImmunityPower::new, Apoli.identifier("fire_immunity")));
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyLavaSpeedPower::new, Apoli.identifier("modify_lava_speed")));
+        register(ModifyLavaSpeedPower::createFactory);
         register(LavaVisionPower::createFactory);
         register(ConditionedAttributePower::createFactory);
         register(ActiveCooldownPower::createActiveSelfFactory);
@@ -114,6 +113,16 @@ public class PowerFactories {
         register(KeepInventoryPower::createFactory);
         register(ModifyStatusEffectDurationPower::createFactory);
         register(ModifyStatusEffectAmplifierPower::createFactory);
+        register(ModifyAttributePower::createFactory);
+        register(() -> Power.createSimpleFactory(PreventSprintingPower::new, Apoli.identifier("prevent_sprinting")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(
+            ModifyHealingPower::new, Apoli.identifier("modify_healing")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(
+            ModifyInsomniaTicksPower::new, Apoli.identifier("modify_insomnia_ticks")));
+        register(ModifyGrindstonePower::createFactory);
+        register(ReplaceLootTablePower::createFactory);
+        register(ModifyVelocityPower::createFactory);
+        register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
     }
 
     private static void register(PowerFactory<?> powerFactory) {

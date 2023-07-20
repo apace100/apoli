@@ -15,11 +15,11 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.state.property.Property;
-import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.LightType;
 
 import java.util.Collection;
@@ -70,7 +70,7 @@ public class BlockConditions {
                 if(block == null || block.getBlockState() == null) {
                     return false;
                 }
-                return block.getBlockState().isIn((Tag<Block>)data.get("tag"));
+                return block.getBlockState().isIn((TagKey<Block>) data.get("tag"));
             }));
         register(new ConditionFactory<>(Apoli.identifier("adjacent"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -87,7 +87,7 @@ public class BlockConditions {
                 return ((Comparison)data.get("comparison")).compare(adjacent, data.getInt("compare_to"));
             }));
         register(new ConditionFactory<>(Apoli.identifier("replacable"), new SerializableData(),
-            (data, block) -> block.getBlockState().getMaterial().isReplaceable()));
+            (data, block) -> block.getBlockState().isReplaceable()));
         register(new ConditionFactory<>(Apoli.identifier("attachable"), new SerializableData(),
             (data, block) -> {
                 for(Direction d : Direction.values()) {
@@ -102,9 +102,9 @@ public class BlockConditions {
             .add("fluid_condition", ApoliDataTypes.FLUID_CONDITION),
             (data, block) -> ((ConditionFactory<FluidState>.Instance)data.get("fluid_condition")).test(block.getWorld().getFluidState(block.getBlockPos()))));
         register(new ConditionFactory<>(Apoli.identifier("movement_blocking"), new SerializableData(),
-            (data, block) -> block.getBlockState().getMaterial().blocksMovement() && !block.getBlockState().getCollisionShape(block.getWorld(), block.getBlockPos()).isEmpty()));
+            (data, block) -> block.getBlockState().blocksMovement() && !block.getBlockState().getCollisionShape(block.getWorld(), block.getBlockPos()).isEmpty()));
         register(new ConditionFactory<>(Apoli.identifier("light_blocking"), new SerializableData(),
-            (data, block) -> block.getBlockState().getMaterial().blocksLight()));
+            (data, block) -> block.getBlockState().isOpaque()));
         register(new ConditionFactory<>(Apoli.identifier("water_loggable"), new SerializableData(),
             (data, block) -> block.getBlockState().getBlock() instanceof FluidFillable));
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sky"), new SerializableData(),
@@ -149,6 +149,7 @@ public class BlockConditions {
                     } else if(data.isPresent("comparison") && data.isPresent("compare_to") && value instanceof Integer) {
                         return ((Comparison)data.get("comparison")).compare((Integer) value, data.getInt("compare_to"));
                     }
+                    return true;
                 }
                 return false;
             }));

@@ -4,23 +4,26 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import io.github.apace100.apoli.power.KeepInventoryPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.GameStateChangeS2CPacket;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.screen.ScreenHandlerListener;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,8 +33,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity implements ScreenHandlerListener, EndRespawningEntity {
@@ -49,6 +56,10 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     @Shadow
     public ServerPlayNetworkHandler networkHandler;
 
+    public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
+        super(world, pos, yaw, gameProfile);
+    }
+
     @Shadow
     public abstract void sendMessage(Text message, boolean actionBar);
 
@@ -57,23 +68,35 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Shadow private boolean spawnForced;
 
-    public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile profile) {
-        super(world, pos, yaw, profile);
-    }
+    @Shadow public abstract void setSpawnPoint(RegistryKey<World> dimension, @Nullable BlockPos pos, float angle, boolean forced, boolean sendMessage);
 
-    // FRESH_AIR
-    @Inject(method = "trySleep", at = @At(value = "INVOKE",target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/util/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"), cancellable = true)
-    public void preventAvianSleep(BlockPos pos, CallbackInfoReturnable<Either<SleepFailureReason, Unit>> info) {
-        PowerHolderComponent.getPowers(this, PreventSleepPower.class).forEach(p -> {
-                if(p.doesPrevent(world, pos)) {
-                    if(p.doesAllowSpawnPoint()) {
-                        ((ServerPlayerEntity)(Object)this).setSpawnPoint(this.world.getRegistryKey(), pos, this.getYaw(), false, true);
-                    }
-                    info.setReturnValue(Either.left(null));
-                    this.sendMessage(new TranslatableText(p.getMessage()), true);
-                }
-            }
-        );
+    @Shadow public abstract void sendMessage(Text message);
+
+    @Shadow public abstract boolean shouldDamagePlayer(PlayerEntity player);
+
+    @Inject(method = "trySleep", at = @At(value = "INVOKE",target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"), cancellable = true)
+    public void preventSleep(BlockPos pos, CallbackInfoReturnable<Either<SleepFailureReason, Unit>> info) {
+
+        LinkedList<PreventSleepPower> preventSleepPowers = PowerHolderComponent.getPowers(this, PreventSleepPower.class)
+            .stream()
+            .filter(p -> p.doesPrevent(this.getWorld(), pos))
+            .collect(Collectors.toCollection(LinkedList::new));
+
+        if (preventSleepPowers.isEmpty()) {
+            return;
+        }
+
+        preventSleepPowers.sort(Collections.reverseOrder(PreventSleepPower::compareTo));
+        PreventSleepPower preventSleepPower = preventSleepPowers
+            .getFirst();
+
+        if (preventSleepPowers.stream().allMatch(PreventSleepPower::doesAllowSpawnPoint)) {
+            this.setSpawnPoint(this.getWorld().getRegistryKey(), pos, this.getYaw(), false, true);
+        }
+
+        info.setReturnValue(Either.left(SleepFailureReason.OTHER_PROBLEM));
+        this.sendMessage(preventSleepPower.getMessage(), true);
+
     }
 
     @Inject(at = @At("HEAD"), method = "getSpawnPointDimension", cancellable = true)
@@ -127,6 +150,22 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
             return spawn.getRight();
         }
         return null;
+    }
+
+    @Unique
+    private ItemStack apoli$stackBeforeDrop;
+
+    @Inject(method = "dropSelectedItem", at = @At("HEAD"))
+    private void cacheItemStackBeforeDropping(boolean entireStack, CallbackInfoReturnable<Boolean> cir) {
+        apoli$stackBeforeDrop = this.getInventory().getMainHandStack().copy();
+    }
+
+    @Inject(method = "dropSelectedItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/ScreenHandler;getSlotIndex(Lnet/minecraft/inventory/Inventory;I)Ljava/util/OptionalInt;"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void checkItemUsageStopping(boolean entireStack, CallbackInfoReturnable<Boolean> cir, PlayerInventory playerInventory, ItemStack itemStack) {
+        if(this.isUsingItem() && !ItemStack.areItemsEqual(apoli$stackBeforeDrop, this.getInventory().getMainHandStack())) {
+            ActionOnItemUsePower.executeActions(this, itemStack, apoli$stackBeforeDrop,
+                    ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
+        }
     }
 
     @Unique

@@ -10,8 +10,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerLoginNetworkHandler;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 
@@ -35,7 +34,7 @@ public class ModPacketsC2S {
         int otherEntityId = packetByteBuf.readInt();
         int handOrdinal = packetByteBuf.readInt();
         minecraftServer.execute(() -> {
-            Entity otherEntity = playerEntity.world.getEntityById(otherEntityId);
+            Entity otherEntity = playerEntity.getWorld().getEntityById(otherEntityId);
             Hand hand = Hand.values()[handOrdinal];
             if(otherEntity == null) {
                 Apoli.LOGGER.warn("Received unknown entity for prevented interaction");
@@ -101,10 +100,10 @@ public class ModPacketsC2S {
                         clientVersionString.append(".");
                     }
                 }
-                serverLoginNetworkHandler.disconnect(new TranslatableText("apoli.gui.version_mismatch", Apoli.VERSION, clientVersionString));
+                serverLoginNetworkHandler.disconnect(Text.translatable("apoli.gui.version_mismatch", Apoli.VERSION, clientVersionString));
             }
         } else {
-            serverLoginNetworkHandler.disconnect(new LiteralText("This server requires you to install the Apoli mod (v" + Apoli.VERSION + ") to play."));
+            serverLoginNetworkHandler.disconnect(Text.literal("This server requires you to install the Apoli mod (v" + Apoli.VERSION + ") to play."));
         }
     }
 

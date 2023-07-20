@@ -1,0 +1,11 @@
+{
+  "type": "apoli:modify_projectile_damage",
+  "modifier": {
+    "value": 200,
+    "operation": "addition"
+  },
+  "damage_condition": {
+    "type": "apoli:projectile",
+    "projectile": "minecraft:egg"
+  }
+}

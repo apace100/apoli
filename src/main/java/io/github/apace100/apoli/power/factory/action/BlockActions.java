@@ -1,8 +1,9 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.action.block.BonemealAction;
+import io.github.apace100.apoli.power.factory.action.block.BonemealAction;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.action.block.AreaOfEffectAction;
 import io.github.apace100.apoli.power.factory.action.block.ExplodeAction;
 import io.github.apace100.apoli.power.factory.action.block.ModifyBlockStateAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
@@ -15,12 +16,12 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -37,6 +38,7 @@ public class BlockActions {
             t -> new CachedBlockPosition(t.getLeft(), t.getMiddle(), true)));
         register(DelayAction.getFactory(ApoliDataTypes.BLOCK_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.BLOCK_ACTION, block -> !block.getLeft().isClient));
 
         register(new ActionFactory<>(Apoli.identifier("offset"), new SerializableData()
             .add("action", ApoliDataTypes.BLOCK_ACTION)
@@ -52,14 +54,14 @@ public class BlockActions {
         register(new ActionFactory<>(Apoli.identifier("set_block"), new SerializableData()
             .add("block", SerializableDataTypes.BLOCK_STATE),
             (data, block) -> {
-                BlockState actualState = (BlockState)data.get("block");
+                BlockState actualState = data.get("block");
                 //actualState = Block.postProcessState(actualState, block.getLeft(), block.getMiddle());
                 block.getLeft().setBlockState(block.getMiddle(), actualState);
             }));
         register(new ActionFactory<>(Apoli.identifier("add_block"), new SerializableData()
             .add("block", SerializableDataTypes.BLOCK_STATE),
             (data, block) -> {
-                BlockState actualState = (BlockState)data.get("block");
+                BlockState actualState = data.get("block");
                 BlockPos pos = block.getMiddle().offset(block.getRight());
                 //actualState = Block.postProcessState(actualState, block.getLeft(), pos);
                 block.getLeft().setBlockState(pos, actualState);
@@ -77,15 +79,16 @@ public class BlockActions {
                         (ServerWorld)block.getLeft(),
                         Apoli.config.executeCommand.permissionLevel,
                         blockName,
-                        new TranslatableText(blockName),
+                        Text.translatable(blockName),
                         server,
                         null);
-                    server.getCommandManager().execute(source, data.getString("command"));
+                    server.getCommandManager().executeWithPrefix(source, data.getString("command"));
                 }
             }));
-        register(BonemealAction.createFactory());
+        register(BonemealAction.getFactory());
         register(ModifyBlockStateAction.getFactory());
         register(ExplodeAction.getFactory());
+        register(AreaOfEffectAction.getFactory());
     }
 
     private static void register(ActionFactory<Triple<World, BlockPos, Direction>> actionFactory) {

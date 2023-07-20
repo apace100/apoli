@@ -4,11 +4,10 @@ import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.command.PowerCommand;
-import io.github.apace100.apoli.command.PowerOperation;
-import io.github.apace100.apoli.command.PowerTypeArgumentType;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
+import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerFactories;
@@ -19,24 +18,28 @@ import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
-import io.github.apace100.calio.util.OrderedResourceListeners;
+import io.github.apace100.calio.resource.OrderedResourceListenerInitializer;
+import io.github.apace100.calio.resource.OrderedResourceListenerManager;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.command.argument.ArgumentTypes;
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Apoli implements ModInitializer, EntityComponentInitializer {
+public class Apoli implements ModInitializer, EntityComponentInitializer, OrderedResourceListenerInitializer {
 
 	public static ApoliConfig config;
 
@@ -74,20 +77,22 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ModPacketsC2S.register();
 
-		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			PowerCommand.register(dispatcher);
 			ResourceCommand.register(dispatcher);
 		});
 
-		Registry.register(Registry.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
-		Registry.register(Registry.RECIPE_SERIALIZER, Apoli.identifier("modified"), ModifiedCraftingRecipe.SERIALIZER);
+		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
+		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("modified"), ModifiedCraftingRecipe.SERIALIZER);
 
-		Registry.register(Registry.LOOT_FUNCTION_TYPE, Apoli.identifier("add_power"), AddPowerLootFunction.TYPE);
+		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("add_power"), AddPowerLootFunction.TYPE);
+		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("remove_power"), RemovePowerLootFunction.TYPE);
 
-		ArgumentTypes.register(MODID + ":power", PowerTypeArgumentType.class, new ConstantArgumentSerializer<>(PowerTypeArgumentType::power));
-		ArgumentTypes.register(MODID + ":power_operation", PowerOperation.class, new ConstantArgumentSerializer<>(PowerOperation::operation));
+		Registry.register(Registries.LOOT_CONDITION_TYPE, Apoli.identifier("power"), PowerLootCondition.TYPE);
 
 		ApoliClassData.registerAll();
+
+		ModifierOperations.registerAll();
 
 		PowerFactories.register();
 		EntityConditions.register();
@@ -102,7 +107,9 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		BlockActions.register();
 		BiEntityActions.register();
 
-		OrderedResourceListeners.register(new PowerTypes()).complete();
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
+		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));
+		ResourceConditions.register(ApoliResourceConditions.ALL_NAMESPACES_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, true));
 
 		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
 
@@ -119,5 +126,10 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 			.impl(PowerHolderComponentImpl.class)
 			.respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY)
 			.end(PowerHolderComponentImpl::new);
+	}
+
+	@Override
+	public void registerResourceListeners(OrderedResourceListenerManager manager) {
+		manager.register(ResourceType.SERVER_DATA, new PowerTypes()).complete();
 	}
 }

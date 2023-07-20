@@ -4,6 +4,8 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.modifier.Modifier;
+import io.github.apace100.apoli.util.modifier.ModifierOperation;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -36,17 +38,15 @@ public class ModifySlipperinessPower extends ValueModifyingPower {
         return new PowerFactory<>(Apoli.identifier("modify_slipperiness"),
             new SerializableData()
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
-                .add("modifier", SerializableDataTypes.ATTRIBUTE_MODIFIER, null)
-                .add("modifiers", SerializableDataTypes.ATTRIBUTE_MODIFIERS, null),
+                .add("modifier", Modifier.DATA_TYPE, null)
+                .add("modifiers", Modifier.LIST_TYPE, null),
             data ->
                 (type, player) -> {
-                    ModifySlipperinessPower power = new ModifySlipperinessPower(type, player, data.isPresent("block_condition") ? (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition") : cbp -> true);
-                    if(data.isPresent("modifier")) {
-                        power.addModifier(data.getModifier("modifier"));
-                    }
-                    if(data.isPresent("modifiers")) {
-                        ((List<EntityAttributeModifier>)data.get("modifiers")).forEach(power::addModifier);
-                    }
+                    ModifySlipperinessPower power = new ModifySlipperinessPower(type, player, data.get("block_condition"));
+                    data.ifPresent("modifier", power::addModifier);
+                    data.<List<Modifier>>ifPresent("modifiers",
+                        mods -> mods.forEach(power::addModifier)
+                    );
                     return power;
                 })
             .allowCondition();

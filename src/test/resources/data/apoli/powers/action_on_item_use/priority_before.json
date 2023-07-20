@@ -1,0 +1,15 @@
+{
+  "type": "apoli:action_on_item_use",
+  "trigger": "finish",
+  "priority": 1,
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:potion"
+    }
+  },
+  "item_action": {
+    "type": "apoli:modify",
+    "modifier": "apoli:make_long_regeneration"
+  }
+}

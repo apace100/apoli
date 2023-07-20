@@ -1,25 +1,31 @@
 package io.github.apace100.apoli.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.LavaVisionPower;
 import io.github.apace100.apoli.power.ModifyCameraSubmersionTypePower;
 import io.github.apace100.apoli.power.NightVisionPower;
 import io.github.apace100.apoli.power.PhasingPower;
+import io.github.apace100.apoli.util.MiscUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.CameraSubmersionType;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
 
@@ -27,7 +33,13 @@ import java.util.List;
 @Environment(EnvType.CLIENT)
 public abstract class BackgroundRendererMixin {
 
-    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 1), method = "render")
+    @Shadow private static float red;
+
+    @Shadow private static float green;
+
+    @Shadow private static float blue;
+
+    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 0), method = "render")
     private static boolean hasStatusEffectProxy(LivingEntity player, StatusEffect effect) {
         if(player instanceof PlayerEntity && effect == StatusEffects.NIGHT_VISION && !player.hasStatusEffect(StatusEffects.NIGHT_VISION)) {
             return PowerHolderComponent.KEY.get(player).getPowers(NightVisionPower.class).stream().anyMatch(NightVisionPower::isActive);
@@ -59,144 +71,35 @@ public abstract class BackgroundRendererMixin {
         return original;
     }
 
-    @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 1), ordinal = 0)
-    private static double modifyD(double original, Camera camera) {
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BackgroundRenderer;getFogModifier(Lnet/minecraft/entity/Entity;F)Lnet/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier;"))
+    private static void modifyFogColor(Camera camera, float tickDelta, ClientWorld world, int viewDistance, float skyDarkness, CallbackInfo ci) {
         if(camera.getFocusedEntity() instanceof LivingEntity) {
             if(PowerHolderComponent.getPowers(camera.getFocusedEntity(), PhasingPower.class).stream().anyMatch(pp -> pp.getRenderType() == PhasingPower.RenderType.BLINDNESS)) {
-                if(getInWallBlockState((PlayerEntity)camera.getFocusedEntity()) != null) {
-                    return 0;
+                if(MiscUtil.getInWallBlockState((PlayerEntity)camera.getFocusedEntity()) != null) {
+                    red = 0f;
+                    green = 0f;
+                    blue = 0f;
                 }
             }
         }
-        return original;
     }
 
-    /*@ModifyVariable(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;fogStart(F)V"), ordinal = 0)
-    private static float modifyS(float original, Camera camera) {
-        List<LavaVisionPower> powers = OriginComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getS();
-        }
-        return original;
-    }
-
-    @ModifyVariable(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;fogStart(F)V"), ordinal = 1)
-    private static float modifyV(float original, Camera camera) {
-        List<LavaVisionPower> powers = OriginComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getV();
-        }
-        return original;
-    }*/
-
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V"))
-    private static void redirectFogStart(float start, Camera camera, BackgroundRenderer.FogType fogType) {
+    @Inject(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILHARD)
+    private static void modifyFogData(Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo ci, CameraSubmersionType cameraSubmersionType, Entity entity, BackgroundRenderer.FogData fogData) {
         if(camera.getFocusedEntity() instanceof LivingEntity) {
             List<PhasingPower> phasings = PowerHolderComponent.getPowers(camera.getFocusedEntity(), PhasingPower.class);
             if(phasings.stream().anyMatch(pp -> pp.getRenderType() == PhasingPower.RenderType.BLINDNESS)) {
-                if(getInWallBlockState((LivingEntity)camera.getFocusedEntity()) != null) {
+                if(MiscUtil.getInWallBlockState((LivingEntity)camera.getFocusedEntity()) != null) {
                     float view = phasings.stream().filter(pp -> pp.getRenderType() == PhasingPower.RenderType.BLINDNESS).map(PhasingPower::getViewDistance).min(Float::compareTo).get();
-                    float s;
-                    if (fogType == BackgroundRenderer.FogType.FOG_SKY) {
-                        s = Math.min(0F, start);
+                    if (fogData.fogType == BackgroundRenderer.FogType.FOG_SKY) {
+                        fogData.fogStart = 0.0f;
+                        fogData.fogEnd = view * 0.8f;
                     } else {
-                        s = Math.min(view * 0.25F, start);
+                        fogData.fogStart = view * 0.25f;
+                        fogData.fogEnd = view;
                     }
-                    RenderSystem.setShaderFogStart(s);
-                    return;
                 }
             }
         }
-        RenderSystem.setShaderFogStart(start);
-    }
-
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V"))
-    private static void redirectFogEnd(float end, Camera camera, BackgroundRenderer.FogType fogType) {
-        if(camera.getFocusedEntity() instanceof LivingEntity) {
-            List<PhasingPower> phasings = PowerHolderComponent.getPowers(camera.getFocusedEntity(), PhasingPower.class);
-            if(phasings.stream().anyMatch(pp -> pp.getRenderType() == PhasingPower.RenderType.BLINDNESS)) {
-                if(getInWallBlockState((PlayerEntity)camera.getFocusedEntity()) != null) {
-                    float view = phasings.stream().filter(pp -> pp.getRenderType() == PhasingPower.RenderType.BLINDNESS).map(PhasingPower::getViewDistance).min(Float::compareTo).get();
-                    float v;
-                    if (fogType == BackgroundRenderer.FogType.FOG_SKY) {
-                        v = Math.min(view * 0.8F, end);
-                    } else {
-                        v = Math.min(view, end);
-                    }
-                    RenderSystem.setShaderFogEnd(v);
-                    return;
-                }
-            }
-        }
-        RenderSystem.setShaderFogEnd(end);
-    }
-
-    private static BlockState getInWallBlockState(LivingEntity playerEntity) {
-        BlockPos.Mutable mutable = new BlockPos.Mutable();
-
-        for(int i = 0; i < 8; ++i) {
-            double d = playerEntity.getX() + (double)(((float)((i >> 0) % 2) - 0.5F) * playerEntity.getWidth() * 0.8F);
-            double e = playerEntity.getEyeY() + (double)(((float)((i >> 1) % 2) - 0.5F) * 0.1F);
-            double f = playerEntity.getZ() + (double)(((float)((i >> 2) % 2) - 0.5F) * playerEntity.getWidth() * 0.8F);
-            mutable.set(d, e, f);
-            BlockState blockState = playerEntity.world.getBlockState(mutable);
-            if (blockState.getRenderType() != BlockRenderType.INVISIBLE && blockState.shouldBlockVision(playerEntity.world, mutable)) {
-                return blockState;
-            }
-        }
-
-        return null;
-    }
-/*
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 0))
-    private static boolean allowUnderlavaVision(LivingEntity livingEntity, StatusEffect effect) {
-        //if(PowerTypes.LAVA_SWIMMING.isActive(livingEntity)) {
-        //    return true;
-        //}
-        return livingEntity.hasStatusEffect(effect);
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 3.0F, ordinal = 0))
-    private static float modifyLavaVisibility(float original, Camera camera) {
-        //if(PowerTypes.LAVA_SWIMMING.isActive(camera.getFocusedEntity())) {
-        //    return original * 5F;
-        //}
-        return original;
-    }
-
- */ @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 0.25F, ordinal = 1))
-    private static float modifyLavaVisibilitySNoPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getS();
-        }
-        return original;
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 1.0F, ordinal = 0))
-    private static float modifyLavaVisibilityVNoPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getV();
-        }
-        return original;
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 0.0F, ordinal = 0))
-    private static float modifyLavaVisibilitySWithPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getS();
-        }
-        return original;
-    }
-
-    @ModifyConstant(method = "applyFog", constant = @Constant(floatValue = 3.0F, ordinal = 0))
-    private static float modifyLavaVisibilityVWithPotion(float original, Camera camera) {
-        List<LavaVisionPower> powers = PowerHolderComponent.getPowers(camera.getFocusedEntity(), LavaVisionPower.class);
-        if(powers.size() > 0) {
-            return powers.get(0).getV();
-        }
-        return original;
     }
 }

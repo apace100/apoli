@@ -18,10 +18,16 @@ public class TooltipPower extends Power {
 
     private final Predicate<ItemStack> itemCondition;
     private final List<Text> texts = new LinkedList<>();
+    private final int order;
 
-    public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition) {
+    public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition, int order) {
         super(type, entity);
         this.itemCondition = itemCondition;
+        this.order = order;
+    }
+
+    public int getOrder() {
+        return order;
     }
 
     public void addText(Text text) {
@@ -41,11 +47,13 @@ public class TooltipPower extends Power {
             new SerializableData()
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("text", SerializableDataTypes.TEXT, null)
-                .add("texts", SerializableDataType.list(SerializableDataTypes.TEXT), null),
+                .add("texts", SerializableDataType.list(SerializableDataTypes.TEXT), null)
+                .add("order", SerializableDataTypes.INT, 0),
             data ->
                 (type, player) -> {
                     TooltipPower ttp = new TooltipPower(type, player,
-                        data.isPresent("item_condition") ? (Predicate<ItemStack>)data.get("item_condition") : null);
+                        data.isPresent("item_condition") ? data.get("item_condition") : null,
+                        data.get("order"));
                     data.ifPresent("text", ttp::addText);
                     data.<List<Text>>ifPresent("texts", t -> t.forEach(ttp::addText));
                     return ttp;

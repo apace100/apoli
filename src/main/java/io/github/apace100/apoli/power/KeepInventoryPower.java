@@ -51,13 +51,13 @@ public class KeepInventoryPower extends Power {
         if(savedStacks == null) {
             Apoli.LOGGER.error(KeepInventoryPower.class.getSimpleName() +
                 ": Tried to restore items without having saved any on entity \""
-                + entity.getName().asString() + "\". Power may not have functioned correctly.");
+                + entity.getName().getString() + "\". Power may not have functioned correctly.");
             return;
         }
         if(inventory.size() != savedStacks.length) {
             Apoli.LOGGER.error(KeepInventoryPower.class.getSimpleName() +
                 ": Tried to restore items with differently sized inventory on entity \""
-                + entity.getName().asString() + "\". Items may have been lost.");
+                + entity.getName().getString() + "\". Items may have been lost.");
         }
         for(int i = 0; i < inventory.size() && i < savedStacks.length; i++) {
             if(savedStacks[i] != null && !savedStacks[i].isEmpty()) {

@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.data;
 
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableBiMap;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -15,26 +17,31 @@ import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.ArgumentWrapper;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.command.EntitySelector;
+import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.command.argument.ItemSlotArgumentType;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.EnumSet;
 import java.util.List;
 
 public class ApoliDataTypes {
@@ -79,10 +86,10 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<ConditionFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS =
         SerializableDataType.list(DAMAGE_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<Biome>.Instance> BIOME_CONDITION =
+    public static final SerializableDataType<ConditionFactory<RegistryEntry<Biome>>.Instance> BIOME_CONDITION =
         condition(ClassUtil.castClass(ConditionFactory.Instance.class), ConditionTypes.BIOME);
 
-    public static final SerializableDataType<List<ConditionFactory<Biome>.Instance>> BIOME_CONDITIONS =
+    public static final SerializableDataType<List<ConditionFactory<RegistryEntry<Biome>>.Instance>> BIOME_CONDITIONS =
         SerializableDataType.list(BIOME_CONDITION);
 
     public static final SerializableDataType<ActionFactory<Entity>.Instance> ENTITY_ACTION =
@@ -113,6 +120,12 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<ResourceOperation> RESOURCE_OPERATION = SerializableDataType.enumValue(ResourceOperation.class);
 
+    public static final SerializableDataType<InventoryUtil.InventoryType> INVENTORY_TYPE = SerializableDataType.enumValue(InventoryUtil.InventoryType.class);
+
+    public static final SerializableDataType<EnumSet<InventoryUtil.InventoryType>> INVENTORY_TYPE_SET = SerializableDataType.enumSet(InventoryUtil.InventoryType.class, INVENTORY_TYPE);
+
+    public static final SerializableDataType<InventoryUtil.ProcessMode> PROCESS_MODE = SerializableDataType.enumValue(InventoryUtil.ProcessMode.class);
+
     public static final SerializableDataType<AttributedEntityAttributeModifier> ATTRIBUTED_ATTRIBUTE_MODIFIER = SerializableDataType.compound(
         AttributedEntityAttributeModifier.class,
         new SerializableData()
@@ -120,11 +133,11 @@ public class ApoliDataTypes {
             .add("operation", SerializableDataTypes.MODIFIER_OPERATION)
             .add("value", SerializableDataTypes.DOUBLE)
             .add("name", SerializableDataTypes.STRING, "Unnamed EntityAttributeModifier"),
-        dataInst -> new AttributedEntityAttributeModifier((EntityAttribute)dataInst.get("attribute"),
+        dataInst -> new AttributedEntityAttributeModifier(dataInst.get("attribute"),
             new EntityAttributeModifier(
                 dataInst.getString("name"),
                 dataInst.getDouble("value"),
-                (EntityAttributeModifier.Operation)dataInst.get("operation"))),
+                dataInst.get("operation"))),
         (data, inst) -> {
             SerializableData.Instance dataInst = data.new Instance();
             dataInst.set("attribute", inst.getAttribute());
@@ -146,7 +159,7 @@ public class ApoliDataTypes {
         (data) ->  {
             ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
             if(data.isPresent("tag")) {
-                stack.setNbt((NbtCompound) data.get("tag"));
+                stack.setNbt(data.get("tag"));
             }
             return new Pair<>(data.getInt("slot"), stack);
         },
@@ -201,7 +214,7 @@ public class ApoliDataTypes {
             dataInst.getBoolean("should_render"),
             dataInst.getInt("bar_index"),
             dataInst.getId("sprite_location"),
-            (ConditionFactory<LivingEntity>.Instance)dataInst.get("condition"),
+            dataInst.get("condition"),
             dataInst.getBoolean("inverted")),
         (data, inst) -> {
             SerializableData.Instance dataInst = data.new Instance();
@@ -219,6 +232,33 @@ public class ApoliDataTypes {
     public static final SerializableDataType<PlayerAbility> PLAYER_ABILITY = SerializableDataType.wrap(
         PlayerAbility.class, SerializableDataTypes.IDENTIFIER,
         PlayerAbility::getId, id -> Pal.provideRegisteredAbility(id).get());
+
+    public static final SerializableDataType<ArgumentWrapper<Integer>> ITEM_SLOT = SerializableDataType.argumentType(ItemSlotArgumentType.itemSlot());
+
+    public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = SerializableDataType.list(ITEM_SLOT);
+
+    public static final SerializableDataType<Explosion.DestructionType> BACKWARDS_COMPATIBLE_DESTRUCTION_TYPE = SerializableDataType.mapped(Explosion.DestructionType.class,
+            HashBiMap.create(ImmutableBiMap.of(
+                    "none", Explosion.DestructionType.KEEP,
+                    "break", Explosion.DestructionType.DESTROY,
+                    "destroy", Explosion.DestructionType.DESTROY_WITH_DECAY)
+            ));
+
+    public static final SerializableDataType<ArgumentWrapper<EntitySelector>> ENTITIES_SELECTOR = SerializableDataType.argumentType(EntityArgumentType.entities());
+
+    public static final SerializableDataType<DamageSourceDescription> DAMAGE_SOURCE_DESCRIPTION = SerializableDataType.compound(DamageSourceDescription.class,
+            DamageSourceDescription.DATA, DamageSourceDescription::fromData, DamageSourceDescription::toData);
+
+    public static final SerializableDataType<LegacyMaterial> LEGACY_MATERIAL = SerializableDataType.wrap(
+            LegacyMaterial.class, SerializableDataTypes.STRING,
+            LegacyMaterial::getMaterial, LegacyMaterial::new
+    );
+
+    public static final SerializableDataType<AdvancementCommand.Operation> ADVANCEMENT_OPERATION = SerializableDataType.enumValue(AdvancementCommand.Operation.class);
+
+    public static final SerializableDataType<AdvancementCommand.Selection> ADVANCEMENT_SELECTION = SerializableDataType.enumValue(AdvancementCommand.Selection.class);
+
+    public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

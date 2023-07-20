@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.bientity.OwnerCondition;
 import io.github.apace100.apoli.power.factory.condition.bientity.RelativeRotationCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
@@ -10,13 +11,12 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.Tameable;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.Pair;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.RaycastContext;
 
 import java.util.List;
@@ -98,7 +98,7 @@ public class BiEntityConditions {
             (data, pair) -> {
                 RaycastContext.ShapeType shapeType = data.get("shape_type");
                 RaycastContext.FluidHandling fluidHandling = data.get("fluid_handling");
-                if (pair.getRight().world != pair.getLeft().world) {
+                if (pair.getRight().getWorld() != pair.getLeft().getWorld()) {
                     return false;
                 } else {
                     Vec3d vec3d = new Vec3d(pair.getLeft().getX(), pair.getLeft().getEyeY(), pair.getLeft().getZ());
@@ -106,19 +106,12 @@ public class BiEntityConditions {
                     if (vec3d2.distanceTo(vec3d) > 128.0D) {
                         return false;
                     } else {
-                        return pair.getLeft().world.raycast(new RaycastContext(vec3d, vec3d2, shapeType, fluidHandling, pair.getLeft())).getType() == HitResult.Type.MISS;
+                        return pair.getLeft().getWorld().raycast(new RaycastContext(vec3d, vec3d2, shapeType, fluidHandling, pair.getLeft())).getType() == HitResult.Type.MISS;
                     }
                 }
             }
         ));
-        register(new ConditionFactory<>(Apoli.identifier("owner"), new SerializableData(),
-            (data, pair) -> {
-                if(pair.getRight() instanceof Tameable) {
-                    return pair.getLeft() == ((Tameable)pair.getRight()).getOwner();
-                }
-                return false;
-            }
-        ));
+        register(OwnerCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("riding"), new SerializableData(),
             (data, pair) -> pair.getLeft().getVehicle() == pair.getRight()
         ));

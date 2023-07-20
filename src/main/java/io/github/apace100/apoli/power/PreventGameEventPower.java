@@ -3,12 +3,11 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.tag.Tag;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.world.event.GameEvent;
 
 import java.util.LinkedList;
@@ -17,11 +16,11 @@ import java.util.function.Consumer;
 
 public class PreventGameEventPower extends Power {
 
-    private final Tag<GameEvent> tag;
+    private final TagKey<GameEvent> tag;
     private final List<GameEvent> list;
     private final Consumer<Entity> entityAction;
 
-    public PreventGameEventPower(PowerType<?> type, LivingEntity entity, Tag<GameEvent> tag, List<GameEvent> list, Consumer<Entity> entityAction) {
+    public PreventGameEventPower(PowerType<?> type, LivingEntity entity, TagKey<GameEvent> tag, List<GameEvent> list, Consumer<Entity> entityAction) {
         super(type, entity);
         this.tag = tag;
         this.list = list;
@@ -35,7 +34,7 @@ public class PreventGameEventPower extends Power {
     }
 
     public boolean doesPrevent(GameEvent event) {
-        if(tag != null && tag.contains(event)) {
+        if(tag != null && event.isIn(tag)) {
             return true;
         }
         if(list != null && list.contains(event)) {
@@ -58,11 +57,11 @@ public class PreventGameEventPower extends Power {
                         if(eventList == null) {
                             eventList = new LinkedList<>();
                         }
-                        eventList.add((GameEvent)data.get("event"));
+                        eventList.add(data.get("event"));
                     }
                     return new PreventGameEventPower(type, player,
-                        (Tag<GameEvent>)data.get("tag"), eventList,
-                        (ActionFactory<Entity>.Instance)data.get("entity_action"));
+                        data.get("tag"), eventList,
+                        data.get("entity_action"));
                 })
             .allowCondition();
     }

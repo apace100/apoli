@@ -165,9 +165,9 @@ public class ModPacketsS2C {
             } else {
                 boolean result = mountingPlayer.startRiding(mountedPlayer, true);
                 if(result) {
-                    Apoli.LOGGER.info(mountingPlayer.getDisplayName().asString() + " started riding " + mountedPlayer.getDisplayName().asString());
+                    Apoli.LOGGER.info(mountingPlayer.getDisplayName().getString() + " started riding " + mountedPlayer.getDisplayName().getString());
                 } else {
-                    Apoli.LOGGER.warn(mountingPlayer.getDisplayName().asString() + " failed to start riding " + mountedPlayer.getDisplayName().asString());
+                    Apoli.LOGGER.warn(mountingPlayer.getDisplayName().getString() + " failed to start riding " + mountedPlayer.getDisplayName().getString());
                 }
             }
         });

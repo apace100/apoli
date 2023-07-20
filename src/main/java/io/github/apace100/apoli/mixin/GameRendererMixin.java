@@ -9,7 +9,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FluidBlock;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderEffect;
+import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.client.render.GameRenderer;
@@ -17,7 +17,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -49,18 +48,12 @@ public abstract class GameRendererMixin {
     private MinecraftClient client;
 
     @Shadow
-    private ItemStack floatingItem;
+    protected abstract void loadPostProcessor(Identifier identifier);
 
     @Shadow
-    protected abstract void method_31136(float f);
-
+    private PostEffectProcessor postProcessor;
     @Shadow
-    protected abstract void loadShader(Identifier identifier);
-
-    @Shadow
-    private ShaderEffect shader;
-    @Shadow
-    private boolean shadersEnabled;
+    private boolean postProcessorEnabled;
     @Shadow @Final private ResourceManager resourceManager;
     @Unique
     private Identifier currentlyLoadedShader;
@@ -69,8 +62,8 @@ public abstract class GameRendererMixin {
     private void loadShaderFromPowerOnCameraEntity(Entity entity, CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
-            if(this.resourceManager.containsResource(shaderLoc)) {
-                loadShader(shaderLoc);
+            if(this.resourceManager.getResource(shaderLoc).isPresent()) {
+                loadPostProcessor(shaderLoc);
                 currentlyLoadedShader = shaderLoc;
             }
         });
@@ -81,18 +74,18 @@ public abstract class GameRendererMixin {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
             if(currentlyLoadedShader != shaderLoc) {
-                if(this.resourceManager.containsResource(shaderLoc)) {
-                    loadShader(shaderLoc);
+                if(this.resourceManager.getResource(shaderLoc).isPresent()) {
+                    loadPostProcessor(shaderLoc);
                     currentlyLoadedShader = shaderLoc;
                 }
             }
         });
         if(!PowerHolderComponent.hasPower(client.getCameraEntity(), ShaderPower.class) && currentlyLoadedShader != null) {
-            if(this.shader != null) {
-                this.shader.close();
-                this.shader = null;
+            if(this.postProcessor != null) {
+                this.postProcessor.close();
+                this.postProcessor = null;
             }
-            this.shadersEnabled = false;
+            this.postProcessorEnabled = false;
             currentlyLoadedShader = null;
         }
     }
@@ -115,15 +108,7 @@ public abstract class GameRendererMixin {
         }, OverlayPower::render);
     }
 
-    @Inject(
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getFramebuffer()Lnet/minecraft/client/gl/Framebuffer;"),
-        method = "render"
-    )
-    private void fixHudWithShaderEnabled(float tickDelta, long nanoTime, boolean renderLevel, CallbackInfo info) {
-        RenderSystem.enableTexture();
-    }
-
-    @Inject(at = @At("HEAD"), method = "toggleShadersEnabled", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)
     private void disableShaderToggle(CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
@@ -132,22 +117,6 @@ public abstract class GameRendererMixin {
             }
         });
     }
-/*
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setCameraEntity(Lnet/minecraft/entity/Entity;)V"))
-    private void updateShaderPowers(CallbackInfo ci) {
-        if(OriginComponent.hasPower(client.getCameraEntity(), ShaderPower.class)) {
-            OriginComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
-                Identifier shaderLoc = shaderPower.getShaderLocation();
-                loadShader(shaderLoc);
-                currentlyLoadedShader = shaderLoc;
-            });
-        } else {
-            this.shader.close();
-            this.shader = null;
-            this.shadersEnabled = false;
-            currentlyLoadedShader = null;
-        }
-    }*/
 
     // NightVisionPower
     @Inject(at = @At("HEAD"), method = "getNightVisionStrength", cancellable = true)
@@ -196,7 +165,7 @@ public abstract class GameRendererMixin {
                 BlockState stateAtP = client.world.getBlockState(p);
                 if (!savedStates.containsKey(p) && !client.world.isAir(p) && !(stateAtP.getBlock() instanceof FluidBlock)) {
                     savedStates.put(p, stateAtP);
-                    client.world.setBlockStateWithoutNeighborUpdates(p, Blocks.AIR.getDefaultState());
+                    client.world.setBlockState(p, Blocks.AIR.getDefaultState());
                 }
             }
         } else if (savedStates.size() > 0) {
@@ -227,11 +196,4 @@ public abstract class GameRendererMixin {
         BlockPos.stream(cameraBox).forEach(p -> set.add(p.toImmutable()));
         return set;
     }
-    /* TODO: make this overlay independent of phasing power
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"))
-    private void drawPhantomizedOverlay(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
-        if(PowerHolderComponent.getPowers(this.client.player, PhasingPower.class).size() > 0 && !this.client.player.hasStatusEffect(StatusEffects.NAUSEA)) {
-            this.method_31136(OriginsClient.config.phantomizedOverlayStrength);
-        }
-    }*/
 }

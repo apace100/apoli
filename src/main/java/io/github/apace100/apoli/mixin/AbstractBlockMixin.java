@@ -24,7 +24,7 @@ public abstract class AbstractBlockMixin {
     @Inject(at = @At("RETURN"), method = "calcBlockBreakingDelta", cancellable = true)
     private void modifyBlockBreakSpeed(BlockState state, PlayerEntity player, BlockView world, BlockPos pos, CallbackInfoReturnable<Float> info) {
         float base = info.getReturnValue();
-        float modified = PowerHolderComponent.modify(player, ModifyBreakSpeedPower.class, base, p -> p.doesApply(player.world, pos));
+        float modified = PowerHolderComponent.modify(player, ModifyBreakSpeedPower.class, base, p -> p.doesApply(player.getWorld(), pos));
         info.setReturnValue(modified);
     }
 

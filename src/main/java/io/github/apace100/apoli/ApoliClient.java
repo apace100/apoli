@@ -99,8 +99,8 @@ public class ApoliClient implements ClientModInitializer {
 			if(!initializedKeyBindingMap) {
 				initializedKeyBindingMap = true;
 				MinecraftClient client = MinecraftClient.getInstance();
-				for(int i = 0; i < client.options.keysAll.length; i++) {
-					idToKeyBindingMap.put(client.options.keysAll[i].getTranslationKey(), client.options.keysAll[i]);
+				for(int i = 0; i < client.options.allKeys.length; i++) {
+					idToKeyBindingMap.put(client.options.allKeys[i].getTranslationKey(), client.options.allKeys[i]);
 				}
 				return getKeyBinding(key);
 			}

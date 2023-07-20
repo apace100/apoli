@@ -32,6 +32,9 @@
     ],
     "modmenu": [
       "io.github.apace100.apoli.integration.ModMenuIntegration"
+    ],
+    "calio:ordered-resource-listener": [
+      "io.github.apace100.apoli.Apoli"
     ]
   },
   "mixins": [
@@ -43,6 +46,9 @@
     ],
     "modmenu": {
       "badges": ["library"]
+    },
+    "lithium:options": {
+      "mixin.entity.collisions.suffocation": false
     }
   },
 
@@ -50,9 +56,9 @@
 
   "depends": {
     "java": ">=17",
-    "fabricloader": ">=0.11.3",
-    "fabric": ">=0.43.0",
-    "minecraft": "1.18.x",
-    "calio": ">=1.4.1"
+    "fabricloader": ">=0.13.3",
+    "fabric": ">=0.83.0",
+    "minecraft": ">=1.20",
+    "calio": ">=1.11.0"
   }
 }

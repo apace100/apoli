@@ -7,8 +7,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.power.factory.condition.entity.ElytraFlightPossibleCondition;
-import io.github.apace100.apoli.power.factory.condition.entity.RaycastCondition;
+import io.github.apace100.apoli.power.factory.condition.entity.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
@@ -20,7 +19,6 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.effect.StatusEffect;
@@ -29,8 +27,10 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootDataType;
 import net.minecraft.loot.condition.LootCondition;
 import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.nbt.NbtCompound;
@@ -42,14 +42,15 @@ import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.tag.Tag;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
@@ -72,31 +73,22 @@ public class EntityConditions {
             (data, entity) -> ((List<ConditionFactory<Entity>.Instance>)data.get("conditions")).stream().anyMatch(
                 condition -> condition.test(entity)
             )));
-        register(new ConditionFactory<>(Apoli.identifier("block_collision"), new SerializableData()
-            .add("offset_x", SerializableDataTypes.FLOAT)
-            .add("offset_y", SerializableDataTypes.FLOAT)
-            .add("offset_z", SerializableDataTypes.FLOAT),
-            (data, entity) -> entity.world.getBlockCollisions(entity,
-                entity.getBoundingBox().offset(
-                    data.getFloat("offset_x") * entity.getBoundingBox().getXLength(),
-                    data.getFloat("offset_y") * entity.getBoundingBox().getYLength(),
-                    data.getFloat("offset_z") * entity.getBoundingBox().getZLength())
-            ).iterator().hasNext()));
+        register(BlockCollisionCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("brightness"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
             (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.getBrightnessAtEyes(), data.getFloat("compare_to"))));
-        register(new ConditionFactory<>(Apoli.identifier("daytime"), new SerializableData(), (data, entity) -> entity.world.getTimeOfDay() % 24000L < 13000L));
+        register(new ConditionFactory<>(Apoli.identifier("daytime"), new SerializableData(), (data, entity) -> entity.getWorld().getTimeOfDay() % 24000L < 13000L));
         register(new ConditionFactory<>(Apoli.identifier("time_of_day"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT), (data, entity) ->
-            ((Comparison)data.get("comparison")).compare(entity.world.getTimeOfDay() % 24000L, data.getInt("compare_to"))));
+            ((Comparison)data.get("comparison")).compare(entity.getWorld().getTimeOfDay() % 24000L, data.getInt("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("fall_flying"), new SerializableData(), (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()));
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sun"), new SerializableData(), (data, entity) -> {
-            if (entity.world.isDay() && !((EntityAccessor) entity).callIsBeingRainedOn()) {
+            if (entity.getWorld().isDay() && !((EntityAccessor) entity).callIsBeingRainedOn()) {
                 float f = entity.getBrightnessAtEyes();
-                BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
-                return f > 0.5F && entity.world.isSkyVisible(blockPos);
+                BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
+                return f > 0.5F && entity.getWorld().isSkyVisible(blockPos);
             }
             return false;
         }));
@@ -104,8 +96,8 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("invisible"), new SerializableData(), (data, entity) -> entity.isInvisible()));
         register(new ConditionFactory<>(Apoli.identifier("on_fire"), new SerializableData(), (data, entity) -> entity.isOnFire()));
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sky"), new SerializableData(), (data, entity) -> {
-            BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : new BlockPos(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
-            return entity.world.isSkyVisible(blockPos);
+            BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
+            return entity.getWorld().isSkyVisible(blockPos);
         }));
         register(new ConditionFactory<>(Apoli.identifier("sneaking"), new SerializableData(), (data, entity) -> entity.isSneaking()));
         register(new ConditionFactory<>(Apoli.identifier("sprinting"), new SerializableData(), (data, entity) -> entity.isSprinting()));
@@ -135,20 +127,7 @@ public class EntityConditions {
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.DOUBLE),
             (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely(data.get("fluid")), data.getDouble("compare_to"))));
-        register(new ConditionFactory<>(Apoli.identifier("power"), new SerializableData()
-            .add("power", SerializableDataTypes.IDENTIFIER)
-            .add("source", SerializableDataTypes.IDENTIFIER, null),
-            (data, entity) -> {
-                try {
-                    PowerType<?> powerType = PowerTypeRegistry.get(data.getId("power"));
-                    if(data.isPresent("source")) {
-                        return PowerHolderComponent.KEY.get(entity).hasPower(powerType, data.getId("source"));
-                    }
-                    return PowerHolderComponent.KEY.get(entity).hasPower(powerType);
-                } catch(IllegalArgumentException e) {
-                    return false;
-                }
-            }));
+        register(PowerCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("food_level"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
@@ -171,7 +150,7 @@ public class EntityConditions {
             .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null),
             (data, entity) -> entity.isOnGround() &&
                 (!data.isPresent("block_condition") || ((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")).test(
-                    new CachedBlockPosition(entity.world, new BlockPos(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ()), true)))));
+                    new CachedBlockPosition(entity.getWorld(), BlockPos.ofFloored(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ()), true)))));
         register(new ConditionFactory<>(Apoli.identifier("equipped_item"), new SerializableData()
             .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
             .add("item_condition", ApoliDataTypes.ITEM_CONDITION),
@@ -192,21 +171,7 @@ public class EntityConditions {
                 return ((Comparison)data.get("comparison")).compare(attrValue, data.getDouble("compare_to"));
             }));
         register(new ConditionFactory<>(Apoli.identifier("swimming"), new SerializableData(), (data, entity) -> entity.isSwimming()));
-        register(new ConditionFactory<>(Apoli.identifier("resource"), new SerializableData()
-            .add("resource", ApoliDataTypes.POWER_TYPE)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT),
-            (data, entity) -> {
-                int resourceValue = 0;
-                PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                Power p = component.getPower((PowerType<?>)data.get("resource"));
-                if(p instanceof VariableIntPower) {
-                    resourceValue = ((VariableIntPower)p).getValue();
-                } else if(p instanceof CooldownPower) {
-                    resourceValue = ((CooldownPower)p).getRemainingTicks();
-                }
-                return ((Comparison)data.get("comparison")).compare(resourceValue, data.getInt("compare_to"));
-            }));
+        register(ResourceCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("air"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
@@ -214,7 +179,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("in_block"), new SerializableData()
             .add("block_condition", ApoliDataTypes.BLOCK_CONDITION),
             (data, entity) ->((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")).test(
-                new CachedBlockPosition(entity.world, entity.getBlockPos(), true))));
+                new CachedBlockPosition(entity.getWorld(), entity.getBlockPos(), true))));
         register(new ConditionFactory<>(Apoli.identifier("block_in_radius"), new SerializableData()
             .add("block_condition", ApoliDataTypes.BLOCK_CONDITION)
             .add("radius", SerializableDataTypes.INT)
@@ -236,7 +201,7 @@ public class EntityConditions {
                 }
                 int count = 0;
                 for(BlockPos pos : Shape.getPositions(entity.getBlockPos(), data.get("shape"), data.getInt("radius"))) {
-                    if(blockCondition.test(new CachedBlockPosition(entity.world, pos, true))) {
+                    if(blockCondition.test(new CachedBlockPosition(entity.getWorld(), pos, true))) {
                         count++;
                         if(count == stopAt) {
                             break;
@@ -248,7 +213,7 @@ public class EntityConditions {
         DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("dimension"), new SerializableData()
             .add("dimension", SerializableDataTypes.IDENTIFIER),
-            (data, entity) -> entity.world.getRegistryKey() == RegistryKey.of(Registry.WORLD_KEY, data.getId("dimension"))));
+            (data, entity) -> entity.getWorld().getRegistryKey() == RegistryKey.of(RegistryKeys.WORLD, data.getId("dimension"))));
         register(new ConditionFactory<>(Apoli.identifier("xp_levels"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
@@ -286,60 +251,44 @@ public class EntityConditions {
             .add("biomes", SerializableDataTypes.IDENTIFIERS, null)
             .add("condition", ApoliDataTypes.BIOME_CONDITION, null),
             (data, entity) -> {
-                Biome biome = entity.world.getBiome(entity.getBlockPos());
-                ConditionFactory<Biome>.Instance condition = data.get("condition");
+                RegistryEntry<Biome> biomeEntry = entity.getWorld().getBiome(entity.getBlockPos());
+                Biome biome = biomeEntry.value();
+                ConditionFactory<RegistryEntry<Biome>>.Instance condition = data.get("condition");
                 if(data.isPresent("biome") || data.isPresent("biomes")) {
-                    Identifier biomeId = entity.world.getRegistryManager().get(Registry.BIOME_KEY).getId(biome);
+                    Identifier biomeId = entity.getWorld().getRegistryManager().get(RegistryKeys.BIOME).getId(biome);
                     if(data.isPresent("biome") && biomeId.equals(data.getId("biome"))) {
-                        return condition == null || condition.test(biome);
+                        return condition == null || condition.test(biomeEntry);
                     }
                     if(data.isPresent("biomes") && ((List<Identifier>)data.get("biomes")).contains(biomeId)) {
-                        return condition == null || condition.test(biome);
+                        return condition == null || condition.test(biomeEntry);
                     }
                     return false;
                 }
-                return condition == null || condition.test(biome);
+                return condition == null || condition.test(biomeEntry);
             }));
         register(new ConditionFactory<>(Apoli.identifier("entity_type"), new SerializableData()
             .add("entity_type", SerializableDataTypes.ENTITY_TYPE),
             (data, entity) -> entity.getType() == data.get("entity_type")));
-        register(new ConditionFactory<>(Apoli.identifier("scoreboard"), new SerializableData()
-            .add("objective", SerializableDataTypes.STRING)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT),
-            (data, entity) -> {
-                if(entity instanceof PlayerEntity) {
-                    PlayerEntity player = (PlayerEntity)entity;
-                    Scoreboard scoreboard = player.getScoreboard();
-                    ScoreboardObjective objective = scoreboard.getObjective(data.getString("objective"));
-                    String playerName = player.getName().asString();
-
-                    if (scoreboard.playerHasObjective(playerName, objective)) {
-                        int value = scoreboard.getPlayerScore(playerName, objective).getScore();
-                        return ((Comparison)data.get("comparison")).compare(value, data.getInt("compare_to"));
-                    }
-                }
-                return false;
-            }));
+        register(ScoreboardCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("command"), new SerializableData()
             .add("command", SerializableDataTypes.STRING)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT),
             (data, entity) -> {
-                MinecraftServer server = entity.world.getServer();
+                MinecraftServer server = entity.getWorld().getServer();
                 if(server != null) {
                     boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
                     ServerCommandSource source = new ServerCommandSource(
                         Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
                         entity.getPos(),
                         entity.getRotationClient(),
-                        entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
+                        entity.getWorld() instanceof ServerWorld ? (ServerWorld)entity.getWorld() : null,
                         Apoli.config.executeCommand.permissionLevel,
                         entity.getName().getString(),
                         entity.getDisplayName(),
                         server,
                         entity);
-                    int output = server.getCommandManager().execute(source, data.getString("command"));
+                    int output = server.getCommandManager().executeWithPrefix(source, data.getString("command"));
                     return ((Comparison)data.get("comparison")).compare(output, data.getInt("compare_to"));
                 }
                 return false;
@@ -347,14 +296,16 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("predicate"), new SerializableData()
             .add("predicate", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> {
-                MinecraftServer server = entity.world.getServer();
+                MinecraftServer server = entity.getWorld().getServer();
                 if (server != null) {
-                    LootCondition lootCondition = server.getPredicateManager().get(data.get("predicate"));
+                    LootCondition lootCondition = server.getLootManager().getElement(LootDataType.PREDICATES, data.get("predicate"));
                     if (lootCondition != null) {
-                        LootContext.Builder lootBuilder = (new LootContext.Builder((ServerWorld) entity.world))
-                            .parameter(LootContextParameters.ORIGIN, entity.getPos())
-                            .optionalParameter(LootContextParameters.THIS_ENTITY, entity);
-                        return lootCondition.test(lootBuilder.build(LootContextTypes.COMMAND));
+                        LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder((ServerWorld) entity.getWorld())
+                                .add(LootContextParameters.ORIGIN, entity.getPos())
+                                .addOptional(LootContextParameters.THIS_ENTITY, entity)
+                                .build(LootContextTypes.COMMAND);
+                        LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(null);
+                        return lootCondition.test(lootContext);
                     }
                 }
                 return false;
@@ -385,14 +336,14 @@ public class EntityConditions {
                 }
                 int count = 0;
                 Box box = entity.getBoundingBox();
-                BlockPos blockPos = new BlockPos(box.minX + 0.001D, box.minY + 0.001D, box.minZ + 0.001D);
-                BlockPos blockPos2 = new BlockPos(box.maxX - 0.001D, box.maxY - 0.001D, box.maxZ - 0.001D);
+                BlockPos blockPos = BlockPos.ofFloored(box.minX + 0.001D, box.minY + 0.001D, box.minZ + 0.001D);
+                BlockPos blockPos2 = BlockPos.ofFloored(box.maxX - 0.001D, box.maxY - 0.001D, box.maxZ - 0.001D);
                 BlockPos.Mutable mutable = new BlockPos.Mutable();
                 for(int i = blockPos.getX(); i <= blockPos2.getX() && count < stopAt; ++i) {
                     for(int j = blockPos.getY(); j <= blockPos2.getY() && count < stopAt; ++j) {
                         for(int k = blockPos.getZ(); k <= blockPos2.getZ() && count < stopAt; ++k) {
                             mutable.set(i, j, k);
-                            if(blockCondition.test(new CachedBlockPosition(entity.world, mutable, true))) {
+                            if(blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutable, true))) {
                                 count++;
                             }
                         }
@@ -404,7 +355,7 @@ public class EntityConditions {
             (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
             .add("tag", SerializableDataTypes.ENTITY_TAG),
-            (data, entity) -> ((Tag<EntityType<?>>)data.get("tag")).contains(entity.getType())));
+            (data, entity) -> entity.getType().getRegistryEntry().isIn(data.get("tag"))));
         register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(),
             (data, entity) -> {
                 if(entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()) {
@@ -563,13 +514,14 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("ability"), new SerializableData()
             .add("ability", ApoliDataTypes.PLAYER_ABILITY),
             (data, entity) -> {
-                if(entity instanceof PlayerEntity && !entity.world.isClient) {
+                if(entity instanceof PlayerEntity && !entity.getWorld().isClient) {
                     return ((PlayerAbility) data.get("ability")).isEnabledFor((PlayerEntity) entity);
                 }
                 return false;
             }));
         register(RaycastCondition.getFactory());
         register(ElytraFlightPossibleCondition.getFactory());
+        register(InventoryCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

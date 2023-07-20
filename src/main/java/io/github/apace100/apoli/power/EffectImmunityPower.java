@@ -14,13 +14,11 @@ import java.util.List;
 public class EffectImmunityPower extends Power {
 
     protected final HashSet<StatusEffect> effects = new HashSet<>();
+    private final boolean inverted;
 
-    public EffectImmunityPower(PowerType<?> type, LivingEntity entity) {
+    public EffectImmunityPower(PowerType<?> type, LivingEntity entity, boolean inverted) {
         super(type, entity);
-    }
-    public EffectImmunityPower(PowerType<?> type, LivingEntity entity, StatusEffect effect) {
-        super(type, entity);
-        addEffect(effect);
+        this.inverted = inverted;
     }
 
     public EffectImmunityPower addEffect(StatusEffect effect) {
@@ -33,19 +31,20 @@ public class EffectImmunityPower extends Power {
     }
 
     public boolean doesApply(StatusEffect effect) {
-        return effects.contains(effect);
+        return inverted ^ effects.contains(effect);
     }
 
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("effect_immunity"),
             new SerializableData()
                 .add("effect", SerializableDataTypes.STATUS_EFFECT, null)
-                .add("effects", SerializableDataTypes.STATUS_EFFECTS, null),
+                .add("effects", SerializableDataTypes.STATUS_EFFECTS, null)
+                .add("inverted", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) -> {
-                    EffectImmunityPower power = new EffectImmunityPower(type, player);
+                    EffectImmunityPower power = new EffectImmunityPower(type, player, data.get("inverted"));
                     if(data.isPresent("effect")) {
-                        power.addEffect((StatusEffect)data.get("effect"));
+                        power.addEffect(data.get("effect"));
                     }
                     if(data.isPresent("effects")) {
                         ((List<StatusEffect>)data.get("effects")).forEach(power::addEffect);

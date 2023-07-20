@@ -20,7 +20,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -68,13 +68,13 @@ public abstract class LoginMixin {
 
 		List<ServerPlayerEntity> playerList = getPlayerList();
 		playerList.forEach(spe -> {
-			PowerHolderComponent.KEY.syncWith(spe, ComponentProvider.fromEntity(player));
-			PowerHolderComponent.KEY.syncWith(player, ComponentProvider.fromEntity(spe));
+			PowerHolderComponent.KEY.syncWith(spe, (ComponentProvider) player);
+			PowerHolderComponent.KEY.syncWith(player, (ComponentProvider) spe);
 		});
 		PowerHolderComponent.sync(player);
 	}
 
-	@Redirect(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/util/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"))
+	@Redirect(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"))
 	private void preventEndExitSpawnPointSetting(ServerPlayerEntity serverPlayerEntity, RegistryKey<World> dimension, BlockPos pos, float angle, boolean spawnPointSet, boolean bl, ServerPlayerEntity playerEntity, boolean alive) {
 		EndRespawningEntity ere = (EndRespawningEntity)playerEntity;
 		// Prevent setting the spawn point if the player has a "fake" respawn point

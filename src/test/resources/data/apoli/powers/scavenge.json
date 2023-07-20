@@ -1,0 +1,67 @@
+{
+  "type": "apoli:multiple",
+  "keep_corpses": {
+    "type": "apoli:action_on_hit",
+    "bientity_action": {
+      "type": "apoli:target_action",
+      "action": {
+        "type": "apoli:delay",
+        "ticks": 1,
+        "action": {
+          "type": "apoli:if_else",
+          "condition": {
+            "type": "apoli:health",
+            "comparison": "<=",
+            "compare_to": 0
+          },
+          "if_action": {
+            "type": "apoli:grant_power",
+            "power": "*:*_corpse",
+            "source": "*:*"
+          }
+        }
+      }
+    }
+  },
+  "scavenge": {
+    "type": "apoli:action_on_entity_use",
+    "bientity_condition": {
+      "type": "apoli:target_condition",
+      "condition": {
+        "type": "apoli:power",
+        "power": "*:*_corpse"
+      }
+    },
+    "bientity_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:actor_action",
+          "action": {
+            "type": "apoli:give",
+            "stack": {
+              "item": "minecraft:diamond"
+            }
+          }
+        },
+        {
+          "type": "apoli:target_action",
+          "action": {
+            "type": "apoli:and",
+            "actions": [
+              {
+                "type": "apoli:revoke_power",
+                "power": "*:*_corpse",
+                "source": "*:*"
+              },
+              {
+                "type": "apoli:execute_command",
+                "command": "loot spawn ~ ~ ~ kill @s"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

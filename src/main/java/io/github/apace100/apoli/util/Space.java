@@ -2,9 +2,9 @@ package io.github.apace100.apoli.util;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
+import org.joml.Matrix3f;
+import org.joml.Vector3f;
 
 public enum Space {
     WORLD,
@@ -68,11 +68,11 @@ public enum Space {
      * @param baseYaw the yaw of the base (used in case the forward vector lacks information to infer the base)
      * @param normalizeBase whether to normalize the base, if so all three vectors of the base will be normalized, otherwise they'll all have the length of the input forward vector
      * */
-    public static void transformVectorToBase(Vec3d baseForwardVector, Vec3f vector, float baseYaw, boolean normalizeBase) {
+    public static void transformVectorToBase(Vec3d baseForwardVector, Vector3f vector, float baseYaw, boolean normalizeBase) {
 
         double baseScaleD = baseForwardVector.length();
         if (baseScaleD <= 0.007D){ // tweak value if too high, may be a bit too aggressive
-            vector.set(Vec3f.ZERO);
+            vector.zero();
         } else {
             float baseScale = (float)baseScaleD;
 
@@ -80,8 +80,8 @@ public enum Space {
 
             Matrix3f transformMatrix = getBaseTransformMatrixFromNormalizedDirectionVector(normalizedBase, baseYaw);
             if (!normalizeBase) // if the base wasn't supposed to get normalized, re-scale to compensate for the prior normalization
-                transformMatrix.multiply(Matrix3f.scale(baseScale, baseScale, baseScale));
-            vector.transform(transformMatrix); // matrix multiplication, vector is now in the new base :D
+                transformMatrix.scale(baseScale, baseScale, baseScale);
+            vector.mulTranspose(transformMatrix); // matrix multiplication, vector is now in the new base :D
         }
     }
 
@@ -93,7 +93,7 @@ public enum Space {
      * @param vector the vector to transform
      * @param entity the entity to align the local space to
      * */
-    public void toGlobal(Vec3f vector, Entity entity){
+    public void toGlobal(Vector3f vector, Entity entity){
         Vec3d baseForwardVector;
 
         switch (this){

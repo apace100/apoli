@@ -9,8 +9,11 @@ import io.github.apace100.apoli.mixin.PlayerScreenHandlerAccessor;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
+import net.minecraft.recipe.book.CraftingRecipeCategory;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
@@ -23,35 +26,50 @@ import java.util.Optional;
 
 public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
-    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(ModifiedCraftingRecipe::new);
+    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<ModifiedCraftingRecipe>(ModifiedCraftingRecipe::new);
 
-    public ModifiedCraftingRecipe(Identifier id) {
-        super(id);
+    public ModifiedCraftingRecipe(Identifier id, CraftingRecipeCategory category) {
+        super(id, category);
     }
 
     @Override
-    public boolean matches(CraftingInventory inv, World world) {
-        Optional<CraftingRecipe> original = getOriginalMatch(inv);
-        if(original.isEmpty()) {
-            return false;
+    public boolean matches(RecipeInputInventory inventory, World world)
+    {
+        if (inventory instanceof CraftingInventory craftingInventory)
+        {
+            Optional<CraftingRecipe> original = getOriginalMatch(craftingInventory);
+            if (original.isEmpty())
+            {
+                return false;
+            }
+            return getRecipes(craftingInventory).stream().anyMatch(r -> r.doesApply(craftingInventory, original.get()));
         }
-        return getRecipes(inv).stream().anyMatch(r -> r.doesApply(inv, original.get()));
+
+        return false;
     }
 
     @Override
-    public ItemStack craft(CraftingInventory inv) {
-        PlayerEntity player = getPlayerFromInventory(inv);
-        if(player != null) {
-            Optional<CraftingRecipe> original = getOriginalMatch(inv);
-            if(original.isPresent()) {
-                Optional<ModifyCraftingPower> optional = getRecipes(inv).stream().filter(r -> r.doesApply(inv, original.get())).findFirst();
-                if(optional.isPresent()) {
-                    ItemStack result = optional.get().getNewResult(inv, original.get());
-                    ((PowerCraftingInventory)inv).setPower(optional.get());
-                    return result;
+    public ItemStack craft(RecipeInputInventory inventory, DynamicRegistryManager registryManager)
+    {
+        if (inventory instanceof CraftingInventory craftingInventory)
+        {
+            PlayerEntity player = getPlayerFromInventory(craftingInventory);
+            if (player != null)
+            {
+                Optional<CraftingRecipe> original = getOriginalMatch(craftingInventory);
+                if (original.isPresent())
+                {
+                    Optional<ModifyCraftingPower> optional = getRecipes(craftingInventory).stream().filter(r -> r.doesApply(craftingInventory, original.get())).findFirst();
+                    if (optional.isPresent())
+                    {
+                        ItemStack result = optional.get().getNewResult(craftingInventory, original.get());
+                        ((PowerCraftingInventory) craftingInventory).setPower(optional.get());
+                        return result;
+                    }
                 }
             }
         }
+
         return ItemStack.EMPTY;
     }
 
@@ -94,7 +112,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
             List<CraftingRecipe> recipes = player.getServer().getRecipeManager().listAllOfType(RecipeType.CRAFTING);
             return recipes.stream()
                 .filter(cr -> !(cr instanceof ModifiedCraftingRecipe)
-                    && cr.matches(inv, player.world))
+                    && cr.matches(inv, player.getWorld()))
                 .findFirst();
         }
         return Optional.empty();

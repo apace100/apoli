@@ -17,23 +17,25 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -55,7 +57,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     public World world;
 
     @Shadow
-    public abstract double getFluidHeight(Tag<Fluid> fluid);
+    public abstract double getFluidHeight(TagKey<Fluid> fluid);
 
     @Shadow
     public abstract Vec3d getVelocity();
@@ -66,9 +68,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow
     protected boolean onGround;
 
-    @Shadow @Nullable protected Tag<Fluid> submergedFluidTag;
+    @Shadow @Nullable protected Set<TagKey<Fluid>> submergedFluidTag;
 
-    @Shadow protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
+    @Shadow protected Object2DoubleMap<TagKey<Fluid>> fluidHeight;
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -112,23 +114,17 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;<init>(DDD)V"), method = "pushOutOfBlocks", cancellable = true)
+    @Inject(method = "isInvisibleTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getScoreboardTeam()Lnet/minecraft/scoreboard/AbstractTeam;"), cancellable = true)
+    private void invisibilityException(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
+        if (PowerHolderComponent.hasPower((Entity) (Object) this, InvisibilityPower.class, p -> !p.doesApply(player))) cir.setReturnValue(false);
+    }
+
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;ofFloored(DDD)Lnet/minecraft/util/math/BlockPos;"), method = "pushOutOfBlocks", cancellable = true)
     protected void pushOutOfBlocks(double x, double y, double z, CallbackInfo info) {
         List<PhasingPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, PhasingPower.class);
         if(powers.size() > 0) {
-            if(powers.stream().anyMatch(phasingPower -> phasingPower.doesApply(new BlockPos(x, y, z)))) {
+            if(powers.stream().anyMatch(phasingPower -> phasingPower.doesApply(BlockPos.ofFloored(x, y, z)))) {
                 info.cancel();
-            }
-        }
-    }
-
-    @Inject(method = "emitGameEvent(Lnet/minecraft/world/event/GameEvent;Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/BlockPos;)V", at = @At("HEAD"), cancellable = true)
-    private void preventGameEvents(GameEvent event, @Nullable Entity entity, BlockPos pos, CallbackInfo ci) {
-        if(entity instanceof LivingEntity) {
-            List<PreventGameEventPower> preventingPowers = PowerHolderComponent.getPowers(entity, PreventGameEventPower.class).stream().filter(p -> p.doesPrevent(event)).toList();
-            if(preventingPowers.size() > 0) {
-                preventingPowers.forEach(p -> p.executeAction(entity));
-                ci.cancel();
             }
         }
     }
@@ -154,27 +150,48 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         }
     }
 
-    @Override
-    public boolean isSubmergedInLoosely(Tag<Fluid> tag) {
-        if(tag == null || submergedFluidTag == null) {
-            return false;
+    @ModifyVariable(method = "move", at = @At("HEAD"), argsOnly = true)
+    private Vec3d modifyMovementVelocity(Vec3d original, MovementType movementType) {
+        if(movementType != MovementType.SELF) {
+            return original;
         }
-        if(tag == submergedFluidTag) {
-            return true;
+        Vec3d modified = new Vec3d(
+            PowerHolderComponent.modify((Entity)(Object)this, ModifyVelocityPower.class, original.x, p -> p.axes.contains(Direction.Axis.X), null),
+            PowerHolderComponent.modify((Entity)(Object)this, ModifyVelocityPower.class, original.y, p -> p.axes.contains(Direction.Axis.Y), null),
+            PowerHolderComponent.modify((Entity)(Object)this, ModifyVelocityPower.class, original.z, p -> p.axes.contains(Direction.Axis.Z), null)
+        );
+        return modified;
+    }
+
+    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLandingPos()Lnet/minecraft/util/math/BlockPos;"))
+    private void forceGrounded(MovementType movementType, Vec3d movement, CallbackInfo ci) {
+        if(PowerHolderComponent.hasPower((Entity)(Object)this, GroundedPower.class)) {
+            this.onGround = true;
         }
-        return Calio.areTagsEqual(Registry.FLUID_KEY, tag, submergedFluidTag);
     }
 
     @Override
-    public double getFluidHeightLoosely(Tag<Fluid> tag) {
+    public boolean isSubmergedInLoosely(TagKey<Fluid> tag) {
+        if(tag == null || submergedFluidTag == null) {
+            return false;
+        }
+        if(submergedFluidTag.contains(tag)) {
+            return true;
+        }
+        return false;
+        //return Calio.areTagsEqual(Registry.FLUID_KEY, tag, submergedFluidTag);
+    }
+
+    @Override
+    public double getFluidHeightLoosely(TagKey<Fluid> tag) {
         if(tag == null) {
             return 0;
         }
         if(fluidHeight.containsKey(tag)) {
             return fluidHeight.getDouble(tag);
         }
-        for(Tag<Fluid> ft : fluidHeight.keySet()) {
-            if(Calio.areTagsEqual(Registry.FLUID_KEY, ft, tag)) {
+        for(TagKey<Fluid> ft : fluidHeight.keySet()) {
+            if(Calio.areTagsEqual(RegistryKeys.FLUID, ft, tag)) {
                 return fluidHeight.getDouble(ft);
             }
         }
@@ -189,12 +206,19 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Environment(EnvType.CLIENT)
     @Inject(method = "getTeamColorValue", at = @At("RETURN"), cancellable = true)
     private void modifyGlowingColorFromPower(CallbackInfoReturnable<Integer> cir) {
-        /** Adviced by @EdwinMindcraft: a solution making the hook limited to WorldRenderer ONLY.
-         * Remove this comment when run into unexpected call to Entity#getTeamColorValue to fix the problem.
+
+/*
+
+        Advised by @EdwinMindcraft: a solution making the hook limited to WorldRenderer ONLY.
+        Remove this comment when run into unexpected call to Entity#getTeamColorValue to fix the problem.
+
         StackWalker walker = StackWalker.getInstance(Set.of(StackWalker.Option.RETAIN_CLASS_REFERENCE), 2);
         boolean calledByWorldRenderer = walker.walk(s -> s.map(StackWalker.StackFrame::getDeclaringClass).anyMatch(cls -> cls == WorldRenderer.class));
-        if(!calledByWorldRenderer) return;
-         */
+        if (!calledByWorldRenderer) {
+            return;
+        }
+
+*/
 
         Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
         Entity renderEntity = (Entity) (Object) this;

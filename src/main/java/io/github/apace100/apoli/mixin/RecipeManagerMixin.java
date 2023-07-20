@@ -1,13 +1,11 @@
 package io.github.apace100.apoli.mixin;
 
-import com.google.common.collect.ImmutableMap;
 import io.github.apace100.apoli.util.ModifiedCraftingRecipe;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeManager;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,11 +23,12 @@ public abstract class RecipeManagerMixin {
 
     @Inject(method = "getFirstMatch", at = @At("HEAD"), cancellable = true)
     private void prioritizeModifiedRecipes(RecipeType<Recipe<Inventory>> type, Inventory inventory, World world, CallbackInfoReturnable<Optional<Recipe<Inventory>>> cir) {
+        /* TODO: this
         Optional<Recipe<Inventory>> modifiedRecipe = this.getAllOfType(type).values().stream().flatMap((recipe) -> {
-            return Util.stream(type.match(recipe, world, inventory));
+            return type.match(recipe, world, inventory).stream();
         }).filter(r -> r.getClass() == ModifiedCraftingRecipe.class).findFirst();
         if(modifiedRecipe.isPresent()) {
             cir.setReturnValue(modifiedRecipe);
-        }
+        }*/
     }
 }

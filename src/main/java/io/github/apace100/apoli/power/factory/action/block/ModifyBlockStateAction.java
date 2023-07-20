@@ -38,8 +38,8 @@ public class ModifyBlockStateAction {
                     modifyEnumState(block.getLeft(), block.getMiddle(), state, property, data.getString("enum"));
                 } else if(data.isPresent("value") && value instanceof Boolean) {
                     block.getLeft().setBlockState(block.getMiddle(), state.with((Property<Boolean>) property, data.getBoolean("value")));
-                } else if(data.isPresent("comparison") && data.isPresent("compare_to") && value instanceof Integer) {
-                    ResourceOperation op = ((ResourceOperation)data.get("operation"));
+                } else if(data.isPresent("operation") && data.isPresent("change") && value instanceof Integer) {
+                    ResourceOperation op = data.get("operation");
                     int opValue = data.getInt("change");
                     int newValue = (int)value;
                     switch(op) {

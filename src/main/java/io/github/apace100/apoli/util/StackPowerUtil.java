@@ -50,6 +50,36 @@ public final class StackPowerUtil {
         list.add(stackPower.toNbt());
     }
 
+    public static void removePower(ItemStack stack, EquipmentSlot slot, Identifier powerId) {
+        NbtCompound nbt = stack.getOrCreateNbt();
+        NbtList list;
+        if(nbt.contains("Powers")) {
+            NbtElement elem = nbt.get("Powers");
+            if(elem.getType() != NbtType.LIST) {
+                Apoli.LOGGER.warn("Can't remove power " + powerId + " from item stack "
+                    + stack + ", as it contains conflicting NBT data.");
+                return;
+            }
+            list = (NbtList)elem;
+            int found = -1;
+            while(list.size() > 0) {
+                for(int i = 0; i < list.size(); i++) {
+                    StackPower sp = StackPower.fromNbt(list.getCompound(i));
+                    if(sp.powerId.equals(powerId) && sp.slot == slot) {
+                        found = i;
+                        break;
+                    }
+                }
+                if(found >= 0) {
+                    list.remove(found);
+                    found = -1;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
     public static List<StackPower> getPowers(ItemStack stack, EquipmentSlot slot) {
         NbtCompound nbt = stack.getNbt();
         NbtList list;

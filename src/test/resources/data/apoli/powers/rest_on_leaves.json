@@ -1,0 +1,18 @@
+{
+  "type": "apoli:action_on_block_use",
+  "block_condition": {
+    "type": "apoli:block",
+    "block": "minecraft:oak_leaves"
+  },
+  "entity_action": {
+    "type": "apoli:modify_stat",
+    "stat": {
+      "type": "minecraft:custom",
+      "id": "minecraft:time_since_rest"
+    },
+    "modifier": {
+      "operation": "set_total",
+      "value": 0
+    }
+  }
+}

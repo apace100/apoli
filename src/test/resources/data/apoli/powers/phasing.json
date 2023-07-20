@@ -1,0 +1,5 @@
+{
+  "type": "apoli:phasing",
+  "render_type": "blindness",
+  "view_distance": 10
+}

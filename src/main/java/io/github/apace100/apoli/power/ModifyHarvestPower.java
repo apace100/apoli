@@ -24,7 +24,7 @@ public class ModifyHarvestPower extends Power {
     }
 
     public boolean doesApply(BlockPos pos) {
-        CachedBlockPosition cbp = new CachedBlockPosition(entity.world, pos, true);
+        CachedBlockPosition cbp = new CachedBlockPosition(entity.getWorld(), pos, true);
         return predicate.test(cbp);
     }
 

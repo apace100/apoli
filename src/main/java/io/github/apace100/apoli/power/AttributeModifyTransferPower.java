@@ -2,6 +2,8 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.modifier.Modifier;
+import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.ClassDataRegistry;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -28,6 +30,18 @@ public class AttributeModifyTransferPower extends Power {
 
     public boolean doesApply(Class<?> cls) {
         return cls.equals(modifyClass);
+    }
+
+    public void addModifiers(List<Modifier> modifiers) {
+        AttributeContainer attrContainer = entity.getAttributes();
+        if(attrContainer.hasAttribute(attribute)) {
+            EntityAttributeInstance attributeInstance = attrContainer.getCustomInstance(attribute);
+            attributeInstance.getModifiers().forEach(mod -> {
+                EntityAttributeModifier transferMod =
+                    new EntityAttributeModifier(mod.getName(), mod.getValue() * valueMultiplier, mod.getOperation());
+                modifiers.add(ModifierUtil.fromAttributeModifier(transferMod));
+            });
+        }
     }
 
     public void apply(List<EntityAttributeModifier> modifiers) {

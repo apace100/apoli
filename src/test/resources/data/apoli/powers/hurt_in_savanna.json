@@ -1,0 +1,26 @@
+{
+  "type": "apoli:action_over_time",
+  "interval": 40,
+  "entity_action": {
+    "type": "apoli:damage",
+    "source": {
+      "name": "magic"
+    },
+    "amount": 1
+  },
+  "render_armor": false,
+  "texture": "minecraft:textures/misc/nausea.png",
+  "draw_mode": "nausea",
+  "draw_phase": "above_hud",
+  "strength": 0.7,
+  "red": 0.2,
+  "green": 0.4,
+  "blue": 0.2,
+  "condition": {
+    "type": "apoli:biome",
+    "condition": {
+      "type": "apoli:category",
+      "category": "savanna"
+    }
+  }
+}

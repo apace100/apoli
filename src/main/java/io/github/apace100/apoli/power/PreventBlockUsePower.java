@@ -22,6 +22,9 @@ public class PreventBlockUsePower extends Power {
     }
 
     public boolean doesPrevent(WorldView world, BlockPos pos) {
+        if(predicate == null) {
+            return true;
+        }
         CachedBlockPosition cbp = new CachedBlockPosition(world, pos, true);
         return predicate.test(cbp);
     }
@@ -32,7 +35,7 @@ public class PreventBlockUsePower extends Power {
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null),
             data ->
                 (type, player) -> new PreventBlockUsePower(type, player,
-                    (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")))
+                    data.get("block_condition")))
             .allowCondition();
     }
 }

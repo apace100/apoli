@@ -1,0 +1,10 @@
+{
+  "type": "apoli:particle",
+  "particle": {
+    "type": "minecraft:end_rod"
+  },
+  "frequency": 1,
+  "speed": 2,
+  "count": 2,
+  "visible_in_first_person": true
+}

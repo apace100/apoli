@@ -1,0 +1,15 @@
+{
+  "type": "apoli:modify_attribute",
+  "attribute": "minecraft:generic.movement_speed",
+  "modifier": {
+    "operation": "max_total",
+    "value": 0.02
+  },
+  "condition": {
+    "type": "apoli:on_block",
+    "block_condition": {
+      "type": "apoli:block",
+      "block": "minecraft:grass_block"
+    }
+  }
+}

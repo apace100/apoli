@@ -38,12 +38,13 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
         }
     }
 
-    @Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-    private void preventPumpkinRendering(LivingEntity livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
+    @ModifyVariable(method = "render", at = @At(value = "STORE"), ordinal = 2)
+    private boolean preventOutlineRendering(boolean original, LivingEntity livingEntity) {
         List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(livingEntity, InvisibilityPower.class);
-        if(invisibilityPowers.size() > 0 && invisibilityPowers.stream().noneMatch(InvisibilityPower::shouldRenderArmor)) {
-            info.cancel();
+        if(invisibilityPowers.size() > 0 && invisibilityPowers.stream().noneMatch(InvisibilityPower::shouldRenderOutline)) {
+            return false;
         }
+        return original;
     }
 
     @ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexConsumerProvider;getBuffer(Lnet/minecraft/client/render/RenderLayer;)Lnet/minecraft/client/render/VertexConsumer;", shift = At.Shift.BEFORE))
@@ -57,7 +58,11 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/feature/FeatureRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/Entity;FFFFFF)V"))
-    private void preventFeatureRendering(FeatureRenderer featureRenderer, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, Entity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
+    private void preventFeatureRendering(FeatureRenderer featureRenderer, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, Entity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch, LivingEntity livingEntity) {
+        List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(livingEntity, InvisibilityPower.class);
+        if(invisibilityPowers.size() > 0 && invisibilityPowers.stream().noneMatch(InvisibilityPower::shouldRenderArmor)) {
+            return;
+        }
         Class cls = featureRenderer.getClass();
         if(!PowerHolderComponent.getPowers(entity, PreventFeatureRenderPower.class).stream().anyMatch(p -> p.doesApply(cls))) {
             featureRenderer.render(matrices, vertexConsumers, light, entity, limbAngle, limbDistance, tickDelta, animationProgress, headYaw, headPitch);

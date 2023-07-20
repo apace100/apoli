@@ -1,0 +1,31 @@
+{
+  "type": "apoli:multiple",
+  "fire": {
+    "type": "apoli:fire_projectile",
+    "cooldown": 120,
+    "hud_render": {
+      "sprite_location": "apoli:resource_bar.png",
+      "bar_index": 6
+    },
+    "entity_type": "minecraft:arrow",
+    "tag": "{Passengers:[{id:\"minecraft:chicken\"}]}",
+    "sound": "minecraft:entity.ender_pearl.throw",
+    "speed": 1.5,
+    "divergence": 1,
+    "key": {
+      "key": "key.use",
+      "continuous": false
+    }
+  },
+  "reset": {
+    "type": "apoli:modify_jump",
+    "entity_action": {
+      "type": "apoli:modify_resource",
+      "resource": "*:*_fire",
+      "modifier": {
+        "operation": "addition",
+        "value": -10
+      }
+    }
+  }
+}

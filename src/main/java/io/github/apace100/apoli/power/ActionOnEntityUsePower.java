@@ -19,13 +19,13 @@ import java.util.EnumSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class ActionOnEntityUsePower extends InteractionPower {
+public class ActionOnEntityUsePower extends ActiveInteractionPower {
 
     private final Consumer<Pair<Entity, Entity>> biEntityAction;
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
-    public ActionOnEntityUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
-        super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, itemAction);
+    public ActionOnEntityUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition, int priority) {
+        super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, itemAction, priority);
         this.biEntityAction = biEntityAction;
         this.bientityCondition = bientityCondition;
     }
@@ -55,19 +55,19 @@ public class ActionOnEntityUsePower extends InteractionPower {
                 .add("result_stack", SerializableDataTypes.ITEM_STACK, null)
                 .add("held_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("action_result", SerializableDataTypes.ACTION_RESULT, ActionResult.SUCCESS),
+                .add("action_result", SerializableDataTypes.ACTION_RESULT, ActionResult.SUCCESS)
+                .add("priority", SerializableDataTypes.INT, 0),
             data ->
-                (type, player) -> {
-                    return new ActionOnEntityUsePower(type, player,
-                        (EnumSet<Hand>)data.get("hands"),
-                        (ActionResult)data.get("action_result"),
-                        (Predicate<ItemStack>)data.get("item_condition"),
-                        (Consumer<Pair<World, ItemStack>>)data.get("held_item_action"),
-                        (ItemStack)data.get("result_stack"),
-                        (Consumer<Pair<World, ItemStack>>)data.get("result_item_action"),
-                        (Consumer<Pair<Entity, Entity>>) data.get("bientity_action"),
-                        (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition"));
-                })
+                (type, player) -> new ActionOnEntityUsePower(type, player,
+                    data.get("hands"),
+                    data.get("action_result"),
+                    data.get("item_condition"),
+                    data.get("held_item_action"),
+                    data.get("result_stack"),
+                    data.get("result_item_action"),
+                    data.get("bientity_action"),
+                    data.get("bientity_condition"),
+                    data.get("priority")))
             .allowCondition();
     }
 }

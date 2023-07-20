@@ -105,7 +105,7 @@ public class OverlayPower extends Power {
                 break;
         }
         RenderSystem.setShaderColor(g, h, k, a);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         RenderSystem.setShaderTexture(0, texture);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();

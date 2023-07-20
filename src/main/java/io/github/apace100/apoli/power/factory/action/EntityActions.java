@@ -1,31 +1,22 @@
 package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.action.entity.AreaOfEffectAction;
-import io.github.apace100.apoli.action.entity.CraftingTableAction;
-import io.github.apace100.apoli.action.entity.EnderChestAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.power.factory.action.entity.RaycastAction;
-import io.github.apace100.apoli.power.factory.action.entity.SpawnParticlesAction;
-import io.github.apace100.apoli.power.factory.action.entity.SwingHandAction;
+import io.github.apace100.apoli.power.factory.action.entity.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.potion.PotionUtil;
@@ -38,18 +29,14 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.BlockView;
+import org.joml.Vector3f;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.World;
-import net.minecraft.world.explosion.Explosion;
-import net.minecraft.world.explosion.ExplosionBehavior;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -64,11 +51,16 @@ public class EntityActions {
         register(IfElseListAction.getFactory(ApoliDataTypes.ENTITY_ACTION, ApoliDataTypes.ENTITY_CONDITION));
         register(DelayAction.getFactory(ApoliDataTypes.ENTITY_ACTION));
         register(NothingAction.getFactory());
+        register(SideAction.getFactory(ApoliDataTypes.ENTITY_ACTION, entity -> !entity.getWorld().isClient));
 
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT)
-            .add("source", SerializableDataTypes.DAMAGE_SOURCE),
-            (data, entity) -> entity.damage(data.get("source"), data.getFloat("amount"))));
+            .add("source", ApoliDataTypes.DAMAGE_SOURCE_DESCRIPTION, null)
+            .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, null),
+            (data, entity) -> {
+                DamageSource damageSource = MiscUtil.createDamageSource(entity.getDamageSources(), data.get("source"), data.get("damage_type"));
+                entity.damage(damageSource, data.getFloat("amount"));
+            }));
         register(new ActionFactory<>(Apoli.identifier("heal"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT),
             (data, entity) -> {
@@ -90,7 +82,7 @@ public class EntityActions {
                     } else {
                         category = SoundCategory.NEUTRAL;
                     }
-                    entity.world.playSound(null, (entity).getX(), (entity).getY(), (entity).getZ(), data.get("sound"),
+                    entity.getWorld().playSound(null, (entity).getX(), (entity).getY(), (entity).getZ(), data.get("sound"),
                         category, data.getFloat("volume"), data.getFloat("pitch"));
                 }));
         register(new ActionFactory<>(Apoli.identifier("exhaust"), new SerializableData()
@@ -103,8 +95,7 @@ public class EntityActions {
             .add("effect", SerializableDataTypes.STATUS_EFFECT_INSTANCE, null)
             .add("effects", SerializableDataTypes.STATUS_EFFECT_INSTANCES, null),
             (data, entity) -> {
-                if(entity instanceof LivingEntity && !entity.world.isClient) {
-                    LivingEntity le = (LivingEntity) entity;
+                if(entity instanceof LivingEntity le && !entity.getWorld().isClient) {
                     if(data.isPresent("effect")) {
                         StatusEffectInstance effect = data.get("effect");
                         le.addStatusEffect(new StatusEffectInstance(effect));
@@ -117,8 +108,7 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("clear_effect"), new SerializableData()
             .add("effect", SerializableDataTypes.STATUS_EFFECT, null),
             (data, entity) -> {
-                if(entity instanceof LivingEntity) {
-                    LivingEntity le = (LivingEntity) entity;
+                if(entity instanceof LivingEntity le) {
                     if(data.isPresent("effect")) {
                         le.removeStatusEffect(data.get("effect"));
                     } else {
@@ -128,9 +118,7 @@ public class EntityActions {
             }));
         register(new ActionFactory<>(Apoli.identifier("set_on_fire"), new SerializableData()
             .add("duration", SerializableDataTypes.INT),
-            (data, entity) -> {
-                entity.setOnFireFor(data.getInt("duration"));
-            }));
+            (data, entity) -> entity.setOnFireFor(data.getInt("duration"))));
         register(new ActionFactory<>(Apoli.identifier("add_velocity"), new SerializableData()
             .add("x", SerializableDataTypes.FLOAT, 0F)
             .add("y", SerializableDataTypes.FLOAT, 0F)
@@ -141,53 +129,31 @@ public class EntityActions {
             .add("set", SerializableDataTypes.BOOLEAN, false),
             (data, entity) -> {
                 if (entity instanceof PlayerEntity
-                    && (entity.world.isClient ?
+                    && (entity.getWorld().isClient ?
                     !data.getBoolean("client") : !data.getBoolean("server")))
                     return;
                 Space space = data.get("space");
-                Vec3f vec = new Vec3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
+                Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
                 TriConsumer<Float, Float, Float> method = entity::addVelocity;
                 if(data.getBoolean("set")) {
                     method = entity::setVelocity;
                 }
                 space.toGlobal(vec, entity);
-                method.accept(vec.getX(), vec.getY(), vec.getZ());
+                method.accept(vec.x, vec.y, vec.z);
                 entity.velocityModified = true;
             }));
-        register(new ActionFactory<>(Apoli.identifier("spawn_entity"), new SerializableData()
-            .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
-            .add("tag", SerializableDataTypes.NBT, null)
-            .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            (data, entity) -> {
-                Entity e = ((EntityType<?>)data.get("entity_type")).create(entity.world);
-                if(e != null) {
-                    e.refreshPositionAndAngles(entity.getPos().x, entity.getPos().y, entity.getPos().z, entity.getYaw(), entity.getPitch());
-                    if(data.isPresent("tag")) {
-                        NbtCompound mergedTag = e.writeNbt(new NbtCompound());
-                        mergedTag.copyFrom(data.get("tag"));
-                        e.readNbt(mergedTag);
-                    }
-
-                    entity.world.spawnEntity(e);
-                    if(data.isPresent("entity_action")) {
-                        ((ActionFactory<Entity>.Instance)data.get("entity_action")).accept(e);
-                    }
-                }
-            }));
+        register(SpawnEntityAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("gain_air"), new SerializableData()
             .add("value", SerializableDataTypes.INT),
             (data, entity) -> {
-                if(entity instanceof LivingEntity) {
-                    LivingEntity le = (LivingEntity) entity;
+                if(entity instanceof LivingEntity le) {
                     le.setAir(Math.min(le.getAir() + data.getInt("value"), le.getMaxAir()));
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("block_action_at"), new SerializableData()
             .add("block_action", ApoliDataTypes.BLOCK_ACTION),
-            (data, entity) -> {
-                    ((ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action")).accept(
-                        Triple.of(entity.world, entity.getBlockPos(), Direction.UP));
-            }));
+            (data, entity) -> ((ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action")).accept(
+                Triple.of(entity.getWorld(), entity.getBlockPos(), Direction.UP))));
         register(new ActionFactory<>(Apoli.identifier("spawn_effect_cloud"), new SerializableData()
             .add("radius", SerializableDataTypes.FLOAT, 3.0F)
             .add("radius_on_use", SerializableDataTypes.FLOAT, -0.5F)
@@ -195,7 +161,7 @@ public class EntityActions {
             .add("effect", SerializableDataTypes.STATUS_EFFECT_INSTANCE, null)
             .add("effects", SerializableDataTypes.STATUS_EFFECT_INSTANCES, null),
             (data, entity) -> {
-                AreaEffectCloudEntity areaEffectCloudEntity = new AreaEffectCloudEntity(entity.world, entity.getX(), entity.getY(), entity.getZ());
+                AreaEffectCloudEntity areaEffectCloudEntity = new AreaEffectCloudEntity(entity.getWorld(), entity.getX(), entity.getY(), entity.getZ());
                 if (entity instanceof LivingEntity) {
                     areaEffectCloudEntity.setOwner((LivingEntity)entity);
                 }
@@ -213,27 +179,27 @@ public class EntityActions {
                 areaEffectCloudEntity.setColor(PotionUtil.getColor(effects));
                 effects.forEach(areaEffectCloudEntity::addEffect);
 
-                entity.world.spawnEntity(areaEffectCloudEntity);
+                entity.getWorld().spawnEntity(areaEffectCloudEntity);
             }));
         register(new ActionFactory<>(Apoli.identifier("extinguish"), new SerializableData(),
             (data, entity) -> entity.extinguish()));
         register(new ActionFactory<>(Apoli.identifier("execute_command"), new SerializableData()
             .add("command", SerializableDataTypes.STRING),
             (data, entity) -> {
-                MinecraftServer server = entity.world.getServer();
+                MinecraftServer server = entity.getWorld().getServer();
                 if(server != null) {
                     boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
                     ServerCommandSource source = new ServerCommandSource(
                         Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
                         entity.getPos(),
                         entity.getRotationClient(),
-                        entity.world instanceof ServerWorld ? (ServerWorld)entity.world : null,
+                        entity.getWorld() instanceof ServerWorld ? (ServerWorld)entity.getWorld() : null,
                         Apoli.config.executeCommand.permissionLevel,
                         entity.getName().getString(),
                         entity.getDisplayName(),
-                        entity.world.getServer(),
+                        entity.getWorld().getServer(),
                         entity);
-                    server.getCommandManager().execute(source, data.getString("command"));
+                    server.getCommandManager().executeWithPrefix(source, data.getString("command"));
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("change_resource"), new SerializableData()
@@ -247,8 +213,7 @@ public class EntityActions {
                     Power p = component.getPower(powerType);
                     ResourceOperation operation = data.get("operation");
                     int change = data.getInt("change");
-                    if(p instanceof VariableIntPower) {
-                        VariableIntPower vip = (VariableIntPower)p;
+                    if(p instanceof VariableIntPower vip) {
                         if (operation == ResourceOperation.ADD) {
                             int newValue = vip.getValue() + change;
                             vip.setValue(newValue);
@@ -256,8 +221,7 @@ public class EntityActions {
                             vip.setValue(change);
                         }
                         PowerHolderComponent.syncPower(entity, powerType);
-                    } else if(p instanceof CooldownPower) {
-                        CooldownPower cp = (CooldownPower)p;
+                    } else if(p instanceof CooldownPower cp) {
                         if (operation == ResourceOperation.ADD) {
                             cp.modify(change);
                         } else if (operation == ResourceOperation.SET) {
@@ -291,15 +255,13 @@ public class EntityActions {
 
         register(new ActionFactory<>(Apoli.identifier("set_fall_distance"), new SerializableData()
             .add("fall_distance", SerializableDataTypes.FLOAT),
-            (data, entity) -> {
-                entity.fallDistance = data.getFloat("fall_distance");
-            }));
+            (data, entity) -> entity.fallDistance = data.getFloat("fall_distance")));
         register(new ActionFactory<>(Apoli.identifier("give"), new SerializableData()
             .add("stack", SerializableDataTypes.ITEM_STACK)
             .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
             .add("preferred_slot", SerializableDataTypes.EQUIPMENT_SLOT, null),
             (data, entity) -> {
-                if(!entity.world.isClient()) {
+                if(!entity.getWorld().isClient()) {
                     ItemStack stack = data.get("stack");
                     if(stack.isEmpty()) {
                         return;
@@ -307,10 +269,9 @@ public class EntityActions {
                     stack = stack.copy();
                     if(data.isPresent("item_action")) {
                         ActionFactory<Pair<World, ItemStack>>.Instance action = data.get("item_action");
-                        action.accept(new Pair<>(entity.world, stack));
+                        action.accept(new Pair<>(entity.getWorld(), stack));
                     }
-                    if(data.isPresent("preferred_slot") && entity instanceof LivingEntity) {
-                        LivingEntity living = (LivingEntity)entity;
+                    if(data.isPresent("preferred_slot") && entity instanceof LivingEntity living) {
                         EquipmentSlot slot = data.get("preferred_slot");
                         ItemStack stackInSlot = living.getEquippedStack(slot);
                         if(stackInSlot.isEmpty()) {
@@ -329,7 +290,7 @@ public class EntityActions {
                     if(entity instanceof PlayerEntity) {
                         ((PlayerEntity)entity).getInventory().offerOrDrop(stack);
                     } else {
-                        entity.world.spawnEntity(new ItemEntity(entity.world, entity.getX(), entity.getY(), entity.getZ(), stack));
+                        entity.getWorld().spawnEntity(new ItemEntity(entity.getWorld(), entity.getX(), entity.getY(), entity.getZ(), stack));
                     }
                 }
             }));
@@ -340,7 +301,7 @@ public class EntityActions {
                 if(entity instanceof LivingEntity) {
                     ItemStack stack = ((LivingEntity)entity).getEquippedStack(data.get("equipment_slot"));
                     ActionFactory<Pair<World, ItemStack>>.Instance action = data.get("action");
-                    action.accept(new Pair<>(entity.world, stack));
+                    action.accept(new Pair<>(entity.getWorld(), stack));
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("trigger_cooldown"), new SerializableData()
@@ -349,8 +310,7 @@ public class EntityActions {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
                     Power p = component.getPower((PowerType<?>)data.get("power"));
-                    if(p instanceof CooldownPower) {
-                        CooldownPower cp = (CooldownPower)p;
+                    if(p instanceof CooldownPower cp) {
                         cp.use();
                     }
                 }
@@ -368,9 +328,7 @@ public class EntityActions {
             }));
         register(new ActionFactory<>(Apoli.identifier("emit_game_event"), new SerializableData()
             .add("event", SerializableDataTypes.GAME_EVENT),
-            (data, entity) -> {
-                entity.emitGameEvent(data.get("event"));
-            }));
+            (data, entity) -> entity.emitGameEvent(data.get("event"))));
         register(new ActionFactory<>(Apoli.identifier("set_resource"), new SerializableData()
             .add("resource", ApoliDataTypes.POWER_TYPE)
             .add("value", SerializableDataTypes.INT),
@@ -380,12 +338,10 @@ public class EntityActions {
                     PowerType<?> powerType = data.get("resource");
                     Power p = component.getPower(powerType);
                     int value = data.getInt("value");
-                    if(p instanceof VariableIntPower) {
-                        VariableIntPower vip = (VariableIntPower)p;
+                    if(p instanceof VariableIntPower vip) {
                         vip.setValue(value);
                         PowerHolderComponent.syncPower(entity, powerType);
-                    } else if(p instanceof CooldownPower) {
-                        CooldownPower cp = (CooldownPower)p;
+                    } else if(p instanceof CooldownPower cp) {
                         cp.setCooldown(value);
                         PowerHolderComponent.syncPower(entity, powerType);
                     }
@@ -394,58 +350,18 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("grant_power"), new SerializableData()
             .add("power", ApoliDataTypes.POWER_TYPE)
             .add("source", SerializableDataTypes.IDENTIFIER),
-            (data, entity) -> {
-                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
-                    component.addPower(data.get("power"), data.getId("source"));
-                    component.sync();
-                });
-            }));
+            (data, entity) -> PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
+                component.addPower(data.get("power"), data.getId("source"));
+                component.sync();
+            })));
         register(new ActionFactory<>(Apoli.identifier("revoke_power"), new SerializableData()
             .add("power", ApoliDataTypes.POWER_TYPE)
             .add("source", SerializableDataTypes.IDENTIFIER),
-            (data, entity) -> {
-                PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
-                    component.removePower(data.get("power"), data.getId("source"));
-                    component.sync();
-                });
-            }));
-        register(new ActionFactory<>(Apoli.identifier("explode"), new SerializableData()
-            .add("power", SerializableDataTypes.FLOAT)
-            .add("destruction_type", SerializableDataType.enumValue(Explosion.DestructionType.class), Explosion.DestructionType.BREAK)
-            .add("damage_self", SerializableDataTypes.BOOLEAN, true)
-            .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
-            .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)
-            .add("create_fire", SerializableDataTypes.BOOLEAN, false),
-            (data, entity) -> {
-                if(entity.world.isClient) {
-                    return;
-                }
-                if(data.isPresent("indestructible")) {
-                    Predicate<CachedBlockPosition> blockCondition = data.get("indestructible");
-                    ExplosionBehavior eb = new ExplosionBehavior() {
-                        @Override
-                        public Optional<Float> getBlastResistance(Explosion explosion, BlockView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
-                            Optional<Float> def = super.getBlastResistance(explosion, world, pos, blockState, fluidState);
-                            Optional<Float> ovr = blockCondition.test(
-                                new CachedBlockPosition(entity.world, pos, true)) ?
-                                Optional.of(Blocks.WATER.getBlastResistance()) : Optional.empty();
-                            return ovr.isPresent() ? def.isPresent() ? def.get() > ovr.get() ? def : ovr : ovr : def;
-                        }
-                    };
-                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
-                        entity instanceof LivingEntity ?
-                            DamageSource.explosion((LivingEntity)entity) :
-                            DamageSource.explosion((LivingEntity) null),
-                        eb, entity.getX(), entity.getY(), entity.getZ(),
-                        data.getFloat("power"), data.getBoolean("create_fire"),
-                        data.get("destruction_type"));
-                } else {
-                    entity.world.createExplosion(data.getBoolean("damage_self") ? null : entity,
-                        entity.getX(), entity.getY(), entity.getZ(),
-                        data.getFloat("power"), data.getBoolean("create_fire"),
-                        data.get("destruction_type"));
-                }
-            }));
+            (data, entity) -> PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
+                component.removePower(data.get("power"), data.getId("source"));
+                component.sync();
+            })));
+        register(ExplodeAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("dismount"), new SerializableData(),
             (data, entity) -> entity.stopRiding()));
         register(new ActionFactory<>(Apoli.identifier("passenger_action"), new SerializableData()
@@ -509,12 +425,22 @@ public class EntityActions {
                     }
                 }
             }));
-        register(AreaOfEffectAction.createFactory());
-        register(CraftingTableAction.createFactory());
-        register(EnderChestAction.createFactory());
+        register(AreaOfEffectAction.getFactory());
+        register(CraftingTableAction.getFactory());
+        register(EnderChestAction.getFactory());
         register(SwingHandAction.getFactory());
         register(RaycastAction.getFactory());
         register(SpawnParticlesAction.getFactory());
+        register(ModifyInventoryAction.getFactory());
+        register(ReplaceInventoryAction.getFactory());
+        register(DropInventoryAction.getFactory());
+        register(ModifyDeathTicksAction.getFactory());
+        register(ModifyResourceAction.getFactory());
+        register(ModifyStatAction.getFactory());
+        register(FireProjectileAction.getFactory());
+        register(SelectorAction.getFactory());
+        register(GrantAdvancementAction.getFactory());
+        register(RevokeAdvancementAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
