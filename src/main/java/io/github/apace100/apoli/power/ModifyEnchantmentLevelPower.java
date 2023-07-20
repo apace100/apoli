@@ -109,7 +109,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     }
 
     public static NbtList getEnchantments(ItemStack self, NbtList originalTag) {
-        Entity entity = ((EntityLinkedItemStack) (Object) self).getEntity();
+        Entity entity = ((EntityLinkedItemStack) self).getEntity();
         if (entity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(entity.getUuidAsString())) {
             ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(entity.getUuidAsString());
             if (shouldReapplyEnchantments(living, self)) {
@@ -121,12 +121,12 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         return originalTag;
     }
 
-    public static int getEquipmentLevel(Enchantment enchantment, LivingEntity living) {
+    public static int getEquipmentLevel(Enchantment enchantment, LivingEntity living, boolean useModifications) {
         Iterable<ItemStack> iterable = enchantment.getEquipment(living).values();
         int i = 0;
 
         for(ItemStack itemStack : iterable) {
-            int j = getLevel(enchantment, itemStack);
+            int j = getLevel(living, enchantment, itemStack, useModifications);
             if (j > i) {
                 i = j;
             }
@@ -135,25 +135,41 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         return i;
     }
 
-    public static Map<Enchantment, Integer> get(ItemStack self) {
-        Entity entity = ((EntityLinkedItemStack) self).getEntity();
-        if (entity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(living.getUuidAsString())) {
-            ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(entity.getUuidAsString());
-            return EnchantmentHelper.fromNbt(itemEnchants.computeIfAbsent(self, ItemStack::getEnchantments));
+    public static Map<Enchantment, Integer> get(ItemStack self, boolean useModifications) {
+        if (useModifications) {
+            Entity entity = ((EntityLinkedItemStack) self).getEntity();
+            if (entity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(living.getUuidAsString())) {
+                ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(entity.getUuidAsString());
+                return EnchantmentHelper.fromNbt(itemEnchants.computeIfAbsent(self, ItemStack::getEnchantments));
+            }
         }
         return EnchantmentHelper.get(self);
     }
 
-    public static int getLevel(Enchantment enchantment, ItemStack self) {
-        Entity entity = ((EntityLinkedItemStack) self).getEntity();
-        if (entity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(living.getUuidAsString())) {
-            ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(entity.getUuidAsString());
+    public static int getLevel(Enchantment enchantment, ItemStack self, boolean useModifications) {
+        return getLevel(null, enchantment, self, useModifications);
+    }
+
+    public static int getLevel(LivingEntity entity, Enchantment enchantment, ItemStack self, boolean useModifications) {
+        if (!useModifications) {
+            Identifier id = Registries.ENCHANTMENT.getId(enchantment);
+            Optional<Integer> idx = findEnchantIndex(id, self.getEnchantments());
+            if(idx.isPresent()) {
+                NbtCompound existingEnchant = self.getEnchantments().getCompound(idx.get());
+                return EnchantmentHelper.getLevelFromNbt(existingEnchant);
+            }
+            return 0;
+        }
+
+        Entity nullsafeEntity = entity == null ? ((EntityLinkedItemStack) self).getEntity() : entity;
+        if (nullsafeEntity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(living.getUuidAsString())) {
+            ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(living.getUuidAsString());
             Identifier id = Registries.ENCHANTMENT.getId(enchantment);
             NbtList newEnchants = itemEnchants.computeIfAbsent(self, ItemStack::getEnchantments);
             Optional<Integer> idx = findEnchantIndex(id, newEnchants);
             if(idx.isPresent()) {
                 NbtCompound existingEnchant = newEnchants.getCompound(idx.get());
-                return existingEnchant.getInt("lvl");
+                return EnchantmentHelper.getLevelFromNbt(existingEnchant);
             }
             return 0;
         }
@@ -196,8 +212,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
                     mods -> mods.forEach(power::addModifier)
             );
             return power;
-        })
-                .allowCondition();
+        }).allowCondition();
     }
 
 }
