@@ -65,7 +65,7 @@ public class ModifyGrindstonePower extends Power {
         if(lateItemAction == null) {
             return;
         }
-        lateItemAction.accept(new Pair<>(entity.world, output));
+        lateItemAction.accept(new Pair<>(entity.getWorld(), output));
     }
 
     public boolean doesApply(ItemStack inputTop, ItemStack inputBottom, ItemStack originalOutput, Optional<BlockPos> grindstonePos) {
@@ -78,7 +78,7 @@ public class ModifyGrindstonePower extends Power {
         if(outputItemCondition != null && !outputItemCondition.test(originalOutput)) {
             return false;
         }
-        if(blockCondition != null && grindstonePos.isPresent() && !blockCondition.test(new CachedBlockPosition(entity.world, grindstonePos.get(), true))) {
+        if(blockCondition != null && grindstonePos.isPresent() && !blockCondition.test(new CachedBlockPosition(entity.getWorld(), grindstonePos.get(), true))) {
             return false;
         }
         return true;
@@ -96,7 +96,7 @@ public class ModifyGrindstonePower extends Power {
             case FROM_TOP -> output = inputTop.copy();
         }
         if(resultItemAction != null) {
-            resultItemAction.accept(new Pair<>(entity.world, output));
+            resultItemAction.accept(new Pair<>(entity.getWorld(), output));
         }
         return output;
     }
@@ -106,7 +106,7 @@ public class ModifyGrindstonePower extends Power {
             entityAction.accept(entity);
         }
         if(blockAction != null && pos.isPresent()) {
-            blockAction.accept(Triple.of(entity.world, pos.get(), Direction.UP));
+            blockAction.accept(Triple.of(entity.getWorld(), pos.get(), Direction.UP));
         }
     }
 

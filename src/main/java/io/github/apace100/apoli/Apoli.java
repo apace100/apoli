@@ -1,16 +1,12 @@
 package io.github.apace100.apoli;
 
-import com.mojang.brigadier.Command;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.command.PowerCommand;
-import io.github.apace100.apoli.command.PowerOperation;
-import io.github.apace100.apoli.command.PowerTypeArgumentType;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
-import io.github.apace100.apoli.global.GlobalPowerSet;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerTypes;
@@ -24,7 +20,6 @@ import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
-import io.github.apace100.calio.registry.DataObjectRegistry;
 import io.github.apace100.calio.resource.OrderedResourceListenerInitializer;
 import io.github.apace100.calio.resource.OrderedResourceListenerManager;
 import io.github.ladysnake.pal.AbilitySource;
@@ -33,9 +28,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.command.argument.ArgumentTypes;
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.ResourceType;
@@ -114,6 +108,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		BiEntityActions.register();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
+		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));
+		ResourceConditions.register(ApoliResourceConditions.ALL_NAMESPACES_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, true));
 
 		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
 

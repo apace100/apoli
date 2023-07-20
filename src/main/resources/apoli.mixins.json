@@ -6,6 +6,7 @@
   "mixins": [
     "AbstractBlockMixin",
     "AbstractBlockStateMixin",
+    "AdvancementCommandAccessor",
     "ArgumentTypesMixin",
     "BiomeBuilderMixin",
     "BiomeMixin",
@@ -33,7 +34,9 @@
     "LoginMixin",
     "LootContextBuilderMixin",
     "LootContextMixin",
-    "LootManagerMixin",
+    "LootContextParameterSetBuilderMixin",
+    "LootContextParameterSetMixin",
+    "LootDataLookupMixin",
     "LootTableMixin",
     "PhantomSpawnerMixin",
     "PlayerEntityMixin",

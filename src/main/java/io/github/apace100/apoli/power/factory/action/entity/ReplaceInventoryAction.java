@@ -46,7 +46,7 @@ public class ReplaceInventoryAction {
     public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(Apoli.identifier("replace_inventory"),
             new SerializableData()
-                .add("inventory_type", SerializableDataType.enumValue(InventoryType.class), InventoryType.INVENTORY)
+                .add("inventory_type", ApoliDataTypes.INVENTORY_TYPE, InventoryType.INVENTORY)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)

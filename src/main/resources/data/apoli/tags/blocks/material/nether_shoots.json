@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:crimson_roots",
+      "required": false
+    },
+    {
+      "id": "minecraft:nether_sprouts",
+      "required": false
+    },
+    {
+      "id": "minecraft:warped_roots",
+      "required": false
+    }
+  ]
+}

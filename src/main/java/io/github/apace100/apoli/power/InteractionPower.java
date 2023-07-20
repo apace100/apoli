@@ -57,12 +57,12 @@ public class InteractionPower extends Power {
     protected void performActorItemStuff(InteractionPower power, PlayerEntity actor, Hand hand) {
         ItemStack heldStack = actor.getStackInHand(hand);
         if(power.heldItemAction != null) {
-            power.heldItemAction.accept(new Pair<>(actor.world, heldStack));
+            power.heldItemAction.accept(new Pair<>(actor.getWorld(), heldStack));
         }
         ItemStack resultingStack = power.itemResult == null ? heldStack : power.itemResult.copy();
         boolean modified = power.itemResult != null;
         if(power.resultItemAction != null) {
-            power.resultItemAction.accept(new Pair<>(actor.world, resultingStack));
+            power.resultItemAction.accept(new Pair<>(actor.getWorld(), resultingStack));
             modified = true;
         }
         if(modified) {

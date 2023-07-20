@@ -75,7 +75,7 @@ public class HungerManagerMixin {
     @Inject(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V", shift = At.Shift.AFTER))
     private void executeAdditionalEatAction(Item item, ItemStack stack, CallbackInfo ci) {
 
-        if (player == null || player.world.isClient) return;
+        if (player == null || player.getWorld().isClient) return;
 
         ((ModifiableFoodEntity) player).getCurrentModifyFoodPowers()
             .stream()

@@ -63,7 +63,7 @@ public class RaycastCondition {
         }
         if(hitResult != null && hitResult.getType() != HitResult.Type.MISS) {
             if(hitResult instanceof BlockHitResult bhr && data.isPresent("block_condition")) {
-                CachedBlockPosition cbp = new CachedBlockPosition(entity.world, bhr.getBlockPos(), true);
+                CachedBlockPosition cbp = new CachedBlockPosition(entity.getWorld(), bhr.getBlockPos(), true);
                 return data.<Predicate<CachedBlockPosition>>get("block_condition").test(cbp);
             }
             if(hitResult instanceof EntityHitResult ehr && data.isPresent("hit_bientity_condition")) {
@@ -96,7 +96,7 @@ public class RaycastCondition {
 
     private static BlockHitResult performBlockRaycast(Entity source, Vec3d origin, Vec3d target, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling) {
         RaycastContext context = new RaycastContext(origin, target, shapeType, fluidHandling, source);
-        return source.world.raycast(context);
+        return source.getWorld().raycast(context);
     }
 
     private static EntityHitResult performEntityRaycast(Entity source, Vec3d origin, Vec3d target, ConditionFactory<Pair<Entity, Entity>>.Instance biEntityCondition) {

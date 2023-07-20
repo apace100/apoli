@@ -1,0 +1,25 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:sculk",
+      "required": false
+    },
+    {
+      "id": "minecraft:sculk_catalyst",
+      "required": false
+    },
+    {
+      "id": "minecraft:sculk_sensor",
+      "required": false
+    },
+    {
+      "id": "minecraft:sculk_shrieker",
+      "required": false
+    },
+    {
+      "id": "minecraft:sculk_vein",
+      "required": false
+    }
+  ]
+}

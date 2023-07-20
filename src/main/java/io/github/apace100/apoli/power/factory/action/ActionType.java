@@ -3,56 +3,60 @@ package io.github.apace100.apoli.power.factory.action;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.util.NamespaceAlias;
+import io.github.apace100.apoli.util.IdentifierAlias;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
-import net.minecraft.registry.Registry;
 
 import java.util.Optional;
 
 public class ActionType<T> {
 
     private final String actionTypeName;
-    private final Registry<ActionFactory<T>> actionFactoryRegistry;
+    private final Registry<ActionFactory<T>> actionRegistry;
 
-    public ActionType(String actionTypeName, Registry<ActionFactory<T>> actionFactoryRegistry) {
+    public ActionType(String actionTypeName, Registry<ActionFactory<T>> actionRegistry) {
         this.actionTypeName = actionTypeName;
-        this.actionFactoryRegistry = actionFactoryRegistry;
+        this.actionRegistry = actionRegistry;
     }
 
-    public void write(PacketByteBuf buf, ActionFactory.Instance actionInstance) {
+    public void write(PacketByteBuf buf, ActionFactory<T>.Instance actionInstance) {
         actionInstance.write(buf);
     }
 
     public ActionFactory<T>.Instance read(PacketByteBuf buf) {
-        Identifier type = buf.readIdentifier();
-        ActionFactory<T> actionFactory = actionFactoryRegistry.get(type);
-        if(actionFactory == null) {
-            throw new JsonSyntaxException(actionTypeName + " \"" + type + "\" was not registered.");
-        }
-        return actionFactory.read(buf);
+
+        Identifier actionFactoryId = buf.readIdentifier();
+        Optional<ActionFactory<T>> actionFactory = actionRegistry.getOrEmpty(actionFactoryId);
+
+        return actionFactory
+            .orElseThrow(() -> new JsonSyntaxException(actionTypeName + " \"" + actionFactoryId + "\" was not registered."))
+            .read(buf);
+
     }
 
     public ActionFactory<T>.Instance read(JsonElement jsonElement) {
-        if(jsonElement.isJsonObject()) {
-            JsonObject obj = jsonElement.getAsJsonObject();
-            if(!obj.has("type")) {
-                throw new JsonSyntaxException(actionTypeName + " json requires \"type\" identifier.");
-            }
-            String typeIdentifier = JsonHelper.getString(obj, "type");
-            Identifier type = Identifier.tryParse(typeIdentifier);
-            Optional<ActionFactory<T>> optionalAction = actionFactoryRegistry.getOrEmpty(type);
-            if(!optionalAction.isPresent()) {
-                if(NamespaceAlias.hasAlias(type)) {
-                    optionalAction = actionFactoryRegistry.getOrEmpty(NamespaceAlias.resolveAlias(type));
-                }
-                if(!optionalAction.isPresent()) {
-                    throw new JsonSyntaxException(actionTypeName + " json type \"" + type.toString() + "\" is not defined.");
-                }
-            }
-            return optionalAction.get().read(obj);
+
+        if (!jsonElement.isJsonObject()) {
+            throw new JsonSyntaxException(actionTypeName + " has to be a JSON object!");
         }
-        throw new JsonSyntaxException(actionTypeName + " has to be a JsonObject!");
+
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+        if (!jsonObject.has("type")) {
+            throw new JsonSyntaxException(actionTypeName + " JSON requires a \"type\" identifier!");
+        }
+
+        Identifier actionFactoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
+        Optional<ActionFactory<T>> actionFactory = actionRegistry.getOrEmpty(actionFactoryId);
+
+        if (actionFactory.isEmpty() && IdentifierAlias.hasAlias(actionFactoryId)) {
+            actionFactory = actionRegistry.getOrEmpty(IdentifierAlias.resolveAlias(actionFactoryId));
+        }
+
+        return actionFactory
+            .orElseThrow(() -> new JsonSyntaxException(actionTypeName + " type \"" + actionFactoryId + "\" is not registered."))
+            .read(jsonObject);
+
     }
 }

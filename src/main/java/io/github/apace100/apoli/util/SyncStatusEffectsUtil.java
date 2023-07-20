@@ -13,7 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class SyncStatusEffectsUtil {
 
     public static void sendStatusEffectUpdatePacket(LivingEntity living, UpdateType type, StatusEffectInstance instance) {
-        if (living.world.isClient()) return;
+        if (living.getWorld().isClient()) return;
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
         buf.writeInt(living.getId());
         buf.writeByte(type.ordinal());

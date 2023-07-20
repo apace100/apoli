@@ -1,0 +1,45 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:coarse_dirt",
+      "required": false
+    },
+    {
+      "id": "minecraft:dirt",
+      "required": false
+    },
+    {
+      "id": "minecraft:dirt_path",
+      "required": false
+    },
+    {
+      "id": "minecraft:farmland",
+      "required": false
+    },
+    {
+      "id": "minecraft:mud",
+      "required": false
+    },
+    {
+      "id": "minecraft:muddy_mangrove_roots",
+      "required": false
+    },
+    {
+      "id": "minecraft:packed_mud",
+      "required": false
+    },
+    {
+      "id": "minecraft:podzol",
+      "required": false
+    },
+    {
+      "id": "minecraft:rooted_dirt",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_soil",
+      "required": false
+    }
+  ]
+}
