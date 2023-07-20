@@ -9,6 +9,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtList;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -21,12 +22,13 @@ public class EnchantmentHelperMixin {
 
     @Redirect(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private static boolean forEachIsEmpty(ItemStack instance) {
-        if (((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
+        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
             return false;
         }
         return instance.isEmpty();
     }
 
+    @Unique
     private static ItemStack apugli$runIterationOnItem;
 
     @Inject(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "HEAD"))
@@ -39,6 +41,7 @@ public class EnchantmentHelperMixin {
         return ModifyEnchantmentLevelPower.getEnchantments(apugli$runIterationOnItem, original);
     }
 
+    @Unique
     private static ItemStack apugli$itemEnchantmentLevelStack;
 
     @Inject(method = "getLevel", at = @At("HEAD"))
@@ -48,7 +51,7 @@ public class EnchantmentHelperMixin {
 
     @Redirect(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private static boolean getLevelIsEmpty(ItemStack instance) {
-        if (((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
+        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
             return false;
         }
         return instance.isEmpty();
@@ -57,6 +60,14 @@ public class EnchantmentHelperMixin {
     @ModifyVariable(method = "getLevel", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/item/ItemStack;getEnchantments()Lnet/minecraft/nbt/NbtList;"))
     private static NbtList getEnchantmentsGetLevel(NbtList original) {
         return ModifyEnchantmentLevelPower.getEnchantments(apugli$itemEnchantmentLevelStack, original);
+    }
+
+    @Redirect(method = "chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private static boolean allowEmptyEquipmentChoosing(ItemStack instance) {
+        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
+            return false;
+        }
+        return instance.isEmpty();
     }
 
 }

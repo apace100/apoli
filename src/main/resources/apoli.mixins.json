@@ -17,6 +17,7 @@
     "CraftingScreenHandlerMixin",
     "DamageSourceMixin",
     "EnchantmentHelperMixin",
+    "EnchantmentMixin",
     "EntityAccessor",
     "EntityMixin",
     "EquipmentMixin",
