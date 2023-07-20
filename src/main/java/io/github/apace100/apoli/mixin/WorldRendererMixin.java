@@ -40,9 +40,6 @@ public abstract class WorldRendererMixin {
     @Shadow
     private MinecraftClient client;
 
-    @Unique
-    private Entity renderEntity;
-
     @Shadow public abstract void reload();
 
     @Shadow public abstract void render(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f);
