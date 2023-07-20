@@ -3,6 +3,10 @@ package io.github.apace100.apoli.power.factory.condition;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import io.github.apace100.apoli.integration.PostActionLoadCallback;
+import io.github.apace100.apoli.integration.PostConditionLoadCallback;
+import io.github.apace100.apoli.integration.PreActionLoadCallback;
+import io.github.apace100.apoli.integration.PreConditionLoadCallback;
 import io.github.apace100.apoli.util.IdentifierAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registry;
@@ -43,6 +47,7 @@ public class ConditionType<T> {
         }
 
         JsonObject jsonObject = jsonElement.getAsJsonObject();
+        PreConditionLoadCallback.EVENT.invoker().onPreConditionLoad(conditionRegistry, jsonObject);
         if (!jsonObject.has("type")) {
             throw new JsonSyntaxException(conditionTypeName + " JSON requires a \"type\" identifier!");
         }
@@ -54,9 +59,10 @@ public class ConditionType<T> {
             conditionFactory = conditionRegistry.getOrEmpty(IdentifierAlias.resolveAlias(conditionFactoryId));
         }
 
-        return conditionFactory
+        ConditionFactory<T>.Instance instance = conditionFactory
             .orElseThrow(() -> new JsonSyntaxException(conditionTypeName + " type \"" + conditionFactoryId + "\" is not registered."))
             .read(jsonObject);
-
+        PostConditionLoadCallback.EVENT.invoker().onPostConditionLoad(conditionFactoryId, conditionRegistry, conditionFactory.get().data.read(jsonObject), instance, jsonObject);
+        return instance;
     }
 }

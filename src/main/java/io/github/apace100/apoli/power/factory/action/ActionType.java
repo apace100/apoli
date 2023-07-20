@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power.factory.action;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import io.github.apace100.apoli.integration.PostActionLoadCallback;
+import io.github.apace100.apoli.integration.PreActionLoadCallback;
 import io.github.apace100.apoli.util.IdentifierAlias;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registry;
@@ -43,6 +45,7 @@ public class ActionType<T> {
         }
 
         JsonObject jsonObject = jsonElement.getAsJsonObject();
+        PreActionLoadCallback.EVENT.invoker().onPreActionLoad(actionRegistry, jsonObject);
         if (!jsonObject.has("type")) {
             throw new JsonSyntaxException(actionTypeName + " JSON requires a \"type\" identifier!");
         }
@@ -54,9 +57,10 @@ public class ActionType<T> {
             actionFactory = actionRegistry.getOrEmpty(IdentifierAlias.resolveAlias(actionFactoryId));
         }
 
-        return actionFactory
+        ActionFactory<T>.Instance instance = actionFactory
             .orElseThrow(() -> new JsonSyntaxException(actionTypeName + " type \"" + actionFactoryId + "\" is not registered."))
             .read(jsonObject);
-
+        PostActionLoadCallback.EVENT.invoker().onPostActionLoad(actionFactoryId, actionRegistry, actionFactory.get().data.read(jsonObject), instance, jsonObject);
+        return instance;
     }
 }
