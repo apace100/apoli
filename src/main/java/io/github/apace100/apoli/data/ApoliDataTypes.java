@@ -30,6 +30,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -252,6 +253,10 @@ public class ApoliDataTypes {
             LegacyMaterial.class, SerializableDataTypes.STRING,
             LegacyMaterial::getMaterial, LegacyMaterial::new
     );
+
+    public static final SerializableDataType<AdvancementCommand.Operation> ADVANCEMENT_OPERATION = SerializableDataType.enumValue(AdvancementCommand.Operation.class);
+
+    public static final SerializableDataType<AdvancementCommand.Selection> ADVANCEMENT_SELECTION = SerializableDataType.enumValue(AdvancementCommand.Selection.class);
 
     public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 

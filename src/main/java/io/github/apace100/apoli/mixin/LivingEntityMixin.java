@@ -481,6 +481,15 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
     }
 
+    @Redirect(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
+    private boolean invisibilityException(LivingEntity instance, Entity entity) {
+        if (entity == null || !PowerHolderComponent.hasPower(this, InvisibilityPower.class)) {
+            return instance.isInvisible();
+        } else {
+            return PowerHolderComponent.hasPower(this, InvisibilityPower.class, p -> p.doesApply(entity));
+        }
+    }
+
     @Unique
     private List<ModifyFoodPower> apoli$currentModifyFoodPowers = new LinkedList<>();
 
