@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ApoliConfig;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -158,12 +159,18 @@ public class ModifyPlayerSpawnPower extends Power {
             Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at biome \"{}\" as it's not registered in dimension \"{}\".", this.getType().getIdentifier(), entity.getEntityName(), biomeId, dimension.getValue());
             return Optional.empty();
         }
+        int radius = ((ApoliConfig)Apoli.config).modifyPlayerSpawnPower.radius;
+        int horizontalBlockCheckInterval = ((ApoliConfig)Apoli.config).modifyPlayerSpawnPower.horizontalBlockCheckInterval;
+        int verticalBlockCheckInterval = ((ApoliConfig)Apoli.config).modifyPlayerSpawnPower.verticalBlockCheckInterval;
+        if (radius < 0 ) radius = 64;
+        if (horizontalBlockCheckInterval <= 0) horizontalBlockCheckInterval = 64;
+        if (verticalBlockCheckInterval <= 0) verticalBlockCheckInterval = 64;
         com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> targetBiomePos = targetDimension.locateBiome(
                 biome -> biome.value() == targetBiome.get(),
                 originPos,
-                6400,
-                64,
-                64
+                radius,
+                horizontalBlockCheckInterval,
+                verticalBlockCheckInterval
         );
         if (targetBiomePos != null) return Optional.of(targetBiomePos.getFirst());
         else {
