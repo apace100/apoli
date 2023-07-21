@@ -162,7 +162,7 @@ public class ModifyPlayerSpawnPower extends Power {
         int radius = ((ApoliConfig)Apoli.config).modifyPlayerSpawnPower.radius;
         int horizontalBlockCheckInterval = ((ApoliConfig)Apoli.config).modifyPlayerSpawnPower.horizontalBlockCheckInterval;
         int verticalBlockCheckInterval = ((ApoliConfig)Apoli.config).modifyPlayerSpawnPower.verticalBlockCheckInterval;
-        if (radius < 0 ) radius = 64;
+        if (radius < 0 ) radius = 6400;
         if (horizontalBlockCheckInterval <= 0) horizontalBlockCheckInterval = 64;
         if (verticalBlockCheckInterval <= 0) verticalBlockCheckInterval = 64;
         com.mojang.datafixers.util.Pair<BlockPos, RegistryEntry<Biome>> targetBiomePos = targetDimension.locateBiome(
