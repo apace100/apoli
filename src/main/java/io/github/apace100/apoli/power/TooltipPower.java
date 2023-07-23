@@ -29,12 +29,12 @@ public class TooltipPower extends Power {
 
     private final Predicate<ItemStack> itemCondition;
     private final List<Text> texts;
-    private final boolean shouldResolve;
     private final int tickRate;
     private final int order;
 
     private List<Text> tooltipTexts;
     private Integer initialTicks;
+    private boolean shouldResolve;
 
     public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition, Text text, List<Text> texts, boolean shouldResolve, int tickRate, int order) {
         super(type, entity);
@@ -95,6 +95,7 @@ public class TooltipPower extends Power {
         }
 
         rootNbt.put("Tooltips", tooltipTextsNbt);
+        rootNbt.putBoolean("ShouldResolve", shouldResolve);
         return rootNbt;
 
     }
@@ -110,6 +111,8 @@ public class TooltipPower extends Power {
             Text tooltipText = Text.Serializer.fromJson(tooltipTextsNbt.getString(i));
             tooltipTexts.add(tooltipText);
         }
+
+        shouldResolve = rootNbt.getBoolean("ShouldResolve");
 
     }
 
