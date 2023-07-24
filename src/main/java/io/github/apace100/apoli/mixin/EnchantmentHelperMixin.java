@@ -22,7 +22,7 @@ public class EnchantmentHelperMixin {
 
     @Redirect(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private static boolean forEachIsEmpty(ItemStack instance) {
-        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
+        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
             return false;
         }
         return instance.isEmpty();
@@ -51,7 +51,7 @@ public class EnchantmentHelperMixin {
 
     @Redirect(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private static boolean getLevelIsEmpty(ItemStack instance) {
-        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
+        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
             return false;
         }
         return instance.isEmpty();
@@ -64,7 +64,7 @@ public class EnchantmentHelperMixin {
 
     @Redirect(method = "chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private static boolean allowEmptyEquipmentChoosing(ItemStack instance) {
-        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && PowerHolderComponent.hasPower(living, ModifyEnchantmentLevelPower.class)) {
+        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
             return false;
         }
         return instance.isEmpty();
