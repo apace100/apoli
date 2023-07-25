@@ -26,7 +26,7 @@ public class HolderAction {
     }
 
     public static ActionFactory<Pair<World, ItemStack>> getFactory() {
-        return new ActionFactory<>(Apoli.identifier("holder"),
+        return new ActionFactory<>(Apoli.identifier("holder_action"),
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION),
             HolderAction::action
