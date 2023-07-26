@@ -7,10 +7,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.util.Identifier;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public final class StackPowerUtil {
 
@@ -19,14 +19,18 @@ public final class StackPowerUtil {
     }
 
     public static void addPower(ItemStack stack, EquipmentSlot slot, Identifier powerId, boolean isHidden, boolean isNegative) {
-        addPower(stack, slot, powerId, null, isHidden, isNegative);
+        addPower(stack, EnumSet.of(slot), powerId, null, isHidden, isNegative);
     }
 
-    public static void addPower(ItemStack stack, EquipmentSlot slot, Identifier powerId, NbtElement powerData, boolean isHidden, boolean isNegative) {
+    public static void addPower(ItemStack stack, EnumSet<EquipmentSlot> slots, Identifier powerId, boolean isHidden, boolean isNegative) {
+        addPower(stack, slots, powerId, null, isHidden, isNegative);
+    }
+
+    public static void addPower(ItemStack stack, EnumSet<EquipmentSlot> slots, Identifier powerId, NbtElement powerData, boolean isHidden, boolean isNegative) {
 
         StackPower stackPower = new StackPower();
 
-        stackPower.slot = slot;
+        stackPower.slots = slots;
         stackPower.powerId = powerId;
         stackPower.powerData = powerData;
         stackPower.isHidden = isHidden;
@@ -59,25 +63,34 @@ public final class StackPowerUtil {
                 return;
             }
 
-            removePower(anotherStack, stackPower.slot, stackPower.powerId);
+            removePower(anotherStack, stackPower.slots, stackPower.powerId);
             addPower(anotherStack, stackPower);
 
         });
     }
 
-    public static void removePower(ItemStack stack, EquipmentSlot slot, Identifier powerId) {
+    public static void removePower(ItemStack stack, EnumSet<EquipmentSlot> slots, Identifier powerId) {
+        for (EquipmentSlot slot : slots) {
+            if (removePower(stack, slot, powerId)) {
+                break;
+            }
+        }
+    }
+
+    public static boolean removePower(ItemStack stack, EquipmentSlot slot, Identifier powerId) {
 
         NbtCompound stackNbt = stack.getOrCreateNbt();
         if (!stackNbt.contains("Powers")) {
-            return;
+            return false;
         }
 
         if (!(stackNbt.get("Powers") instanceof NbtList stackPowersNbt) || (!stackPowersNbt.isEmpty() && stackPowersNbt.getHeldType() != NbtElement.COMPOUND_TYPE)) {
             Apoli.LOGGER.warn("Cannot remove power " + powerId + " from item stack " + stack + ", as it contains conflicting NBT data.");
-            return;
+            return false;
         }
 
         stackPowersNbt.removeIf(nbtElement -> StackPower.fromNbt((NbtCompound) nbtElement).equals(powerId, slot));
+        return true;
 
     }
 
@@ -101,7 +114,7 @@ public final class StackPowerUtil {
 
         for (NbtElement stackPowerNbt : stackPowersNbt) {
             StackPower stackPower = StackPower.fromNbt((NbtCompound) stackPowerNbt);
-            if (stackPower.slot == slot) {
+            if (stackPower.slots.contains(slot)) {
                 stackPowers.add(stackPower);
             }
         }
@@ -112,7 +125,7 @@ public final class StackPowerUtil {
 
     public static class StackPower {
 
-        public EquipmentSlot slot;
+        public EnumSet<EquipmentSlot> slots;
         public Identifier powerId;
         public NbtElement powerData;
 
@@ -122,8 +135,13 @@ public final class StackPowerUtil {
         public NbtCompound toNbt() {
 
             NbtCompound nbt = new NbtCompound();
+            NbtList slotsNbt = new NbtList();
 
-            nbt.putString("Slot", slot.getName());
+            for (EquipmentSlot slot : slots) {
+                slotsNbt.add(NbtString.of(slot.getName()));
+            }
+
+            nbt.put("Slots", slotsNbt);
             nbt.putString("Power", powerId.toString());
 
             if (powerData != null) {
@@ -140,8 +158,20 @@ public final class StackPowerUtil {
         public static StackPower fromNbt(NbtCompound nbt) {
 
             StackPower stackPower = new StackPower();
+            EnumSet<EquipmentSlot> slots = EnumSet.noneOf(EquipmentSlot.class);
 
-            stackPower.slot = EquipmentSlot.byName(nbt.getString("Slot"));
+            if (nbt.contains("Slot") && nbt.get("Slot") instanceof NbtString slotNbt) {
+                slots.add(EquipmentSlot.byName(slotNbt.asString()));
+            }
+
+            if (nbt.contains("Slots") && nbt.get("Slots") instanceof NbtList slotsNbt && (!slotsNbt.isEmpty() && slotsNbt.getHeldType() == NbtElement.STRING_TYPE)) {
+                for (int i = 0; i < slotsNbt.size(); i++) {
+                    EquipmentSlot slot = EquipmentSlot.byName(slotsNbt.getString(i));
+                    slots.add(slot);
+                }
+            }
+
+            stackPower.slots = slots;
             stackPower.powerId = new Identifier(nbt.getString("Power"));
             stackPower.powerData = nbt.contains("Data") ? nbt.get("Data") : null;
             stackPower.isHidden = nbt.contains("Hidden") && nbt.getBoolean("Hidden");
@@ -151,15 +181,19 @@ public final class StackPowerUtil {
 
         }
 
-        public boolean equals(Identifier powerId, EquipmentSlot slot) {
+        public boolean equals(Identifier powerId, EquipmentSlot... slots) {
+            return equals(powerId, EnumSet.copyOf(Arrays.asList(slots)));
+        }
+
+        public boolean equals(Identifier powerId, EnumSet<EquipmentSlot> slots) {
             return this.powerId.equals(powerId)
-                && this.slot == slot;
+                && this.slots.containsAll(slots);
         }
 
         @Override
         public boolean equals(Object o) {
             return this == o
-                || (o instanceof StackPower other && equals(other.powerId, other.slot));
+                || (o instanceof StackPower other && equals(other.powerId, other.slots));
         }
 
     }
