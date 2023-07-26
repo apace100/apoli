@@ -24,8 +24,8 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -131,34 +131,64 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     @Inject(method = "getEquipmentChanges", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;removeModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void removeEquipmentPowers(CallbackInfoReturnable<Map> cir, Map map, EquipmentSlot var2[], int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack3, ItemStack itemStack4) {
-        List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers(itemStack3, equipmentSlot);
-        if(powers.size() > 0) {
-            Identifier source = new Identifier(Apoli.MODID, equipmentSlot.getName());
-            PowerHolderComponent powerHolder = PowerHolderComponent.KEY.get(this);
-            powers.forEach(sp -> {
-                if(PowerTypeRegistry.contains(sp.powerId)) {
-                    powerHolder.removePower(PowerTypeRegistry.get(sp.powerId), source);
-                }
-            });
-            powerHolder.sync();
+    private void removeEquipmentPowers(CallbackInfoReturnable<Map<EquipmentSlot, ItemStack>> cir, Map<EquipmentSlot, ItemStack> map, EquipmentSlot[] var2, int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack, ItemStack itemStack2) {
+
+        List<StackPowerUtil.StackPower> stackPowers = StackPowerUtil.getPowers(itemStack, equipmentSlot);
+        if (stackPowers.isEmpty()) {
+            return;
         }
+
+        Identifier source = Apoli.identifier(equipmentSlot.getName());
+        PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
+        for (StackPowerUtil.StackPower stackPower : stackPowers) {
+
+            if (!PowerTypeRegistry.contains(stackPower.powerId)) {
+                continue;
+            }
+
+            PowerType<?> powerType = PowerTypeRegistry.get(stackPower.powerId);
+            Power power = component.getPower(powerType);
+
+            stackPower.powerData = power.toTag();
+            component.removePower(powerType, source);
+
+            StackPowerUtil.updatePower(this, itemStack, stackPower);
+
+        }
+
+        component.sync();
+
     }
 
     @Inject(method = "getEquipmentChanges", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;addTemporaryModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void addEquipmentPowers(CallbackInfoReturnable<Map> cir, Map map, EquipmentSlot var2[], int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack3, ItemStack itemStack4) {
-        List<StackPowerUtil.StackPower> powers = StackPowerUtil.getPowers(itemStack4, equipmentSlot);
-        if(powers.size() > 0) {
-            Identifier source = new Identifier(Apoli.MODID, equipmentSlot.getName());
-            PowerHolderComponent powerHolder = PowerHolderComponent.KEY.get(this);
-            powers.forEach(sp -> {
-                if(PowerTypeRegistry.contains(sp.powerId)) {
-                    powerHolder.addPower(PowerTypeRegistry.get(sp.powerId), source);
+    private void addEquipmentPowers(CallbackInfoReturnable<Map<EquipmentSlot, ItemStack>> cir, Map<EquipmentSlot, ItemStack> map, EquipmentSlot[] var2, int var3, int var4, EquipmentSlot equipmentSlot, ItemStack itemStack, ItemStack itemStack2) {
+
+        List<StackPowerUtil.StackPower> stackPowers = StackPowerUtil.getPowers(itemStack2, equipmentSlot);
+        PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
+
+        if (!stackPowers.isEmpty()) {
+
+            Identifier source = Apoli.identifier(equipmentSlot.getName());
+            for (StackPowerUtil.StackPower stackPower : stackPowers) {
+
+                if (!PowerTypeRegistry.contains(stackPower.powerId)) {
+                    continue;
                 }
-            });
-            powerHolder.sync();
-        } else if(StackPowerUtil.getPowers(itemStack3, equipmentSlot).size() > 0) {
-            PowerHolderComponent.KEY.get(this).sync();
+
+                PowerType<?> powerType = PowerTypeRegistry.get(stackPower.powerId);
+                component.addPower(powerType, source);
+
+                Power power = component.getPower(powerType);
+                if (power != null && stackPower.powerData != null) {
+                    power.fromTag(stackPower.powerData);
+                }
+
+            }
+
+            component.sync();
+
+        } else if (!StackPowerUtil.getPowers(itemStack, equipmentSlot).isEmpty()) {
+            component.sync();
         }
 
     }
