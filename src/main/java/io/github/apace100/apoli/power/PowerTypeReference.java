@@ -9,12 +9,12 @@ import org.jetbrains.annotations.Nullable;
 public class PowerTypeReference<T extends Power> extends PowerType<T> {
 
     private PowerType<T> referencedPowerType;
-    private final Identifier currentId;
+    private final Identifier fileId;
     private final JsonElement jsonData;
 
-    protected PowerTypeReference(Identifier id, Identifier currentId, JsonElement jsonObject) {
+    protected PowerTypeReference(Identifier id, Identifier fileId, JsonElement jsonObject) {
         super(id, null);
-        this.currentId = currentId;
+        this.fileId = fileId;
         this.jsonData = jsonObject;
     }
 
@@ -55,8 +55,8 @@ public class PowerTypeReference<T extends Power> extends PowerType<T> {
     }
 
     @Nullable
-    protected Identifier getCurrentId() {
-        return currentId;
+    protected Identifier getFileId() {
+        return fileId;
     }
 
     public PowerType<T> getReferencedPowerType() {

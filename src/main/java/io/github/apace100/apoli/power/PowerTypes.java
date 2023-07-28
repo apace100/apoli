@@ -76,7 +76,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
             JsonElement jsonElement = powerTypeRef.getJsonData();
 
             if (jsonElement != null) {
-                loadPower(powerId, powerTypeRef.getCurrentId(), jsonElement, false);
+                loadPower(powerId, powerTypeRef.getFileId(), jsonElement, false);
             }
 
         });
@@ -93,11 +93,11 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
 
     }
 
-    private void loadPower(Identifier powerId, Identifier currentId, JsonElement jsonElement, boolean preLoad) {
+    private void loadPower(Identifier powerId, Identifier fileId, JsonElement jsonElement, boolean preLoad) {
         try {
 
-            SerializableData.CURRENT_NAMESPACE = currentId.getNamespace();
-            SerializableData.CURRENT_PATH = currentId.getPath();
+            SerializableData.CURRENT_NAMESPACE = fileId.getNamespace();
+            SerializableData.CURRENT_PATH = fileId.getPath();
 
             JsonObject jsonObject = jsonElement.getAsJsonObject();
 
@@ -164,14 +164,15 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
     private PowerType<?> readPower(Identifier id, JsonElement jsonElement, boolean isSubPower, boolean preLoad, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory) {
 
         JsonObject jsonObject = jsonElement.getAsJsonObject();
+        Identifier fileId = new Identifier(SerializableData.CURRENT_NAMESPACE, SerializableData.CURRENT_PATH);
         Identifier powerFactoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
 
         int priority = JsonHelper.getInt(jsonObject, "loading_priority", 0);
 
         //  If currently preloading and the resource conditions evaluate to false, disable the power
         //  and return early
-        if (preLoad && !ApoliResourceConditions.test(id, jsonObject)) {
-            if (!PowerTypeRegistry.contains(id)) {
+        if (preLoad && !ApoliResourceConditions.test(fileId, jsonObject)) {
+            if (!PowerTypeRegistry.contains(id) || !PowerTypeRegistry.isPreLoaded(id)) {
                 PowerTypeRegistry.disable(id);
             }
             return null;
@@ -189,9 +190,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         Integer previousPriority = LOADING_PRIORITIES.get(id);
         if (preLoad) {
 
-            Identifier currentId = new Identifier(SerializableData.CURRENT_NAMESPACE, SerializableData.CURRENT_PATH);
-
-            PowerTypeReference<?> powerTypeRef = new PowerTypeReference<>(id, currentId, jsonObject);
+            PowerTypeReference<?> powerTypeRef = new PowerTypeReference<>(id, fileId, jsonObject);
             PowerTypeRegistry.preLoad(powerTypeRef);
 
             return powerTypeRef;
@@ -199,16 +198,15 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         }
 
         //  Otherwise, register the power normally (if it's not registered yet)
-        else if (!PowerTypeRegistry.contains(id)) {
+        else if (!PowerTypeRegistry.isDisabled(fileId) && !PowerTypeRegistry.contains(id)) {
             return finishReadingPower(PowerTypeRegistry::register, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, priority);
         }
 
         //  If the power is already registered, and its priority value is higher than the
         //  previously recorded priority value, override the power
-        else if (previousPriority < priority) {
+        else if (PowerTypeRegistry.contains(id) && previousPriority < priority) {
             Apoli.LOGGER.warn("Overriding power " + id + " (previous priority: " + previousPriority + ") with a priority of " + priority + "!");
             return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, priority);
-
         }
 
         return null;

@@ -40,6 +40,11 @@ public class PowerTypeRegistry {
         idToPower.remove(id);
     }
 
+    public static boolean isPreLoaded(Identifier id) {
+        return preLoadedPowers.stream()
+            .anyMatch(ref -> ref.getIdentifier().equals(id));
+    }
+
     public static boolean isDisabled(Identifier id) {
         return disabledPowers.contains(id);
     }
