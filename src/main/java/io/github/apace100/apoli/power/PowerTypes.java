@@ -11,6 +11,7 @@ import io.github.apace100.calio.data.MultiJsonDataLoader;
 import io.github.apace100.calio.data.SerializableData;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
+import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
@@ -65,18 +66,18 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         //  Preload all powers
         prepared.forEach((powerId, jsonElements) -> {
             for (JsonElement jsonElement : jsonElements) {
-                loadPower(powerId, powerId, jsonElement, true);
+                preLoadPower(powerId, jsonElement);
             }
         });
 
         //  Validate all preloaded powers
         PowerTypeRegistry.validatePreLoadedPowers(powerTypeRef -> {
 
-            Identifier powerId = powerTypeRef.getIdentifier();
+            Identifier fileId = powerTypeRef.getFileId();
             JsonElement jsonElement = powerTypeRef.getJsonData();
 
-            if (jsonElement != null) {
-                loadPower(powerId, powerTypeRef.getFileId(), jsonElement, false);
+            if (jsonElement != null && fileId != null) {
+                loadPower(manager, powerTypeRef.getIdentifier(), powerTypeRef.getFileId(), jsonElement, false);
             }
 
         });
@@ -93,7 +94,11 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
 
     }
 
-    private void loadPower(Identifier powerId, Identifier fileId, JsonElement jsonElement, boolean preLoad) {
+    private void preLoadPower(Identifier powerId, JsonElement jsonElement) {
+        loadPower(null, powerId, powerId, jsonElement, true);
+    }
+
+    private void loadPower(ResourceManager manager, Identifier powerId, Identifier fileId, JsonElement jsonElement, boolean preLoad) {
         try {
 
             SerializableData.CURRENT_NAMESPACE = fileId.getNamespace();
@@ -106,7 +111,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
 
             //  If the specified power type ID is not considered multiple, load the power as a normal power
             if (!isMultiple(powerFactoryId)) {
-                readPower(powerId, jsonElement, false, preLoad);
+                readPower(manager, powerId, jsonElement, false, preLoad);
                 return;
             }
 
@@ -120,7 +125,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
 
                 Identifier subPowerId = new Identifier(powerId + "_" + entry.getKey());
                 try {
-                    PowerType<?> subPower = readPower(subPowerId, entry.getValue(), true, preLoad);
+                    PowerType<?> subPower = readPower(manager, subPowerId, entry.getValue(), true, preLoad);
                     if (subPower != null) {
                         subPowers.add(subPowerId);
                     }
@@ -132,7 +137,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
 
             //  Load the supposed super-power. If currently preloading, return early as the sub-powers
             //  will be added on validation phase
-            PowerType<?> power = readPower(powerId, jsonElement, false, preLoad, MultiplePowerType::new);
+            PowerType<?> power = readPower(manager, powerId, jsonElement,false, preLoad, MultiplePowerType::new);
             if (preLoad) {
                 return;
             }
@@ -156,12 +161,12 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
     }
 
     @Nullable
-    private PowerType<?> readPower(Identifier id, JsonElement jsonElement, boolean isSubPower, boolean preLoad) {
-        return readPower(id, jsonElement, isSubPower, preLoad, PowerType::new);
+    private PowerType<?> readPower(ResourceManager manager, Identifier id, JsonElement jsonElement, boolean isSubPower, boolean preLoad) {
+        return readPower(manager, id, jsonElement, isSubPower, preLoad, PowerType::new);
     }
 
     @Nullable
-    private PowerType<?> readPower(Identifier id, JsonElement jsonElement, boolean isSubPower, boolean preLoad, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory) {
+    private PowerType<?> readPower(ResourceManager manager, Identifier id, JsonElement jsonElement, boolean isSubPower, boolean preLoad, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory) {
 
         JsonObject jsonObject = jsonElement.getAsJsonObject();
         Identifier fileId = new Identifier(SerializableData.CURRENT_NAMESPACE, SerializableData.CURRENT_PATH);
@@ -205,8 +210,16 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         //  If the power is already registered, and its priority value is higher than the
         //  previously recorded priority value, override the power
         else if (PowerTypeRegistry.contains(id) && previousPriority < priority) {
-            Apoli.LOGGER.warn("Overriding power " + id + " (previous priority: " + previousPriority + ") with a priority of " + priority + "!");
+
+            StringBuilder builder = new StringBuilder();
+            manager.getResource(new Identifier(fileId.getNamespace(), "powers/" + fileId.getPath() + ".json"))
+                .ifPresent(r -> builder.append(" from datapack [").append(r.getResourcePackName()).append("]"));
+
+            builder.append("!");
+            Apoli.LOGGER.warn("Overriding old power " + id + " (previous priority: " + previousPriority + ") with a new priority of " + priority + builder);
+
             return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, priority);
+
         }
 
         return null;
