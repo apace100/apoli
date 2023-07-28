@@ -32,10 +32,10 @@ import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -132,4 +132,5 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 	public void registerResourceListeners(OrderedResourceListenerManager manager) {
 		manager.register(ResourceType.SERVER_DATA, new PowerTypes()).complete();
 	}
+
 }

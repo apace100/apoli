@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableBiMap;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
+import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.action.ActionType;
 import io.github.apace100.apoli.power.factory.action.ActionTypes;
@@ -44,11 +45,22 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.EnumSet;
 import java.util.List;
 
+@SuppressWarnings("rawtypes")
 public class ApoliDataTypes {
 
-    public static final SerializableDataType<PowerTypeReference> POWER_TYPE = SerializableDataType.wrap(
-        PowerTypeReference.class, SerializableDataTypes.IDENTIFIER,
-        PowerType::getIdentifier, PowerTypeReference::new);
+    public static final SerializableDataType<PowerTypeReference> POWER_TYPE_REFERENCE = SerializableDataType.wrap(
+        PowerTypeReference.class,
+        SerializableDataTypes.IDENTIFIER,
+        PowerType::getIdentifier,
+        PowerTypeReference::new
+    );
+
+    public static final SerializableDataType<PowerType> POWER_TYPE = SerializableDataType.wrap(
+        PowerType.class,
+        SerializableDataTypes.IDENTIFIER,
+        PowerType::getIdentifier,
+        PowerTypeRegistry::get
+    );
 
     public static final SerializableDataType<ConditionFactory<Entity>.Instance> ENTITY_CONDITION =
         condition(ClassUtil.castClass(ConditionFactory.Instance.class), ConditionTypes.ENTITY);

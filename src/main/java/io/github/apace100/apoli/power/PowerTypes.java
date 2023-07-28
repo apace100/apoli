@@ -29,192 +29,289 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
     private static final Identifier MULTIPLE = Apoli.identifier("multiple");
     private static final Identifier SIMPLE = Apoli.identifier("simple");
 
-    private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().disableHtmlEscaping().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
-    private static final HashMap<Identifier, Integer> LOADING_PRIORITIES = new HashMap<>();
+    private static final Map<Identifier, Integer> LOADING_PRIORITIES = new HashMap<>();
+    private static final Map<String, AdditionalPowerDataCallback> ADDITIONAL_DATA = new HashMap<>();
 
-    private static final HashMap<String, AdditionalPowerDataCallback> ADDITIONAL_DATA = new HashMap<>();
+    private static final Set<String> FIELDS_TO_IGNORE = Set.of(
+        "type",
+        "loading_priority",
+        "name",
+        "description",
+        "hidden",
+        "condition",
+        ResourceConditions.CONDITIONS_KEY
+    );
 
     public PowerTypes() {
         super(GSON, "powers");
     }
 
     @Override
-    protected void apply(Map<Identifier, List<JsonElement>> loader, ResourceManager manager, Profiler profiler) {
+    protected void apply(Map<Identifier, List<JsonElement>> prepared, ResourceManager manager, Profiler profiler) {
+
+        Apoli.LOGGER.info("Loading powers from data files...");
         PowerTypeRegistry.reset();
+
         LOADING_PRIORITIES.clear();
         LOADED_NAMESPACES.clear();
+
         LOADED_NAMESPACES.addAll(manager.getAllNamespaces());
+
         PowerReloadCallback.EVENT.invoker().onPowerReload();
         PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
-        loader.forEach((id, jel) -> {
-            for (JsonElement je : jel) {
-                try {
-                    SerializableData.CURRENT_NAMESPACE = id.getNamespace();
-                    SerializableData.CURRENT_PATH = id.getPath();
-                    JsonObject jo = je.getAsJsonObject();
 
-                    PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(id, jo);
-
-                    Identifier factoryId = Identifier.tryParse(JsonHelper.getString(jo, "type"));
-                    if (isMultiple(factoryId)) {
-                        List<Identifier> subPowers = new LinkedList<>();
-                        for (Map.Entry<String, JsonElement> entry : jo.entrySet()) {
-                            if (entry.getKey().equals("type")
-                                || entry.getKey().equals("loading_priority")
-                                || entry.getKey().equals("name")
-                                || entry.getKey().equals("description")
-                                || entry.getKey().equals("hidden")
-                                || entry.getKey().equals("condition")
-                                || entry.getKey().startsWith("$")
-                                || ADDITIONAL_DATA.containsKey(entry.getKey())
-                                || entry.getKey().equals(ResourceConditions.CONDITIONS_KEY)) {
-                                continue;
-                            }
-                            Identifier subId = new Identifier(id + "_" + entry.getKey());
-                            try {
-                                PowerType<?> subPower = readPower(subId, entry.getValue(), true);
-                                if (subPower != null) {
-                                    subPowers.add(subId);
-                                }
-                            } catch (Exception e) {
-                                Apoli.LOGGER.error("There was a problem reading sub-power \"" +
-                                    subId + "\" in power file \"" + id + "\": " + e.getMessage());
-                            }
-                        }
-                        MultiplePowerType<?> superPower = (MultiplePowerType) readPower(id, je, false, MultiplePowerType::new);
-                        if (superPower != null) {
-                            superPower.setSubPowers(subPowers);
-                        } else {
-                            subPowers.forEach(PowerTypeRegistry::disable);
-                        }
-                        handleAdditionalData(id, factoryId, false, jo, superPower);
-                        PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, false, jo, superPower);
-                    } else {
-                        readPower(id, je, false);
-                    }
-                } catch (Exception e) {
-                    Apoli.LOGGER.error("There was a problem reading power file " + id.toString() + " (skipping): " + e.getMessage());
-                }
+        //  Preload all powers
+        prepared.forEach((powerId, jsonElements) -> {
+            for (JsonElement jsonElement : jsonElements) {
+                loadPower(powerId, powerId, jsonElement, true);
             }
         });
+
+        //  Validate all preloaded powers
+        PowerTypeRegistry.validatePreLoadedPowers(powerTypeRef -> {
+
+            Identifier powerId = powerTypeRef.getIdentifier();
+            JsonElement jsonElement = powerTypeRef.getJsonData();
+
+            if (jsonElement != null) {
+                loadPower(powerId, powerTypeRef.getCurrentId(), jsonElement, false);
+            }
+
+        });
+
         PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
+
         LOADING_PRIORITIES.clear();
         LOADED_NAMESPACES.clear();
+
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
+
         Apoli.LOGGER.info("Finished loading powers from data files. Registry contains " + PowerTypeRegistry.size() + " powers.");
+
     }
 
-    private boolean isResourceConditionValid(Identifier id, JsonObject jo) {
-        return ApoliResourceConditions.test(id, jo);
+    private void loadPower(Identifier powerId, Identifier currentId, JsonElement jsonElement, boolean preLoad) {
+        try {
+
+            SerializableData.CURRENT_NAMESPACE = currentId.getNamespace();
+            SerializableData.CURRENT_PATH = currentId.getPath();
+
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(powerId, jsonObject);
+            Identifier powerFactoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
+
+            //  If the specified power type ID is not considered multiple, load the power as a normal power
+            if (!isMultiple(powerFactoryId)) {
+                readPower(powerId, jsonElement, false, preLoad);
+                return;
+            }
+
+            //  Load the sub-powers of the super-power
+            List<Identifier> subPowers = new LinkedList<>();
+            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+
+                if (shouldIgnoreField(entry.getKey())) {
+                    continue;
+                }
+
+                Identifier subPowerId = new Identifier(powerId + "_" + entry.getKey());
+                try {
+                    PowerType<?> subPower = readPower(subPowerId, entry.getValue(), true, preLoad);
+                    if (subPower != null) {
+                        subPowers.add(subPowerId);
+                    }
+                } catch (Exception e) {
+                    Apoli.LOGGER.error("There was a problem reading sub-power \"" + subPowerId + "\" in power file \"" + powerId + "\": " + e.getMessage());
+                }
+
+            }
+
+            //  Load the supposed super-power. If currently preloading, return early as the sub-powers
+            //  will be added on validation phase
+            PowerType<?> power = readPower(powerId, jsonElement, false, preLoad, MultiplePowerType::new);
+            if (preLoad) {
+                return;
+            }
+
+            //  Get the actual super-power. If the super-power does not exist, disable its sub-powers
+            MultiplePowerType<?> superPower = getMultiplePower(power);
+            if (superPower == null) {
+                subPowers.forEach(PowerTypeRegistry::disable);
+                return;
+            }
+
+            //  Add the sub-powers of the super-power and handle its additional data
+            superPower.setSubPowers(subPowers);
+            handleAdditionalData(powerId, powerFactoryId, false, jsonObject, superPower);
+
+            PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(powerId, powerFactoryId, false, jsonObject, superPower);
+
+        } catch (Exception e) {
+            Apoli.LOGGER.error("There was a problem reading power file " + powerId.toString() + " (skipping): " + e.getMessage());
+        }
     }
 
     @Nullable
-    private PowerType readPower(Identifier id, JsonElement je, boolean isSubPower) {
-        return readPower(id, je, isSubPower, PowerType::new);
+    private PowerType<?> readPower(Identifier id, JsonElement jsonElement, boolean isSubPower, boolean preLoad) {
+        return readPower(id, jsonElement, isSubPower, preLoad, PowerType::new);
     }
 
     @Nullable
-    private PowerType readPower(Identifier id, JsonElement je, boolean isSubPower,
-                                BiFunction<Identifier, PowerFactory.Instance, PowerType> powerTypeFactory) {
-        JsonObject jo = je.getAsJsonObject();
-        Identifier factoryId = new Identifier(JsonHelper.getString(jo, "type"));
-        int priority = JsonHelper.getInt(jo, "loading_priority", 0);
+    private PowerType<?> readPower(Identifier id, JsonElement jsonElement, boolean isSubPower, boolean preLoad, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory) {
 
-        if (!isResourceConditionValid(id, jo)) {
-            if(!PowerTypeRegistry.contains(id)) {
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+        Identifier powerFactoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
+
+        int priority = JsonHelper.getInt(jsonObject, "loading_priority", 0);
+
+        //  If currently preloading and the resource conditions evaluate to false, disable the power
+        //  and return early
+        if (preLoad && !ApoliResourceConditions.test(id, jsonObject)) {
+            if (!PowerTypeRegistry.contains(id)) {
                 PowerTypeRegistry.disable(id);
             }
             return null;
         }
 
-        if(isMultiple(factoryId)) {
-            factoryId = SIMPLE;
-            if(isSubPower) {
-                throw new JsonSyntaxException("Power type \"" + MULTIPLE + "\" may not be used for a sub-power of "
-                    + "another \"" + MULTIPLE + "\" power.");
+        if (isMultiple(powerFactoryId)) {
+            powerFactoryId = SIMPLE;
+            if (isSubPower) {
+                throw new JsonSyntaxException("Power type \"" + MULTIPLE + "\" may not be used for a sub-power of another \"" + MULTIPLE + "\" power.");
             }
         }
-        Optional<PowerFactory> optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(factoryId);
-        if(optionalFactory.isEmpty()) {
-            if(IdentifierAlias.hasAlias(factoryId)) {
-                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(IdentifierAlias.resolveAlias(factoryId));
-            }
-            if(optionalFactory.isEmpty()) {
-                throw new JsonSyntaxException("Power type \"" + factoryId + "\" is not registered.");
-            }
+
+        //  If currently preloading, add a reference to the power to the registry (that contains the ID of the power,
+        //  the current ID (of the power file, not sub-power ID) and the JSON object for defining the power
+        Integer previousPriority = LOADING_PRIORITIES.get(id);
+        if (preLoad) {
+
+            Identifier currentId = new Identifier(SerializableData.CURRENT_NAMESPACE, SerializableData.CURRENT_PATH);
+
+            PowerTypeReference<?> powerTypeRef = new PowerTypeReference<>(id, currentId, jsonObject);
+            PowerTypeRegistry.preLoad(powerTypeRef);
+
+            return powerTypeRef;
+
         }
-        PowerFactory.Instance factoryInstance = optionalFactory.get().read(jo);
-        PowerType type = powerTypeFactory.apply(id, factoryInstance);
-        String name = JsonHelper.getString(jo, "name", "");
-        String description = JsonHelper.getString(jo, "description", "");
-        boolean hidden = JsonHelper.getBoolean(jo, "hidden", false);
-        if(hidden || isSubPower) {
-            type.setHidden();
+
+        //  Otherwise, register the power normally (if it's not registered yet)
+        else if (!PowerTypeRegistry.contains(id)) {
+            return finishReadingPower(PowerTypeRegistry::register, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, priority);
         }
-        type.setTranslationKeys(name, description);
-        if(!PowerTypeRegistry.contains(id)) {
-            PowerTypeRegistry.register(id, type);
-            LOADING_PRIORITIES.put(id, priority);
-            if(!(type instanceof MultiplePowerType<?>)) {
-                handleAdditionalData(id, factoryId, isSubPower, jo, type);
-                PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
-            }
+
+        //  If the power is already registered, and its priority value is higher than the
+        //  previously recorded priority value, override the power
+        else if (previousPriority < priority) {
+            Apoli.LOGGER.warn("Overriding power " + id + " (previous priority: " + previousPriority + ") with a priority of " + priority + "!");
+            return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, priority);
+
+        }
+
+        return null;
+
+    }
+
+    private PowerType<?> finishReadingPower(BiFunction<Identifier, PowerType<?>, PowerType<?>> powerProcessor, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory, Identifier id, Identifier powerFactoryId, JsonObject jsonObject, boolean isSubPower, int priority) {
+
+        //  Get the power type factory from the specified power type ID, or from an alias of the power type ID
+        //  if the power type does not exist from the power type ID and if the power type ID has an alias
+        Optional<PowerFactory> optionalPowerFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(powerFactoryId);
+        if (optionalPowerFactory.isEmpty() && IdentifierAlias.hasAlias(powerFactoryId)) {
+            optionalPowerFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(IdentifierAlias.resolveAlias(powerFactoryId));
+        }
+
+        //  Get the power type factory instance of the power type factory and read the JSON object. If the
+        //  power type factory does not exist, throw an exception instead
+        PowerFactory<?>.Instance powerFactoryInstance = optionalPowerFactory
+            .orElseThrow(() -> new JsonSyntaxException("Power type \"" + powerFactoryId + "\" is not registered."))
+            .read(jsonObject);
+
+        //  Load the power using the power ID, power factory instance, JSON object
+        //  and process it with the specified processor
+        PowerType<?> powerType = loadPowerType(id, powerFactoryInstance, jsonObject, isSubPower, powerTypeFactory);
+        powerProcessor.apply(id, powerType);
+
+        //  Put the power in a loading priority map and handle its additional data (if it's not a multiple)
+        LOADING_PRIORITIES.put(id, priority);
+        if (!(powerType instanceof MultiplePowerType<?>)) {
+            handleAdditionalData(id, powerFactoryId, isSubPower, jsonObject, powerType);
+            PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, powerFactoryId, isSubPower, jsonObject, powerType);
+        }
+
+        return powerType;
+
+    }
+
+    private PowerType<?> loadPowerType(Identifier id, PowerFactory<?>.Instance powerFactoryInstance, JsonObject jsonObject, boolean isSubPower, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory) {
+
+        String name = JsonHelper.getString(jsonObject, "name", "");
+        String description = JsonHelper.getString(jsonObject, "description", "");
+
+        boolean hidden = JsonHelper.getBoolean(jsonObject, "hidden", false);
+
+        PowerType<?> powerType = powerTypeFactory.apply(id, powerFactoryInstance);
+        powerType.setTranslationKeys(name, description);
+
+        if (hidden || isSubPower) {
+            powerType.setHidden();
+        }
+
+        return powerType;
+
+
+    }
+
+    @Nullable
+    private MultiplePowerType<?> getMultiplePower(PowerType<?> powerType) {
+        if (powerType instanceof PowerTypeReference<?> ref && ref.getReferencedPowerType() instanceof MultiplePowerType<?> multiple) {
+            return multiple;
+        } else if (powerType instanceof MultiplePowerType<?> multiple) {
+            return multiple;
         } else {
-            if(LOADING_PRIORITIES.get(id) < priority) {
-                PowerTypeRegistry.update(id, type);
-                LOADING_PRIORITIES.put(id, priority);
-                if(!(type instanceof MultiplePowerType<?>)) {
-                    handleAdditionalData(id, factoryId, isSubPower, jo, type);
-                    PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, isSubPower, jo, type);
-                }
-            }
+            return null;
         }
-        return type;
+    }
+
+    private boolean shouldIgnoreField(String field) {
+        return field.startsWith("$")
+            || FIELDS_TO_IGNORE.contains(field)
+            || ADDITIONAL_DATA.containsKey(field);
     }
 
     private boolean isMultiple(Identifier id) {
-        if(MULTIPLE.equals(id)) {
-            return true;
-        }
-        if(IdentifierAlias.hasAlias(id)) {
-            return MULTIPLE.equals(IdentifierAlias.resolveAlias(id));
-        }
-        return false;
+        return MULTIPLE.equals(id)
+            || (IdentifierAlias.hasAlias(id) && MULTIPLE.equals(IdentifierAlias.resolveAlias(id)));
     }
 
-    private void handleAdditionalData(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonObject json, PowerType<?> powerType) {
+    private void handleAdditionalData(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonObject jsonObject, PowerType<?> powerType) {
         ADDITIONAL_DATA.forEach((dataFieldName, callback) -> {
-            if(json.has(dataFieldName)) {
-                callback.readAdditionalPowerData(powerId, factoryId, isSubPower, json.get(dataFieldName), powerType);
+            if (jsonObject.has(dataFieldName)) {
+                callback.readAdditionalPowerData(powerId, factoryId, isSubPower, jsonObject.get(dataFieldName), powerType);
             }
         });
     }
 
     @Override
     public Identifier getFabricId() {
-        return new Identifier(Apoli.MODID, "powers");
+        return Apoli.identifier("powers");
     }
 
     public static void registerAdditionalData(String data, AdditionalPowerDataCallback callback) {
-        if(ADDITIONAL_DATA.containsKey(data)) {
+        if (ADDITIONAL_DATA.containsKey(data)) {
             Apoli.LOGGER.error("Apoli already contains a callback for additional data for the field \"" + data + "\".");
             return;
         }
-        // TODO: Check whether any power factory uses that data field?
+        //  TODO: Check whether any power factory uses that data field?
         ADDITIONAL_DATA.put(data, callback);
-    }
-
-    public static int getLoadingPriority(Identifier powerId) {
-        if(!LOADING_PRIORITIES.containsKey(powerId)) {
-            return Integer.MIN_VALUE;
-        }
-        return LOADING_PRIORITIES.get(powerId);
     }
 
     @Override
     public Collection<Identifier> getFabricDependencies() {
         return DEPENDENCIES;
     }
+
 }

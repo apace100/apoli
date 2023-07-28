@@ -1,14 +1,15 @@
 package io.github.apace100.apoli.power;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.PowerClearCallback;
 import net.minecraft.util.Identifier;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class PowerTypeRegistry {
 
+    private static final List<PowerTypeReference> preLoadedPowers = new LinkedList<>();
     private static final HashMap<Identifier, PowerType> idToPower = new HashMap<>();
     private static final Set<Identifier> disabledPowers = new HashSet<>();
 
@@ -22,11 +23,12 @@ public class PowerTypeRegistry {
     }
 
     protected static PowerType update(Identifier id, PowerType powerType) {
-        if(idToPower.containsKey(id)) {
-            PowerType old = idToPower.get(id);
-            idToPower.remove(id);
-        }
+        remove(id);
         return register(id, powerType);
+    }
+
+    protected static void preLoad(PowerTypeReference powerTypeRef) {
+        preLoadedPowers.add(powerTypeRef);
     }
 
     protected static void disable(Identifier id) {
@@ -46,6 +48,13 @@ public class PowerTypeRegistry {
         return idToPower.size();
     }
 
+    protected static void validatePreLoadedPowers(Consumer<PowerTypeReference> validator) {
+        preLoadedPowers.removeIf(powerTypeRef -> {
+            validator.accept(powerTypeRef);
+            return true;
+        });
+    }
+
     public static Stream<Identifier> identifiers() {
         return idToPower.keySet().stream();
     }
@@ -59,11 +68,16 @@ public class PowerTypeRegistry {
     }
 
     public static PowerType get(Identifier id) {
-        if(!idToPower.containsKey(id)) {
-            throw new IllegalArgumentException("Could not get power type from id '" + id.toString() + "', as it was not registered!");
+
+        if (idToPower.containsKey(id)) {
+            return idToPower.get(id);
         }
-        PowerType powerType = idToPower.get(id);
-        return powerType;
+
+        return preLoadedPowers.stream()
+            .filter(ref -> ref.getIdentifier().equals(id))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Could not get power type from id '" + id.toString() + "', as it was not registered!"));
+
     }
 
     public static Identifier getId(PowerType<?> powerType) {
