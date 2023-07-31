@@ -522,6 +522,8 @@ public class EntityConditions {
         register(RaycastCondition.getFactory());
         register(ElytraFlightPossibleCondition.getFactory());
         register(InventoryCondition.getFactory());
+        register(InSnowCondition.getFactory());
+        register(InThunderstormCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
