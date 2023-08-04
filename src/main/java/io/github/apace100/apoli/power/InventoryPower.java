@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
@@ -109,9 +110,7 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public ItemStack getStack(int slot) {
-        ItemStack stack = container.get(slot);
-        stack.setHolder(entity);
-        return stack;
+        return container.get(slot);
     }
 
     @Override
@@ -121,14 +120,12 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public ItemStack removeStack(int slot) {
-        ItemStack stack = getStack(slot);
         setStack(slot, ItemStack.EMPTY);
-        return stack;
+        return getStack(slot);
     }
 
     @Override
     public void setStack(int slot, ItemStack stack) {
-        stack.setHolder(entity);
         container.set(slot, stack);
     }
 
