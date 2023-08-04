@@ -1,0 +1,35 @@
+{
+  "type": "apoli:modify_enchantment_level",
+  "enchantment": "minecraft:sharpness",
+  "modifiers": [
+    {
+      "operation": "addition",
+      "value": 1
+    },
+    {
+      "operation": "multiply_total",
+      "value": 1
+    }
+  ],
+  "item_condition": {
+    "type": "apoli:or",
+    "conditions": [
+      {
+        "type": "apoli:and",
+        "conditions": [
+          {
+            "type": "apoli:amount",
+            "comparison": ">=",
+            "compare_to": 3
+          },
+          {
+            "type": "apoli:meat"
+          }
+        ]
+      },
+      {
+        "type": "apoli:empty"
+      }
+    ]
+  }
+}

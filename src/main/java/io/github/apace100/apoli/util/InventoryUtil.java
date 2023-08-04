@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.util;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.InventoryPower;
@@ -17,7 +17,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -356,7 +356,20 @@ public class InventoryUtil {
 
     }
 
+    private static final Map<Entity, ItemStack> ENTITY_EMPTY_STACK_MAP = new HashMap<>();
+
+    public static ItemStack getEntityLinkedEmptyStack(Entity entity) {
+        if (!ENTITY_EMPTY_STACK_MAP.containsKey(entity)) {
+            ENTITY_EMPTY_STACK_MAP.put(entity, new ItemStack((Void) null));
+        }
+        return ENTITY_EMPTY_STACK_MAP.get(entity);
+    }
+
     public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
+        forEachStack(entity, itemStackConsumer, null);
+    }
+
+    public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer, @Nullable Consumer<ItemStack> emptyStackConsumer) {
         int skip = getDuplicatedSlotIndex(entity);
 
         for(int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
@@ -368,7 +381,13 @@ public class InventoryUtil {
             if (stackReference == StackReference.EMPTY) continue;
 
             ItemStack itemStack = stackReference.get();
-            if (itemStack.isEmpty()) continue;
+            if (itemStack.isEmpty()) {
+                if (emptyStackConsumer == null) continue;
+                ItemStack newStack = getEntityLinkedEmptyStack(entity);
+                emptyStackConsumer.accept(newStack);
+                ((MutableItemStack)itemStack).setFrom(newStack);
+                continue;
+            }
             itemStackConsumer.accept(itemStack);
         }
 
@@ -379,7 +398,10 @@ public class InventoryUtil {
             for(InventoryPower inventoryPower : inventoryPowers) {
                 for(int index = 0; index < inventoryPower.size(); index++) {
                     ItemStack stack = inventoryPower.getStack(index);
-                    if(stack.isEmpty()) {
+                    if (stack.isEmpty()) {
+                        if (emptyStackConsumer == null) continue;
+                        ItemStack newStack = getEntityLinkedEmptyStack(entity);
+                        emptyStackConsumer.accept(newStack);
                         continue;
                     }
                     itemStackConsumer.accept(stack);

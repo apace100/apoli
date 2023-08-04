@@ -1,4 +1,7 @@
 {
+
+  "commands.apoli.power_not_found": "Unknown power: %s",
+
   "commands.apoli.grant.success.single": "Entity %s was granted the power %s.",
   "commands.apoli.grant.success.multiple": "%s entities were granted the power %s.",
 
@@ -51,14 +54,15 @@
   "commands.apoli.clear.invalid_entities": "%s entities were not living entities, thus no powers were cleared.",
 
   "commands.apoli.list.pass": "Entity %s has %s powers: [%s]",
-  "commands.apoli.list.fail": "Entity %s is not a living entity or did not have any powers.",
+  "commands.apoli.list.fail": "Entity %s did not have any powers.",
 
-  "commands.apoli.list.source": "Source: %s",
+  "commands.apoli.list.invalid_entity": "Entity %s is not a living entity.",
   "commands.apoli.list.sources": "Sources: [%s]",
 
   "commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
-  "commands.apoli.sources.fail": "Entity %s is not a living entity or did not have the power %s.",
+  "commands.apoli.sources.fail": "Entity %s did not have the power %s.",
 
+  "commands.apoli.sources.invalid_entity": "Entity %s is not a living entity.",
   "commands.apoli.resource.invalid_entity": "The entity is not a living entity, thus can't have any powers.",
 
   "tooltip.apoli.unusable.none.single": "Unusable (%s)",
