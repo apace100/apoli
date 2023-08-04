@@ -1,0 +1,37 @@
+{
+  "$comment": "On right-click, counts the number of diamonds in the inventory by referring to a resource via the holder action",
+  "type": "apoli:multiple",
+  "count": {
+    "type": "apoli:resource",
+    "min": 0,
+    "max": 128,
+    "hud_render": {
+      "sprite_location": "apoli:resource_bar.png",
+      "bar_index": 0
+    }
+  },
+  "activate": {
+    "type": "apoli:active_self",
+    "key": {
+      "key": "key.use"
+    },
+    "entity_action": {
+      "type": "apoli:modify_inventory",
+      "process_mode": "items",
+      "item_action": {
+        "type": "apoli:holder_action",
+        "action": {
+          "type": "apoli:change_resource",
+          "resource": "*:*_count",
+          "change": 1
+        }
+      },
+      "item_condition": {
+        "type": "apoli:ingredient",
+        "ingredient": {
+          "item": "minecraft:diamond"
+        }
+      }
+    }
+  }
+}
