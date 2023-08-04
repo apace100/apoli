@@ -37,6 +37,8 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
     @Shadow public abstract @Nullable Entity getHolder();
 
+    @Shadow public abstract void setHolder(@Nullable Entity holder);
+
     @Unique
     private ItemStack apoli$usedItemStack;
 
@@ -45,8 +47,13 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
     @Override
     public Entity getEntity() {
+        return getEntity(true);
+    }
+
+    @Override
+    public Entity getEntity(boolean prioritiseVanillaHolder) {
         Entity vanillaHolder = getHolder();
-        if(vanillaHolder == null) {
+        if(!prioritiseVanillaHolder || vanillaHolder == null) {
             return apoli$holdingEntity;
         }
         return vanillaHolder;
@@ -162,5 +169,6 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
         setItem(stack.getItem());
         nbt = stack.getNbt();
         count = stack.getCount();
+        setEntity(((EntityLinkedItemStack)stack).getEntity(false));
     }
 }

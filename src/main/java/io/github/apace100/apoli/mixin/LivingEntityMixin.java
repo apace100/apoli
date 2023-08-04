@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.access.HiddenEffectStatus;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -480,6 +481,15 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
     }
 
+    @Redirect(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
+    private boolean invisibilityException(LivingEntity instance, Entity entity) {
+        if (entity == null || !PowerHolderComponent.hasPower(this, InvisibilityPower.class)) {
+            return instance.isInvisible();
+        } else {
+            return PowerHolderComponent.hasPower(this, InvisibilityPower.class, p -> p.doesApply(entity));
+        }
+    }
+
     @Unique
     private List<ModifyFoodPower> apoli$currentModifyFoodPowers = new LinkedList<>();
 
@@ -508,6 +518,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "baseTick", at = @At("TAIL"))
     private void updateItemStackHolder(CallbackInfo ci) {
-        InventoryUtil.forEachStack(this, stack -> stack.setHolder(this));
+        InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).setEntity(this), stack -> ((EntityLinkedItemStack) stack).setEntity(this));
     }
 }

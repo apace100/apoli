@@ -4,12 +4,10 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.ApoliClient;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.LivingEntity;
@@ -56,10 +54,10 @@ public class ModifyBlockRenderPower extends Power {
         return new PowerFactory<>(Apoli.identifier("modify_block_render"),
             new SerializableData()
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
-                .add("block", SerializableDataTypes.BLOCK),
+                .add("block", SerializableDataTypes.BLOCK_STATE),
             data ->
                 (type, player) -> new ModifyBlockRenderPower(type, player,
-                    (ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition"),
-                    ((Block)data.get("block")).getDefaultState()));
+                        data.get("block_condition"),
+                        data.get("block")));
     }
 }
