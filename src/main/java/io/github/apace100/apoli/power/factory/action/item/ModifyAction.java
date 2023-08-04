@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action.item;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.loot.context.ApoliLootContextTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -27,7 +28,9 @@ public class ModifyAction {
     public static void action(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
         MinecraftServer server = worldAndStack.getLeft().getServer();
-        if (server == null) return;
+        if (server == null) {
+            return;
+        }
 
         Identifier itemModifierId = data.get("modifier");
         LootFunction itemModifier = server.getLootManager().getElement(LootDataType.ITEM_MODIFIERS, itemModifierId);
@@ -43,7 +46,7 @@ public class ModifyAction {
         }
 
         ItemStack stack = worldAndStack.getRight();
-        Entity stackHolder = stack.getHolder();
+        Entity stackHolder = ((EntityLinkedItemStack) stack).getEntity(false);
         if (stackHolder != null) {
             Apoli.LOGGER.warn("Using the dimension of the stack holder instead.");
             world = (ServerWorld) stackHolder.getWorld();
