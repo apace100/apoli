@@ -18,7 +18,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 @Mixin(InGameHud.class)
 @Environment(EnvType.CLIENT)
@@ -30,18 +33,21 @@ public class InGameHudMixin {
     private void renderOnHud(DrawContext context, float tickDelta, CallbackInfo ci) {
         boolean hudHidden = client.options.hudHidden;
         boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
-        PowerHolderComponent.withPower(client.getCameraEntity(), OverlayPower.class, p -> {
-            if(p.getDrawPhase() != OverlayPower.DrawPhase.BELOW_HUD) {
+        List<OverlayPower> overlays = PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class);
+        overlays.sort(Comparator.comparing(OverlayPower::getPriority));
+        Predicate<OverlayPower> overlayPredicate = overlay -> {
+            if(overlay.getDrawPhase() != OverlayPower.DrawPhase.BELOW_HUD) {
                 return false;
             }
-            if(hudHidden && p.doesHideWithHud()) {
+            if(hudHidden && overlay.doesHideWithHud()) {
                 return false;
             }
-            if(thirdPerson && !p.shouldBeVisibleInThirdPerson()) {
+            if(thirdPerson && !overlay.shouldBeVisibleInThirdPerson()) {
                 return false;
             }
             return true;
-        }, OverlayPower::render);
+        };
+        overlays.stream().filter(overlayPredicate).forEach(OverlayPower::render);
 
         for(GameHudRender hudRender : GameHudRender.HUD_RENDERS) {
             hudRender.render(context, tickDelta);
