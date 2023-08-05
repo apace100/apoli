@@ -1,0 +1,249 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:ancient_debris",
+      "required": false
+    },
+    {
+      "id": "minecraft:bell",
+      "required": false
+    },
+    {
+      "id": "minecraft:brewing_stand",
+      "required": false
+    },
+    {
+      "id": "minecraft:cauldron",
+      "required": false
+    },
+    {
+      "id": "minecraft:chain",
+      "required": false
+    },
+    {
+      "id": "minecraft:chain_command_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:command_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:copper_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:cut_copper_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:diamond_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:emerald_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:exposed_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:exposed_cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:exposed_cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:exposed_cut_copper_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:gold_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:heavy_weighted_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:hopper",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_bars",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_door",
+      "required": false
+    },
+    {
+      "id": "minecraft:iron_trapdoor",
+      "required": false
+    },
+    {
+      "id": "minecraft:jigsaw",
+      "required": false
+    },
+    {
+      "id": "minecraft:lantern",
+      "required": false
+    },
+    {
+      "id": "minecraft:lapis_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:lava_cauldron",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_weighted_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "minecraft:lightning_rod",
+      "required": false
+    },
+    {
+      "id": "minecraft:netherite_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:oxidized_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:oxidized_cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:oxidized_cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:oxidized_cut_copper_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:powder_snow_cauldron",
+      "required": false
+    },
+    {
+      "id": "minecraft:redstone_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:repeating_command_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_lantern",
+      "required": false
+    },
+    {
+      "id": "minecraft:structure_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:water_cauldron",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_copper_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_cut_copper_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_exposed_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_exposed_cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_exposed_cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_exposed_cut_copper_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_oxidized_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_oxidized_cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_oxidized_cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_oxidized_cut_copper_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_weathered_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_weathered_cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_weathered_cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:waxed_weathered_cut_copper_stairs",
+      "required": false
+    },
+    {
+      "id": "minecraft:weathered_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:weathered_cut_copper",
+      "required": false
+    },
+    {
+      "id": "minecraft:weathered_cut_copper_slab",
+      "required": false
+    },
+    {
+      "id": "minecraft:weathered_cut_copper_stairs",
+      "required": false
+    }
+  ]
+}

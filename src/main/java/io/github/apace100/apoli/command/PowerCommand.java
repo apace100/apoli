@@ -105,12 +105,12 @@ public class PowerCommand {
 
 		if (!processedLivingTargets.isEmpty()) {
 			if (isSourceSpecified) {
-				if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.apoli.grant.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
-				else source.sendFeedback(Text.translatable("commands.apoli.grant.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
+				if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.apoli.grant.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
+				else source.sendFeedback(() -> Text.translatable("commands.apoli.grant.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
 			}
 			else {
-				if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource), true);
-				else source.sendFeedback(Text.translatable("commands.apoli.grant_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
+				if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource), true);
+				else source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
 			}
 		}
 
@@ -159,12 +159,12 @@ public class PowerCommand {
 
 		if (!processedLivingTargets.isEmpty()) {
 			if (!isSourceSpecified) {
-				if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.apoli.revoke.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
-				else source.sendFeedback(Text.translatable("commands.apoli.revoke.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
+				if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.apoli.revoke.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
+				else source.sendFeedback(() -> Text.translatable("commands.apoli.revoke.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
 			}
 			else {
-				if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource), true);
-				else source.sendFeedback(Text.translatable("commands.apoli.revoke_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
+				if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName(), powerSource), true);
+				else source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.multiple", processedLivingTargets.size(), powerType.getName(), powerSource), true);
 			}
 		}
 
@@ -212,8 +212,9 @@ public class PowerCommand {
 		}
 
 		if (!processedLivingTargets.isEmpty()) {
-			if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.apoli.revoke_all.success.single", processedLivingTargets.getFirst().getDisplayName(), revokedPowers, powerSource), true);
-			else source.sendFeedback(Text.translatable("commands.apoli.revoke_all.success.multiple", processedLivingTargets.size(), revokedPowers, powerSource), true);
+			final int currentRevokedPowers = revokedPowers;
+			if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_all.success.single", processedLivingTargets.getFirst().getDisplayName(), currentRevokedPowers, powerSource), true);
+			else source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_all.success.multiple", processedLivingTargets.size(), currentRevokedPowers, powerSource), true);
 		}
 
 		else if (!livingTargets.isEmpty()) {
@@ -239,7 +240,7 @@ public class PowerCommand {
 		int powerCount = 0;
 
 		if (!(target instanceof LivingEntity livingTarget)) {
-			source.sendError(Text.translatable("commands.apoli.list.fail", target.getDisplayName()));
+			source.sendError(Text.translatable("commands.apoli.list.invalid_entity", target.getDisplayName()));
 			return powerCount;
 		}
 
@@ -251,7 +252,7 @@ public class PowerCommand {
 
             HoverEvent powerSourcesOnHover = new HoverEvent(
                 HoverEvent.Action.SHOW_TEXT,
-                Text.translatable(powerSources.size() == 1 ? "commands.apoli.list.source" : "commands.apoli.list.sources", Texts.join(powerSources, Text.of(", ")))
+                Text.translatable("commands.apoli.list.sources", Texts.join(powerSources, Text.of(", ")))
             );
 
 			Text power = Text.literal(powerType.getIdentifier().toString()).setStyle(Style.EMPTY.withHoverEvent(powerSourcesOnHover));
@@ -260,8 +261,12 @@ public class PowerCommand {
 
 		}
 
-		if (powerCount > 0) source.sendFeedback(Text.translatable("commands.apoli.list.pass", livingTarget.getDisplayName(), powerCount, Texts.join(powers, Text.of(", "))), true);
-		else source.sendError(Text.translatable("commands.apoli.list.fail", livingTarget.getDisplayName()));
+		if (powerCount > 0) {
+			final int currentPowerCount = powerCount;
+			source.sendFeedback(() -> Text.translatable("commands.apoli.list.pass", livingTarget.getDisplayName(), currentPowerCount, Texts.join(powers, Text.of(", "))), true);
+		} else {
+			source.sendFeedback(() -> Text.translatable("commands.apoli.list.fail", livingTarget.getDisplayName()), true);
+		}
 
 		return powerCount;
 
@@ -285,8 +290,8 @@ public class PowerCommand {
 		}
 		
 		if (!processedLivingTargets.isEmpty()) {
-			if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.execute.conditional.pass"), true);
-			else source.sendFeedback(Text.translatable("commands.execute.conditional.pass_count", processedLivingTargets.size()), true);
+			if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.execute.conditional.pass"), true);
+			else source.sendFeedback(() -> Text.translatable("commands.execute.conditional.pass_count", processedLivingTargets.size()), true);
 		}
 		
 		else {
@@ -308,7 +313,7 @@ public class PowerCommand {
 		int powerSourceCount = 0;
 
 		if (!(target instanceof LivingEntity livingTarget)) {
-			source.sendError(Text.translatable("commands.apoli.sources.fail", target.getDisplayName(), powerType.getName()));
+			source.sendError(Text.translatable("commands.apoli.sources.invalid_entity", target.getDisplayName(), powerType.getName()));
 			return powerSourceCount;
 		}
 
@@ -319,7 +324,10 @@ public class PowerCommand {
 			powerSourceCount++;
 		}
 
-		if (powerSourceCount > 0) source.sendFeedback(Text.translatable("commands.apoli.sources.pass", livingTarget.getDisplayName(), powerSourceCount, powerType.getName(), powerSources), true);
+		if (powerSourceCount > 0) {
+			final int currentPowerSourceCount = powerSourceCount;
+			source.sendFeedback(() -> Text.translatable("commands.apoli.sources.pass", livingTarget.getDisplayName(), currentPowerSourceCount, powerType.getName(), powerSources), true);
+		}
 		else source.sendError(Text.translatable("commands.apoli.sources.fail", livingTarget.getDisplayName(), powerType.getName()));
 			
 		return powerSourceCount;
@@ -358,8 +366,8 @@ public class PowerCommand {
 		}
 
 		if (!processedLivingTargets.isEmpty()) {
-			if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.apoli.remove.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
-			else source.sendFeedback(Text.translatable("commands.apoli.remove.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
+			if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.apoli.remove.success.single", processedLivingTargets.getFirst().getDisplayName(), powerType.getName()), true);
+			else source.sendFeedback(() -> Text.translatable("commands.apoli.remove.success.multiple", processedLivingTargets.size(), powerType.getName()), true);
 		}
 
 		else if (!livingTargets.isEmpty()) {
@@ -409,8 +417,9 @@ public class PowerCommand {
 		}
 
 		if (!processedLivingTargets.isEmpty()) {
-			if (processedLivingTargets.size() == 1) source.sendFeedback(Text.translatable("commands.apoli.clear.success.single", processedLivingTargets.getFirst().getDisplayName(), clearedPowers), true);
-			else source.sendFeedback(Text.translatable("commands.apoli.clear.success.multiple", processedLivingTargets.size(), clearedPowers), true);
+			final int currentClearedPowers = clearedPowers;
+			if (processedLivingTargets.size() == 1) source.sendFeedback(() -> Text.translatable("commands.apoli.clear.success.single", processedLivingTargets.getFirst().getDisplayName(), currentClearedPowers), true);
+			else source.sendFeedback(() -> Text.translatable("commands.apoli.clear.success.multiple", processedLivingTargets.size(), currentClearedPowers), true);
 		}
 
 		else if (!livingTargets.isEmpty()) {

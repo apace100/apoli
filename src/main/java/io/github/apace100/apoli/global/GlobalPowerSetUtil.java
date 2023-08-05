@@ -35,7 +35,7 @@ public class GlobalPowerSetUtil {
     }
 
     public static void applyGlobalPowers(Entity entity) {
-        if(entity.world.isClient) {
+        if(entity.getWorld().isClient) {
             return;
         }
         Optional<PowerHolderComponent> optional = PowerHolderComponent.KEY.maybeGet(entity);

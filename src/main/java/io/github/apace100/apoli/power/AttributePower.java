@@ -41,7 +41,7 @@ public class AttributePower extends Power {
 
     @Override
     public void onAdded() {
-        if(!entity.world.isClient) {
+        if(!entity.getWorld().isClient) {
             float previousMaxHealth = entity.getMaxHealth();
             float previousHealthPercent = entity.getHealth() / previousMaxHealth;
             modifiers.forEach(mod -> {
@@ -58,7 +58,7 @@ public class AttributePower extends Power {
 
     @Override
     public void onRemoved() {
-        if(!entity.world.isClient) {
+        if(!entity.getWorld().isClient) {
             float previousMaxHealth = entity.getMaxHealth();
             float previousHealthPercent = entity.getHealth() / previousMaxHealth;
             modifiers.forEach(mod -> {

@@ -26,6 +26,7 @@ public class ActionOverTimePower extends Power {
 
     public ActionOverTimePower(PowerType<?> type, LivingEntity entity, int interval, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction) {
         super(type, entity);
+        if(interval <= 0) interval = 1;
         this.interval = interval;
         this.entityAction = entityAction;
         this.risingAction = risingAction;
@@ -75,7 +76,7 @@ public class ActionOverTimePower extends Power {
                 .add("falling_action", ApoliDataTypes.ENTITY_ACTION, null),
             data ->
                 (type, player) -> new ActionOverTimePower(type, player, data.getInt("interval"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action"), (ActionFactory<Entity>.Instance)data.get("rising_action"), (ActionFactory<Entity>.Instance)data.get("falling_action")))
+                        data.get("entity_action"), data.get("rising_action"), data.get("falling_action")))
             .allowCondition();
     }
 }

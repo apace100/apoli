@@ -34,7 +34,7 @@ public class ModPacketsC2S {
         int otherEntityId = packetByteBuf.readInt();
         int handOrdinal = packetByteBuf.readInt();
         minecraftServer.execute(() -> {
-            Entity otherEntity = playerEntity.world.getEntityById(otherEntityId);
+            Entity otherEntity = playerEntity.getWorld().getEntityById(otherEntityId);
             Hand hand = Hand.values()[handOrdinal];
             if(otherEntity == null) {
                 Apoli.LOGGER.warn("Received unknown entity for prevented interaction");

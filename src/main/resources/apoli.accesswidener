@@ -1,5 +1,11 @@
 accessWidener   v1  named
 
 mutable field net/minecraft/item/ItemStack item Lnet/minecraft/item/Item;
+accessible method net/minecraft/item/ItemStack <init> (Ljava/lang/Void;)V
 extendable class net/minecraft/item/ItemStack
+accessible class net/minecraft/enchantment/EnchantmentHelper$Consumer
 accessible class net/minecraft/client/render/BackgroundRenderer$FogData
+accessible class net/minecraft/server/command/AdvancementCommand$Operation
+accessible class net/minecraft/server/command/AdvancementCommand$Selection
+accessible method net/minecraft/server/command/AdvancementCommand$Operation processEach (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;)Z
+accessible method net/minecraft/server/command/AdvancementCommand$Operation processEachCriterion (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;Ljava/lang/String;)Z

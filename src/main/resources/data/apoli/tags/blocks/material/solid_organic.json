@@ -1,0 +1,37 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:dried_kelp_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:grass_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:hay_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:mycelium",
+      "required": false
+    },
+    {
+      "id": "minecraft:nether_wart_block",
+      "required": false
+    },
+    {
+      "id": "minecraft:shroomlight",
+      "required": false
+    },
+    {
+      "id": "minecraft:target",
+      "required": false
+    },
+    {
+      "id": "minecraft:warped_wart_block",
+      "required": false
+    }
+  ]
+}

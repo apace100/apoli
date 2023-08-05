@@ -30,7 +30,7 @@ public abstract class ClientPlayerInteractionManagerMixin {
 
     @Inject(method = "interactBlockInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldCancelInteraction()Z"), cancellable = true)
     private void preventBlockInteraction(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> cir) {
-        if(PowerHolderComponent.getPowers(player, PreventBlockUsePower.class).stream().anyMatch(p -> p.doesPrevent(player.world, hitResult.getBlockPos()))) {
+        if(PowerHolderComponent.getPowers(player, PreventBlockUsePower.class).stream().anyMatch(p -> p.doesPrevent(player.getWorld(), hitResult.getBlockPos()))) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

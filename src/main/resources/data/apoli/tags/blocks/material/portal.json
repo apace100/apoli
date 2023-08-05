@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:end_gateway",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_portal",
+      "required": false
+    },
+    {
+      "id": "minecraft:nether_portal",
+      "required": false
+    }
+  ]
+}

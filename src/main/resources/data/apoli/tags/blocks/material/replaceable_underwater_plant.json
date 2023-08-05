@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:seagrass",
+      "required": false
+    },
+    {
+      "id": "minecraft:tall_seagrass",
+      "required": false
+    }
+  ]
+}

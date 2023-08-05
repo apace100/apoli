@@ -21,7 +21,7 @@ public class SelectorAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
 
-        MinecraftServer server = entity.world.getServer();
+        MinecraftServer server = entity.getWorld().getServer();
         if (server == null) return;
 
         EntitySelector selector = data.<ArgumentWrapper<EntitySelector>>get("selector").get();
@@ -32,7 +32,7 @@ public class SelectorAction {
             CommandOutput.DUMMY,
             entity.getPos(),
             entity.getRotationClient(),
-            (ServerWorld) entity.world,
+            (ServerWorld) entity.getWorld(),
             2,
             entity.getEntityName(),
             entity.getName(),

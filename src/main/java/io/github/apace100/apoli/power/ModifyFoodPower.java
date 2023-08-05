@@ -59,7 +59,7 @@ public class ModifyFoodPower extends Power {
         if(replaceStack != null) stack = replaceStack;
         ItemStack consumed = stack.copy();
 
-        if(consumableAction != null) consumableAction.accept(new Pair<>(entity.world, consumed));
+        if(consumableAction != null) consumableAction.accept(new Pair<>(entity.getWorld(), consumed));
         return consumed;
 
     }

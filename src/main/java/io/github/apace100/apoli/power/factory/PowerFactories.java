@@ -121,8 +121,8 @@ public class PowerFactories {
         register(ModifyGrindstonePower::createFactory);
         register(ReplaceLootTablePower::createFactory);
         register(ModifyVelocityPower::createFactory);
-
         register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
+        register(ModifyEnchantmentLevelPower::createFactory);
         register(ActionOnDeathPower::createFactory);
     }
 

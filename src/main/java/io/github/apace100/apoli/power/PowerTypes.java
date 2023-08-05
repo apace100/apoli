@@ -5,14 +5,17 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.NamespaceAlias;
+import io.github.apace100.apoli.util.ApoliResourceConditions;
+import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.MultiJsonDataLoader;
 import io.github.apace100.calio.data.SerializableData;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -21,6 +24,7 @@ import java.util.function.BiFunction;
 public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResourceReloadListener {
 
     public static final Set<Identifier> DEPENDENCIES = new HashSet<>();
+    public static final Set<String> LOADED_NAMESPACES = new HashSet<>();
 
     private static final Identifier MULTIPLE = Apoli.identifier("multiple");
     private static final Identifier SIMPLE = Apoli.identifier("simple");
@@ -39,6 +43,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
     protected void apply(Map<Identifier, List<JsonElement>> loader, ResourceManager manager, Profiler profiler) {
         PowerTypeRegistry.reset();
         LOADING_PRIORITIES.clear();
+        LOADED_NAMESPACES.clear();
+        LOADED_NAMESPACES.addAll(manager.getAllNamespaces());
         PowerReloadCallback.EVENT.invoker().onPowerReload();
         PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
         loader.forEach((id, jel) -> {
@@ -60,21 +66,28 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
                                 || entry.getKey().equals("description")
                                 || entry.getKey().equals("hidden")
                                 || entry.getKey().equals("condition")
-                                || entry.getKey().toString().startsWith("$")
-                                || ADDITIONAL_DATA.containsKey(entry.getKey())) {
+                                || entry.getKey().startsWith("$")
+                                || ADDITIONAL_DATA.containsKey(entry.getKey())
+                                || entry.getKey().equals(ResourceConditions.CONDITIONS_KEY)) {
                                 continue;
                             }
-                            Identifier subId = new Identifier(id.toString() + "_" + entry.getKey());
+                            Identifier subId = new Identifier(id + "_" + entry.getKey());
                             try {
-                                readPower(subId, entry.getValue(), true);
-                                subPowers.add(subId);
+                                PowerType<?> subPower = readPower(subId, entry.getValue(), true);
+                                if (subPower != null) {
+                                    subPowers.add(subId);
+                                }
                             } catch (Exception e) {
                                 Apoli.LOGGER.error("There was a problem reading sub-power \"" +
-                                    subId.toString() + "\" in power file \"" + id.toString() + "\": " + e.getMessage());
+                                    subId + "\" in power file \"" + id + "\": " + e.getMessage());
                             }
                         }
-                        MultiplePowerType superPower = (MultiplePowerType) readPower(id, je, false, MultiplePowerType::new);
-                        superPower.setSubPowers(subPowers);
+                        MultiplePowerType<?> superPower = (MultiplePowerType) readPower(id, je, false, MultiplePowerType::new);
+                        if (superPower != null) {
+                            superPower.setSubPowers(subPowers);
+                        } else {
+                            subPowers.forEach(PowerTypeRegistry::disable);
+                        }
                         handleAdditionalData(id, factoryId, false, jo, superPower);
                         PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, factoryId, false, jo, superPower);
                     } else {
@@ -87,38 +100,53 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         });
         PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
         LOADING_PRIORITIES.clear();
+        LOADED_NAMESPACES.clear();
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
         Apoli.LOGGER.info("Finished loading powers from data files. Registry contains " + PowerTypeRegistry.size() + " powers.");
     }
 
-    private void readPower(Identifier id, JsonElement je, boolean isSubPower) {
-        readPower(id, je, isSubPower, PowerType::new);
+    private boolean isResourceConditionValid(Identifier id, JsonObject jo) {
+        return ApoliResourceConditions.test(id, jo);
     }
 
+    @Nullable
+    private PowerType readPower(Identifier id, JsonElement je, boolean isSubPower) {
+        return readPower(id, je, isSubPower, PowerType::new);
+    }
+
+    @Nullable
     private PowerType readPower(Identifier id, JsonElement je, boolean isSubPower,
                                 BiFunction<Identifier, PowerFactory.Instance, PowerType> powerTypeFactory) {
         JsonObject jo = je.getAsJsonObject();
-        Identifier factoryId = Identifier.tryParse(JsonHelper.getString(jo, "type"));
+        Identifier factoryId = new Identifier(JsonHelper.getString(jo, "type"));
+        int priority = JsonHelper.getInt(jo, "loading_priority", 0);
+
+        if (!isResourceConditionValid(id, jo)) {
+            if(!PowerTypeRegistry.contains(id)) {
+                PowerTypeRegistry.disable(id);
+            }
+            return null;
+        }
+
         if(isMultiple(factoryId)) {
             factoryId = SIMPLE;
             if(isSubPower) {
-                throw new JsonSyntaxException("Power type \"" + MULTIPLE.toString() + "\" may not be used for a sub-power of "
-                    + "another \"" + MULTIPLE.toString() + "\" power.");
+                throw new JsonSyntaxException("Power type \"" + MULTIPLE + "\" may not be used for a sub-power of "
+                    + "another \"" + MULTIPLE + "\" power.");
             }
         }
         Optional<PowerFactory> optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(factoryId);
-        if(!optionalFactory.isPresent()) {
-            if(NamespaceAlias.hasAlias(factoryId)) {
-                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(NamespaceAlias.resolveAlias(factoryId));
+        if(optionalFactory.isEmpty()) {
+            if(IdentifierAlias.hasAlias(factoryId)) {
+                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(IdentifierAlias.resolveAlias(factoryId));
             }
-            if(!optionalFactory.isPresent()) {
-                throw new JsonSyntaxException("Power type \"" + factoryId.toString() + "\" is not defined.");
+            if(optionalFactory.isEmpty()) {
+                throw new JsonSyntaxException("Power type \"" + factoryId + "\" is not registered.");
             }
         }
         PowerFactory.Instance factoryInstance = optionalFactory.get().read(jo);
         PowerType type = powerTypeFactory.apply(id, factoryInstance);
-        int priority = JsonHelper.getInt(jo, "loading_priority", 0);
         String name = JsonHelper.getString(jo, "name", "");
         String description = JsonHelper.getString(jo, "description", "");
         boolean hidden = JsonHelper.getBoolean(jo, "hidden", false);
@@ -150,8 +178,8 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         if(MULTIPLE.equals(id)) {
             return true;
         }
-        if(NamespaceAlias.hasAlias(id)) {
-            return MULTIPLE.equals(NamespaceAlias.resolveAlias(id));
+        if(IdentifierAlias.hasAlias(id)) {
+            return MULTIPLE.equals(IdentifierAlias.resolveAlias(id));
         }
         return false;
     }

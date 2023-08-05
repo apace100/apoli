@@ -1,0 +1,161 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:beacon",
+      "required": false
+    },
+    {
+      "id": "minecraft:black_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:black_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:blue_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:blue_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:conduit",
+      "required": false
+    },
+    {
+      "id": "minecraft:cyan_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:cyan_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:glowstone",
+      "required": false
+    },
+    {
+      "id": "minecraft:gray_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:gray_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:green_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:green_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_blue_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_blue_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_gray_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:light_gray_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:lime_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:lime_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:magenta_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:magenta_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:orange_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:orange_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:pink_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:pink_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:purple_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:purple_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:sea_lantern",
+      "required": false
+    },
+    {
+      "id": "minecraft:tinted_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:white_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:white_stained_glass_pane",
+      "required": false
+    },
+    {
+      "id": "minecraft:yellow_stained_glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:yellow_stained_glass_pane",
+      "required": false
+    }
+  ]
+}

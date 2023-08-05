@@ -26,7 +26,7 @@ public class PlayerAbilityPower extends Power {
 
     @Override
     public void tick() {
-        if(!entity.world.isClient) {
+        if(!entity.getWorld().isClient) {
             boolean isActive = isActive();
             boolean hasAbility = hasAbility();
             if(isActive && !hasAbility) {
@@ -39,7 +39,7 @@ public class PlayerAbilityPower extends Power {
 
     @Override
     public void onGained() {
-        if(!entity.world.isClient &&
+        if(!entity.getWorld().isClient &&
             entity instanceof PlayerEntity &&
             isActive() &&
             !hasAbility()) {
@@ -49,7 +49,7 @@ public class PlayerAbilityPower extends Power {
 
     @Override
     public void onAdded() {
-        if(!entity.world.isClient &&
+        if(!entity.getWorld().isClient &&
             entity instanceof PlayerEntity player &&
             Apoli.LEGACY_POWER_SOURCE.grants(player, ability)) {
             Apoli.LEGACY_POWER_SOURCE.revokeFrom(player, ability);
@@ -58,7 +58,7 @@ public class PlayerAbilityPower extends Power {
 
     @Override
     public void onLost() {
-        if(!entity.world.isClient &&
+        if(!entity.getWorld().isClient &&
             entity instanceof PlayerEntity &&
             hasAbility()) {
             revokeAbility();
