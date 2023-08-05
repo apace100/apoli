@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import net.fabricmc.api.EnvType;
@@ -34,7 +33,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 @Environment(EnvType.CLIENT)
 @Mixin(GameRenderer.class)
@@ -93,23 +91,11 @@ public abstract class GameRendererMixin {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
     private void renderOverlayPowers(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
-        boolean hudHidden = this.client.options.hudHidden;
-        boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
-        List<OverlayPower> overlays = PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class);
-        overlays.sort(Comparator.comparing(OverlayPower::getPriority));
-        Predicate<OverlayPower> overlayPredicate = overlay -> {
-            if(overlay.getDrawPhase() != OverlayPower.DrawPhase.ABOVE_HUD) {
-                return false;
-            }
-            if(hudHidden && overlay.doesHideWithHud()) {
-                return false;
-            }
-            if(thirdPerson && !overlay.shouldBeVisibleInThirdPerson()) {
-                return false;
-            }
-            return true;
-        };
-        overlays.stream().filter(overlayPredicate).forEach(OverlayPower::render);
+        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
+            .stream()
+            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.ABOVE_HUD))
+            .sorted(Comparator.comparing(OverlayPower::getPriority))
+            .forEach(OverlayPower::render);
     }
 
     @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)

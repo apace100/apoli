@@ -9,8 +9,8 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.NetherPortalBlock;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
@@ -65,6 +65,13 @@ public class OverlayPower extends Power {
 
     public boolean doesHideWithHud() {
         return hideWithHud;
+    }
+
+    @Environment(EnvType.CLIENT)
+    public boolean shouldRender(GameOptions options, DrawPhase targetDrawPhase) {
+        return this.getDrawPhase() == targetDrawPhase
+            && (!options.hudHidden || !this.doesHideWithHud())
+            && (options.getPerspective().isFirstPerson() || this.shouldBeVisibleInThirdPerson());
     }
 
     @Environment(EnvType.CLIENT)
@@ -150,8 +157,8 @@ public class OverlayPower extends Power {
                     data.getFloat("red"),
                     data.getFloat("green"),
                     data.getFloat("blue"),
-                    (OverlayPower.DrawMode) data.get("draw_mode"),
-                    (OverlayPower.DrawPhase) data.get("draw_phase"),
+                    data.get("draw_mode"),
+                    data.get("draw_phase"),
                     data.getBoolean("hide_with_hud"),
                     data.getBoolean("visible_in_third_person")))
             .allowCondition();
