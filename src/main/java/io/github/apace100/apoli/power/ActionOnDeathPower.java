@@ -25,12 +25,13 @@ public class ActionOnDeathPower extends Power {
         this.bientityCondition = bientityCondition;
     }
 
-    public void onDeath(Entity target, DamageSource damageSource, float damageAmount) {
-        if(bientityCondition == null || bientityCondition.test(new Pair<>(entity, target))) {
-            if(damageCondition == null || damageCondition.test(new Pair<>(damageSource, damageAmount))) {
-                this.bientityAction.accept(new Pair<>(entity, target));
-            }
-        }
+    public boolean doesApply(Entity actor, DamageSource damageSource, float damageAmount) {
+        return (bientityCondition == null || bientityCondition.test(new Pair<>(actor, entity)))
+            && (damageCondition == null || damageCondition.test(new Pair<>(damageSource, damageAmount)));
+    }
+
+    public void onDeath(Entity actor) {
+        bientityAction.accept(new Pair<>(actor, entity));
     }
 
     public static PowerFactory createFactory() {
