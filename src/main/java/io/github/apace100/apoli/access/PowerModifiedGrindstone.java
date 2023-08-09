@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface PowerModifiedGrindstone {
 
-    List<ModifyGrindstonePower> getAppliedPowers();
+    List<ModifyGrindstonePower> apoli$getAppliedPowers();
 
-    PlayerEntity getPlayer();
+    PlayerEntity apoli$getPlayer();
 
-    Optional<BlockPos> getPos();
+    Optional<BlockPos> apoli$getPos();
 }

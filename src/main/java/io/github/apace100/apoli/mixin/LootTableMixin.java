@@ -1,7 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import com.google.common.collect.Lists;
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.IdentifiedLootTable;
 import io.github.apace100.apoli.access.ReplacingLootContext;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -39,23 +37,23 @@ public class LootTableMixin implements IdentifiedLootTable {
     private LootManager apoli$lootManager;
 
     @Override
-    public void setId(Identifier id, LootManager lootManager) {
+    public void apoli$setId(Identifier id, LootManager lootManager) {
         apoli$id = id;
         apoli$lootManager = lootManager;
     }
 
     @Override
-    public Identifier getId() {
+    public Identifier apoli$getId() {
         return apoli$id;
     }
 
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At("HEAD"), cancellable = true)
     private void modifyLootTable(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
-        if(((ReplacingLootContext)context).isReplaced((LootTable)(Object)this)) {
+        if(((ReplacingLootContext)context).apoli$isReplaced((LootTable)(Object)this)) {
             return;
         }
         if(context.hasParameter(LootContextParameters.THIS_ENTITY)) {
-            LootContextType type = ((ReplacingLootContext)context).getType();
+            LootContextType type = ((ReplacingLootContext)context).apoli$getType();
             Entity entity = context.get(LootContextParameters.THIS_ENTITY);
             if(type == LootContextTypes.FISHING) {
                 if(entity instanceof FishingBobberEntity bobber) {
@@ -88,7 +86,7 @@ public class LootTableMixin implements IdentifiedLootTable {
                 replacement = apoli$lootManager.getLootTable(id);
                 ReplaceLootTablePower.addToStack(replacement);
             }
-            ((ReplacingLootContext)context).setReplaced((LootTable)(Object)this);
+            ((ReplacingLootContext)context).apoli$setReplaced((LootTable)(Object)this);
             replacement.generateUnprocessedLoot(context, lootConsumer);
             ReplaceLootTablePower.clearStack();
             ci.cancel();

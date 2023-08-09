@@ -22,7 +22,7 @@ public class GrindstoneScreenHandlerBottomInputSlotMixin {
     @Inject(method = "canInsert", at = @At("HEAD"), cancellable = true)
     private void allowPowerStacks(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         PowerModifiedGrindstone pmg = (PowerModifiedGrindstone) field_16778;
-        if(PowerHolderComponent.hasPower(pmg.getPlayer(), ModifyGrindstonePower.class, p -> p.allowsInBottom(stack))) {
+        if(PowerHolderComponent.hasPower(pmg.apoli$getPlayer(), ModifyGrindstonePower.class, p -> p.allowsInBottom(stack))) {
             cir.setReturnValue(true);
         }
     }

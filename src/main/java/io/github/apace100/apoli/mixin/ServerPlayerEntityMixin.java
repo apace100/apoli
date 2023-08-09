@@ -101,7 +101,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Inject(at = @At("HEAD"), method = "getSpawnPointDimension", cancellable = true)
     private void modifySpawnPointDimension(CallbackInfoReturnable<RegistryKey<World>> info) {
-        if (!this.origins_isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
+        if (!this.apoli$isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
             ModifyPlayerSpawnPower power = PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).get(0);
             info.setReturnValue(power.dimension);
         }
@@ -109,7 +109,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Inject(at = @At("HEAD"), method = "getSpawnPointPosition", cancellable = true)
     private void modifyPlayerSpawnPosition(CallbackInfoReturnable<BlockPos> info) {
-        if(!this.origins_isEndRespawning && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
+        if(!this.apoli$isEndRespawning && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
             if(spawnPointPosition == null) {
                 info.setReturnValue(findPlayerSpawn());
             } else if(hasObstructedSpawn()) {
@@ -122,7 +122,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Inject(at = @At("HEAD"), method = "isSpawnForced", cancellable = true)
     private void modifySpawnPointSet(CallbackInfoReturnable<Boolean> info) {
-        if(!this.origins_isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class)) {
+        if(!this.apoli$isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class)) {
             info.setReturnValue(true);
         }
     }
@@ -169,20 +169,20 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     }
 
     @Unique
-    private boolean origins_isEndRespawning;
+    private boolean apoli$isEndRespawning;
 
     @Override
-    public void setEndRespawning(boolean endSpawn) {
-        this.origins_isEndRespawning = endSpawn;
+    public void apoli$setEndRespawning(boolean endSpawn) {
+        this.apoli$isEndRespawning = endSpawn;
     }
 
     @Override
-    public boolean isEndRespawning() {
-        return this.origins_isEndRespawning;
+    public boolean apoli$isEndRespawning() {
+        return this.apoli$isEndRespawning;
     }
 
     @Override
-    public boolean hasRealRespawnPoint() {
+    public boolean apoli$hasRealRespawnPoint() {
         return spawnPointPosition != null && !hasObstructedSpawn();
     }
 }

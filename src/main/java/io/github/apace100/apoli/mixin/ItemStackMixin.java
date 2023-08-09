@@ -46,12 +46,12 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     private Entity apoli$holdingEntity;
 
     @Override
-    public Entity getEntity() {
-        return getEntity(true);
+    public Entity apoli$getEntity() {
+        return apoli$getEntity(true);
     }
 
     @Override
-    public Entity getEntity(boolean prioritiseVanillaHolder) {
+    public Entity apoli$getEntity(boolean prioritiseVanillaHolder) {
         Entity vanillaHolder = getHolder();
         if(!prioritiseVanillaHolder || vanillaHolder == null) {
             return apoli$holdingEntity;
@@ -60,14 +60,14 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     }
 
     @Override
-    public void setEntity(Entity entity) {
+    public void apoli$setEntity(Entity entity) {
         this.apoli$holdingEntity = entity;
     }
 
     @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void copyNewParams(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
         if (this.apoli$holdingEntity != null) {
-            ((EntityLinkedItemStack)itemStack).setEntity(apoli$holdingEntity);
+            ((EntityLinkedItemStack)itemStack).apoli$setEntity(apoli$holdingEntity);
         }
     }
 
@@ -160,15 +160,15 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     }
 
     @Override
-    public void setItem(Item item) {
+    public void apoli$setItem(Item item) {
         this.item = item;
     }
 
     @Override
-    public void setFrom(ItemStack stack) {
-        setItem(stack.getItem());
+    public void apoli$setFrom(ItemStack stack) {
+        apoli$setItem(stack.getItem());
         nbt = stack.getNbt();
         count = stack.getCount();
-        setEntity(((EntityLinkedItemStack)stack).getEntity(false));
+        apoli$setEntity(((EntityLinkedItemStack)stack).apoli$getEntity(false));
     }
 }

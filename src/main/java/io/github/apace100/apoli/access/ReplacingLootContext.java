@@ -5,11 +5,11 @@ import net.minecraft.loot.context.LootContextType;
 
 public interface ReplacingLootContext {
 
-    void setType(LootContextType type);
+    void apoli$setType(LootContextType type);
 
-    LootContextType getType();
+    LootContextType apoli$getType();
 
-    void setReplaced(LootTable table);
+    void apoli$setReplaced(LootTable table);
 
-    boolean isReplaced(LootTable table);
+    boolean apoli$isReplaced(LootTable table);
 }
