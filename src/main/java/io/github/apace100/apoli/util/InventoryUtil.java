@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.util;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.InventoryPower;
@@ -17,7 +17,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -356,16 +356,38 @@ public class InventoryUtil {
 
     }
 
-    public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
-        Set<Integer> slots = Sets.newHashSet(ItemSlotArgumentTypeAccessor.getSlotMappings().values());
-        deduplicateSlots(entity, slots);
+    private static final Map<Entity, ItemStack> ENTITY_EMPTY_STACK_MAP = new HashMap<>();
 
-        for(int slot : slots) {
+    public static ItemStack getEntityLinkedEmptyStack(Entity entity) {
+        if (!ENTITY_EMPTY_STACK_MAP.containsKey(entity)) {
+            ENTITY_EMPTY_STACK_MAP.put(entity, new ItemStack((Void) null));
+        }
+        return ENTITY_EMPTY_STACK_MAP.get(entity);
+    }
+
+    public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
+        forEachStack(entity, itemStackConsumer, null);
+    }
+
+    public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer, @Nullable Consumer<ItemStack> emptyStackConsumer) {
+        int skip = getDuplicatedSlotIndex(entity);
+
+        for(int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+            if(slot == skip) {
+                skip = Integer.MIN_VALUE;
+                continue;
+            }
             StackReference stackReference = entity.getStackReference(slot);
             if (stackReference == StackReference.EMPTY) continue;
 
             ItemStack itemStack = stackReference.get();
-            if (itemStack.isEmpty()) continue;
+            if (itemStack.isEmpty()) {
+                if (emptyStackConsumer == null) continue;
+                ItemStack newStack = getEntityLinkedEmptyStack(entity);
+                emptyStackConsumer.accept(newStack);
+                ((MutableItemStack)itemStack).setFrom(newStack);
+                continue;
+            }
             itemStackConsumer.accept(itemStack);
         }
 
@@ -376,7 +398,10 @@ public class InventoryUtil {
             for(InventoryPower inventoryPower : inventoryPowers) {
                 for(int index = 0; index < inventoryPower.size(); index++) {
                     ItemStack stack = inventoryPower.getStack(index);
-                    if(stack.isEmpty()) {
+                    if (stack.isEmpty()) {
+                        if (emptyStackConsumer == null) continue;
+                        ItemStack newStack = getEntityLinkedEmptyStack(entity);
+                        emptyStackConsumer.accept(newStack);
                         continue;
                     }
                     itemStackConsumer.accept(stack);
@@ -386,13 +411,25 @@ public class InventoryUtil {
     }
 
     private static void deduplicateSlots(Entity entity, Set<Integer> slots) {
+        int hotbarSlot = getDuplicatedSlotIndex(entity);
+        if(hotbarSlot != Integer.MIN_VALUE && slots.contains(hotbarSlot)) {
+            Integer mainHandSlot = ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand");
+            slots.remove(mainHandSlot);
+        }
+    }
+
+    /**
+     * For players, their selected hotbar slot will overlap with the `weapon.mainhand` slot reference.
+     * This method returns the slot id of the selected hotbar slot.
+     * Otherwise, if no slot is duplicated because the entity is not a player, returns Integer.MIN_VALUE
+     * @param entity The entity
+     * @return Slot id of hotbar slot if entity is a player, Integer.MIN_VALUE otherwise
+     */
+    private static int getDuplicatedSlotIndex(Entity entity) {
         if(entity instanceof PlayerEntity player) {
             int selectedSlot = player.getInventory().selectedSlot;
-            Integer hotbarSlot = ItemSlotArgumentTypeAccessor.getSlotMappings().get("hotbar." + selectedSlot);
-            if(slots.contains(hotbarSlot)) {
-                Integer mainHandSlot = ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand");
-                slots.remove(mainHandSlot);
-            }
+            return ItemSlotArgumentTypeAccessor.getSlotMappings().get("hotbar." + selectedSlot);
         }
+        return Integer.MIN_VALUE;
     }
 }

@@ -66,6 +66,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         super(entityType, world);
     }
 
+    @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
+    private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
+        cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
+    }
+
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private ItemStack modifyEatenItemStack(ItemStack original) {
         List<ModifyFoodPower> mfps = PowerHolderComponent.getPowers(this, ModifyFoodPower.class);

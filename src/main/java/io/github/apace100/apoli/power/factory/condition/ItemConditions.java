@@ -3,23 +3,21 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.item.EnchantmentCondition;
+import io.github.apace100.apoli.power.factory.condition.item.FuelCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolItem;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.recipe.Ingredient;
-import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registry;
+import net.minecraft.util.Identifier;
 
 import java.util.List;
 
@@ -128,6 +126,7 @@ public class ItemConditions {
         register(new ConditionFactory<>(Apoli.identifier("is_equippable"), new SerializableData()
             .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT),
             (data, stack) -> MobEntity.getPreferredEquipmentSlot(stack) == data.get("equipment_slot")));
+        register(FuelCondition.getFactory());
     }
 
     private static void register(ConditionFactory<ItemStack> conditionFactory) {

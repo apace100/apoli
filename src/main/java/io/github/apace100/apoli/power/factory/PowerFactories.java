@@ -2,7 +2,6 @@ package io.github.apace100.apoli.power.factory;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.power.factory.action.entity.GrantAdvancementAction;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.ladysnake.pal.VanillaAbilities;
@@ -123,6 +122,8 @@ public class PowerFactories {
         register(ReplaceLootTablePower::createFactory);
         register(ModifyVelocityPower::createFactory);
         register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
+        register(ModifyEnchantmentLevelPower::createFactory);
+        register(ActionOnDeathPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {
