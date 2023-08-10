@@ -25,22 +25,8 @@ import java.util.Optional;
 
 public class BiomeConditions {
 
-    @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, biome) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BIOME_CONDITIONS),
-            (data, biome) -> ((List<ConditionFactory<RegistryEntry<Biome>>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(biome)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BIOME_CONDITIONS),
-            (data, biome) -> ((List<ConditionFactory<RegistryEntry<Biome>>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(biome)
-            )));
-
+        MetaConditions.register(ApoliDataTypes.BIOME_CONDITION, BiomeConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("high_humidity"), new SerializableData(),
             (data, biome) -> ((BiomeWeatherAccess)(Object)biome.value()).getDownfall() > 0.85f));
         register(new ConditionFactory<>(Apoli.identifier("temperature"), new SerializableData()
