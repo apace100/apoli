@@ -240,7 +240,7 @@ public class PowerCommand {
 		int powerCount = 0;
 
 		if (!(target instanceof LivingEntity livingTarget)) {
-			source.sendError(Text.translatable("commands.apoli.list.fail", target.getDisplayName()));
+			source.sendError(Text.translatable("commands.apoli.list.invalid_entity", target.getDisplayName()));
 			return powerCount;
 		}
 
@@ -252,7 +252,7 @@ public class PowerCommand {
 
             HoverEvent powerSourcesOnHover = new HoverEvent(
                 HoverEvent.Action.SHOW_TEXT,
-                Text.translatable(powerSources.size() == 1 ? "commands.apoli.list.source" : "commands.apoli.list.sources", Texts.join(powerSources, Text.of(", ")))
+                Text.translatable("commands.apoli.list.sources", Texts.join(powerSources, Text.of(", ")))
             );
 
 			Text power = Text.literal(powerType.getIdentifier().toString()).setStyle(Style.EMPTY.withHoverEvent(powerSourcesOnHover));
@@ -261,12 +261,12 @@ public class PowerCommand {
 
 		}
 
-		if (powerCount > 0)
-		{
+		if (powerCount > 0) {
 			final int currentPowerCount = powerCount;
 			source.sendFeedback(() -> Text.translatable("commands.apoli.list.pass", livingTarget.getDisplayName(), currentPowerCount, Texts.join(powers, Text.of(", "))), true);
+		} else {
+			source.sendFeedback(() -> Text.translatable("commands.apoli.list.fail", livingTarget.getDisplayName()), true);
 		}
-		else source.sendError(Text.translatable("commands.apoli.list.fail", livingTarget.getDisplayName()));
 
 		return powerCount;
 
@@ -313,7 +313,7 @@ public class PowerCommand {
 		int powerSourceCount = 0;
 
 		if (!(target instanceof LivingEntity livingTarget)) {
-			source.sendError(Text.translatable("commands.apoli.sources.fail", target.getDisplayName(), powerType.getName()));
+			source.sendError(Text.translatable("commands.apoli.sources.invalid_entity", target.getDisplayName(), powerType.getName()));
 			return powerSourceCount;
 		}
 
@@ -324,8 +324,7 @@ public class PowerCommand {
 			powerSourceCount++;
 		}
 
-		if (powerSourceCount > 0)
-		{
+		if (powerSourceCount > 0) {
 			final int currentPowerSourceCount = powerSourceCount;
 			source.sendFeedback(() -> Text.translatable("commands.apoli.sources.pass", livingTarget.getDisplayName(), currentPowerSourceCount, powerType.getName(), powerSources), true);
 		}

@@ -14,7 +14,6 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.Set;
 
 public class InventoryCondition {
@@ -22,40 +21,39 @@ public class InventoryCondition {
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
         Set<InventoryUtil.InventoryType> inventoryTypes = data.get("inventory_types");
-        Comparison comparison = data.get("comparison");
         InventoryUtil.ProcessMode processMode = data.get("process_mode");
+        Comparison comparison = data.get("comparison");
 
-        boolean result = false;
         int compareTo = data.get("compare_to");
         int matches = 0;
 
         if (inventoryTypes.contains(InventoryUtil.InventoryType.INVENTORY)) {
             matches += InventoryUtil.checkInventory(data, entity, null, processMode.getProcessor());
-            result = comparison.compare(matches, compareTo);
         }
+
+        powerTest:
         if (inventoryTypes.contains(InventoryUtil.InventoryType.POWER)) {
+
+            PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
+            if (component == null) {
+                break powerTest;
+            }
 
             PowerType<?> targetPowerType = data.get("power");
             if (targetPowerType == null) {
-                return result;
+                break powerTest;
             }
 
-            Optional<PowerHolderComponent> opt$component = PowerHolderComponent.KEY.maybeGet(entity);
-            if (opt$component.isEmpty()) {
-                return result;
-            }
-
-            Power targetPower = opt$component.get().getPower(targetPowerType);
+            Power targetPower = component.getPower(targetPowerType);
             if (!(targetPower instanceof InventoryPower inventoryPower)) {
-                return result;
+                break powerTest;
             }
 
             matches += InventoryUtil.checkInventory(data, entity, inventoryPower, processMode.getProcessor());
-            result = comparison.compare(matches, compareTo);
 
         }
 
-        return result;
+        return comparison.compare(matches, compareTo);
 
     }
 

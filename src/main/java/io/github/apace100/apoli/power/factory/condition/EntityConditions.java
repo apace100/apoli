@@ -394,7 +394,8 @@ public class EntityConditions {
             .add("enchantment", SerializableDataTypes.ENCHANTMENT)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT)
-            .add("calculation", SerializableDataTypes.STRING, "sum"),
+            .add("calculation", SerializableDataTypes.STRING, "sum")
+            .add("use_modifications", SerializableDataTypes.BOOLEAN, true),
             (data, entity) -> {
                 int value = 0;
                 if(entity instanceof LivingEntity le) {
@@ -403,11 +404,11 @@ public class EntityConditions {
                     switch(calculation) {
                         case "sum":
                             for(ItemStack stack : enchantment.getEquipment(le).values()) {
-                                value += EnchantmentHelper.getLevel(enchantment, stack);
+                                value += ModifyEnchantmentLevelPower.getLevel(le, enchantment, stack, data.getBoolean("use_modifications"));
                             }
                             break;
                         case "max":
-                            value = EnchantmentHelper.getEquipmentLevel(enchantment, le);
+                            value = ModifyEnchantmentLevelPower.getEquipmentLevel(enchantment, le, data.getBoolean("use_modifications"));
                             break;
                         default:
                             Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");
@@ -522,6 +523,8 @@ public class EntityConditions {
         register(RaycastCondition.getFactory());
         register(ElytraFlightPossibleCondition.getFactory());
         register(InventoryCondition.getFactory());
+        register(InSnowCondition.getFactory());
+        register(InThunderstormCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

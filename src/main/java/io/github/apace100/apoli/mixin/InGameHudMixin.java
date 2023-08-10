@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.OverrideHudTexturePower;
 import io.github.apace100.apoli.power.OverlayPower;
+import io.github.apace100.apoli.power.OverrideHudTexturePower;
 import io.github.apace100.apoli.screen.GameHudRender;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 @Mixin(InGameHud.class)
@@ -28,24 +29,19 @@ public class InGameHudMixin {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;getCurrentGameMode()Lnet/minecraft/world/GameMode;", ordinal = 0))
     private void renderOnHud(DrawContext context, float tickDelta, CallbackInfo ci) {
-        boolean hudHidden = client.options.hudHidden;
-        boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
-        PowerHolderComponent.withPower(client.getCameraEntity(), OverlayPower.class, p -> {
-            if(p.getDrawPhase() != OverlayPower.DrawPhase.BELOW_HUD) {
-                return false;
-            }
-            if(hudHidden && p.doesHideWithHud()) {
-                return false;
-            }
-            if(thirdPerson && !p.shouldBeVisibleInThirdPerson()) {
-                return false;
-            }
-            return true;
-        }, OverlayPower::render);
 
+        //  Render overlays below the HUD
+        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
+            .stream()
+            .filter(overlayPower -> overlayPower.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
+            .sorted(Comparator.comparing(OverlayPower::getPriority))
+            .forEach(OverlayPower::render);
+
+        //  Render resource bars
         for(GameHudRender hudRender : GameHudRender.HUD_RENDERS) {
             hudRender.render(context, tickDelta);
         }
+
     }
 
     @ModifyArg(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)

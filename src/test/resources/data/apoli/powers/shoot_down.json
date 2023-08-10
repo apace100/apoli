@@ -1,0 +1,35 @@
+{
+  "type": "apoli:active_self",
+  "cooldown": 1,
+  "hud_render": {
+    "should_render": false
+  },
+  "key": {
+    "key": "key.jump",
+    "continuous": true
+  },
+  "entity_action": {
+    "type": "apoli:raycast",
+    "block_distance": 24,
+    "entity_distance": 32,
+    "direction": {
+      "y": -1.0
+    },
+    "space": "LOCAL",
+    "hit_action": {
+      "type": "apoli:add_velocity",
+      "y": 0.5,
+      "set": true
+    },
+    "command_along_ray": "particle minecraft:end_rod ~ ~ ~ 0 0 0 0 1 normal"
+  },
+  "condition": {
+    "type": "apoli:raycast",
+    "block_distance": 24,
+    "entity_distance": 32,
+    "direction": {
+      "y": -1.0
+    },
+    "space": "LOCAL"
+  }
+}
