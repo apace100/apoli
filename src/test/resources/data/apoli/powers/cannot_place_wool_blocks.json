@@ -1,0 +1,24 @@
+{
+
+	"type": "apoli:prevent_block_place",
+
+	"title": "Wool Conservative",
+	"description": "You don't want to waste wool-like blocks, therefore, you cannot place them.",
+
+	"entity_action": {
+		"type": "apoli:execute_command",
+		"command": "title @s actionbar {\"text\": \"Cannot place wool-like blocks!\", \"color\": \"red\"}"
+	},
+	"item_condition": {
+		"type": "apoli:ingredient",
+		"ingredient": [
+			{
+				"tag": "minecraft:wool"
+			},
+			{
+				"tag": "minecraft:wool_carpets"
+			}
+		]
+	}
+
+}

@@ -1,0 +1,31 @@
+{
+
+	"type": "apoli:action_on_block_place",
+
+	"title": "Dragon Egg Collector",
+	"description": "Placing a Dragon Egg on a Diamond Block gives you buffs",
+
+	"entity_action": {
+		"type": "apoli:apply_effect",
+		"effect": {
+			"effect": "minecraft:speed",
+			"duration": 100,
+			"amplifier": 1
+		}
+	},
+	"place_to_action": {
+		"type": "apoli:set_block",
+		"block": "minecraft:air"
+	},
+	"item_condition": {
+		"type": "apoli:ingredient",
+		"ingredient": {
+			"item": "minecraft:dragon_egg"
+		}
+	},
+	"place_on_condition": {
+		"type": "apoli:block",
+		"block": "minecraft:diamond_block"
+	}
+
+}

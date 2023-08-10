@@ -1,0 +1,21 @@
+{
+
+	"type": "apoli:prevent_block_place",
+
+	"title": "Farmland Carer",
+	"description": "You cannot place blocks on top of Farmland blocks.",
+
+	"entity_action": {
+		"type": "apoli:execute_command",
+		"command": "title @s actionbar {\"text\": \"Cannot place a block on Farmland!\", \"color\": \"red\"}"
+	},
+	"place_on_condition": {
+		"type": "apoli:block",
+		"block": "minecraft:farmland"
+	},
+	"directions": [
+		"up"
+	],
+	"priority": 1
+
+}
