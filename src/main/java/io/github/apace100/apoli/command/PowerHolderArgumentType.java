@@ -10,6 +10,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class PowerHolderArgumentType extends EntityArgumentType {
@@ -46,13 +47,16 @@ public class PowerHolderArgumentType extends EntityArgumentType {
 
     public static List<LivingEntity> getHolders(CommandContext<ServerCommandSource> context, String name) throws CommandSyntaxException {
 
-        List<LivingEntity> holders = getEntities(context, name)
-            .stream()
+        List<? extends Entity> entities = new LinkedList<>(getEntities(context, name));
+        List<LivingEntity> holders = entities.stream()
             .filter(e -> e instanceof LivingEntity)
             .map(e -> (LivingEntity) e)
             .toList();
 
         if (holders.isEmpty()) {
+            if (entities.size() == 1) {
+                throw HOLDER_NOT_FOUND.create(entities.get(0).getName());
+            }
             throw HOLDERS_NOT_FOUND.create();
         }
 
