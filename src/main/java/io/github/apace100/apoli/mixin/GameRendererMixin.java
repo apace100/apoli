@@ -92,8 +92,9 @@ public abstract class GameRendererMixin {
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0))
     private void apoli$renderOverlayPowersBelowHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
 
-        //  Skip this method if the HUD is not hidden
-        if (!client.options.hudHidden) {
+        //  Skip this method if the HUD is not hidden or if the current screen is not null
+        //  (to make sure the overlay is not rendered twice)
+        if (!client.options.hudHidden || client.currentScreen != null) {
             return;
         }
 
