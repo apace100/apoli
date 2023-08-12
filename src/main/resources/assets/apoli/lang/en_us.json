@@ -1,5 +1,8 @@
 {
 
+  "argument.apoli.power_holder.not_found.single": "Entity %s is not a living entity",
+  "argument.apoli.power_holder.not_found.multiple": "No living entities were found",
+
   "commands.apoli.power_not_found": "Unknown power: %s",
 
   "commands.apoli.grant.success.single": "Entity %s was granted the power %s.",
