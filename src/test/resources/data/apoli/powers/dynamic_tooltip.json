@@ -1,0 +1,9 @@
+{
+	"type": "apoli:tooltip",
+	"text": {
+		"storage": "apoli:test/dynamic_tooltip",
+		"nbt": "text",
+		"interpret": true
+	},
+	"should_resolve": true
+}

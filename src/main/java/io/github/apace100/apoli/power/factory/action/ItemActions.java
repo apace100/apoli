@@ -75,7 +75,7 @@ public class ItemActions {
                     LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(serverWorld).add(LootContextParameters.ORIGIN, new Vec3d(0, 0,0)).build(LootContextTypes.COMMAND);
                     LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(null);
                     ItemStack newStack = lootFunction.apply(stack, lootContext);
-                    ((MutableItemStack)stack).setFrom(newStack);
+                    ((MutableItemStack)stack).apoli$setFrom(newStack);
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()

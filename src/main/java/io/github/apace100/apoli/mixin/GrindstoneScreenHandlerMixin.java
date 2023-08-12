@@ -69,17 +69,17 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
     }
 
     @Override
-    public List<ModifyGrindstonePower> getAppliedPowers() {
+    public List<ModifyGrindstonePower> apoli$getAppliedPowers() {
         return apoli$appliedPowers;
     }
 
     @Override
-    public PlayerEntity getPlayer() {
+    public PlayerEntity apoli$getPlayer() {
         return apoli$cachedPlayer;
     }
 
     @Override
-    public Optional<BlockPos> getPos() {
+    public Optional<BlockPos> apoli$getPos() {
         return apoli$cachedPosition;
     }
 }

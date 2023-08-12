@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 public class PowerTypeArgumentType implements ArgumentType<Identifier> {
 
     public static final DynamicCommandExceptionType POWER_NOT_FOUND = new DynamicCommandExceptionType(
-        o -> Text.translatable("commands.apoli.power_not_found")
+        o -> Text.translatable("commands.apoli.power_not_found", o)
     );
 
     public static PowerTypeArgumentType power() {

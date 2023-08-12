@@ -12,7 +12,7 @@ public class StatusEffectInstanceMixin implements HiddenEffectStatus {
     @Nullable
     private StatusEffectInstance hiddenEffect;
 
-    public @Nullable StatusEffectInstance getHiddenEffect() {
+    public @Nullable StatusEffectInstance apoli$getHiddenEffect() {
         return this.hiddenEffect;
     }
 }

@@ -1,105 +1,90 @@
 {
 
-  "commands.apoli.power_not_found": "Unknown power: %s",
+	"argument.apoli.power_holder.not_found.multiple": "No living entities were found",
+	"argument.apoli.power_holder.not_found.single": "Entity %s is not a living entity",
 
-  "commands.apoli.grant.success.single": "Entity %s was granted the power %s.",
-  "commands.apoli.grant.success.multiple": "%s entities were granted the power %s.",
+	"commands.apoli.clear.fail.multiple": "No entity had any power to clear.",
+	"commands.apoli.clear.fail.single": "Entity %s did not have any power to clear.",
 
-  "commands.apoli.grant_from_source.success.single": "Entity %s was granted the power %s from source %s.",
-  "commands.apoli.grant_from_source.success.multiple": "%s entities were granted the power %s from source %s.",
+	"commands.apoli.clear.success.multiple": "%s entities had in total %s powers cleared.",
+	"commands.apoli.clear.success.single": "Entity %s had %s powers cleared.",
 
-  "commands.apoli.grant.fail.single": "Entity %s already had the power %s from source %s.",
-  "commands.apoli.grant.fail.multiple": "All %s entities already had the power %s from source %s.",
+	"commands.apoli.grant.fail.multiple": "All %s entities already had the power %s from source %s.",
+	"commands.apoli.grant.fail.single": "Entity %s already had the power %s from source %s.",
 
-  "commands.apoli.grant.invalid_entity": "Entity %s is not a living entity, thus cannot be granted powers.",
-  "commands.apoli.grant.invalid_entities": "%s entities are not living entities, thus cannot be granted powers.",
+	"commands.apoli.grant.success.multiple": "%s entities were granted the power %s.",
+	"commands.apoli.grant.success.single": "Entity %s was granted the power %s.",
 
-  "commands.apoli.revoke.success.single": "Entity %s had the power %s revoked.",
-  "commands.apoli.revoke.success.multiple": "%s entities had the power %s revoked.",
+	"commands.apoli.grant_from_source.success.multiple": "%s entities were granted the power %s from source %s.",
+	"commands.apoli.grant_from_source.success.single": "Entity %s was granted the power %s from source %s.",
 
-  "commands.apoli.revoke_from_source.success.single": "Entity %s had the power %s revoked from source %s.",
-  "commands.apoli.revoke_from_source.success.multiple": "%s entities had the power %s revoked from source %s.",
+	"commands.apoli.list.fail": "Entity %s did not have any powers.",
+	"commands.apoli.list.pass": "Entity %s has %s powers: [%s]",
+	"commands.apoli.list.sources": "Sources: [%s]",
 
-  "commands.apoli.revoke.fail.single": "Entity %s did not have the power %s from source %s.",
-  "commands.apoli.revoke.fail.multiple": "No entity had the power %s from source %s.",
+	"commands.apoli.power_not_found": "Unknown power: %s",
 
-  "commands.apoli.revoke.invalid_entity": "Entity %s is not a living entity, thus no power was revoked from source %s.",
-  "commands.apoli.revoke.invalid_entities": "%s entities are not living entities, thus no power was revoked from source %s.",
+	"commands.apoli.remove.fail.multiple": "No entity had the power %s.",
+	"commands.apoli.remove.fail.single": "Entity %s did not have the power %s.",
 
-  "commands.apoli.revoke_all.success.single": "Entity %s had %s powers revoked from source %s.",
-  "commands.apoli.revoke_all.success.multiple": "%s entities had %s powers revoked from source %s.",
+	"commands.apoli.remove.success.multiple": "%s entities had the power %s removed.",
+	"commands.apoli.remove.success.single": "Entity %s had the power %s removed.",
 
-  "commands.apoli.revoke_all.fail.single": "Entity %s did not have any power from source %s.",
-  "commands.apoli.revoke_all.fail.multiple": "No entity had any power from source %s.",
+	"commands.apoli.revoke.fail.multiple": "No entity had the power %s from source %s.",
+	"commands.apoli.revoke.fail.single": "Entity %s did not have the power %s from source %s.",
 
-  "commands.apoli.revoke_all.invalid_entity": "Entity %s is not a living entity, thus no powers were revoked from source %s.",
-  "commands.apoli.revoke_all.invalid_entities": "%s entities are not living entities, thus no powers were revoked from source %s.",
+	"commands.apoli.revoke.success.multiple": "%s entities had the power %s revoked.",
+	"commands.apoli.revoke.success.single": "Entity %s had the power %s revoked.",
 
-  "commands.apoli.remove.success.single": "Entity %s had the power %s removed.",
-  "commands.apoli.remove.success.multiple": "%s entities had the power %s removed.",
+	"commands.apoli.revoke_all.fail.multiple": "No entity had any power from source %s.",
+	"commands.apoli.revoke_all.fail.single": "Entity %s did not have any power from source %s.",
 
-  "commands.apoli.remove.fail.single": "Entity %s did not have the power %s.",
-  "commands.apoli.remove.fail.multiple": "No entity had the power %s.",
+	"commands.apoli.revoke_all.success.multiple": "%s entities had %s powers revoked from source %s.",
+	"commands.apoli.revoke_all.success.single": "Entity %s had %s powers revoked from source %s.",
 
-  "commands.apoli.remove.invalid_entity": "Entity %s is not a living entity, thus no power was removed.",
-  "commands.apoli.remove.invalid_entities": "%s entities are not living entities, thus no power was removed.",
+	"commands.apoli.revoke_from_source.success.multiple": "%s entities had the power %s revoked from source %s.",
+	"commands.apoli.revoke_from_source.success.single": "Entity %s had the power %s revoked from source %s.",
 
-  "commands.apoli.clear.success.single": "Entity %s had %s powers cleared.",
-  "commands.apoli.clear.success.multiple": "%s entities had in total %s powers cleared.",
+	"commands.apoli.sources.fail": "Entity %s did not have the power %s.",
+	"commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
 
-  "commands.apoli.clear.fail.single": "Entity %s did not have any power to clear.",
-  "commands.apoli.clear.fail.multiple": "No entity had any power to clear.",
+	"death.attack.genericDamageOverTime": "%1$s died to a damage over time effect",
+	"death.attack.genericDamageOverTime.player": "%1$s died to a damage over time effect whilst fighting %2$s",
 
-  "commands.apoli.clear.invalid_entity": "Entity %s is not a living entity, thus no powers were cleared.",
-  "commands.apoli.clear.invalid_entities": "%s entities were not living entities, thus no powers were cleared.",
+	"text.apoli.cannot_sleep": "You cannot sleep",
 
-  "commands.apoli.list.pass": "Entity %s has %s powers: [%s]",
-  "commands.apoli.list.fail": "Entity %s did not have any powers.",
+	"text.autoconfig.power_config.option.executeCommand": "Execute Command",
+	"text.autoconfig.power_config.option.executeCommand.permissionLevel": "Permission Level",
+	"text.autoconfig.power_config.option.executeCommand.showOutput": "Show Output in Chat",
 
-  "commands.apoli.list.invalid_entity": "Entity %s is not a living entity.",
-  "commands.apoli.list.sources": "Sources: [%s]",
+	"text.autoconfig.power_config.option.resourcesAndCooldowns": "Resources & Cooldowns",
+	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetX": "HUD Offset X",
+	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetY": "HUD Offset Y",
 
-  "commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
-  "commands.apoli.sources.fail": "Entity %s did not have the power %s.",
+	"text.autoconfig.power_config.option.tooltips": "Tooltips",
 
-  "commands.apoli.sources.invalid_entity": "Entity %s is not a living entity.",
-  "commands.apoli.resource.invalid_entity": "The entity is not a living entity, thus can't have any powers.",
+	"text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compact Usability Hints",
+	"text.autoconfig.power_config.option.tooltips.showUsabilityHints": "Show Usability Hints",
 
-  "tooltip.apoli.unusable.none.single": "Unusable (%s)",
-  "tooltip.apoli.unusable.none.multiple": "Unusable (%s)",
-  "tooltip.apoli.unusable.eat.single": "Inedible (%s)",
-  "tooltip.apoli.unusable.eat.multiple": "Inedible (%s)",
-  "tooltip.apoli.unusable.drink.single": "Undrinkable (%s)",
-  "tooltip.apoli.unusable.drink.multiple": "Undrinkable (%s)",
-  "tooltip.apoli.unusable.block.single": "Unusable (%s)",
-  "tooltip.apoli.unusable.block.multiple": "Unusable (%s)",
-  "tooltip.apoli.unusable.bow.single": "Unusable (%s)",
-  "tooltip.apoli.unusable.bow.multiple": "Unusable (%s)",
-  "tooltip.apoli.unusable.spear.single": "Unusable (%s)",
-  "tooltip.apoli.unusable.spear.multiple": "Unusable (%s)",
-  "tooltip.apoli.unusable.crossbow.single": "Unusable (%s)",
-  "tooltip.apoli.unusable.crossbow.multiple": "Unusable (%s)",
-  "tooltip.apoli.unusable.spyglass.single": "Unusable (%s)",
-  "tooltip.apoli.unusable.spyglass.multiple": "Unusable (%s)",
-  "tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)",
-  "tooltip.apoli.unusable.toot_horn.multiple": "Untootable (%s)",
+	"text.autoconfig.power_config.title": "Apoli Power Config",
 
-  "text.apoli.cannot_sleep": "You cannot sleep",
+	"tooltip.apoli.unusable.block.multiple": "Unusable (%s)",
+	"tooltip.apoli.unusable.block.single": "Unusable (%s)",
+	"tooltip.apoli.unusable.bow.multiple": "Unusable (%s)",
+	"tooltip.apoli.unusable.bow.single": "Unusable (%s)",
+	"tooltip.apoli.unusable.crossbow.multiple": "Unusable (%s)",
+	"tooltip.apoli.unusable.crossbow.single": "Unusable (%s)",
+	"tooltip.apoli.unusable.drink.multiple": "Undrinkable (%s)",
+	"tooltip.apoli.unusable.drink.single": "Undrinkable (%s)",
+	"tooltip.apoli.unusable.eat.multiple": "Inedible (%s)",
+	"tooltip.apoli.unusable.eat.single": "Inedible (%s)",
+	"tooltip.apoli.unusable.none.multiple": "Unusable (%s)",
+	"tooltip.apoli.unusable.none.single": "Unusable (%s)",
+	"tooltip.apoli.unusable.spear.multiple": "Unusable (%s)",
+	"tooltip.apoli.unusable.spear.single": "Unusable (%s)",
+	"tooltip.apoli.unusable.spyglass.multiple": "Unusable (%s)",
+	"tooltip.apoli.unusable.spyglass.single": "Unusable (%s)",
+	"tooltip.apoli.unusable.toot_horn.multiple": "Untootable (%s)",
+	"tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)"
 
-  "text.autoconfig.power_config.title": "Apoli Power Config",
-
-  "text.autoconfig.power_config.option.resourcesAndCooldowns": "Resources & Cooldowns",
-  "text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetX": "HUD Offset X",
-  "text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetY": "HUD Offset Y",
-
-  "text.autoconfig.power_config.option.executeCommand": "Execute Command",
-  "text.autoconfig.power_config.option.executeCommand.permissionLevel": "Permission Level",
-  "text.autoconfig.power_config.option.executeCommand.showOutput": "Show Output in Chat",
-
-  "text.autoconfig.power_config.option.tooltips": "Tooltips",
-  "text.autoconfig.power_config.option.tooltips.showUsabilityHints": "Show Usability Hints",
-  "text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compact Usability Hints",
-
-  "death.attack.genericDamageOverTime": "%1$s died to a damage over time effect",
-  "death.attack.genericDamageOverTime.player": "%1$s died to a damage over time effect whilst fighting %2$s"
 }
