@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -18,7 +19,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -66,9 +66,9 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
         return PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, playerAbilities.getFlySpeed());
     }
 
-    @ModifyVariable(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isOnGround()Z", ordinal = 0), ordinal = 4)
-    private boolean modifySprintAbility(boolean original) {
-        boolean prevent = PowerHolderComponent.hasPower(this, PreventSprintingPower.class);
-        return !prevent && original;
+    @ModifyReturnValue(method = "canSprint", at = @At("RETURN"))
+    private boolean apoli$preventSprinting(boolean original) {
+        return !PowerHolderComponent.hasPower(this, PreventSprintingPower.class) && original;
     }
+
 }
