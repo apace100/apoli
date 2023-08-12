@@ -126,9 +126,9 @@ public class PowerCommand {
 			}
 		} else {
 			if (processedTargetsSize == 1) {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.grant.success", processedTargetName, powerTypeName), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.grant.success.single", processedTargetName, powerTypeName), true);
 			} else {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.grant.multiple", processedTargetsSize, powerTypeName), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.grant.success.multiple", processedTargetsSize, powerTypeName), true);
 			}
 		}
 
@@ -282,7 +282,7 @@ public class PowerCommand {
 			source.sendError(Text.translatable("commands.apoli.list.fail", target.getName()));
 		} else {
 			int finalPowers = powers;
-			source.sendFeedback(() -> Text.translatable("commands.apoli.list.success", target.getName(), finalPowers, Texts.join(powersTooltip, Text.of(", "))), true);
+			source.sendFeedback(() -> Text.translatable("commands.apoli.list.pass", target.getName(), finalPowers, Texts.join(powersTooltip, Text.of(", "))), true);
 		}
 
 		return powers;
@@ -348,7 +348,7 @@ public class PowerCommand {
 		}
 
 		if (powers == 0) {
-			source.sendError(Text.translatable("commands.apoli.sources.faill", target.getName(), powerType.getName()));
+			source.sendError(Text.translatable("commands.apoli.sources.fail", target.getName(), powerType.getName()));
 		} else {
 			int finalPowers = powers;
 			source.sendFeedback(() -> Text.translatable("commands.apoli.sources.pass", target.getName(), finalPowers, powerType.getName(), powerSources), true);
@@ -454,7 +454,7 @@ public class PowerCommand {
 			int finalClearedPowers = clearedPowers;
 
 			if (processedTargetsSize == 1) {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.clear.success.single", processedTargetName), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.clear.success.single", processedTargetName, finalClearedPowers), true);
 			} else {
 				source.sendFeedback(() -> Text.translatable("commands.apoli.clear.success.multiple", processedTargetsSize, finalClearedPowers), true);
 			}
