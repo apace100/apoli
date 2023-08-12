@@ -9,10 +9,9 @@ import io.github.apace100.apoli.power.CooldownPower;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.VariableIntPower;
-import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.ScoreHolderArgumentType;
 import net.minecraft.command.argument.ScoreboardObjectiveArgumentType;
-import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.server.command.ServerCommandSource;
@@ -27,29 +26,29 @@ public class ResourceCommand {
         dispatcher.register(
             literal("resource").requires(cs -> cs.hasPermissionLevel(2))
                 .then(literal("has")
-                    .then(argument("target", EntityArgumentType.entity())
+                    .then(argument("target", PowerHolderArgumentType.holder())
                         .then(argument("power", PowerTypeArgumentType.power())
                             .executes((command) -> resource(command, SubCommand.HAS))))
                 )
                 .then(literal("get")
-                    .then(argument("target", EntityArgumentType.entity())
+                    .then(argument("target", PowerHolderArgumentType.holder())
                         .then(argument("power", PowerTypeArgumentType.power())
                             .executes((command) -> resource(command, SubCommand.GET))))
                 )
                 .then(literal("set")
-                    .then(argument("target", EntityArgumentType.entity())
+                    .then(argument("target", PowerHolderArgumentType.holder())
                         .then(argument("power", PowerTypeArgumentType.power())
                             .then(argument("value", IntegerArgumentType.integer())
                                 .executes((command) -> resource(command, SubCommand.SET)))))
                 )
                 .then(literal("change")
-                    .then(argument("target", EntityArgumentType.entity())
+                    .then(argument("target", PowerHolderArgumentType.holder())
                         .then(argument("power", PowerTypeArgumentType.power())
                             .then(argument("value", IntegerArgumentType.integer())
                                 .executes((command) -> resource(command, SubCommand.CHANGE)))))
                 )
                 .then(literal("operation")
-                    .then(argument("target", EntityArgumentType.entity())
+                    .then(argument("target", PowerHolderArgumentType.holder())
                         .then(argument("power", PowerTypeArgumentType.power())
                             .then(argument("operation", PowerOperation.operation())
                                 .then(argument("entity", ScoreHolderArgumentType.scoreHolder())
@@ -67,14 +66,8 @@ public class ResourceCommand {
     private static int resource(CommandContext<ServerCommandSource> context, SubCommand subCommand) throws CommandSyntaxException {
 
         ServerCommandSource source = context.getSource();
-        Entity target = EntityArgumentType.getEntity(context, "target");
-        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(target)
-            .orElse(null);
-
-        if (component == null) {
-            source.sendError(Text.translatable("commands.apoli.reosurce.invalid_entity"));
-            return 0;
-        }
+        LivingEntity target = PowerHolderArgumentType.getHolder(context, "target");
+        PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 
         PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
         Power power = component.getPower(powerType);
