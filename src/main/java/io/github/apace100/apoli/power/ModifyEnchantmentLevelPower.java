@@ -80,7 +80,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     }
 
     private static NbtList generateEnchantments(NbtList enchants, ItemStack self) {
-        Entity entity = ((EntityLinkedItemStack) self).getEntity();
+        Entity entity = ((EntityLinkedItemStack) self).apoli$getEntity();
 
         if(!(entity instanceof LivingEntity living)) return enchants;
 
@@ -113,7 +113,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     }
 
     public static NbtList getEnchantments(ItemStack self, NbtList originalTag) {
-        Entity entity = ((EntityLinkedItemStack) self).getEntity();
+        Entity entity = ((EntityLinkedItemStack) self).apoli$getEntity();
         if (entity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(entity)) {
             ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(entity);
             if (shouldReapplyEnchantments(living, self)) {
@@ -141,7 +141,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
     public static Map<Enchantment, Integer> get(ItemStack self, boolean useModifications) {
         if (useModifications) {
-            Entity entity = ((EntityLinkedItemStack) self).getEntity();
+            Entity entity = ((EntityLinkedItemStack) self).apoli$getEntity();
             if (entity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(living)) {
                 ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(entity);
                 return EnchantmentHelper.fromNbt(itemEnchants.computeIfAbsent(self, ItemStack::getEnchantments));
@@ -165,7 +165,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
             return 0;
         }
 
-        Entity nullsafeEntity = entity == null ? ((EntityLinkedItemStack) self).getEntity() : entity;
+        Entity nullsafeEntity = entity == null ? ((EntityLinkedItemStack) self).apoli$getEntity() : entity;
         if (nullsafeEntity instanceof LivingEntity living && ENTITY_ITEM_ENCHANTS.containsKey(living)) {
             ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(living);
             Identifier id = Registries.ENCHANTMENT.getId(enchantment);

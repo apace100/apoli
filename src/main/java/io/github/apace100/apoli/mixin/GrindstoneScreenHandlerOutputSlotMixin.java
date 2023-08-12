@@ -1,8 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.PowerModifiedGrindstone;
-import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyGrindstonePower;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
@@ -31,24 +29,24 @@ public class GrindstoneScreenHandlerOutputSlotMixin {
     @Inject(method = "onTakeItem", at = @At(value = "INVOKE",target = "Lnet/minecraft/inventory/Inventory;setStack(ILnet/minecraft/item/ItemStack;)V", ordinal = 0))
     private void executeGrindstoneActions(PlayerEntity player, ItemStack stack, CallbackInfo ci) {
         PowerModifiedGrindstone pmg = (PowerModifiedGrindstone) field_16780;
-        List<ModifyGrindstonePower> applyingPowers = pmg.getAppliedPowers();
+        List<ModifyGrindstonePower> applyingPowers = pmg.apoli$getAppliedPowers();
         applyingPowers.forEach(mgp -> {
             mgp.applyAfterGrindingItemAction(stack);
-            mgp.executeActions(pmg.getPos());
+            mgp.executeActions(pmg.apoli$getPos());
         });
     }
 
     @Inject(method = "getExperience(Lnet/minecraft/world/World;)I", at = @At("RETURN"), cancellable = true)
     private void modifyExperience(World world, CallbackInfoReturnable<Integer> cir) {
         PowerModifiedGrindstone pmg = (PowerModifiedGrindstone) field_16780;
-        if(pmg.getAppliedPowers().size() == 0) {
+        if(pmg.apoli$getAppliedPowers().size() == 0) {
             return;
         }
-        List<Modifier> modifiers = pmg.getAppliedPowers().stream().map(ModifyGrindstonePower::getExperienceModifier).filter(Objects::nonNull).toList();
+        List<Modifier> modifiers = pmg.apoli$getAppliedPowers().stream().map(ModifyGrindstonePower::getExperienceModifier).filter(Objects::nonNull).toList();
         if(modifiers.size() == 0) {
             return;
         }
-        int xp = (int)ModifierUtil.applyModifiers(pmg.getPlayer(), modifiers, cir.getReturnValue());
+        int xp = (int)ModifierUtil.applyModifiers(pmg.apoli$getPlayer(), modifiers, cir.getReturnValue());
         cir.setReturnValue(xp);
     }
 }

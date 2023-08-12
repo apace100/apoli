@@ -16,6 +16,6 @@ public class BiomeBuilderMixin {
 
     @Inject(method = "build", at = @At("RETURN"))
     private void apoli$storeDownfall(CallbackInfoReturnable<Biome> cir) {
-        ((BiomeWeatherAccess)(Object)cir.getReturnValue()).setDownfall(downfall.floatValue());
+        ((BiomeWeatherAccess)(Object)cir.getReturnValue()).apoli$setDownfall(downfall.floatValue());
     }
 }

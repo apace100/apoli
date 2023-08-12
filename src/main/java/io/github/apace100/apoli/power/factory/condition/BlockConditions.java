@@ -15,33 +15,20 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.registry.Registry;
 import net.minecraft.world.LightType;
 
 import java.util.Collection;
-import java.util.List;
 
 public class BlockConditions {
 
     @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, block) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BLOCK_CONDITIONS),
-            (data, block) -> ((List<ConditionFactory<CachedBlockPosition>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(block)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BLOCK_CONDITIONS),
-            (data, block) -> ((List<ConditionFactory<CachedBlockPosition>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(block)
-            )));
+        MetaConditions.register(ApoliDataTypes.BLOCK_CONDITION, BlockConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("offset"), new SerializableData()
             .add("condition", ApoliDataTypes.BLOCK_CONDITION)
             .add("x", SerializableDataTypes.INT, 0)

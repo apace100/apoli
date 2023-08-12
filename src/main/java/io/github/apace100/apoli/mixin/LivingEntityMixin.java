@@ -107,7 +107,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
                     effect.isAmbient(),
                     effect.shouldShowParticles(),
                     effect.shouldShowIcon(),
-                    ((HiddenEffectStatus) effect).getHiddenEffect(),
+                    ((HiddenEffectStatus) effect).apoli$getHiddenEffect(),
                     Optional.empty()
             );
         }
@@ -267,6 +267,11 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             PowerHolderComponent.getPowers(source.getAttacker(), TargetActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
 
         }
+    }
+
+    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
+    private void invokeDeathAction(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        PowerHolderComponent.withPowers(this, ActionOnDeathPower.class, p -> p.doesApply(source.getAttacker(), source, amount), p -> p.onDeath(source.getAttacker()));
     }
 
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
@@ -435,17 +440,17 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         for(ModifyFoodPower mfp : mfps) {
             newStack = mfp.getConsumedItemStack(newStack);
         }
-        ((ModifiableFoodEntity)this).setCurrentModifyFoodPowers(mfps);
-        ((ModifiableFoodEntity)this).setOriginalFoodStack(original);
+        ((ModifiableFoodEntity)this).apoli$setCurrentModifyFoodPowers(mfps);
+        ((ModifiableFoodEntity)this).apoli$setOriginalFoodStack(original);
         return newStack;
     }
 
     @ModifyVariable(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V", shift = At.Shift.AFTER))
     private ItemStack unmodifyEatenItemStack(ItemStack modified) {
         ModifiableFoodEntity foodEntity = (ModifiableFoodEntity)this;
-        ItemStack original = foodEntity.getOriginalFoodStack();
+        ItemStack original = foodEntity.apoli$getOriginalFoodStack();
         if(original != null) {
-            foodEntity.setOriginalFoodStack(null);
+            foodEntity.apoli$setOriginalFoodStack(null);
             return original;
         }
         return modified;
@@ -453,12 +458,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "eatFood", at = @At("TAIL"))
     private void removeCurrentModifyFoodPowers(World world, ItemStack stack, CallbackInfoReturnable<ItemStack> cir) {
-        setCurrentModifyFoodPowers(new LinkedList<>());
+        apoli$setCurrentModifyFoodPowers(new LinkedList<>());
     }
 
     @Redirect(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V"))
     private void preventApplyingFoodEffects(LivingEntity livingEntity, ItemStack stack, World world, LivingEntity targetEntity) {
-        if(getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
+        if(apoli$getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
             return;
         }
         this.applyFoodEffects(stack, world, targetEntity);
@@ -497,27 +502,27 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     private ItemStack apoli$originalFoodStack;
 
     @Override
-    public List<ModifyFoodPower> getCurrentModifyFoodPowers() {
+    public List<ModifyFoodPower> apoli$getCurrentModifyFoodPowers() {
         return apoli$currentModifyFoodPowers;
     }
 
     @Override
-    public void setCurrentModifyFoodPowers(List<ModifyFoodPower> powers) {
+    public void apoli$setCurrentModifyFoodPowers(List<ModifyFoodPower> powers) {
         apoli$currentModifyFoodPowers = powers;
     }
 
     @Override
-    public ItemStack getOriginalFoodStack() {
+    public ItemStack apoli$getOriginalFoodStack() {
         return apoli$originalFoodStack;
     }
 
     @Override
-    public void setOriginalFoodStack(ItemStack original) {
+    public void apoli$setOriginalFoodStack(ItemStack original) {
         apoli$originalFoodStack = original;
     }
 
     @Inject(method = "baseTick", at = @At("TAIL"))
     private void updateItemStackHolder(CallbackInfo ci) {
-        InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).setEntity(this), stack -> ((EntityLinkedItemStack) stack).setEntity(this));
+        InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this), stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this));
     }
 }

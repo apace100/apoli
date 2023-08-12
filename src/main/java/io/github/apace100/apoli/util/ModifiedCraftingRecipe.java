@@ -63,7 +63,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
                     if (optional.isPresent())
                     {
                         ItemStack result = optional.get().getNewResult(craftingInventory, original.get());
-                        ((PowerCraftingInventory) craftingInventory).setPower(optional.get());
+                        ((PowerCraftingInventory) craftingInventory).apoli$setPower(optional.get());
                         return result;
                     }
                 }
