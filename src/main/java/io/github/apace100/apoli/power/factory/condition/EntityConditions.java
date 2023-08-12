@@ -109,12 +109,12 @@ public class EntityConditions {
                 return false;
             }));
         register(new ConditionFactory<>(Apoli.identifier("submerged_in"), new SerializableData().add("fluid", SerializableDataTypes.FLUID_TAG),
-            (data, entity) -> ((SubmergableEntity)entity).isSubmergedInLoosely(data.get("fluid"))));
+            (data, entity) -> ((SubmergableEntity)entity).apoli$isSubmergedInLoosely(data.get("fluid"))));
         register(new ConditionFactory<>(Apoli.identifier("fluid_height"), new SerializableData()
             .add("fluid", SerializableDataTypes.FLUID_TAG)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.DOUBLE),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely(data.get("fluid")), data.getDouble("compare_to"))));
+            (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).apoli$getFluidHeightLoosely(data.get("fluid")), data.getDouble("compare_to"))));
         register(PowerCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("food_level"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -377,7 +377,7 @@ public class EntityConditions {
             return false;
         }));
         register(new ConditionFactory<>(Apoli.identifier("moving"), new SerializableData(),
-            (data, entity) -> ((MovingEntity)entity).isMoving()));
+            (data, entity) -> ((MovingEntity)entity).apoli$isMoving()));
         register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()
             .add("enchantment", SerializableDataTypes.ENCHANTMENT)
             .add("comparison", ApoliDataTypes.COMPARISON)

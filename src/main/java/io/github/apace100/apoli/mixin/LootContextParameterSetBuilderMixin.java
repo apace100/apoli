@@ -14,6 +14,6 @@ public class LootContextParameterSetBuilderMixin {
     @Inject(method = "build", at = @At("RETURN"))
     private void setLootContextType(LootContextType type, CallbackInfoReturnable<LootContext> cir) {
         ReplacingLootContextParameterSet rlc = (ReplacingLootContextParameterSet) cir.getReturnValue();
-        rlc.setType(type);
+        rlc.apoli$setType(type);
     }
 }

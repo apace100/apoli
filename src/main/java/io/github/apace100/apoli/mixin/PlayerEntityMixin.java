@@ -33,8 +33,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,8 +77,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         for(ModifyFoodPower mfp : mfps) {
             newStack = mfp.getConsumedItemStack(newStack);
         }
-        ((ModifiableFoodEntity)this).setCurrentModifyFoodPowers(mfps);
-        ((ModifiableFoodEntity)this).setOriginalFoodStack(original);
+        ((ModifiableFoodEntity)this).apoli$setCurrentModifyFoodPowers(mfps);
+        ((ModifiableFoodEntity)this).apoli$setOriginalFoodStack(original);
         return newStack;
     }
 

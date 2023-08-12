@@ -3,9 +3,9 @@ package io.github.apace100.apoli.access;
 import net.minecraft.entity.Entity;
 
 public interface EntityLinkedItemStack {
-    Entity getEntity();
+    Entity apoli$getEntity();
 
-    Entity getEntity(boolean prioritiseVanillaHolder);
+    Entity apoli$getEntity(boolean prioritiseVanillaHolder);
 
-    void setEntity(Entity entity);
+    void apoli$setEntity(Entity entity);
 }

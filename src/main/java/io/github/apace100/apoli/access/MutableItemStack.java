@@ -5,7 +5,7 @@ import net.minecraft.item.ItemStack;
 
 public interface MutableItemStack {
 
-    void setItem(Item item);
+    void apoli$setItem(Item item);
 
-    void setFrom(ItemStack stack);
+    void apoli$setFrom(ItemStack stack);
 }

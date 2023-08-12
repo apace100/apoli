@@ -4,8 +4,8 @@ import net.minecraft.loot.context.LootContextType;
 
 public interface ReplacingLootContextParameterSet {
 
-    void setType(LootContextType type);
+    void apoli$setType(LootContextType type);
 
-    LootContextType getType();
+    LootContextType apoli$getType();
 
 }

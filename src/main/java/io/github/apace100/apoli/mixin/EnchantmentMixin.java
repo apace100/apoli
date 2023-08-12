@@ -1,8 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
-import com.terraformersmc.modmenu.util.mod.Mod;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
-import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EquipmentSlot;
@@ -30,7 +28,7 @@ public class EnchantmentMixin {
 
     @Redirect(method = "getEquipment", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
     private boolean allowEmptySlotItemIfModified(ItemStack instance) {
-        if (this.apoli$capturedItem != null && this.apoli$capturedItem.isEmpty() && ((EntityLinkedItemStack)apoli$capturedItem).getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
+        if (this.apoli$capturedItem != null && this.apoli$capturedItem.isEmpty() && ((EntityLinkedItemStack)apoli$capturedItem).apoli$getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
             return false;
         }
         return instance.isEmpty();

@@ -12,7 +12,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
@@ -31,8 +30,10 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -68,7 +69,10 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow
     protected boolean onGround;
 
-    @Shadow @Nullable protected Set<TagKey<Fluid>> submergedFluidTag;
+    @Final
+    @Shadow
+    @Nullable
+    private Set<TagKey<Fluid>> submergedFluidTag;
 
     @Shadow protected Object2DoubleMap<TagKey<Fluid>> fluidHeight;
 
@@ -76,7 +80,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
         if(PowerHolderComponent.hasPower((Entity)(Object)this, IgnoreWaterPower.class)) {
             if(this instanceof WaterMovingEntity) {
-                if(((WaterMovingEntity)this).isInMovementPhase()) {
+                if(((WaterMovingEntity)this).apoli$isInMovementPhase()) {
                     cir.setReturnValue(false);
                 }
             }
@@ -134,19 +138,21 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         return state.getCollisionShape(world, pos, ShapeContext.of((Entity)(Object)this));
     }
 
-    private boolean isMoving;
-    private float distanceBefore;
+    @Unique
+    private boolean apoli$isMoving;
+    @Unique
+    private float apoli$distanceBefore;
 
     @Inject(method = "move", at = @At("HEAD"))
     private void saveDistanceTraveled(MovementType type, Vec3d movement, CallbackInfo ci) {
-        this.isMoving = false;
-        this.distanceBefore = this.distanceTraveled;
+        this.apoli$isMoving = false;
+        this.apoli$distanceBefore = this.distanceTraveled;
     }
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
     private void checkIsMoving(MovementType type, Vec3d movement, CallbackInfo ci) {
-        if (this.distanceTraveled > this.distanceBefore) {
-            this.isMoving = true;
+        if (this.distanceTraveled > this.apoli$distanceBefore) {
+            this.apoli$isMoving = true;
         }
     }
 
@@ -171,7 +177,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     }
 
     @Override
-    public boolean isSubmergedInLoosely(TagKey<Fluid> tag) {
+    public boolean apoli$isSubmergedInLoosely(TagKey<Fluid> tag) {
         if(tag == null || submergedFluidTag == null) {
             return false;
         }
@@ -183,7 +189,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     }
 
     @Override
-    public double getFluidHeightLoosely(TagKey<Fluid> tag) {
+    public double apoli$getFluidHeightLoosely(TagKey<Fluid> tag) {
         if(tag == null) {
             return 0;
         }
@@ -199,8 +205,8 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     }
 
     @Override
-    public boolean isMoving() {
-        return isMoving;
+    public boolean apoli$isMoving() {
+        return apoli$isMoving;
     }
 
     @Environment(EnvType.CLIENT)

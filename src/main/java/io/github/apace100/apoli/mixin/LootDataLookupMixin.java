@@ -9,12 +9,10 @@ import net.minecraft.loot.LootManager;
 import net.minecraft.loot.LootTable;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Map;
 import java.util.Optional;
 
 @Mixin(LootDataLookup.class)
@@ -24,7 +22,7 @@ public interface LootDataLookupMixin extends LootDataLookup
     private void setTableId(Identifier id, CallbackInfoReturnable<LootTable> cir) {
         if(id.equals(ReplaceLootTablePower.REPLACED_TABLE_UTIL_ID)) {
             LootTable replace = ReplaceLootTablePower.peek();
-            Apoli.LOGGER.info("Replacing " + id + " with " + ((IdentifiedLootTable)replace).getId());
+            Apoli.LOGGER.info("Replacing " + id + " with " + ((IdentifiedLootTable)replace).apoli$getId());
             cir.setReturnValue(replace);
             //cir.setReturnValue(getTable(ReplaceLootTablePower.LAST_REPLACED_TABLE_ID));
         } else {
@@ -32,7 +30,7 @@ public interface LootDataLookupMixin extends LootDataLookup
             if(tableOptional.isPresent()) {
                 LootTable table = tableOptional.get();
                 if(table instanceof IdentifiedLootTable identifiedLootTable) {
-                    identifiedLootTable.setId(id, (LootManager)(Object)this);
+                    identifiedLootTable.apoli$setId(id, (LootManager)(Object)this);
                 }
             }
         }
