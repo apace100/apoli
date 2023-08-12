@@ -19,25 +19,10 @@ import net.minecraft.recipe.Ingredient;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
-import java.util.List;
-
 public class ItemConditions {
 
-    @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, stack) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.ITEM_CONDITIONS),
-            (data, stack) -> ((List<ConditionFactory<ItemStack>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(stack)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.ITEM_CONDITIONS),
-            (data, stack) -> ((List<ConditionFactory<ItemStack>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(stack)
-            )));
+        MetaConditions.register(ApoliDataTypes.ITEM_CONDITION, ItemConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("food"), new SerializableData(),
             (data, stack) -> stack.isFood()));
         register(new ConditionFactory<>(Apoli.identifier("ingredient"), new SerializableData()

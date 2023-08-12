@@ -35,6 +35,9 @@
     ],
     "calio:ordered-resource-listener": [
       "io.github.apace100.apoli.Apoli"
+    ],
+    "preLaunch": [
+      "com.llamalad7.mixinextras.MixinExtrasBootstrap::init"
     ]
   },
   "mixins": [

@@ -63,7 +63,9 @@ loom {
 }
 
 dependencies {
+
 	implementation 'com.demonwav.mcdev:annotations:1.0'
+	include(implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixinextras_version}")))
 
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
