@@ -93,7 +93,7 @@ public abstract class ItemStackMixinClient {
             } else {
 
                 MinecraftClient client = MinecraftClient.getInstance();
-                KeyBinding keyBinding = ApoliClient.showPreventingPowers;
+                KeyBinding keyBinding = ApoliClient.showPowersOnUsabilityHint;
 
                 Integer keyCode = keyBinding.isUnbound() ? null : InputUtil.fromTranslationKey(keyBinding.getBoundKeyTranslationKey()).getCode();
                 boolean isKeyPressed = keyCode != null && InputUtil.isKeyPressed(client.getWindow().getHandle(), keyCode);
@@ -102,7 +102,7 @@ public abstract class ItemStackMixinClient {
                     apoli$addExpandedTooltip(powers, tooltip, translationKey, powerTextColor, baseTextColor);
                 } else {
 
-                    powerText = Text.translatable("tooltip.apoli.use_preventing_powers.count", powers.size()).formatted(powerTextColor);
+                    powerText = Text.translatable("tooltip.apoli.usability_hint.power_count", powers.size()).formatted(powerTextColor);
                     baseText = Text.translatable(translationKey, powerText).formatted(baseTextColor);
 
                     tooltip.add(baseText);
@@ -113,7 +113,7 @@ public abstract class ItemStackMixinClient {
                         .withItalic(keyBinding.isUnbound())
                     );
 
-                    Text guideText = Text.translatable("tooltip.apoli.use_preventing_powers.show", keybindText).formatted(baseTextColor);
+                    Text guideText = Text.translatable("tooltip.apoli.usability_hint.show_powers", keybindText).formatted(baseTextColor);
                     tooltip.add(guideText);
 
                 }
@@ -189,7 +189,7 @@ public abstract class ItemStackMixinClient {
 
         }
 
-        Text powerText = Text.translatable("tooltip.apoli.use_preventing_powers.count", powers.size()).formatted(powerTextColor);
+        Text powerText = Text.translatable("tooltip.apoli.usability_hint.power_count", powers.size()).formatted(powerTextColor);
         Text baseText = Text.translatable(translationKey, powerText).formatted(baseTextColor);
 
         tooltip.add(baseText);

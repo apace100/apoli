@@ -34,7 +34,7 @@
 	"commands.apoli.sources.pass": "La entidad %s tenía %s fuentes de las que consiguió el poder %s: [%s]",
 	"death.attack.genericDamageOverTime": "%1$s died to a damage over time effect",
 	"death.attack.genericDamageOverTime.player": "%1$s died to a damage over time effect whilst fighting %2$s",
-	"key.apoli.use_preventing_powers.show": "Show use-preventing powers",
+	"key.apoli.usability_hint.show_powers": "Show Powers in Usability Hints",
 	"text.apoli.cannot_sleep": "You cannot sleep",
 	"text.autoconfig.power_config.option.executeCommand": "Ejecución de Comandos.",
 	"text.autoconfig.power_config.option.executeCommand.permissionLevel": "Nivel de Permiso",
@@ -64,6 +64,6 @@
 	"tooltip.apoli.unusable.spyglass.single": "Inutilizable (%s)",
 	"tooltip.apoli.unusable.toot_horn.multiple": "Untootable (%s)",
 	"tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)",
-	"tooltip.apoli.use_preventing_powers.count": "%s powers",
-	"tooltip.apoli.use_preventing_powers.show": "Hold [%s] to show the powers"
+	"tooltip.apoli.usability_hint.power_count": "%s powers",
+	"tooltip.apoli.usability_hint.show_powers": "Hold [%s] to show the powers"
 }

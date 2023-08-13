@@ -33,7 +33,7 @@ import java.util.List;
 @Environment(EnvType.CLIENT)
 public class ApoliClient implements ClientModInitializer {
 
-	public static KeyBinding showPreventingPowers;
+	public static KeyBinding showPowersOnUsabilityHint;
 
 	public static boolean shouldReloadWorldRenderer = false;
 
@@ -48,8 +48,8 @@ public class ApoliClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 
-		showPreventingPowers = new KeyBinding("key.apoli.use_preventing_powers.show", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "category." + Apoli.MODID);
-		KeyBindingHelper.registerKeyBinding(showPreventingPowers);
+		showPowersOnUsabilityHint = new KeyBinding("key.apoli.usability_hint.show_powers", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "category." + Apoli.MODID);
+		KeyBindingHelper.registerKeyBinding(showPowersOnUsabilityHint);
 
 		ModPacketsS2C.register();
 
