@@ -1,73 +1,51 @@
 {
-
 	"argument.apoli.power_holder.not_found.multiple": "No living entities were found",
 	"argument.apoli.power_holder.not_found.single": "Entity %s is not a living entity",
-
+	"category.apoli": "Apoli",
 	"commands.apoli.clear.fail.multiple": "No entity had any power to clear.",
 	"commands.apoli.clear.fail.single": "Entity %s did not have any power to clear.",
-
 	"commands.apoli.clear.success.multiple": "%s entities had in total %s powers cleared.",
 	"commands.apoli.clear.success.single": "Entity %s had %s powers cleared.",
-
 	"commands.apoli.grant.fail.multiple": "All %s entities already had the power %s from source %s.",
 	"commands.apoli.grant.fail.single": "Entity %s already had the power %s from source %s.",
-
 	"commands.apoli.grant.success.multiple": "%s entities were granted the power %s.",
 	"commands.apoli.grant.success.single": "Entity %s was granted the power %s.",
-
 	"commands.apoli.grant_from_source.success.multiple": "%s entities were granted the power %s from source %s.",
 	"commands.apoli.grant_from_source.success.single": "Entity %s was granted the power %s from source %s.",
-
 	"commands.apoli.list.fail": "Entity %s did not have any powers.",
 	"commands.apoli.list.pass": "Entity %s has %s powers: [%s]",
 	"commands.apoli.list.sources": "Sources: [%s]",
-
 	"commands.apoli.power_not_found": "Unknown power: %s",
-
 	"commands.apoli.remove.fail.multiple": "No entity had the power %s.",
 	"commands.apoli.remove.fail.single": "Entity %s did not have the power %s.",
-
 	"commands.apoli.remove.success.multiple": "%s entities had the power %s removed.",
 	"commands.apoli.remove.success.single": "Entity %s had the power %s removed.",
-
 	"commands.apoli.revoke.fail.multiple": "No entity had the power %s from source %s.",
 	"commands.apoli.revoke.fail.single": "Entity %s did not have the power %s from source %s.",
-
 	"commands.apoli.revoke.success.multiple": "%s entities had the power %s revoked.",
 	"commands.apoli.revoke.success.single": "Entity %s had the power %s revoked.",
-
 	"commands.apoli.revoke_all.fail.multiple": "No entity had any power from source %s.",
 	"commands.apoli.revoke_all.fail.single": "Entity %s did not have any power from source %s.",
-
 	"commands.apoli.revoke_all.success.multiple": "%s entities had %s powers revoked from source %s.",
 	"commands.apoli.revoke_all.success.single": "Entity %s had %s powers revoked from source %s.",
-
 	"commands.apoli.revoke_from_source.success.multiple": "%s entities had the power %s revoked from source %s.",
 	"commands.apoli.revoke_from_source.success.single": "Entity %s had the power %s revoked from source %s.",
-
 	"commands.apoli.sources.fail": "Entity %s did not have the power %s.",
 	"commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
-
 	"death.attack.genericDamageOverTime": "%1$s died to a damage over time effect",
 	"death.attack.genericDamageOverTime.player": "%1$s died to a damage over time effect whilst fighting %2$s",
-
+	"key.apoli.use_preventing_powers.show": "Show use-preventing Powers",
 	"text.apoli.cannot_sleep": "You cannot sleep",
-
 	"text.autoconfig.power_config.option.executeCommand": "Execute Command",
 	"text.autoconfig.power_config.option.executeCommand.permissionLevel": "Permission Level",
 	"text.autoconfig.power_config.option.executeCommand.showOutput": "Show Output in Chat",
-
 	"text.autoconfig.power_config.option.resourcesAndCooldowns": "Resources & Cooldowns",
 	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetX": "HUD Offset X",
 	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetY": "HUD Offset Y",
-
 	"text.autoconfig.power_config.option.tooltips": "Tooltips",
-
 	"text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compact Usability Hints",
 	"text.autoconfig.power_config.option.tooltips.showUsabilityHints": "Show Usability Hints",
-
 	"text.autoconfig.power_config.title": "Apoli Power Config",
-
 	"tooltip.apoli.unusable.block.multiple": "Unusable (%s)",
 	"tooltip.apoli.unusable.block.single": "Unusable (%s)",
 	"tooltip.apoli.unusable.bow.multiple": "Unusable (%s)",
@@ -85,6 +63,7 @@
 	"tooltip.apoli.unusable.spyglass.multiple": "Unusable (%s)",
 	"tooltip.apoli.unusable.spyglass.single": "Unusable (%s)",
 	"tooltip.apoli.unusable.toot_horn.multiple": "Untootable (%s)",
-	"tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)"
-
+	"tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)",
+	"tooltip.apoli.use_preventing_powers.count": "%s powers",
+	"tooltip.apoli.use_preventing_powers.show": "Hold [%s] to show the powers"
 }

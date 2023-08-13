@@ -72,6 +72,7 @@
 		"InGameHudMixin",
 		"InGameOverlayRendererMixin",
 		"ItemStackMixinClient",
+		"KeyBindingAccessor",
 		"LightmapTextureManagerMixin",
 		"LivingEntityRendererMixin",
 		"MinecraftClientMixin",

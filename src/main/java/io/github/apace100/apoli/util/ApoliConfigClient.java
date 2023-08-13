@@ -21,6 +21,6 @@ public class ApoliConfigClient extends ApoliConfig {
     public static class Tooltips {
 
         public boolean showUsabilityHints = true;
-        public boolean compactUsabilityHints = false;
+        public boolean compactUsabilityHints = true;
     }
 }

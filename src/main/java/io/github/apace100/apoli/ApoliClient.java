@@ -18,10 +18,13 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.network.PacketByteBuf;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,6 +32,8 @@ import java.util.List;
 
 @Environment(EnvType.CLIENT)
 public class ApoliClient implements ClientModInitializer {
+
+	public static KeyBinding showPreventingPowers;
 
 	public static boolean shouldReloadWorldRenderer = false;
 
@@ -42,6 +47,9 @@ public class ApoliClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+
+		showPreventingPowers = new KeyBinding("key.apoli.use_preventing_powers.show", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "category." + Apoli.MODID);
+		KeyBindingHelper.registerKeyBinding(showPreventingPowers);
 
 		ModPacketsS2C.register();
 
