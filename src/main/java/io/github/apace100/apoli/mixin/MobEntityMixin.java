@@ -25,7 +25,7 @@ public abstract class MobEntityMixin extends LivingEntity {
 
     @ModifyVariable(method = "setTarget", at = @At("HEAD"))
     private LivingEntity modifyTarget(LivingEntity target) {
-        if (world.isClient() || target == null) {
+        if (getWorld().isClient() || target == null) {
             return target;
         }
 

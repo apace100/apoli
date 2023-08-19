@@ -68,8 +68,8 @@ public class HostileMobBehavior extends AttributeMobBehavior {
     @Override
     public void tick() {
         if (this.usesBrain() && (hasMemoryModule(MemoryModuleType.ANGRY_AT) || hasMemoryModule(MemoryModuleType.ATTACK_TARGET))) {
-            List<? extends LivingEntity> applicableEntities = (((ServerWorld)mob.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply));
-            LivingEntity closestTarget = mob.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
+            List<? extends LivingEntity> applicableEntities = (((ServerWorld)mob.getWorld()).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply));
+            LivingEntity closestTarget = mob.getWorld().getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
 
             if (closestTarget == null) return;
 

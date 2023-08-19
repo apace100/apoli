@@ -105,8 +105,8 @@ public class MobBehavior {
 
     public void baseTick() {
         this.tick();
-        List<? extends LivingEntity> applicableEntities = (((ServerWorld)mob.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply));
-        LivingEntity closestTarget = mob.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
+        List<? extends LivingEntity> applicableEntities = (((ServerWorld)mob.getWorld()).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), this::doesApply));
+        LivingEntity closestTarget = mob.getWorld().getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), mob, mob.getX(), mob.getY(), mob.getZ());
         if (closestTarget == null && previousTarget != null || closestTarget != previousTarget) {
             this.resetAttackTargets();
             this.onRemoved();
@@ -191,8 +191,8 @@ public class MobBehavior {
 
     private static SingleTickTask<MobEntity> createBehaviorTargetTask(Predicate<LivingEntity> predicate) {
         return TaskTriggerer.task(context -> context.group(context.queryMemoryAbsent(ApoliMemoryModuleTypes.BEHAVIOR_TARGET)).apply(context, (behaviorTarget) -> (world, entity, time) -> {
-            List<? extends LivingEntity> applicableEntities = (((ServerWorld)entity.world).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), predicate));
-            LivingEntity closestTarget = entity.world.getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), entity, entity.getX(), entity.getY(), entity.getZ());
+            List<? extends LivingEntity> applicableEntities = (((ServerWorld)entity.getWorld()).getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), predicate));
+            LivingEntity closestTarget = entity.getWorld().getClosestEntity(applicableEntities, TargetPredicate.createNonAttackable(), entity, entity.getX(), entity.getY(), entity.getZ());
 
             behaviorTarget.remember(closestTarget, 1L);
 

@@ -40,8 +40,8 @@ public class RevengeMobBehavior extends HostileMobBehavior {
             ++this.revengeTimer;
         }
 
-        Entity entity = ((ServerWorld)mob.world).getEntity(revengeTarget);
-        if (entity instanceof LivingEntity living && !living.isAlive() && (!(living instanceof PlayerEntity) || mob.world.getGameRules().getBoolean(GameRules.FORGIVE_DEAD_PLAYERS)) || revengeTimer > resetTime) {
+        Entity entity = ((ServerWorld)mob.getWorld()).getEntity(revengeTarget);
+        if (entity instanceof LivingEntity living && !living.isAlive() && (!(living instanceof PlayerEntity) || mob.getWorld().getGameRules().getBoolean(GameRules.FORGIVE_DEAD_PLAYERS)) || revengeTimer > resetTime) {
             this.revengeTarget = null;
             this.revengeTimer = 0;
             this.resetAttackTargets();

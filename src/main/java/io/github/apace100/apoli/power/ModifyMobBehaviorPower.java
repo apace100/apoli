@@ -27,14 +27,14 @@ public class ModifyMobBehaviorPower extends Power {
 
     @Override
     public void tick() {
-        if (entity.world.isClient || entity.age % tickRate != 0) return;
+        if (entity.getWorld().isClient || entity.age % tickRate != 0) return;
 
         this.getMobBehavior().baseTick();
     }
 
     @Override
     public void onAdded() {
-        if (entity.world.isClient) return;
+        if (entity.getWorld().isClient) return;
         if (mobBehavior.usesGoals()) {
             mobBehavior.applyGoals();
         } else if (mobBehavior.usesBrain()) {
@@ -44,7 +44,7 @@ public class ModifyMobBehaviorPower extends Power {
 
     @Override
     public void onRemoved() {
-        if (entity.world.isClient) return;
+        if (entity.getWorld().isClient) return;
         this.mobBehavior.onRemoved();
         this.mobBehavior.removeGoals();
         this.mobBehavior.removeTasks();
