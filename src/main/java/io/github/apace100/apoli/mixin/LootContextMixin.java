@@ -6,7 +6,6 @@ import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.Inject;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,22 +20,22 @@ public class LootContextMixin implements ReplacingLootContext {
     private final Set<LootTable> apoli$replacedTables = new HashSet<>();
 
     @Override
-    public void setType(LootContextType type) {
+    public void apoli$setType(LootContextType type) {
         apoli$lootContextType = type;
     }
 
     @Override
-    public LootContextType getType() {
+    public LootContextType apoli$getType() {
         return apoli$lootContextType;
     }
 
     @Override
-    public void setReplaced(LootTable table) {
+    public void apoli$setReplaced(LootTable table) {
         apoli$replacedTables.add(table);
     }
 
     @Override
-    public boolean isReplaced(LootTable table) {
+    public boolean apoli$isReplaced(LootTable table) {
         return apoli$replacedTables.contains(table);
     }
 }

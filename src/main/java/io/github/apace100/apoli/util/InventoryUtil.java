@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.util;
 
-import com.google.common.collect.Sets;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
@@ -385,7 +384,7 @@ public class InventoryUtil {
                 if (emptyStackConsumer == null) continue;
                 ItemStack newStack = getEntityLinkedEmptyStack(entity);
                 emptyStackConsumer.accept(newStack);
-                ((MutableItemStack)itemStack).setFrom(newStack);
+                ((MutableItemStack)itemStack).apoli$setFrom(newStack);
                 continue;
             }
             itemStackConsumer.accept(itemStack);

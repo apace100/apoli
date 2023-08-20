@@ -40,7 +40,7 @@ public class HungerManagerMixin {
 
         if (player == null) return baseValue;
 
-        List<Modifier> modifiers = ((ModifiableFoodEntity) player).getCurrentModifyFoodPowers()
+        List<Modifier> modifiers = ((ModifiableFoodEntity) player).apoli$getCurrentModifyFoodPowers()
             .stream()
             .filter(p -> p.doesApply(stack))
             .flatMap(p -> p.getFoodModifiers().stream())
@@ -59,7 +59,7 @@ public class HungerManagerMixin {
         float baseValue = foodComponent.getSaturationModifier();
         if (player == null) return baseValue;
 
-        List<Modifier> modifiers = ((ModifiableFoodEntity) player).getCurrentModifyFoodPowers()
+        List<Modifier> modifiers = ((ModifiableFoodEntity) player).apoli$getCurrentModifyFoodPowers()
             .stream()
             .filter(p -> p.doesApply(stack))
             .flatMap(p -> p.getSaturationModifiers().stream())
@@ -77,7 +77,7 @@ public class HungerManagerMixin {
 
         if (player == null || player.getWorld().isClient) return;
 
-        ((ModifiableFoodEntity) player).getCurrentModifyFoodPowers()
+        ((ModifiableFoodEntity) player).apoli$getCurrentModifyFoodPowers()
             .stream()
             .filter(p -> p.doesApply(stack))
             .forEach(ModifyFoodPower::eat);

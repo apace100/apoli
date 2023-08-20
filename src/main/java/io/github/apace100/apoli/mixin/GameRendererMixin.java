@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.mixin;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import net.fabricmc.api.EnvType;
@@ -45,7 +44,7 @@ public abstract class GameRendererMixin {
 
     @Shadow
     @Final
-    private MinecraftClient client;
+    MinecraftClient client;
 
     @Shadow
     protected abstract void loadPostProcessor(Identifier identifier);
@@ -90,22 +89,31 @@ public abstract class GameRendererMixin {
         }
     }
 
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0))
+    private void apoli$renderOverlayPowersBelowHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+
+        //  Skip this method if the HUD is not hidden or if the current screen is not null
+        //  (to make sure the overlay is not rendered twice)
+        if (!client.options.hudHidden || client.currentScreen != null) {
+            return;
+        }
+
+        //  Otherwise, render overlay powers specified to render below the HUD
+        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
+            .stream()
+            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
+            .sorted(Comparator.comparing(OverlayPower::getPriority))
+            .forEach(OverlayPower::render);
+
+    }
+
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
-    private void renderOverlayPowers(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
-        boolean hudHidden = this.client.options.hudHidden;
-        boolean thirdPerson = !client.options.getPerspective().isFirstPerson();
-        PowerHolderComponent.withPower(client.getCameraEntity(), OverlayPower.class, p -> {
-            if(p.getDrawPhase() != OverlayPower.DrawPhase.ABOVE_HUD) {
-                return false;
-            }
-            if(hudHidden && p.doesHideWithHud()) {
-                return false;
-            }
-            if(thirdPerson && !p.shouldBeVisibleInThirdPerson()) {
-                return false;
-            }
-            return true;
-        }, OverlayPower::render);
+    private void apoli$renderOverlayPowersAboveHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
+            .stream()
+            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.ABOVE_HUD))
+            .sorted(Comparator.comparing(OverlayPower::getPriority))
+            .forEach(OverlayPower::render);
     }
 
     @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)

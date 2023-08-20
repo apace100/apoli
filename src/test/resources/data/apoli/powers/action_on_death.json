@@ -1,0 +1,10 @@
+{
+    "type": "apoli:action_on_death",
+    "bientity_action": {
+        "type": "apoli:target_action",
+        "action": {
+            "type": "apoli:execute_command",
+            "command": "say welp, i'm dead"
+        }
+    }
+}

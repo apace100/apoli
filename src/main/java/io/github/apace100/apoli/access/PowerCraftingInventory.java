@@ -4,6 +4,6 @@ import io.github.apace100.apoli.power.Power;
 
 public interface PowerCraftingInventory {
 
-    void setPower(Power power);
-    Power getPower();
+    void apoli$setPower(Power power);
+    Power apoli$getPower();
 }

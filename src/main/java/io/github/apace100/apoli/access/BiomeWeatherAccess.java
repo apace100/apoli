@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.access;
 
 public interface BiomeWeatherAccess {
-
-    float getDownfall();
-    void setDownfall(float downfall);
+    float apoli$getDownfall();
+    void apoli$setDownfall(float downfall);
 }

@@ -12,12 +12,12 @@ public class BiomeMixin implements BiomeWeatherAccess {
     private float apoli$downfall;
 
     @Override
-    public float getDownfall() {
+    public float apoli$getDownfall() {
         return apoli$downfall;
     }
 
     @Override
-    public void setDownfall(float downfall) {
+    public void apoli$setDownfall(float downfall) {
         apoli$downfall = downfall;
     }
 }
