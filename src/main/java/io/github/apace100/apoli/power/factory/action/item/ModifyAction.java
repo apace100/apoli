@@ -46,7 +46,7 @@ public class ModifyAction {
         }
 
         ItemStack stack = worldAndStack.getRight();
-        Entity stackHolder = ((EntityLinkedItemStack) stack).getEntity(false);
+        Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity();
         if (stackHolder != null) {
             Apoli.LOGGER.warn("Using the dimension of the stack holder instead.");
             world = (ServerWorld) stackHolder.getWorld();
@@ -69,7 +69,7 @@ public class ModifyAction {
             .build(null);
 
         ItemStack newStack = itemModifier.apply(stack, lootContext);
-        ((MutableItemStack) stack).setFrom(newStack);
+        ((MutableItemStack) stack).apoli$setFrom(newStack);
 
     }
 
