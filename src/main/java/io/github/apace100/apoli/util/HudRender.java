@@ -8,17 +8,19 @@ import net.minecraft.util.Identifier;
 
 public class HudRender {
 
-    public static final HudRender DONT_RENDER = new HudRender(false, 0, Apoli.identifier("textures/gui/resource_bar.png"), null, false);
+    public static final HudRender DONT_RENDER = new HudRender(false, 0, 0, Apoli.identifier("textures/gui/resource_bar.png"), null, false);
 
     private final boolean shouldRender;
     private final int barIndex;
+    private final int iconIndex;
     private final Identifier spriteLocation;
     private final ConditionFactory<LivingEntity>.Instance playerCondition;
     private final boolean inverted;
 
-    public HudRender(boolean shouldRender, int barIndex, Identifier spriteLocation, ConditionFactory<LivingEntity>.Instance condition, boolean inverted) {
+    public HudRender(boolean shouldRender, int barIndex, int iconIndex, Identifier spriteLocation, ConditionFactory<LivingEntity>.Instance condition, boolean inverted) {
         this.shouldRender = shouldRender;
         this.barIndex = barIndex;
+        this.iconIndex = iconIndex;
         this.spriteLocation = spriteLocation;
         this.playerCondition = condition;
         this.inverted = inverted;
@@ -30,6 +32,10 @@ public class HudRender {
 
     public int getBarIndex() {
         return barIndex;
+    }
+
+    public int getIconIndex() {
+        return iconIndex;
     }
 
     public boolean isInverted() {

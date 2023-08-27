@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.HudRendered;
@@ -10,6 +9,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.FluidTags;
@@ -17,53 +17,79 @@ import net.minecraft.util.Identifier;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PowerHudRenderer implements GameHudRender {
 
     @Override
     @Environment(EnvType.CLIENT)
     public void render(DrawContext context, float delta) {
+
         MinecraftClient client = MinecraftClient.getInstance();
-        PowerHolderComponent component = PowerHolderComponent.KEY.get(client.player);
-        int x = client.getWindow().getScaledWidth() / 2 + 20 + ((ApoliConfigClient)Apoli.config).resourcesAndCooldowns.hudOffsetX;
-        int y = client.getWindow().getScaledHeight() - 47 + ((ApoliConfigClient)Apoli.config).resourcesAndCooldowns.hudOffsetY;
-        Entity vehicle = client.player.getVehicle();
-        if(vehicle instanceof LivingEntity) {
-            y -= 8 * (int)(((LivingEntity)vehicle).getMaxHealth() / 20f);
+        ClientPlayerEntity player = client.player;
+
+        if (player == null) {
+            return;
         }
-        if(client.player.isSubmergedIn(FluidTags.WATER) || client.player.getAir() < client.player.getMaxAir()) {
-            y -= 8;
+
+        PowerHolderComponent component = PowerHolderComponent.KEY.get(player);
+        int x = client.getWindow().getScaledWidth() / 2 + 20 + ((ApoliConfigClient) Apoli.config).resourcesAndCooldowns.hudOffsetX;
+        int y = client.getWindow().getScaledHeight() - 47 + ((ApoliConfigClient) Apoli.config).resourcesAndCooldowns.hudOffsetY;
+
+        Entity vehicle = player.getVehicle();
+        if (vehicle instanceof LivingEntity || (player.isSubmergedIn(FluidTags.WATER) || player.getAir() < player.getMaxAir())) {
+            int multiplier = (vehicle instanceof LivingEntity livingVehicle ? (int) (livingVehicle.getMaxHealth() / 20f) : 1);
+            y -= 8 * multiplier;
         }
+
         int barWidth = 71;
         int barHeight = 8;
         int iconSize = 8;
-        List<HudRendered> hudPowers = component.getPowers().stream().filter(p -> p instanceof HudRendered).map(p -> (HudRendered)p).sorted(
-            Comparator.comparing(hudRenderedA -> hudRenderedA.getRenderSettings().getSpriteLocation())
-        ).collect(Collectors.toList());
-        //Identifier lastLocation = null;
-        //RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        for (HudRendered hudPower : hudPowers) {
-            HudRender render = hudPower.getRenderSettings();
-            if(render.shouldRender(client.player) && hudPower.shouldRender()) {
-                Identifier currentLocation = render.getSpriteLocation();
-                /*if(currentLocation != lastLocation) {
-                    RenderSystem.setShaderTexture(0, currentLocation);
-                    lastLocation = currentLocation;
-                }*/
-                context.drawTexture(currentLocation, x, y, 0, 0, barWidth, 5);
-                int v = 8 + render.getBarIndex() * 10;
-                float fill = hudPower.getFill();
-                if(render.isInverted()) {
-                    fill = 1f - fill;
-                }
-                int w = (int)(fill * barWidth);
-                context.drawTexture(currentLocation, x, y - 2, 0, v, w, barHeight);
-                //setZOffset(getZOffset() + 1);
-                context.drawTexture(currentLocation, x - iconSize - 2, y - 2, 73, v, iconSize, iconSize);
-                //setZOffset(getZOffset() - 1);
-                y -= 8;
+
+        //  Used for selecting bars/icons depending on the specified bar/icon index
+        int barIndexOffset = barHeight + 2;
+        int iconIndexOffset = iconSize + 1;
+
+        //  Get and sort the HUD powers
+        List<HudRendered> hudRenderedPowers = component.getPowers()
+            .stream()
+            .filter(p -> p instanceof HudRendered)
+            .map(p -> (HudRendered) p)
+            .sorted(Comparator.comparing(hudRendered -> hudRendered.getRenderSettings().getSpriteLocation()))
+            .toList();
+
+        for (HudRendered hudRenderedPower : hudRenderedPowers) {
+
+            //  Get the HUD render settings of the HUD power. Skip the drawing process if the HUD of the HUD power
+            //  is specified to not render or if the condition is not fulfilled by the player
+            HudRender hudRender = hudRenderedPower.getRenderSettings();
+            if (!(hudRender.shouldRender(player) && hudRenderedPower.shouldRender())) {
+                continue;
             }
+
+            //  Get the identifier of the sprite sheet and draw the base texture of the bar
+            Identifier currentSpriteLocation = hudRender.getSpriteLocation();
+            context.drawTexture(currentSpriteLocation, x, y, 0, 0, barWidth, 5);
+
+            //  Get the V coordinate for the bar and icon and the U coordinate for the icon
+            int barV = barHeight + hudRender.getBarIndex() * barIndexOffset;
+            int iconU = (barWidth + 2) + hudRender.getIconIndex() * iconIndexOffset;
+
+            //  Get the fill portion of the bar
+            float barFill = hudRenderedPower.getFill();
+            if (hudRender.isInverted()) {
+                barFill = 1f - barFill;
+            }
+
+            //  Draw the fill portion of the bar
+            int barFillWidth = (int) (barFill * barWidth);
+            context.drawTexture(currentSpriteLocation, x, y - 2, 0, barV, barFillWidth, barHeight);
+
+            //  Draw the icon of the bar
+            context.drawTexture(currentSpriteLocation, x - iconSize - 2, y - 2, iconU, barV, iconSize, iconSize);
+            y -= 8;
+
         }
+
     }
+
 }
