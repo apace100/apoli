@@ -47,7 +47,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 	public static MinecraftServer server;
 
 	public static final Scheduler SCHEDULER = new Scheduler();
-	public static final Identifier EVENT_PHASE = Apoli.identifier("phase/event");
 
 	public static final String MODID = "apoli";
 	public static final Logger LOGGER = LogManager.getLogger(Apoli.class);
