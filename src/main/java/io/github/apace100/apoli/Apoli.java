@@ -7,6 +7,7 @@ import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
+import io.github.apace100.apoli.data.DynamicContainerType;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerTypes;
@@ -32,10 +33,10 @@ import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,6 +47,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 	public static MinecraftServer server;
 
 	public static final Scheduler SCHEDULER = new Scheduler();
+	public static final Identifier EVENT_PHASE = Apoli.identifier("phase/event");
 
 	public static final String MODID = "apoli";
 	public static final Logger LOGGER = LogManager.getLogger(Apoli.class);
@@ -106,6 +108,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		ItemActions.register();
 		BlockActions.register();
 		BiEntityActions.register();
+
+		DynamicContainerType.register();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
 		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));

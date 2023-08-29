@@ -260,6 +260,34 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 
+    //  TODO: Create a dynamic screen handler with configurable rows and columns
+    public static final SerializableDataType<DynamicContainerType> CONTAINER_TYPE = SerializableDataType.compound(
+        DynamicContainerType.class,
+        new SerializableData()
+            .add("type", SerializableDataTypes.STRING)
+            .add("columns", SerializableDataTypes.INT)
+            .add("rows", SerializableDataTypes.INT),
+        instance -> DynamicContainerType.get(instance.get("type")),
+        (serializableData, dynamicContainerType) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+            data.set("type", dynamicContainerType.getName());
+            data.set("columns", dynamicContainerType.getColumns());
+            data.set("rows", dynamicContainerType.getRows());
+
+            return data;
+
+        }
+    );
+
+    public static final SerializableDataType<DynamicContainerType> BACKWARDS_COMPATIBLE_CONTAINER_TYPE = new SerializableDataType<>(
+        DynamicContainerType.class,
+        CONTAINER_TYPE::send,
+        CONTAINER_TYPE::receive,
+        jsonElement -> jsonElement.isJsonPrimitive() ? DynamicContainerType.get(jsonElement.getAsString())
+                                                     : CONTAINER_TYPE.read(jsonElement)
+    );
+
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);
     }
