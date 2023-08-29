@@ -7,13 +7,13 @@ import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandlerType;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class DynamicContainerType {
 
-    private static final Map<String, DynamicContainerType> MAP = new HashMap<>();
+    private static final Map<String, DynamicContainerType> MAP = new LinkedHashMap<>();
 
     /**
      *      <p>Register the specified {@link DynamicContainerType} to the registry. <b>Registering a
@@ -52,7 +52,7 @@ public class DynamicContainerType {
 
     }
 
-    public static void register() {
+    public static void registerAll() {
 
         for (InventoryPower.ContainerType oldContainerType : InventoryPower.ContainerType.values()) {
             register(oldContainerType.getDynamicType());

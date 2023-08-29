@@ -94,6 +94,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		ApoliClassData.registerAll();
 
 		ModifierOperations.registerAll();
+		DynamicContainerType.registerAll();
 
 		PowerFactories.register();
 		EntityConditions.register();
@@ -107,8 +108,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		ItemActions.register();
 		BlockActions.register();
 		BiEntityActions.register();
-
-		DynamicContainerType.register();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
 		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));

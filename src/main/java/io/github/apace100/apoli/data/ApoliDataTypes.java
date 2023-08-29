@@ -2,6 +2,7 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.gson.JsonPrimitive;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -284,8 +285,8 @@ public class ApoliDataTypes {
         DynamicContainerType.class,
         CONTAINER_TYPE::send,
         CONTAINER_TYPE::receive,
-        jsonElement -> jsonElement.isJsonPrimitive() ? DynamicContainerType.get(jsonElement.getAsString())
-                                                     : CONTAINER_TYPE.read(jsonElement)
+        jsonElement -> jsonElement instanceof JsonPrimitive jsonPrimitive && jsonPrimitive.isString() ?
+                       DynamicContainerType.get(jsonPrimitive.getAsString()) : CONTAINER_TYPE.read(jsonElement)
     );
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
