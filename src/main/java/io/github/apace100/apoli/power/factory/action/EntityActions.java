@@ -7,19 +7,17 @@ import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.action.entity.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.*;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.potion.PotionUtil;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
@@ -29,11 +27,10 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import org.joml.Vector3f;
-import net.minecraft.registry.Registry;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.joml.Vector3f;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -53,14 +50,7 @@ public class EntityActions {
         register(NothingAction.getFactory());
         register(SideAction.getFactory(ApoliDataTypes.ENTITY_ACTION, entity -> !entity.getWorld().isClient));
 
-        register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
-            .add("amount", SerializableDataTypes.FLOAT)
-            .add("source", ApoliDataTypes.DAMAGE_SOURCE_DESCRIPTION, null)
-            .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, null),
-            (data, entity) -> {
-                DamageSource damageSource = MiscUtil.createDamageSource(entity.getDamageSources(), data.get("source"), data.get("damage_type"));
-                entity.damage(damageSource, data.getFloat("amount"));
-            }));
+        register(DamageAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("heal"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT),
             (data, entity) -> {

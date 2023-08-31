@@ -139,7 +139,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
         Optional<PowerFactory> optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(factoryId);
         if(optionalFactory.isEmpty()) {
             if(IdentifierAlias.hasAlias(factoryId)) {
-                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(IdentifierAlias.resolveAlias(factoryId));
+                optionalFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(IdentifierAlias.resolveAlias(factoryId, IdentifierAlias.Priority.NAMESPACE));
             }
             if(optionalFactory.isEmpty()) {
                 throw new JsonSyntaxException("Power type \"" + factoryId + "\" is not registered.");
@@ -179,7 +179,7 @@ public class PowerTypes extends MultiJsonDataLoader implements IdentifiableResou
             return true;
         }
         if(IdentifierAlias.hasAlias(id)) {
-            return MULTIPLE.equals(IdentifierAlias.resolveAlias(id));
+            return MULTIPLE.equals(IdentifierAlias.resolveAlias(id, IdentifierAlias.Priority.NAMESPACE));
         }
         return false;
     }

@@ -51,7 +51,7 @@ public class ConditionType<T> {
         Optional<ConditionFactory<T>> conditionFactory = conditionRegistry.getOrEmpty(conditionFactoryId);
 
         if (conditionFactory.isEmpty() && IdentifierAlias.hasAlias(conditionFactoryId)) {
-            conditionFactory = conditionRegistry.getOrEmpty(IdentifierAlias.resolveAlias(conditionFactoryId));
+            conditionFactory = conditionRegistry.getOrEmpty(IdentifierAlias.resolveAlias(conditionFactoryId, IdentifierAlias.Priority.NAMESPACE));
         }
 
         return conditionFactory

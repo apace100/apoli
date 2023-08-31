@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.power.factory.action.bientity;
+package io.github.apace100.apoli.power.factory.action.entity;
 
 import com.google.gson.JsonSyntaxException;
 import io.github.apace100.apoli.Apoli;
@@ -12,21 +12,13 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.util.Pair;
 
 import java.util.LinkedList;
 import java.util.List;
 
 public class DamageAction {
 
-    public static void action(SerializableData.Instance data, Pair<Entity, Entity> entities) {
-
-        Entity actor = entities.getLeft();
-        Entity target = entities.getRight();
-
-        if (actor == null || target == null) {
-            return;
-        }
+    public static void action(SerializableData.Instance data, Entity entity) {
 
         Float damageAmount = data.get("amount");
         List<Modifier> modifiers = new LinkedList<>();
@@ -34,12 +26,12 @@ public class DamageAction {
         data.<Modifier>ifPresent("modifier", modifiers::add);
         data.<List<Modifier>>ifPresent("modifiers", modifiers::addAll);
 
-        if (!modifiers.isEmpty() && target instanceof LivingEntity livingTarget) {
+        if (!modifiers.isEmpty() && entity instanceof LivingEntity livingEntity) {
 
-            float targetMaxHealth = livingTarget.getMaxHealth();
-            float newDamageAmount = (float) ModifierUtil.applyModifiers(actor, modifiers, targetMaxHealth);
+            float maxHealth = livingEntity.getMaxHealth();
+            float newDamageAmount = (float) ModifierUtil.applyModifiers(livingEntity, modifiers, maxHealth);
 
-            damageAmount = newDamageAmount > targetMaxHealth ? newDamageAmount - targetMaxHealth : newDamageAmount;
+            damageAmount = newDamageAmount > maxHealth ? newDamageAmount - maxHealth : newDamageAmount;
 
         }
 
@@ -48,16 +40,17 @@ public class DamageAction {
         }
 
         try {
-            DamageSource damageSource = MiscUtil.createDamageSource(actor.getDamageSources(), data.get("source"), data.get("damage_type"), actor);
-            target.damage(damageSource, damageAmount);
+            DamageSource damageSource = MiscUtil.createDamageSource(entity.getDamageSources(), data.get("source"), data.get("damage_type"));
+            entity.damage(damageSource, damageAmount);
         } catch (JsonSyntaxException e) {
-            Apoli.LOGGER.error("Error trying to create damage source in a `damage` bi-entity action: " + e.getMessage());
+            Apoli.LOGGER.error("Error trying to create damage source in a `damage` entity action: " + e.getMessage());
         }
 
     }
 
-    public static ActionFactory<Pair<Entity, Entity>> getFactory() {
-        return new ActionFactory<>(Apoli.identifier("damage"),
+    public static ActionFactory<Entity> getFactory() {
+        return new ActionFactory<>(
+            Apoli.identifier("damage"),
             new SerializableData()
                 .add("amount", SerializableDataTypes.FLOAT, null)
                 .add("source", ApoliDataTypes.DAMAGE_SOURCE_DESCRIPTION, null)
@@ -67,4 +60,5 @@ public class DamageAction {
             DamageAction::action
         );
     }
+
 }

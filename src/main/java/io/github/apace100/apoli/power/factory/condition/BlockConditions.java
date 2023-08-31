@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.block.CommandCondition;
 import io.github.apace100.apoli.power.factory.condition.block.MaterialCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
@@ -173,6 +174,7 @@ public class BlockConditions {
                 return ((Comparison)data.get("comparison")).compare(state.getBlock().getHardness(), data.getFloat("compare_to"));
             }));
         register(MaterialCondition.getFactory());
+        register(CommandCondition.getFactory());
     }
 
     private static void register(ConditionFactory<CachedBlockPosition> conditionFactory) {

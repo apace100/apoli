@@ -51,7 +51,7 @@ public class ActionType<T> {
         Optional<ActionFactory<T>> actionFactory = actionRegistry.getOrEmpty(actionFactoryId);
 
         if (actionFactory.isEmpty() && IdentifierAlias.hasAlias(actionFactoryId)) {
-            actionFactory = actionRegistry.getOrEmpty(IdentifierAlias.resolveAlias(actionFactoryId));
+            actionFactory = actionRegistry.getOrEmpty(IdentifierAlias.resolveAlias(actionFactoryId, IdentifierAlias.Priority.NAMESPACE));
         }
 
         return actionFactory
