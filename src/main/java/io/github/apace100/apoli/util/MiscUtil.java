@@ -81,6 +81,11 @@ public final class MiscUtil {
 
             }
 
+            @Override
+            public boolean canDestroyBlock(Explosion explosion, BlockView blockView, BlockPos pos, BlockState state, float power) {
+                return !indestructibleCondition.test(new CachedBlockPosition(world, pos, true));
+            }
+
         };
     }
 

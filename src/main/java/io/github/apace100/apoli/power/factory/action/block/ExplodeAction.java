@@ -49,7 +49,7 @@ public class ExplodeAction {
                 .add("power", SerializableDataTypes.FLOAT)
                 .add("destruction_type", ApoliDataTypes.BACKWARDS_COMPATIBLE_DESTRUCTION_TYPE, Explosion.DestructionType.DESTROY)
                 .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
-                .add("indestructible_resistance", SerializableDataTypes.FLOAT, 5.0f)
+                .add("indestructible_resistance", SerializableDataTypes.FLOAT, 10.0f)
                 .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)
                 .add("create_fire", SerializableDataTypes.BOOLEAN, false),
             ExplodeAction::action
