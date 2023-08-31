@@ -30,7 +30,7 @@ public class HolderAction {
         List<Consumer<Entity>> entityActions = new LinkedList<>();
 
         data.<Consumer<Entity>>ifPresent("entity_action", entityActions::add);
-        entityActions.add(data.get("action"));
+        data.<Consumer<Entity>>ifPresent("action", entityActions::add);
 
         entityActions.forEach(entityAction -> entityAction.accept(holder));
 
@@ -40,7 +40,7 @@ public class HolderAction {
         return new ActionFactory<>(Apoli.identifier("holder_action"),
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("action", ApoliDataTypes.ENTITY_ACTION),
+                .add("action", ApoliDataTypes.ENTITY_ACTION, null),
             HolderAction::action
         );
     }
