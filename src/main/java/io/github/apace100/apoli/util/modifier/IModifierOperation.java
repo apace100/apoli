@@ -12,7 +12,7 @@ import java.util.Locale;
 public interface IModifierOperation {
 
     SerializableDataType<IModifierOperation> STRICT_DATA_TYPE =
-        SerializableDataType.defaultedRegistry(IModifierOperation.class, ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID);
+        SerializableDataType.registry(IModifierOperation.class, ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID, true);
 
     SerializableDataType<IModifierOperation> DATA_TYPE = new SerializableDataType<>(IModifierOperation.class,
         STRICT_DATA_TYPE::send, STRICT_DATA_TYPE::receive, (jsonElement -> {
