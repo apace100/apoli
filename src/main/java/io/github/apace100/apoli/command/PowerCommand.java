@@ -8,6 +8,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
 import net.minecraft.command.argument.IdentifierArgumentType;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.HoverEvent;
@@ -71,8 +72,9 @@ public class PowerCommand {
 							.executes(PowerCommand::removePower)))
 				)
 				.then(literal("clear")
+					.executes(context -> clearAllPowers(context, true))
 					.then(argument("targets", PowerHolderArgumentType.holders())
-						.executes(PowerCommand::clearAllPowers))
+						.executes(context -> clearAllPowers(context, false)))
 				)
 		);
 	}
@@ -409,12 +411,25 @@ public class PowerCommand {
 
 	}
 
-	private static int clearAllPowers(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+	private static int clearAllPowers(CommandContext<ServerCommandSource> context, boolean onlyTargetSelf) throws CommandSyntaxException {
 
 		ServerCommandSource source = context.getSource();
 
-		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
+		List<LivingEntity> targets = new LinkedList<>();
 		List<LivingEntity> processedTargets = new LinkedList<>();
+
+		if (!onlyTargetSelf) {
+			targets.addAll(PowerHolderArgumentType.getHolders(context, "targets"));
+		} else {
+
+			Entity self = source.getEntityOrThrow();
+			if (!(self instanceof LivingEntity livingSelf)) {
+				throw PowerHolderArgumentType.HOLDER_NOT_FOUND.create(self.getName());
+			}
+
+			targets.add(livingSelf);
+
+		}
 
 		int clearedPowers = 0;
 

@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.damage.TypeCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
@@ -71,6 +72,7 @@ public class DamageConditions {
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
                 .add("tag", SerializableDataType.tag(RegistryKeys.DAMAGE_TYPE)),
                 (data, dmg) -> dmg.getLeft().isIn(data.get("tag"))));
+        register(TypeCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Pair<DamageSource, Float>> conditionFactory) {
