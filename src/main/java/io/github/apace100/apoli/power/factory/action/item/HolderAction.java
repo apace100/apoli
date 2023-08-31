@@ -21,7 +21,7 @@ public class HolderAction {
         if(holder == null) {
             return;
         }
-        Consumer<Entity> entityAction = data.get("entity_action");
+        Consumer<Entity> entityAction = data.get("action");
         entityAction.accept(holder);
     }
 
