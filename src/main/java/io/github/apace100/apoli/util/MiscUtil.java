@@ -13,6 +13,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageSources;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.registry.Registries;
@@ -32,15 +33,15 @@ import java.util.function.Predicate;
 
 public final class MiscUtil {
 
-    public static void createExplosion(World world, ExplosionBehavior behavior, Vec3d pos, float power, boolean createFire, Explosion.DestructionType destructionType) {
-        createExplosion(world, null, behavior, pos, power, createFire, destructionType);
+    public static void createExplosion(World world, Vec3d pos, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
+        createExplosion(world, null, pos, power, createFire, destructionType, behavior);
     }
 
-    public static void createExplosion(World world, Entity entity, ExplosionBehavior behavior, Vec3d pos, float power, boolean createFire, Explosion.DestructionType destructionType) {
-        createExplosion(world, entity, world.getDamageSources().explosion(null), behavior, pos.getX(), pos.getY(), pos.getZ(), power, createFire, destructionType);
+    public static void createExplosion(World world, Entity entity, Vec3d pos, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
+        createExplosion(world, entity, world.getDamageSources().explosion(null), pos.getX(), pos.getY(), pos.getZ(), power, createFire, destructionType, behavior);
     }
 
-    public static void createExplosion(World world, Entity entity, DamageSource damageSource, ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType) {
+    public static void createExplosion(World world, Entity entity, DamageSource damageSource, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
 
         Explosion explosion = new Explosion(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType);
 
@@ -64,12 +65,20 @@ public final class MiscUtil {
 
     }
 
-    public static ExplosionBehavior getExplosionBehavior(World world, Predicate<CachedBlockPosition> blockCondition, boolean invert) {
-        return new ExplosionBehavior() {
+    @Nullable
+    public static ExplosionBehavior getExplosionBehavior(World world, float indestructibleResistance, @Nullable Predicate<CachedBlockPosition> indestructibleCondition) {
+        return indestructibleCondition == null ? null : new ExplosionBehavior() {
 
             @Override
-            public boolean canDestroyBlock(Explosion explosion, BlockView blockView, BlockPos pos, BlockState state, float power) {
-                return invert != blockCondition.test(new CachedBlockPosition(world, pos, true));
+            public Optional<Float> getBlastResistance(Explosion explosion, BlockView blockView, BlockPos pos, BlockState blockState, FluidState fluidState) {
+
+                CachedBlockPosition cachedBlockPosition = new CachedBlockPosition(world, pos, true);
+
+                Optional<Float> defaultValue = super.getBlastResistance(explosion, world, pos, blockState, fluidState);
+                Optional<Float> newValue = indestructibleCondition.test(cachedBlockPosition) ? Optional.of(indestructibleResistance) : Optional.empty();
+
+                return defaultValue.isPresent() ? (newValue.isPresent() ? (defaultValue.get() > newValue.get() ? (defaultValue) : newValue) : defaultValue) : defaultValue;
+
             }
 
         };

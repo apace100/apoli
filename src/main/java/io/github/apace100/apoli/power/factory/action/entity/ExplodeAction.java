@@ -10,7 +10,6 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
-import net.minecraft.world.explosion.ExplosionBehavior;
 
 import java.util.function.Predicate;
 
@@ -26,18 +25,17 @@ public class ExplodeAction {
         Predicate<CachedBlockPosition> indestructibleCondition = data.get("indestructible");
         if (data.isPresent("destructible")) {
             Predicate<CachedBlockPosition> destructibleCondition = data.get("destructible");
-            indestructibleCondition = MiscUtil.combineOr(indestructibleCondition, destructibleCondition.negate());
+            indestructibleCondition = MiscUtil.combineOr(destructibleCondition.negate(), indestructibleCondition);
         }
 
-        ExplosionBehavior behavior = MiscUtil.getExplosionBehavior(world, indestructibleCondition, true);
         MiscUtil.createExplosion(
             world,
             entity,
-            indestructibleCondition != null ? behavior : null,
             entity.getPos(),
             data.getFloat("power"),
             data.getBoolean("create_fire"),
-            data.get("destruction_type")
+            data.get("destruction_type"),
+            MiscUtil.getExplosionBehavior(world, data.get("indestructible_resistance"), indestructibleCondition)
         );
 
     }
@@ -49,6 +47,7 @@ public class ExplodeAction {
                 .add("destruction_type", ApoliDataTypes.BACKWARDS_COMPATIBLE_DESTRUCTION_TYPE, Explosion.DestructionType.DESTROY)
                 .add("damage_self", SerializableDataTypes.BOOLEAN, true)
                 .add("indestructible", ApoliDataTypes.BLOCK_CONDITION, null)
+                .add("indestructible_resistance", SerializableDataTypes.FLOAT, 5.0f)
                 .add("destructible", ApoliDataTypes.BLOCK_CONDITION, null)
                 .add("create_fire", SerializableDataTypes.BOOLEAN, false),
             ExplodeAction::action
