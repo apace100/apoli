@@ -2,10 +2,10 @@ package io.github.apace100.apoli.data;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.InventoryPower;
+import io.github.apace100.apoli.screen.DynamicContainerScreenHandler;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.ScreenHandlerFactory;
-import net.minecraft.screen.ScreenHandlerType;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,47 +58,67 @@ public class DynamicContainerType {
             register(oldContainerType.getDynamicType());
         }
 
-        register(new DynamicContainerType("generic_9x1", 9, 1, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X1, syncId, playerInventory, inventory, rows)
-        ));
-
-        register(new DynamicContainerType("generic_9x2", 9, 2, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X2, syncId, playerInventory, inventory, rows)
-        ));
-
-        register(new DynamicContainerType("generic_9x3", 9, 3, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X3, syncId, playerInventory, inventory, rows)
-        ));
-
-        register(new DynamicContainerType("generic_9x4", 9, 4, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X4, syncId, playerInventory, inventory, rows)
-        ));
-
-        register(new DynamicContainerType("generic_9x5", 9, 5, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X5, syncId, playerInventory, inventory, rows)
-        ));
-
-        register(new DynamicContainerType("generic_9x6", 9, 6, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X6, syncId, playerInventory, inventory, rows)
-        ));
+        for (int i = 1; i <= 6; i++) {
+            register(DynamicContainerType.of("generic_9x" + i, 9, i));
+        }
 
     }
 
     private final Factory handlerFactory;
-
     private final String name;
+
     private final int columns;
     private final int rows;
 
-    public DynamicContainerType(String name, int columns, int rows, Factory handlerFactory) {
+    private DynamicContainerType(String name, int columns, int rows, Factory handlerFactory) {
         this.handlerFactory = handlerFactory;
-        this.name = name;
         this.columns = columns;
         this.rows = rows;
+        this.name = name;
+    }
+
+    public static DynamicContainerType of(String name, int columns, int rows, Factory factory) {
+        return new DynamicContainerType(name, columns, rows, factory);
+    }
+
+    private DynamicContainerType(String name, int columns, int rows) {
+        this(name, columns, rows, null);
+    }
+
+    public static DynamicContainerType of(String name, int columns, int rows) {
+        return new DynamicContainerType(name, columns, rows);
     }
 
     public ScreenHandlerFactory create(Inventory inventory) {
-        return handlerFactory.create(inventory, columns, rows);
+
+        if (handlerFactory != null) {
+            return handlerFactory.create(inventory, columns, rows);
+        }
+
+        return (syncId, playerInventory, player) -> new DynamicContainerScreenHandler(this, syncId, playerInventory, inventory);
+
+    }
+
+    public static DynamicContainerType fromNbt(NbtCompound nbt) {
+
+        String name = nbt.getString("Name");
+        int columns = nbt.getInt("Columns");
+        int rows = nbt.getInt("Rows");
+
+        return new DynamicContainerType(name, columns, rows);
+
+    }
+
+    public NbtCompound toNbt() {
+
+        NbtCompound containerTypeNbt = new NbtCompound();
+
+        containerTypeNbt.putString("Name", name);
+        containerTypeNbt.putInt("Columns", columns);
+        containerTypeNbt.putInt("Rows", rows);
+
+        return containerTypeNbt;
+
     }
 
     public String getName() {

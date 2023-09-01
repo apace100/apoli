@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.DynamicContainerType;
 import io.github.apace100.apoli.power.factory.PowerFactory;
@@ -29,48 +30,41 @@ public class InventoryPower extends Power implements Active, Inventory {
     private final Text containerTitle;
     private final ScreenHandlerFactory containerScreen;
     private final Predicate<ItemStack> dropOnDeathFilter;
+    private final Predicate<ItemStack> insertFilter;
+    private final DynamicContainerType specifiedContainerType;
 
     private final boolean shouldDropOnDeath;
     private final boolean recoverable;
     private final int containerSize;
 
+    private DynamicContainerType containerType;
+    private boolean opened = false;
+
     public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, boolean recoverable) {
-        this(type, entity, Text.translatable(containerTitle), containerType.getDynamicType(), shouldDropOnDeath, dropOnDeathFilter, new Key(), recoverable);
+        this(type, entity, Text.translatable(containerTitle), containerType.getDynamicType(), shouldDropOnDeath, dropOnDeathFilter, null, new Key(), recoverable);
     }
 
-    public InventoryPower(PowerType<?> powerType, LivingEntity livingEntity, Text containerTitle, DynamicContainerType dynamicContainerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, Key key, boolean recoverable) {
+    public InventoryPower(PowerType<?> powerType, LivingEntity livingEntity, Text containerTitle, DynamicContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, Predicate<ItemStack> insertFilter, Key key, boolean recoverable) {
         super(powerType, livingEntity);
-        this.containerSize = dynamicContainerType.getSize();
-        this.containerScreen = dynamicContainerType.create(this);
+        this.specifiedContainerType = containerType;
+        this.containerSize = containerType.getSize();
+        this.containerScreen = containerType.create(this);
         this.container = DefaultedList.ofSize(containerSize, ItemStack.EMPTY);
         this.containerTitle = containerTitle;
         this.shouldDropOnDeath = shouldDropOnDeath;
         this.dropOnDeathFilter = dropOnDeathFilter;
+        this.insertFilter = insertFilter;
         this.key = key;
         this.recoverable = recoverable;
     }
 
     public enum ContainerType {
 
-        CHEST("chest", name -> new DynamicContainerType(name, 9, 3, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x3(syncId, playerInventory, inventory)
-        )),
-
-        DOUBLE_CHEST("double_chest", name -> new DynamicContainerType(name, 9, 6, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x6(syncId, playerInventory, inventory)
-        )),
-
-        DROPPER("dropper", name -> new DynamicContainerType(name, 3, 3, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new Generic3x3ContainerScreenHandler(syncId, playerInventory, inventory)
-        )),
-
-        DISPENSER("dispenser", name -> new DynamicContainerType(name, 3, 3, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new Generic3x3ContainerScreenHandler(syncId, playerInventory, inventory)
-        )),
-
-        HOPPER("hopper", name -> new DynamicContainerType(name, 5, 1, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> new HopperScreenHandler(syncId, playerInventory, inventory)
-        ));
+        CHEST("chest", name -> DynamicContainerType.of(name, 9, 3)),
+        DOUBLE_CHEST("double_chest", name -> DynamicContainerType.of(name, 9, 6)),
+        DROPPER("dropper", name -> DynamicContainerType.of(name, 3, 3)),
+        DISPENSER("dispenser", name -> DynamicContainerType.of(name, 3, 3)),
+        HOPPER("hopper", name -> DynamicContainerType.of(name, 5, 1));
 
         private final String name;
         private final DynamicContainerType dynamicContainerType;
@@ -91,6 +85,11 @@ public class InventoryPower extends Power implements Active, Inventory {
     }
 
     @Override
+    public boolean isValid(int slot, ItemStack stack) {
+        return insertFilter == null || insertFilter.test(stack);
+    }
+
+    @Override
     public void onLost() {
         if (recoverable) {
             dropItemsOnLost();
@@ -99,21 +98,41 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void onUse() {
+
+        if (PowerHolderComponent.hasPower(entity, InventoryPower.class, InventoryPower::isOpened)) {
+            return;
+        }
+
         if (entity instanceof PlayerEntity playerEntity && !playerEntity.getWorld().isClient && isActive()) {
             playerEntity.openHandledScreen(new SimpleNamedScreenHandlerFactory(containerScreen, containerTitle));
         }
+
     }
 
     @Override
     public NbtCompound toTag() {
-        NbtCompound tag = new NbtCompound();
-        Inventories.writeNbt(tag, container);
-        return tag;
+
+        NbtCompound rootNbt = new NbtCompound();
+
+        Inventories.writeNbt(rootNbt, container);
+        rootNbt.putBoolean("Opened", opened);
+        rootNbt.put("ContainerType", specifiedContainerType.toNbt());
+
+        return rootNbt;
+
     }
 
     @Override
     public void fromTag(NbtElement tag) {
-        Inventories.readNbt((NbtCompound)tag, container);
+
+        if (!(tag instanceof NbtCompound rootNbt)) {
+            return;
+        }
+
+        Inventories.readNbt(rootNbt, container);
+        opened = rootNbt.getBoolean("Opened");
+        containerType = DynamicContainerType.fromNbt(rootNbt.getCompound("ContainerType"));
+
     }
 
     @Override
@@ -163,9 +182,27 @@ public class InventoryPower extends Power implements Active, Inventory {
         }
     }
 
+    @Override
+    public void onOpen(PlayerEntity player) {
+        opened = true;
+    }
+
+    @Override
+    public void onClose(PlayerEntity player) {
+        opened = false;
+    }
+
+    public boolean isOpened() {
+        return opened;
+    }
+
     @SuppressWarnings("unused")
     public DefaultedList<ItemStack> getContainer() {
         return container;
+    }
+
+    public DynamicContainerType getContainerType() {
+        return containerType;
     }
 
     @SuppressWarnings("unused")
@@ -233,6 +270,7 @@ public class InventoryPower extends Power implements Active, Inventory {
                 .add("container_type", ApoliDataTypes.BACKWARDS_COMPATIBLE_CONTAINER_TYPE, ContainerType.DROPPER.getDynamicType())
                 .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
                 .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("insert_filter", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Key())
                 .add("recoverable", SerializableDataTypes.BOOLEAN, true),
             data -> (powerType, livingEntity) -> new InventoryPower(
@@ -242,6 +280,7 @@ public class InventoryPower extends Power implements Active, Inventory {
                 data.get("container_type"),
                 data.get("drop_on_death"),
                 data.get("drop_on_death_filter"),
+                data.get("insert_filter"),
                 data.get("key"),
                 data.get("recoverable")
             )

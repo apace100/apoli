@@ -261,18 +261,21 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 
-    //  TODO: Create a dynamic screen handler with configurable rows and columns
     public static final SerializableDataType<DynamicContainerType> CONTAINER_TYPE = SerializableDataType.compound(
         DynamicContainerType.class,
         new SerializableData()
-            .add("type", SerializableDataTypes.STRING)
-            .add("columns", SerializableDataTypes.INT)
-            .add("rows", SerializableDataTypes.INT),
-        instance -> DynamicContainerType.get(instance.get("type")),
+            .add("columns", SerializableDataTypes.INT, 1)
+            .add("rows", SerializableDataTypes.INT, 1),
+        data -> DynamicContainerType.of(
+            "apoli:custom",
+            data.get("columns"),
+            data.get("rows")
+        ),
         (serializableData, dynamicContainerType) -> {
 
             SerializableData.Instance data = serializableData.new Instance();
-            data.set("type", dynamicContainerType.getName());
+
+            data.set("name", dynamicContainerType.getName());
             data.set("columns", dynamicContainerType.getColumns());
             data.set("rows", dynamicContainerType.getRows());
 
