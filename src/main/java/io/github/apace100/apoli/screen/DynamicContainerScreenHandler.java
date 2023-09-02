@@ -45,8 +45,8 @@ public class DynamicContainerScreenHandler extends SyncedGuiDescription {
             PowerHolderComponent.sync(playerEntity);
         }
 
-        int columns = containerType.getColumns();
-        int rows = containerType.getRows();
+        int columns = Math.max(containerType.getColumns(), 0);
+        int rows = Math.max(containerType.getRows(), 0);
 
         int slotSize = 18;
 
@@ -76,7 +76,7 @@ public class DynamicContainerScreenHandler extends SyncedGuiDescription {
         }
 
         //  Center player's inventory relative to the slot grid if the slot grid is bigger
-        int playerInvY = rows * slotSize + 15;
+        int playerInvY = rows * slotSize + 25;
         int playerInvX = columns > 9 ? ((columns - 9) / 2) * slotSize : 0;
         if (columns > 9 && columns % 2 == 0) {
             playerInvX += slotSize / 2;
