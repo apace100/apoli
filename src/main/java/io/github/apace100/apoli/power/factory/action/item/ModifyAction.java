@@ -14,13 +14,11 @@ import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.function.LootFunction;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class ModifyAction {
@@ -35,38 +33,22 @@ public class ModifyAction {
         Identifier itemModifierId = data.get("modifier");
         LootFunction itemModifier = server.getLootManager().getElement(LootDataType.ITEM_MODIFIERS, itemModifierId);
         if (itemModifier == null) {
-            Apoli.LOGGER.warn("Unknown item modifier (\"" + itemModifierId + "\") used in `modify` item action type");
+            Apoli.LOGGER.warn("Unknown item modifier \"{}\" used in `modify` item action type!", itemModifierId);
             return;
         }
 
-        RegistryKey<World> dimension = data.get("dimension");
-        ServerWorld world = server.getWorld(dimension);
-        if (world == null) {
-            Apoli.LOGGER.warn("Unknown dimension (\"" + dimension.getValue() + "\") used in `modify` item action type!");
-        }
+        ServerWorld overworld = server.getOverworld();
 
         ItemStack stack = worldAndStack.getRight();
+        BlockPos blockPos = overworld.getSpawnPos();
         Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity();
-        if (stackHolder != null) {
-            Apoli.LOGGER.warn("Using the dimension of the stack holder instead.");
-            world = (ServerWorld) stackHolder.getWorld();
-        } else {
-            Apoli.LOGGER.warn("Using the `minecraft:overworld` dimension instead.");
-            world = server.getOverworld();
-        }
 
-        Vec3d pos = data.isPresent("position") ? data.get("position") : world.getSpawnPos().toCenterPos();
-        BlockPos blockPos = BlockPos.ofFloored(pos);
-
-        LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(world)
-            .add(LootContextParameters.ORIGIN, pos)
+        LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(overworld)
+            .add(LootContextParameters.ORIGIN, blockPos.toCenterPos())
             .add(LootContextParameters.TOOL, stack)
             .addOptional(LootContextParameters.THIS_ENTITY, stackHolder)
-            .addOptional(LootContextParameters.BLOCK_STATE, world.getBlockState(blockPos))
-            .addOptional(LootContextParameters.BLOCK_ENTITY, world.getBlockEntity(blockPos))
             .build(ApoliLootContextTypes.ANY);
-        LootContext lootContext = new LootContext.Builder(lootContextParameterSet)
-            .build(null);
+        LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(null);
 
         ItemStack newStack = itemModifier.apply(stack, lootContext);
         ((MutableItemStack) stack).apoli$setFrom(newStack);
@@ -77,9 +59,7 @@ public class ModifyAction {
         return new ActionFactory<>(
             Apoli.identifier("modify"),
             new SerializableData()
-                .add("modifier", SerializableDataTypes.IDENTIFIER)
-                .add("position", SerializableDataTypes.VECTOR, null)
-                .add("dimension", SerializableDataTypes.DIMENSION, World.OVERWORLD),
+                .add("modifier", SerializableDataTypes.IDENTIFIER),
             ModifyAction::action
         );
     }
