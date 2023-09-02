@@ -50,6 +50,7 @@ public class DynamicContainerScreenHandler extends SyncedGuiDescription {
 
         int slotSize = 18;
 
+        //  TODO: Use a scroll panel for the slot grid panel
         WPlainPanel root = new WPlainPanel();
         WGridPanel slotGrid = new WGridPanel();
 
@@ -88,7 +89,7 @@ public class DynamicContainerScreenHandler extends SyncedGuiDescription {
             slotGridX += slotSize / 2;
         }
 
-        root.add(createPlayerInventoryPanel(), playerInvX, playerInvY);
+        root.add(createPlayerInventoryPanel(false), playerInvX, playerInvY);
         root.add(slotGrid, slotGridX, slotGridY);
 
         root.validate(this);
