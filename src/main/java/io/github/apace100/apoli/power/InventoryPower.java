@@ -152,14 +152,13 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public ItemStack removeStack(int slot, int amount) {
-        return container.get(slot).split(amount);
+        return getStack(slot).split(amount);
     }
 
     @Override
     public ItemStack removeStack(int slot) {
-        ItemStack stack = container.get(slot);
         setStack(slot, ItemStack.EMPTY);
-        return stack;
+        return getStack(slot);
     }
 
     @Override
