@@ -16,7 +16,9 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.screen.*;
+import net.minecraft.screen.ScreenHandlerFactory;
+import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
@@ -184,11 +186,13 @@ public class InventoryPower extends Power implements Active, Inventory {
     @Override
     public void onOpen(PlayerEntity player) {
         opened = true;
+        PowerHolderComponent.syncPower(player, this.getType());
     }
 
     @Override
     public void onClose(PlayerEntity player) {
         opened = false;
+        PowerHolderComponent.syncPower(player, this.getType());
     }
 
     public boolean isOpened() {
@@ -285,4 +289,18 @@ public class InventoryPower extends Power implements Active, Inventory {
             )
         ).allowCondition();
     }
+
+    public class FilteredSlot extends Slot {
+
+        public FilteredSlot(int index, int x, int y) {
+            super(InventoryPower.this, index, x, y);
+        }
+
+        @Override
+        public boolean canInsert(ItemStack stack) {
+            return insertFilter == null || insertFilter.test(stack);
+        }
+
+    }
+
 }
