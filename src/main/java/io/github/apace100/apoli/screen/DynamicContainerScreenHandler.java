@@ -127,6 +127,7 @@ public class DynamicContainerScreenHandler extends ScreenHandler {
 
     @Override
     public void onClosed(PlayerEntity player) {
+        super.onClosed(player);
         inventory.onClose(player);
     }
 
