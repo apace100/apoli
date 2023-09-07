@@ -6,6 +6,8 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.DynamicContainerType;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.slot.SlotBiFilter;
+import io.github.apace100.apoli.util.slot.SlotFilter;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -22,9 +24,13 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class InventoryPower extends Power implements Active, Inventory {
 
@@ -32,8 +38,10 @@ public class InventoryPower extends Power implements Active, Inventory {
     private final Text containerTitle;
     private final ScreenHandlerFactory containerScreen;
     private final Predicate<ItemStack> dropOnDeathFilter;
-    private final Predicate<ItemStack> insertFilter;
     private final DynamicContainerType specifiedContainerType;
+
+    private final List<SlotBiFilter> insertBiFilters;
+    private final boolean insertBiFiltersInclusive;
 
     private final boolean shouldDropOnDeath;
     private final boolean recoverable;
@@ -43,10 +51,10 @@ public class InventoryPower extends Power implements Active, Inventory {
     private boolean opened = false;
 
     public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, boolean recoverable) {
-        this(type, entity, Text.translatable(containerTitle), containerType.getDynamicType(), shouldDropOnDeath, dropOnDeathFilter, null, new Key(), recoverable);
+        this(type, entity, Text.translatable(containerTitle), containerType.getDynamicType(), shouldDropOnDeath, dropOnDeathFilter, null, true, new Key(), recoverable);
     }
 
-    public InventoryPower(PowerType<?> powerType, LivingEntity livingEntity, Text containerTitle, DynamicContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, Predicate<ItemStack> insertFilter, Key key, boolean recoverable) {
+    public InventoryPower(PowerType<?> powerType, LivingEntity livingEntity, Text containerTitle, DynamicContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, List<SlotBiFilter> insertBiFilters, boolean insertBiFiltersInclusive, Key key, boolean recoverable) {
         super(powerType, livingEntity);
         this.specifiedContainerType = containerType;
         this.containerSize = containerType.getSize();
@@ -55,7 +63,8 @@ public class InventoryPower extends Power implements Active, Inventory {
         this.containerTitle = containerTitle;
         this.shouldDropOnDeath = shouldDropOnDeath;
         this.dropOnDeathFilter = dropOnDeathFilter;
-        this.insertFilter = insertFilter;
+        this.insertBiFilters = insertBiFilters != null ? insertBiFilters : new LinkedList<>();
+        this.insertBiFiltersInclusive = insertBiFiltersInclusive;
         this.key = key;
         this.recoverable = recoverable;
     }
@@ -84,11 +93,6 @@ public class InventoryPower extends Power implements Active, Inventory {
             return dynamicContainerType;
         }
 
-    }
-
-    @Override
-    public boolean isValid(int slot, ItemStack stack) {
-        return insertFilter == null || insertFilter.test(stack);
     }
 
     @Override
@@ -150,6 +154,11 @@ public class InventoryPower extends Power implements Active, Inventory {
     @Override
     public ItemStack getStack(int slot) {
         return container.get(slot);
+    }
+
+    @Nullable
+    public ItemStack getNullableStack(Integer slot) {
+        return slot == null || slot < 0 || slot >= size() ? null : getStack(slot);
     }
 
     @Override
@@ -273,7 +282,8 @@ public class InventoryPower extends Power implements Active, Inventory {
                 .add("container_type", ApoliDataTypes.BACKWARDS_COMPATIBLE_CONTAINER_TYPE, ContainerType.DROPPER.getDynamicType())
                 .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
                 .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("insert_filter", ApoliDataTypes.ITEM_CONDITION, null)
+                .add("insert_bifilter", ApoliDataTypes.SLOT_BIFILTERS, null)
+                .add("insert_bifilter_inclusive", SerializableDataTypes.BOOLEAN, true)
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Key())
                 .add("recoverable", SerializableDataTypes.BOOLEAN, true),
             data -> (powerType, livingEntity) -> new InventoryPower(
@@ -283,7 +293,8 @@ public class InventoryPower extends Power implements Active, Inventory {
                 data.get("container_type"),
                 data.get("drop_on_death"),
                 data.get("drop_on_death_filter"),
-                data.get("insert_filter"),
+                data.get("insert_bifilter"),
+                data.get("insert_bifilter_inclusive"),
                 data.get("key"),
                 data.get("recoverable")
             )
@@ -292,13 +303,47 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     public class FilteredSlot extends Slot {
 
+        private final int index;
         public FilteredSlot(int index, int x, int y) {
             super(InventoryPower.this, index, x, y);
+            this.index = index;
         }
 
         @Override
         public boolean canInsert(ItemStack stack) {
-            return insertFilter == null || insertFilter.test(stack);
+
+            if (insertBiFilters.isEmpty()) {
+                return true;
+            }
+
+            Stream<SlotBiFilter> matchingBiFilters = insertBiFilters
+                .stream()
+                .filter(biFilter -> biFilter.testSlot(biFilter.getLeft(), index));
+
+            if (insertBiFiltersInclusive) {
+                return matchingBiFilters
+                    .allMatch(slotBiFilter -> testBiFilter(slotBiFilter, stack));
+            } else {
+                return matchingBiFilters
+                    .anyMatch(slotBiFilter -> testBiFilter(slotBiFilter, stack));
+            }
+
+        }
+
+        private boolean testBiFilter(SlotBiFilter slotBiFilter, ItemStack insertingStack) {
+
+            SlotFilter insertingToSlotFilter = slotBiFilter.getLeft();
+            SlotFilter onSlotFilter = slotBiFilter.getRight();
+
+            Integer onSlot = onSlotFilter != null ? (onSlotFilter.slot() != null ? (onSlotFilter.slot()) : null) : null;
+            ItemStack onSlotStack = InventoryPower.this.getNullableStack(onSlot);
+
+            if (onSlot == null || (onSlotStack != null && onSlotFilter.testStack(onSlotStack))) {
+                return (insertingToSlotFilter == null || insertingToSlotFilter.test(index, insertingStack));
+            }
+
+            return true;
+
         }
 
     }

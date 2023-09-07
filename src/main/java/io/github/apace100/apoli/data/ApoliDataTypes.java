@@ -13,6 +13,8 @@ import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.power.factory.condition.ConditionTypes;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.slot.SlotBiFilter;
+import io.github.apace100.apoli.util.slot.SlotFilter;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
@@ -291,6 +293,52 @@ public class ApoliDataTypes {
         jsonElement -> jsonElement instanceof JsonPrimitive jsonPrimitive && jsonPrimitive.isString() ?
                        DynamicContainerType.get(jsonPrimitive.getAsString()) : CONTAINER_TYPE.read(jsonElement)
     );
+
+    public static final SerializableDataType<SlotFilter> SLOT_FILTER = SerializableDataType.compound(
+        SlotFilter.class,
+        new SerializableData()
+            .add("slot", SerializableDataTypes.INT, null)
+            .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null),
+        data -> new SlotFilter(
+            data.get("slot"),
+            data.get("item_condition")
+        ),
+        (serializableData, slotFilter) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("slot", slotFilter.slot());
+            data.set("item_condition", slotFilter.stackPredicate());
+
+            return data;
+
+        }
+    );
+
+    public static final SerializableDataType<List<SlotFilter>> SLOT_FILTERS = SerializableDataType.list(SLOT_FILTER);
+
+    public static final SerializableDataType<SlotBiFilter> SLOT_BIFILTER = SerializableDataType.compound(
+        SlotBiFilter.class,
+        new SerializableData()
+            .add("inserting_to_slot_filter", ApoliDataTypes.SLOT_FILTER, null)
+            .add("on_slot_filter", ApoliDataTypes.SLOT_FILTER, null),
+        data -> new SlotBiFilter(
+            data.get("inserting_to_slot_filter"),
+            data.get("on_slot_filter")
+        ),
+        (serializableData, slotBiFilter) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("inserting_to_slot_filter", slotBiFilter.getLeft());
+            data.set("on_slot_filter", slotBiFilter.getRight());
+
+            return data;
+
+        }
+    );
+
+    public static final SerializableDataType<List<SlotBiFilter>> SLOT_BIFILTERS = SerializableDataType.list(SLOT_BIFILTER);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);
