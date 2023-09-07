@@ -22,7 +22,6 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
     private final int rows;
 
     private final int playerInventoryTitleOffsetX;
-    private final int inventoryTitleOffsetX;
 
     private final int playerInventorySlotsOffsetX;
     private final int playerInventorySlotsOffsetY;
@@ -46,32 +45,40 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
         int halvedSlotSize = SLOT_SIZE / 2;
         int columnDiff = (columns > 9 ? columns - 9 : 9 - columns) / 2;
 
-        this.playerInventoryTitleOffsetX = columns > 9 ? columnDiff * SLOT_SIZE : 0;
-        this.inventoryTitleOffsetX = columns < 9 ? columnDiff * SLOT_SIZE : 0;
-
-        int playerInventorySlotsOffsetX = columns > 9 ? columnDiff * SLOT_SIZE : 0;
-        int inventorySlotsOffsetX = columns < 9 ? columnDiff * SLOT_SIZE : 0;
-
+        //  Calculate the offsets used for filling the GUI with a repeating texture
         int fillOffsetX = fillWidth < 9 ? ((9 - fillWidth) / 2) * SLOT_SIZE : 0;
-        if (fillWidth % 2 == 0) {
+        if (fillWidth < 9 && fillWidth % 2 == 0) {
             fillOffsetX += halvedSlotSize;
         }
 
+        //  Calculate the offsets used for the titles of the inventories
+        int playerInventoryTitleOffsetX = columns > 9 ? columnDiff * SLOT_SIZE : 0;
+
+        //  Calculate the offsets used for the slots of the inventories
+        int playerInventorySlotsOffsetX = columns > 9 ? columnDiff * SLOT_SIZE : 0;
+        int inventorySlotsOffsetX = columns < 9 ? columnDiff * SLOT_SIZE : 0;
+
         if (columns % 2 == 0) {
+
             if (columns > 9) {
+                playerInventoryTitleOffsetX += halvedSlotSize;
                 playerInventorySlotsOffsetX += halvedSlotSize;
             } else {
                 inventorySlotsOffsetX += halvedSlotSize;
             }
-        }
 
-        this.playerInventorySlotsOffsetX = playerInventorySlotsOffsetX;
-        this.inventorySlotsOffsetX = inventorySlotsOffsetX;
-        this.playerInventorySlotsOffsetY = rows * SLOT_SIZE;
-        this.inventorySlotsOffsetY = 18;
+        }
 
         this.fillOffsetX = fillOffsetX;
         this.fillOffsetY = 18;
+
+        this.playerInventoryTitleOffsetX = playerInventoryTitleOffsetX;
+
+        this.playerInventorySlotsOffsetX = playerInventorySlotsOffsetX;
+        this.inventorySlotsOffsetX = inventorySlotsOffsetX;
+
+        this.playerInventorySlotsOffsetY = rows * SLOT_SIZE;
+        this.inventorySlotsOffsetY = 18;
 
     }
 
@@ -87,8 +94,14 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
 
     @Override
     protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
-        context.drawText(textRenderer, title, titleX + inventoryTitleOffsetX, titleY, 4210752, false);
+
+        int inventoryTitleWidth = textRenderer.getWidth(title);
+        int inventoryTitleOffsetX = Math.abs(backgroundWidth - inventoryTitleWidth) / 2;
+
+        //  TODO: Draw the inventory title as scrollable so it fits in the GUI
+        context.drawText(textRenderer, title, inventoryTitleOffsetX, titleY, 4210752, false);
         context.drawText(textRenderer, playerInventoryTitle, playerInventoryTitleX + playerInventoryTitleOffsetX, playerInventoryTitleY, 4210752, false);
+
     }
 
     @Override
