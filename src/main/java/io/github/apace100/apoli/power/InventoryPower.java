@@ -30,7 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 public class InventoryPower extends Power implements Active, Inventory {
 
@@ -310,27 +309,33 @@ public class InventoryPower extends Power implements Active, Inventory {
         }
 
         @Override
-        public boolean canInsert(ItemStack stack) {
+        public boolean canInsert(ItemStack insertingStack) {
 
             if (insertBiFilters.isEmpty()) {
                 return true;
             }
 
-            Stream<SlotBiFilter> matchingBiFilters = insertBiFilters
+            List<SlotBiFilter> matchingSlotBiFilters = insertBiFilters
                 .stream()
-                .filter(biFilter -> biFilter.testSlot(biFilter.getLeft(), index));
+                .filter(slotBiFilter -> slotBiFilter.testSlot(slotBiFilter.getLeft(), index))
+                .toList();
+            boolean hasStrictMatches = insertBiFilters
+                .stream()
+                .anyMatch(slotBiFilter -> slotBiFilter.getLeft() != null
+                                       && slotBiFilter.getLeft().slot() != null
+                                       && slotBiFilter.getLeft().slot() == index);
 
-            if (insertBiFiltersInclusive) {
-                return matchingBiFilters
-                    .allMatch(slotBiFilter -> testBiFilter(slotBiFilter, stack));
-            } else {
-                return matchingBiFilters
-                    .anyMatch(slotBiFilter -> testBiFilter(slotBiFilter, stack));
+            if (insertBiFiltersInclusive && !hasStrictMatches) {
+                return true;
             }
+
+            return matchingSlotBiFilters
+                .stream()
+                .anyMatch(slotBiFilter -> testSlotBiFilter(slotBiFilter, insertingStack));
 
         }
 
-        private boolean testBiFilter(SlotBiFilter slotBiFilter, ItemStack insertingStack) {
+        private boolean testSlotBiFilter(SlotBiFilter slotBiFilter, ItemStack insertingStack) {
 
             SlotFilter insertingToSlotFilter = slotBiFilter.getLeft();
             SlotFilter onSlotFilter = slotBiFilter.getRight();
@@ -342,7 +347,7 @@ public class InventoryPower extends Power implements Active, Inventory {
                 return (insertingToSlotFilter == null || insertingToSlotFilter.test(index, insertingStack));
             }
 
-            return true;
+            return insertBiFiltersInclusive;
 
         }
 
