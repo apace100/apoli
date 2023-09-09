@@ -7,7 +7,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.ScreenHandlerProvider;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -18,15 +17,13 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
     private static final Identifier TEXTURE = Apoli.identifier("textures/gui/container/dynamic.png");
     private static final int SLOT_SIZE = 18;
 
-    private final int columns;
+    private final int totalSize;
     private final int rows;
 
     private final int playerInventoryTitleOffsetX;
 
     private final int playerInventorySlotsOffsetX;
     private final int playerInventorySlotsOffsetY;
-    private final int inventorySlotsOffsetX;
-    private final int inventorySlotsOffsetY;
 
     private final int fillWidth;
     private final int fillOffsetX;
@@ -35,15 +32,15 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
     public DynamicContainerScreen(DynamicContainerScreenHandler screenHandler, PlayerInventory playerInventory, Text title) {
         super(screenHandler, playerInventory, title);
 
-        this.columns = Math.max(handler.getColumns(), 1);
+        int columns = Math.max(handler.getColumns(), 1);
         this.rows = Math.max(handler.getRows(), 1);
+        this.totalSize = columns * rows;
         this.fillWidth = Math.max(columns, 5);
         this.backgroundWidth = Math.max(columns, 9) * SLOT_SIZE + 16;
         this.backgroundHeight = rows * SLOT_SIZE + 121;
         this.playerInventoryTitleY = backgroundHeight - 88;
 
         int halvedSlotSize = SLOT_SIZE / 2;
-        int columnDiff = (columns > 9 ? columns - 9 : 9 - columns) / 2;
 
         //  Calculate the offsets used for filling the GUI with a repeating texture
         int fillOffsetX = fillWidth < 9 ? ((9 - fillWidth) / 2) * SLOT_SIZE : 0;
@@ -51,34 +48,18 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
             fillOffsetX += halvedSlotSize;
         }
 
-        //  Calculate the offsets used for the titles of the inventories
-        int playerInventoryTitleOffsetX = columns > 9 ? columnDiff * SLOT_SIZE : 0;
-
-        //  Calculate the offsets used for the slots of the inventories
-        int playerInventorySlotsOffsetX = columns > 9 ? columnDiff * SLOT_SIZE : 0;
-        int inventorySlotsOffsetX = columns < 9 ? columnDiff * SLOT_SIZE : 0;
-
-        if (columns % 2 == 0) {
-
-            if (columns > 9) {
-                playerInventoryTitleOffsetX += halvedSlotSize;
-                playerInventorySlotsOffsetX += halvedSlotSize;
-            } else {
-                inventorySlotsOffsetX += halvedSlotSize;
-            }
-
+        //  Calculate the offsets used for the title and slots of the player inventory
+        int playerInventoryOffsetX = columns > 9 ? ((columns - 9) / 2) * SLOT_SIZE : 0;
+        if (columns > 9 && columns % 2 == 0) {
+            playerInventoryOffsetX += halvedSlotSize;
         }
 
         this.fillOffsetX = fillOffsetX;
         this.fillOffsetY = 18;
 
-        this.playerInventoryTitleOffsetX = playerInventoryTitleOffsetX;
-
-        this.playerInventorySlotsOffsetX = playerInventorySlotsOffsetX;
-        this.inventorySlotsOffsetX = inventorySlotsOffsetX;
-
+        this.playerInventoryTitleOffsetX = playerInventoryOffsetX;
+        this.playerInventorySlotsOffsetX = playerInventoryOffsetX;
         this.playerInventorySlotsOffsetY = rows * SLOT_SIZE;
-        this.inventorySlotsOffsetY = 18;
 
     }
 
@@ -107,7 +88,7 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
     @Override
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
 
-        //  Fill the top and bottom parts of the GUI
+        //  Fill the top and bottom slice of the GUI
         for (int columnIndex = 0; columnIndex < fillWidth; columnIndex++) {
             context.drawTexture(TEXTURE, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, y, 8, 0, 18, 18);
             context.drawTexture(TEXTURE, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, rows * SLOT_SIZE + fillOffsetY + y, 8, 35, 18, 8);
@@ -119,8 +100,7 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
         context.drawTexture(TEXTURE, fillOffsetX + x, rows * SLOT_SIZE + fillOffsetY + y, 0, 35, 8, 8);
         context.drawTexture(TEXTURE, fillWidth * SLOT_SIZE + fillOffsetX + x + 8, rows * SLOT_SIZE + fillOffsetY + y, 25, 35, 8, 8);
 
-        //  Draw the slots of the inventory
-        int invIndex = 0;
+        //  Draw the middle slices of the GUI
         for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
 
             //  Draw the left and right borders of the GUI
@@ -132,24 +112,20 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
                 context.drawTexture(TEXTURE, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, rowIndex * SLOT_SIZE + fillOffsetY + y, 8, 18, 18, 18);
             }
 
-            //  Draw the slots of the GUI
-            for (int columnIndex = 0; columnIndex < columns; columnIndex++) {
-
-                ItemStack cursorStack = handler.getCursorStack();
-                Slot slot = handler.getSlot(invIndex++);
-
-                //  If the cursor stack is either empty or cannot be inserted into
-                //  the current slot, change the texture of the slot
-                int slotU = cursorStack.isEmpty() || slot.canInsert(cursorStack) ? 35 : 56;
-                context.drawTexture(TEXTURE, columnIndex * SLOT_SIZE + inventorySlotsOffsetX + x + 7, rowIndex * SLOT_SIZE + inventorySlotsOffsetY + y - 1, slotU, 17, 19, 19);
-
-            }
-
         }
 
         //  Draw the player's inventory
         context.drawTexture(TEXTURE, playerInventorySlotsOffsetX + x, playerInventorySlotsOffsetY + y + 27, 0, 47, 176, 100);
 
+    }
+
+    public boolean withinBounds(Slot slot) {
+        return slot.getIndex() >= 0 && slot.getIndex() < totalSize;
+    }
+
+    public void drawSlot(DrawContext context, Slot slot, int textureU, int textureV, int size) {
+        size += 1;
+        context.drawTexture(TEXTURE, slot.x - 1, slot.y - 1, textureU, textureV, size, size);
     }
 
 }

@@ -69,6 +69,7 @@
 		"EntityParticleMixin",
 		"EntityRenderDispatcherMixin",
 		"GameRendererMixin",
+		"HandledScreenMixin",
 		"InGameHudMixin",
 		"InGameOverlayRendererMixin",
 		"ItemStackMixinClient",
