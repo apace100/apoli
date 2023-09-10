@@ -343,6 +343,8 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<SlotBiFilter>> SLOT_BIFILTERS = SerializableDataType.list(SLOT_BIFILTER);
 
+    public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
+
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);
     }

@@ -3,6 +3,7 @@ package io.github.apace100.apoli.screen;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.DynamicContainerType;
 import io.github.apace100.apoli.power.InventoryPower;
+import io.github.apace100.apoli.util.TextAlignment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -14,6 +15,7 @@ import net.minecraft.screen.slot.Slot;
 public class DynamicContainerScreenHandler extends ScreenHandler {
 
     private final Inventory inventory;
+    private final TextAlignment titleAlignment;
 
     private final int totalSize;
     private final int columns;
@@ -39,6 +41,9 @@ public class DynamicContainerScreenHandler extends ScreenHandler {
             otherInventory = inventoryPower != null ? inventoryPower : new SimpleInventory(containerType.getSize());
 
         }
+
+        titleAlignment = otherInventory instanceof InventoryPower inventoryPower ? inventoryPower.getContainerTitleAlignment()
+                                                                                 : TextAlignment.CENTER;
 
         inventory = otherInventory;
         inventory.onOpen(playerEntity);
@@ -129,6 +134,10 @@ public class DynamicContainerScreenHandler extends ScreenHandler {
     public void onClosed(PlayerEntity player) {
         super.onClosed(player);
         inventory.onClose(player);
+    }
+
+    public TextAlignment getTitleAlignment() {
+        return titleAlignment;
     }
 
     public int getColumns() {

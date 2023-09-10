@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.screen.widget;
 
+import io.github.apace100.apoli.util.TextAlignment;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
@@ -9,15 +10,19 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 
-// TODO: Implement methods for aligning the text
 @Environment(EnvType.CLIENT)
 public class ScrollingTextWidget extends AbstractTextWidget {
 
+    private TextAlignment textAlignment = TextAlignment.CENTER;
     private final boolean hasShadow;
 
     public ScrollingTextWidget(int x, int y, int width, int height, Text text, boolean hasShadow, TextRenderer textRenderer) {
         super(x, y, width, height, text, textRenderer);
         this.hasShadow = hasShadow;
+    }
+
+    public void setAlignment(TextAlignment textAlignment) {
+        this.textAlignment = textAlignment;
     }
 
     @Override
@@ -28,18 +33,18 @@ public class ScrollingTextWidget extends AbstractTextWidget {
         int top = this.getY();
         int bottom = this.getY() + this.getHeight();
 
-        drawScrollingText(context, getTextRenderer(), this.getMessage(), left, top, right, bottom, getTextColor(), hasShadow);
+        drawScrollingText(context, getTextRenderer(), this.getMessage(), textAlignment, left, top, right, bottom, getTextColor(), hasShadow);
 
     }
 
-    protected static void drawScrollingText(DrawContext context, TextRenderer textRenderer, Text text, int left, int top, int right, int bottom, int color, boolean hasShadow) {
+    protected static void drawScrollingText(DrawContext context, TextRenderer textRenderer, Text text, TextAlignment textAlignment, int left, int top, int right, int bottom, int color, boolean hasShadow) {
 
         int textWidth = textRenderer.getWidth(text);
         int height = (top + bottom - 9) / 2 + 1;
         int width = right - left;
 
         if (textWidth <= width) {
-            context.drawText(textRenderer, text, ((left + right) - textWidth) / 2, height, color, hasShadow);
+            context.drawText(textRenderer, text, textAlignment.horizontal(left, right, textWidth), height, color, hasShadow);
             return;
         }
 

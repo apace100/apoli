@@ -73,6 +73,8 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
         ScrollingTextWidget inventoryTitleWidget = new ScrollingTextWidget(fillOffsetX + x + 7, y + 6, fillWidth * SLOT_SIZE, 9, title, false, textRenderer);
 
         inventoryTitleWidget.setTextColor(4210752);
+        inventoryTitleWidget.setAlignment(handler.getTitleAlignment());
+
         addDrawableChild(inventoryTitleWidget);
 
     }
