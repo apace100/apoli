@@ -16,42 +16,41 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public class FireProjectileAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
 
-        if (entity.getWorld().isClient) return;
+        if (!(entity.getWorld() instanceof ServerWorld serverWorld)) {
+            return;
+        }
 
-        ServerWorld serverWorld = (ServerWorld) entity.getWorld();
+        EntityType<?> entityType = data.get("entity_type");
+        NbtCompound entityNbt = data.get("tag");
+        Random random = serverWorld.getRandom();
+
+        Vec3d rotationVector = entity.getRotationVector();
+        Vec3d velocity = entity.getVelocity();
+        Vec3d verticalOffset = entity
+            .getPos()
+            .add(0, entity.getEyeHeight(entity.getPose()), 0);
+
+        float divergence = data.get("divergence");
+        float speed = data.get("speed");
+        float pitch = entity.getPitch();
+        float yaw = entity.getYaw();
+
         int count = data.get("count");
-
         for (int i = 0; i < count; i++) {
 
-            EntityType<?> entityType = data.get("entity_type");
-            NbtCompound entityNbt = data.get("tag");
-            float yaw = entity.getYaw();
-            float pitch = entity.getPitch();
+            Entity entityToSpawn = MiscUtil
+                .getEntityWithPassengers(serverWorld, entityType, entityNbt, verticalOffset, yaw, pitch)
+                .orElse(null);
 
-            Optional<Entity> opt$entityToSpawn = MiscUtil.getEntityWithPassengers(
-                serverWorld,
-                entityType,
-                entityNbt,
-                entity.getPos().add(0, entity.getEyeHeight(entity.getPose()), 0),
-                yaw,
-                pitch
-            );
-            if (opt$entityToSpawn.isEmpty()) return;
-
-            Vec3d rotationVector = entity.getRotationVector();
-            Vec3d velocity = entity.getVelocity();
-            Entity entityToSpawn = opt$entityToSpawn.get();
-            Random random = serverWorld.getRandom();
-
-            float divergence = data.get("divergence");
-            float speed = data.get("speed");
+            if (entityToSpawn == null) {
+                return;
+            }
 
             if (entityToSpawn instanceof ProjectileEntity projectileToSpawn) {
 
@@ -64,24 +63,31 @@ public class FireProjectileAction {
                 projectileToSpawn.setOwner(entity);
                 projectileToSpawn.setVelocity(entity, pitch, yaw, 0F, speed, divergence);
 
-            }
+            } else {
 
-            else {
-
-                float  j = 0.017453292F;
+                float j = 0.017453292F;
                 double k = 0.007499999832361937D;
 
                 float l = -MathHelper.sin(yaw * j) * MathHelper.cos(pitch * j);
                 float m = -MathHelper.sin(pitch * j);
                 float n =  MathHelper.cos(yaw * j) * MathHelper.cos(pitch * j);
 
-                Vec3d vec3d = new Vec3d(l, m, n)
+                Vec3d entityToSpawnVelocity = new Vec3d(l, m, n)
                     .normalize()
                     .add(random.nextGaussian() * k * divergence, random.nextGaussian() * k * divergence, random.nextGaussian() * k * divergence)
                     .multiply(speed);
 
-                entityToSpawn.setVelocity(vec3d);
+                entityToSpawn.setVelocity(entityToSpawnVelocity);
                 entityToSpawn.addVelocity(velocity.x, entity.isOnGround() ? 0.0D : velocity.y, velocity.z);
+
+            }
+
+            if (!entityNbt.isEmpty()) {
+
+                NbtCompound mergedNbt = entityToSpawn.writeNbt(new NbtCompound());
+                mergedNbt.copyFrom(entityNbt);
+
+                entityToSpawn.readNbt(mergedNbt);
 
             }
 
@@ -100,7 +106,7 @@ public class FireProjectileAction {
                 .add("divergence", SerializableDataTypes.FLOAT, 1F)
                 .add("speed", SerializableDataTypes.FLOAT, 1.5F)
                 .add("count", SerializableDataTypes.INT, 1)
-                .add("tag", SerializableDataTypes.NBT, null)
+                .add("tag", SerializableDataTypes.NBT, new NbtCompound())
                 .add("projectile_action", ApoliDataTypes.ENTITY_ACTION, null),
             FireProjectileAction::action
         );
