@@ -46,10 +46,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Mixin(LivingEntity.class)
@@ -316,18 +313,13 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // SetEntityGroupPower
-    @Inject(at = @At("HEAD"), method = "getGroup", cancellable = true)
-    public void getGroup(CallbackInfoReturnable<EntityGroup> info) {
-        if((Object)this instanceof LivingEntity) {
-            PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
-            List<SetEntityGroupPower> groups = component.getPowers(SetEntityGroupPower.class);
-            if(groups.size() > 0) {
-                if(groups.size() > 1) {
-                    Apoli.LOGGER.warn("Entity " + this.getDisplayName().toString() + " has two instances of SetEntityGroupPower.");
-                }
-                info.setReturnValue(groups.get(0).group);
-            }
-        }
+    @ModifyReturnValue(method = "getGroup", at = @At("RETURN"))
+    private EntityGroup apoli$replaceGroup(EntityGroup original) {
+        return PowerHolderComponent.getPowers(this, SetEntityGroupPower.class)
+            .stream()
+            .max(Comparator.comparing(SetEntityGroupPower::getPriority))
+            .map(SetEntityGroupPower::getGroup)
+            .orElse(original);
     }
 
     // SPRINT_JUMP
