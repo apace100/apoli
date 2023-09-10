@@ -3,8 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -45,56 +43,53 @@ public class ItemOnItemPower extends Power {
         this.clickType = clickType;
     }
 
-    public boolean doesApply(ItemStack using, ItemStack on, ClickType click) {
-        if(click != this.clickType) return false;
-        if(usingItemCondition != null && !usingItemCondition.test(using)) {
-            return false;
-        }
-        if(onItemCondition != null && !onItemCondition.test(on)) {
-            return false;
-        }
-        return true;
+    public boolean doesApply(ItemStack usingStack, ItemStack onStack, ClickType clickType) {
+        return this.clickType == clickType
+            && (onItemCondition == null || onItemCondition.test(onStack))
+            && (usingItemCondition == null || usingItemCondition.test(usingStack));
     }
 
-    public ItemStack execute(ItemStack using, ItemStack on, Slot slot) {
-        ItemStack stack;
-        if(newStack != null) {
-            stack = newStack.copy();
-            if(resultItemAction != null) {
-                resultItemAction.accept(new Pair<>(entity.getWorld(), stack));
+    public void execute(ItemStack usingStack, ItemStack onStack, Slot slot) {
+
+        ItemStack resultStack = newStack != null ? newStack.copy()
+                                                 : resultFromOnStack > 0 ? onStack.split(resultFromOnStack) : onStack;
+
+        if (resultItemAction != null) {
+            resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
+        }
+
+        if (usingItemAction != null) {
+            usingItemAction.accept(new Pair<>(entity.getWorld(), usingStack));
+        }
+
+        if (onItemAction != null) {
+            onItemAction.accept(new Pair<>(entity.getWorld(), onStack));
+        }
+
+        tryOffer:
+        if (newStack != null || resultItemAction != null) {
+
+            if (!(entity instanceof PlayerEntity playerEntity)) {
+                break tryOffer;
             }
-        } else {
-            if(resultFromOnStack > 0) {
-                stack = on.split(resultFromOnStack);
+
+            if (slot.hasStack()) {
+                playerEntity.getInventory().offerOrDrop(resultStack);
             } else {
-                stack = on;
+                slot.setStackNoCallbacks(resultStack);
             }
-            if(resultItemAction != null) {
-                resultItemAction.accept(new Pair<>(entity.getWorld(), stack));
-            }
+
         }
-        if(usingItemAction != null) {
-            usingItemAction.accept(new Pair<>(entity.getWorld(), using));
-        }
-        if(onItemAction != null) {
-            onItemAction.accept(new Pair<>(entity.getWorld(), on));
-        }
-        if(newStack != null || resultItemAction != null) {
-            PlayerEntity player = (PlayerEntity)entity;
-            if(slot.getStack().isEmpty()) {
-                slot.setStackNoCallbacks(stack);
-            } else {
-                player.getInventory().offerOrDrop(stack);
-            }
-        }
-        if(entityAction != null) {
+
+        if (entityAction != null) {
             entityAction.accept(entity);
         }
-        return stack;
+
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("item_on_item"),
+        return new PowerFactory<>(
+            Apoli.identifier("item_on_item"),
             new SerializableData()
                 .add("click_type", ApoliDataTypes.CLICK_TYPE, ClickType.RIGHT)
                 .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
@@ -105,16 +100,19 @@ public class ItemOnItemPower extends Power {
                 .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            data ->
-                (type, player) -> new ItemOnItemPower(type, player,
-                        data.get("using_item_condition"),
-                        data.get("on_item_condition"),
-                        data.get("result"), data.get("using_item_action"),
-                        data.get("on_item_action"),
-                        data.get("result_item_action"),
-                        data.get("entity_action"),
-                        data.getInt("result_from_on_stack"),
-                        data.get("click_type")))
-            .allowCondition();
+            data -> (powerType, livingEntity) -> new ItemOnItemPower(
+                powerType,
+                livingEntity,
+                data.get("using_item_condition"),
+                data.get("on_item_condition"),
+                data.get("result"),
+                data.get("using_item_action"),
+                data.get("on_item_action"),
+                data.get("result_item_action"),
+                data.get("entity_action"),
+                data.get("result_from_on_stack"),
+                data.get("click_type")
+            )
+        ).allowCondition();
     }
 }
