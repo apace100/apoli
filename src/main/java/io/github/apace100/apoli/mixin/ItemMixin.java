@@ -40,12 +40,8 @@ public class ItemMixin {
         if(cir.getReturnValue()) {
             return;
         }
-        if (clickType != ClickType.RIGHT) {
-            return;
-        }
-        List<ItemOnItemPower> powers = PowerHolderComponent.getPowers(player, ItemOnItemPower.class).stream().filter(p -> p.doesApply(otherStack, stack)).collect(Collectors.toList());
-        for (ItemOnItemPower p :
-            powers) {
+        List<ItemOnItemPower> powers = PowerHolderComponent.getPowers(player, ItemOnItemPower.class).stream().filter(p -> p.doesApply(otherStack, stack, clickType)).collect(Collectors.toList());
+        for (ItemOnItemPower p : powers) {
             p.execute(otherStack, stack, slot);
         }
         if(powers.size() > 0) {
