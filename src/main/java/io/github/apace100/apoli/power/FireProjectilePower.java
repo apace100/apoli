@@ -22,7 +22,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public class FireProjectilePower extends ActiveCooldownPower {
@@ -150,20 +149,16 @@ public class FireProjectilePower extends ActiveCooldownPower {
         float yaw = entity.getYaw();
         float pitch = entity.getPitch();
 
-        Optional<Entity> opt$entityToSpawn = MiscUtil.getEntityWithPassengers(
-            serverWorld,
-            entityType,
-            tag,
-            entity.getPos().add(0, entity.getEyeHeight(entity.getPose()), 0),
-            yaw,
-            pitch
-        );
+        Entity entityToSpawn = MiscUtil
+            .getEntityWithPassengers(serverWorld, entityType, tag, entity.getPos().add(0, entity.getEyeHeight(entity.getPose()), 0), yaw, pitch)
+            .orElse(null);
 
-        if (opt$entityToSpawn.isEmpty()) return;
+        if (entityToSpawn == null) {
+            return;
+        }
 
         Vec3d rotationVector = entity.getRotationVector();
         Vec3d velocity = entity.getVelocity();
-        Entity entityToSpawn = opt$entityToSpawn.get();
         Random random = serverWorld.getRandom();
 
         if (entityToSpawn instanceof ProjectileEntity projectileToSpawn) {
@@ -198,9 +193,23 @@ public class FireProjectilePower extends ActiveCooldownPower {
 
         }
 
+        if (tag.isEmpty()) {
+
+            NbtCompound mergedTag = entityToSpawn.writeNbt(new NbtCompound());
+            mergedTag.copyFrom(tag);
+
+            entityToSpawn.readNbt(mergedTag);
+
+        }
+
         serverWorld.spawnNewEntityAndPassengers(entityToSpawn);
-        if (projectileAction != null) projectileAction.accept(entityToSpawn);
-        if (shooterAction != null) shooterAction.accept(entity);
+        if (projectileAction != null) {
+            projectileAction.accept(entityToSpawn);
+        }
+
+        if (shooterAction != null) {
+            shooterAction.accept(entity);
+        }
 
     }
 
@@ -217,7 +226,7 @@ public class FireProjectilePower extends ActiveCooldownPower {
                 .add("sound", SerializableDataTypes.SOUND_EVENT, null)
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
-                .add("tag", SerializableDataTypes.NBT, null)
+                .add("tag", SerializableDataTypes.NBT, new NbtCompound())
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key())
                 .add("projectile_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("shooter_action", ApoliDataTypes.ENTITY_ACTION, null),
