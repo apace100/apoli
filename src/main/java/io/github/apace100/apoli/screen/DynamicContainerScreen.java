@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.screen;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.screen.widget.ScrollingTextWidget;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawContext;
@@ -64,6 +65,19 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
     }
 
     @Override
+    protected void init() {
+
+        super.init();
+
+        //  Use scrolling text widget for the title of the inventory
+        ScrollingTextWidget inventoryTitleWidget = new ScrollingTextWidget(fillOffsetX + x + 7, y + 6, fillWidth * SLOT_SIZE, 9, title, false, textRenderer);
+
+        inventoryTitleWidget.setTextColor(4210752);
+        addDrawableChild(inventoryTitleWidget);
+
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
 
         this.renderBackground(context);
@@ -75,14 +89,7 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
 
     @Override
     protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
-
-        int inventoryTitleWidth = textRenderer.getWidth(title);
-        int inventoryTitleOffsetX = Math.abs(backgroundWidth - inventoryTitleWidth) / 2;
-
-        //  TODO: Draw the inventory title as scrollable so it fits in the GUI
-        context.drawText(textRenderer, title, inventoryTitleOffsetX, titleY, 4210752, false);
         context.drawText(textRenderer, playerInventoryTitle, playerInventoryTitleX + playerInventoryTitleOffsetX, playerInventoryTitleY, 4210752, false);
-
     }
 
     @Override
