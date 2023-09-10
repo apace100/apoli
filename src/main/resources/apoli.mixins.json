@@ -40,6 +40,7 @@
 		"LootContextMixin",
 		"LootContextParameterSetBuilderMixin",
 		"LootContextParameterSetMixin",
+		"LootContextTypesAccessor",
 		"LootDataLookupMixin",
 		"LootTableMixin",
 		"PhantomSpawnerMixin",

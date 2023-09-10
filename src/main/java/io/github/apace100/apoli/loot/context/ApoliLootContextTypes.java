@@ -31,7 +31,9 @@ public class ApoliLootContextTypes {
         LootContextType lootContextType = lootContextTypeBuilder.build();
         BiMap<Identifier, LootContextType> idAndLootContextTypeMap = LootContextTypesAccessor.getMap();
 
-        if (idAndLootContextTypeMap.containsKey(id)) throw new IllegalStateException("Loot table parameter set \"" + id + "\" is already registered!");
+        if (idAndLootContextTypeMap.containsKey(id)) {
+            throw new IllegalStateException("Loot table parameter set \"" + id + "\" is already registered!");
+        }
 
         idAndLootContextTypeMap.put(id, lootContextType);
         return lootContextType;
