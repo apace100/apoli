@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@SuppressWarnings("rawtypes")
 @Mixin(HandledScreen.class)
 public abstract class HandledScreenMixin extends Screen {
 
@@ -21,24 +22,29 @@ public abstract class HandledScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawItemInSlot(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/item/ItemStack;IILjava/lang/String;)V", shift = At.Shift.AFTER))
-    private void apoli$drawSlotTexture(DrawContext context, Slot slot, CallbackInfo ci, @Local(ordinal = 1) ItemStack cursorStack) {
+    @Inject(method = "drawSlot", at = @At("HEAD"))
+    private void apoli$drawSlotTexture(DrawContext context, Slot slot, CallbackInfo ci) {
+        if (((HandledScreen) (Object) this instanceof DynamicContainerScreen dynamicContainerScreen) && dynamicContainerScreen.withinBounds(slot)) {
+            dynamicContainerScreen.drawSlot(context, slot, 35, 17, 18);
+        }
+    }
 
-        //noinspection rawtypes
+    @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawItemInSlot(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/item/ItemStack;IILjava/lang/String;)V", shift = At.Shift.AFTER))
+    private void apoli$drawSlotOverlayTexture(DrawContext context, Slot slot, CallbackInfo ci, @Local(ordinal = 1) ItemStack cursorStack) {
+
         if (!((HandledScreen) (Object) this instanceof DynamicContainerScreen dynamicContainerScreen) || !dynamicContainerScreen.withinBounds(slot)) {
             return;
         }
 
-        //  Draw the texture for the slot
-        dynamicContainerScreen.drawSlot(context, slot, 35, 17, 18);
-
         //  Draw an overlay texture on the slot if the cursor item stack
         //  cannot be inserted into the said slot
-        if (!(cursorStack.isEmpty() || slot.canInsert(cursorStack))) {
-            RenderSystem.disableDepthTest();
-            dynamicContainerScreen.drawSlot(context, slot, 56, 17, 18);
-            RenderSystem.enableDepthTest();
+        if (cursorStack.isEmpty() || slot.canInsert(cursorStack)) {
+            return;
         }
+
+        RenderSystem.disableDepthTest();
+        dynamicContainerScreen.drawSlot(context, slot, 56, 17, 18);
+        RenderSystem.enableDepthTest();
 
     }
 
