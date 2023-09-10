@@ -1,7 +1,9 @@
 package io.github.apace100.apoli.screen;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.data.DynamicContainerType;
 import io.github.apace100.apoli.screen.widget.ScrollingTextWidget;
+import io.github.apace100.apoli.util.TextureUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawContext;
@@ -15,8 +17,8 @@ import net.minecraft.util.Identifier;
 @Environment(EnvType.CLIENT)
 public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreenHandler> implements ScreenHandlerProvider<DynamicContainerScreenHandler> {
 
-    private static final Identifier TEXTURE = Apoli.identifier("textures/gui/container/dynamic.png");
     private static final int SLOT_SIZE = 18;
+    private final Identifier texture;
 
     private final int totalSize;
     private final int rows;
@@ -33,8 +35,8 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
     public DynamicContainerScreen(DynamicContainerScreenHandler screenHandler, PlayerInventory playerInventory, Text title) {
         super(screenHandler, playerInventory, title);
 
-        int columns = Math.max(handler.getColumns(), 1);
-        this.rows = Math.max(handler.getRows(), 1);
+        int columns = handler.getColumns();
+        this.rows = handler.getRows();
         this.totalSize = columns * rows;
         this.fillWidth = Math.max(columns, 5);
         this.backgroundWidth = Math.max(columns, 9) * SLOT_SIZE + 16;
@@ -61,6 +63,18 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
         this.playerInventoryTitleOffsetX = playerInventoryOffsetX;
         this.playerInventorySlotsOffsetX = playerInventoryOffsetX;
         this.playerInventorySlotsOffsetY = rows * SLOT_SIZE;
+
+        //  Get the specified texture. If the specified texture does not exist, use the default texture instead
+        this.texture = TextureUtil
+            .tryLoadingTexture(handler.getSpriteLocation())
+            .orElseGet(() -> {
+
+                Identifier defaultTexture = DynamicContainerType.DEFAULT_SPRITE_LOCATION;
+                Apoli.LOGGER.warn("Loading texture " + defaultTexture + " for dynamic container screen instead...");
+
+                return defaultTexture;
+
+            });
 
     }
 
@@ -99,32 +113,32 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
 
         //  Fill the top and bottom slice of the GUI
         for (int columnIndex = 0; columnIndex < fillWidth; columnIndex++) {
-            context.drawTexture(TEXTURE, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, y, 8, 0, 18, 18);
-            context.drawTexture(TEXTURE, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, rows * SLOT_SIZE + fillOffsetY + y, 8, 35, 18, 8);
+            context.drawTexture(texture, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, y, 8, 0, 18, 18);
+            context.drawTexture(texture, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, rows * SLOT_SIZE + fillOffsetY + y, 8, 35, 18, 8);
         }
 
         //  Draw the top-left, top-right, bottom-left and bottom-right corners of the GUI
-        context.drawTexture(TEXTURE, fillOffsetX + x, y, 0, 0, 8, 18);
-        context.drawTexture(TEXTURE, fillWidth * SLOT_SIZE + fillOffsetX + x + 8, y, 25, 0, 8, 18);
-        context.drawTexture(TEXTURE, fillOffsetX + x, rows * SLOT_SIZE + fillOffsetY + y, 0, 35, 8, 8);
-        context.drawTexture(TEXTURE, fillWidth * SLOT_SIZE + fillOffsetX + x + 8, rows * SLOT_SIZE + fillOffsetY + y, 25, 35, 8, 8);
+        context.drawTexture(texture, fillOffsetX + x, y, 0, 0, 8, 18);
+        context.drawTexture(texture, fillWidth * SLOT_SIZE + fillOffsetX + x + 8, y, 25, 0, 8, 18);
+        context.drawTexture(texture, fillOffsetX + x, rows * SLOT_SIZE + fillOffsetY + y, 0, 35, 8, 8);
+        context.drawTexture(texture, fillWidth * SLOT_SIZE + fillOffsetX + x + 8, rows * SLOT_SIZE + fillOffsetY + y, 25, 35, 8, 8);
 
         //  Draw the middle slices of the GUI
         for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
 
             //  Draw the left and right borders of the GUI
-            context.drawTexture(TEXTURE, fillOffsetX + x, rowIndex * SLOT_SIZE + fillOffsetY + y, 0, 18, 8, 18);
-            context.drawTexture(TEXTURE, fillWidth * SLOT_SIZE + fillOffsetX + x + 8, rowIndex * SLOT_SIZE + fillOffsetY + y, 25, 18, 8, 18);
+            context.drawTexture(texture, fillOffsetX + x, rowIndex * SLOT_SIZE + fillOffsetY + y, 0, 18, 8, 18);
+            context.drawTexture(texture, fillWidth * SLOT_SIZE + fillOffsetX + x + 8, rowIndex * SLOT_SIZE + fillOffsetY + y, 25, 18, 8, 18);
 
             //  Fill the GUI with a repeating texture
             for (int columnIndex = 0; columnIndex < fillWidth; columnIndex++) {
-                context.drawTexture(TEXTURE, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, rowIndex * SLOT_SIZE + fillOffsetY + y, 8, 18, 18, 18);
+                context.drawTexture(texture, columnIndex * SLOT_SIZE + fillOffsetX + x + 8, rowIndex * SLOT_SIZE + fillOffsetY + y, 8, 18, 18, 18);
             }
 
         }
 
         //  Draw the player's inventory
-        context.drawTexture(TEXTURE, playerInventorySlotsOffsetX + x, playerInventorySlotsOffsetY + y + 27, 0, 47, 176, 100);
+        context.drawTexture(texture, playerInventorySlotsOffsetX + x, playerInventorySlotsOffsetY + y + 27, 0, 47, 176, 100);
 
     }
 
@@ -134,7 +148,7 @@ public class DynamicContainerScreen extends HandledScreen<DynamicContainerScreen
 
     public void drawSlot(DrawContext context, Slot slot, int textureU, int textureV, int size) {
         size += 1;
-        context.drawTexture(TEXTURE, slot.x - 1, slot.y - 1, textureU, textureV, size, size);
+        context.drawTexture(texture, slot.x - 1, slot.y - 1, textureU, textureV, size, size);
     }
 
 }

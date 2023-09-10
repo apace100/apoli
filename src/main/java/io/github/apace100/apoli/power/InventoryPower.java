@@ -5,7 +5,6 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.DynamicContainerType;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.util.TextAlignment;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.slot.SlotBiFilter;
 import io.github.apace100.apoli.util.slot.SlotFilter;
@@ -19,8 +18,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.screen.ScreenHandlerFactory;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.screen.*;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -36,7 +34,6 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     private final DefaultedList<ItemStack> container;
     private final Text containerTitle;
-    private final TextAlignment containerTitleAlignment;
     private final ScreenHandlerFactory containerScreen;
     private final Predicate<ItemStack> dropOnDeathFilter;
     private final DynamicContainerType specifiedContainerType;
@@ -52,17 +49,16 @@ public class InventoryPower extends Power implements Active, Inventory {
     private boolean opened = false;
 
     public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, boolean recoverable) {
-        this(type, entity, Text.translatable(containerTitle), TextAlignment.CENTER, containerType.getDynamicType(), shouldDropOnDeath, dropOnDeathFilter, null, true, new Key(), recoverable);
+        this(type, entity, Text.translatable(containerTitle), containerType.getDynamicType(), shouldDropOnDeath, dropOnDeathFilter, null, true, new Key(), recoverable);
     }
 
-    public InventoryPower(PowerType<?> powerType, LivingEntity livingEntity, Text containerTitle, TextAlignment containerTitleAlignment,DynamicContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, List<SlotBiFilter> insertBiFilters, boolean insertBiFiltersInclusive, Key key, boolean recoverable) {
+    public InventoryPower(PowerType<?> powerType, LivingEntity livingEntity, Text containerTitle,DynamicContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, List<SlotBiFilter> insertBiFilters, boolean insertBiFiltersInclusive, Key key, boolean recoverable) {
         super(powerType, livingEntity);
         this.specifiedContainerType = containerType;
         this.containerSize = containerType.getSize();
         this.containerScreen = containerType.create(this);
         this.container = DefaultedList.ofSize(containerSize, ItemStack.EMPTY);
         this.containerTitle = containerTitle;
-        this.containerTitleAlignment = containerTitleAlignment;
         this.shouldDropOnDeath = shouldDropOnDeath;
         this.dropOnDeathFilter = dropOnDeathFilter;
         this.insertBiFilters = insertBiFilters != null ? insertBiFilters : new LinkedList<>();
@@ -73,11 +69,25 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     public enum ContainerType {
 
-        CHEST("chest", name -> DynamicContainerType.of(name, 9, 3)),
-        DOUBLE_CHEST("double_chest", name -> DynamicContainerType.of(name, 9, 6)),
-        DROPPER("dropper", name -> DynamicContainerType.of(name, 3, 3)),
-        DISPENSER("dispenser", name -> DynamicContainerType.of(name, 3, 3)),
-        HOPPER("hopper", name -> DynamicContainerType.of(name, 5, 1));
+        CHEST("chest", name -> DynamicContainerType.of(name, 9, 3, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x3(syncId, playerInventory)
+        )),
+
+        DOUBLE_CHEST("double_chest", name -> DynamicContainerType.of(name, 9, 6, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x6(syncId, playerInventory)
+        )),
+
+        DROPPER("dropper", name -> DynamicContainerType.of(name, 3, 3, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> new Generic3x3ContainerScreenHandler(syncId, playerInventory, inventory)
+        )),
+
+        DISPENSER("dispenser", name -> DynamicContainerType.of(name, 3, 3, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> new Generic3x3ContainerScreenHandler(syncId, playerInventory, inventory)
+        )),
+
+        HOPPER("hopper", name -> DynamicContainerType.of(name, 5, 1, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> new HopperScreenHandler(syncId, playerInventory, inventory)
+        ));
 
         private final String name;
         private final DynamicContainerType dynamicContainerType;
@@ -224,10 +234,6 @@ public class InventoryPower extends Power implements Active, Inventory {
         return containerTitle.copy();
     }
 
-    public TextAlignment getContainerTitleAlignment() {
-        return containerTitleAlignment;
-    }
-
     @SuppressWarnings("unused")
     public ScreenHandlerFactory getContainerScreen() {
         return containerScreen;
@@ -285,7 +291,6 @@ public class InventoryPower extends Power implements Active, Inventory {
             Apoli.identifier("inventory"),
             new SerializableData()
                 .add("title", SerializableDataTypes.TEXT, Text.translatable("container.inventory"))
-                .add("title_alignment", ApoliDataTypes.TEXT_ALIGNMENT, TextAlignment.CENTER)
                 .add("container_type", ApoliDataTypes.BACKWARDS_COMPATIBLE_CONTAINER_TYPE, ContainerType.DROPPER.getDynamicType())
                 .add("drop_on_death", SerializableDataTypes.BOOLEAN, false)
                 .add("drop_on_death_filter", ApoliDataTypes.ITEM_CONDITION, null)
@@ -297,7 +302,6 @@ public class InventoryPower extends Power implements Active, Inventory {
                 powerType,
                 livingEntity,
                 data.get("title"),
-                data.get("title_alignment"),
                 data.get("container_type"),
                 data.get("drop_on_death"),
                 data.get("drop_on_death_filter"),

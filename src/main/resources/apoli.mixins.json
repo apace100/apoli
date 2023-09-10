@@ -78,6 +78,7 @@
 		"LivingEntityRendererMixin",
 		"MinecraftClientMixin",
 		"PlayerEntityRendererMixin",
+		"TextureManagerAccessor",
 		"WorldRendererMixin"
 	],
 	"injectors": {

@@ -3,9 +3,12 @@ package io.github.apace100.apoli.data;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.screen.DynamicContainerScreenHandler;
+import io.github.apace100.apoli.util.TextAlignment;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ScreenHandlerFactory;
+import net.minecraft.util.Identifier;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,35 +61,57 @@ public class DynamicContainerType {
             register(oldContainerType.getDynamicType());
         }
 
-        for (int i = 1; i <= 6; i++) {
-            register(DynamicContainerType.of("generic_9x" + i, 9, i));
-        }
+        register(DynamicContainerType.of("generic_9x1", 9, 1, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x1(syncId, playerInventory)
+        ));
+
+        register(DynamicContainerType.of("generic_9x2", 9, 2, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x2(syncId, playerInventory)
+        ));
+
+        register(DynamicContainerType.of("generic_9x3", 9, 3, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x3(syncId, playerInventory)
+        ));
+
+        register(DynamicContainerType.of("generic_9x4", 9, 4, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x4(syncId, playerInventory)
+        ));
+
+        register(DynamicContainerType.of("generic_9x5", 9, 5, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x5(syncId, playerInventory)
+        ));
+
+        register(DynamicContainerType.of("generic_9x6", 9, 6, (inventory, columns, rows) ->
+            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x6(syncId, playerInventory)
+        ));
 
     }
 
+    public static final Identifier DEFAULT_SPRITE_LOCATION = Apoli.identifier("textures/gui/container/dynamic.png");
+
+    private final TextAlignment titleAlignment;
+    private final Identifier spriteLocation;
     private final Factory handlerFactory;
     private final String name;
 
     private final int columns;
     private final int rows;
 
-    private DynamicContainerType(String name, int columns, int rows, Factory handlerFactory) {
+    private DynamicContainerType(String name, int columns, int rows, Factory handlerFactory, Identifier spriteLocation, TextAlignment titleAlignment) {
+        this.titleAlignment = titleAlignment;
+        this.spriteLocation = spriteLocation;
         this.handlerFactory = handlerFactory;
-        this.columns = columns;
-        this.rows = rows;
+        this.columns = Math.max(columns, 1);
+        this.rows = Math.max(rows, 1);
         this.name = name;
     }
 
     public static DynamicContainerType of(String name, int columns, int rows, Factory factory) {
-        return new DynamicContainerType(name, columns, rows, factory);
+        return new DynamicContainerType(name, columns, rows, factory, DEFAULT_SPRITE_LOCATION, TextAlignment.CENTER);
     }
 
-    private DynamicContainerType(String name, int columns, int rows) {
-        this(name, columns, rows, null);
-    }
-
-    public static DynamicContainerType of(String name, int columns, int rows) {
-        return new DynamicContainerType(name, columns, rows);
+    public static DynamicContainerType of(String name, int columns, int rows, Identifier spriteLocation, TextAlignment titleAlignment) {
+        return new DynamicContainerType(name, columns, rows, null, spriteLocation, titleAlignment);
     }
 
     public ScreenHandlerFactory create(Inventory inventory) {
@@ -101,11 +126,14 @@ public class DynamicContainerType {
 
     public static DynamicContainerType fromNbt(NbtCompound nbt) {
 
+        TextAlignment titleAlignment = TextAlignment.from(nbt.getString("TitleAlignment"));
+        Identifier spriteLocation = Identifier.tryParse(nbt.getString("SpriteLocation"));
         String name = nbt.getString("Name");
+
         int columns = nbt.getInt("Columns");
         int rows = nbt.getInt("Rows");
 
-        return new DynamicContainerType(name, columns, rows);
+        return new DynamicContainerType(name, columns, rows, null, spriteLocation, titleAlignment);
 
     }
 
@@ -114,11 +142,21 @@ public class DynamicContainerType {
         NbtCompound containerTypeNbt = new NbtCompound();
 
         containerTypeNbt.putString("Name", name);
+        containerTypeNbt.putString("TitleAlignment", titleAlignment.toString());
+        containerTypeNbt.putString("SpriteLocation", spriteLocation.toString());
         containerTypeNbt.putInt("Columns", columns);
         containerTypeNbt.putInt("Rows", rows);
 
         return containerTypeNbt;
 
+    }
+
+    public TextAlignment getTitleAlignment() {
+        return titleAlignment;
+    }
+
+    public Identifier getSpriteLocation() {
+        return spriteLocation;
     }
 
     public String getName() {

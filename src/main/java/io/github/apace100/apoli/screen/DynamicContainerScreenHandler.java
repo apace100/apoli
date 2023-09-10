@@ -11,11 +11,13 @@ import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.util.Identifier;
 
 public class DynamicContainerScreenHandler extends ScreenHandler {
 
-    private final Inventory inventory;
     private final TextAlignment titleAlignment;
+    private final Identifier spriteLocation;
+    private final Inventory inventory;
 
     private final int totalSize;
     private final int columns;
@@ -42,15 +44,16 @@ public class DynamicContainerScreenHandler extends ScreenHandler {
 
         }
 
-        titleAlignment = otherInventory instanceof InventoryPower inventoryPower ? inventoryPower.getContainerTitleAlignment()
-                                                                                 : TextAlignment.CENTER;
+        titleAlignment = containerType.getTitleAlignment();
+        spriteLocation = containerType.getSpriteLocation() != null ? containerType.getSpriteLocation()
+                                                                   : DynamicContainerType.DEFAULT_SPRITE_LOCATION;
 
         inventory = otherInventory;
         inventory.onOpen(playerEntity);
 
-        totalSize = Math.max(containerType.getSize(), 1);
-        columns = Math.max(containerType.getColumns(), 1);
-        rows = Math.max(containerType.getRows(), 1);
+        totalSize = containerType.getSize();
+        columns = containerType.getColumns();
+        rows = containerType.getRows();
 
         int slotSize = 18;
         int invIndex = 0;
@@ -138,6 +141,10 @@ public class DynamicContainerScreenHandler extends ScreenHandler {
 
     public TextAlignment getTitleAlignment() {
         return titleAlignment;
+    }
+
+    public Identifier getSpriteLocation() {
+        return spriteLocation;
     }
 
     public int getColumns() {

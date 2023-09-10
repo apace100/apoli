@@ -33,13 +33,13 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
@@ -266,21 +266,29 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class);
 
+    public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
+
     public static final SerializableDataType<DynamicContainerType> CONTAINER_TYPE = SerializableDataType.compound(
         DynamicContainerType.class,
         new SerializableData()
+            .add("title_alignment", ApoliDataTypes.TEXT_ALIGNMENT, TextAlignment.CENTER)
+            .add("sprite_location", SerializableDataTypes.IDENTIFIER, DynamicContainerType.DEFAULT_SPRITE_LOCATION)
             .add("columns", SerializableDataTypes.INT, 1)
             .add("rows", SerializableDataTypes.INT, 1),
         data -> DynamicContainerType.of(
             "apoli:custom",
-            data.get("columns"),
-            data.get("rows")
+            data.getInt("columns"),
+            data.getInt("rows"),
+            data.getId("sprite_location"),
+            data.get("title_alignment")
         ),
         (serializableData, dynamicContainerType) -> {
 
             SerializableData.Instance data = serializableData.new Instance();
 
             data.set("name", dynamicContainerType.getName());
+            data.set("title_alignment", dynamicContainerType.getTitleAlignment());
+            data.set("sprite_location", dynamicContainerType.getSpriteLocation());
             data.set("columns", dynamicContainerType.getColumns());
             data.set("rows", dynamicContainerType.getRows());
 
@@ -342,8 +350,6 @@ public class ApoliDataTypes {
     );
 
     public static final SerializableDataType<List<SlotBiFilter>> SLOT_BIFILTERS = SerializableDataType.list(SLOT_BIFILTER);
-
-    public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);

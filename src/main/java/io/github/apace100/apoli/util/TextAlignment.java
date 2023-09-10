@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.util;
 
+import java.util.Locale;
+
 public enum TextAlignment {
 
     LEFT((left, right, textWidth) -> left - 1),
@@ -13,6 +15,14 @@ public enum TextAlignment {
 
     public int horizontal(int left, int right, int textWidth) {
         return horizontalSupplier.apply(left, right, textWidth);
+    }
+
+    public static TextAlignment from(String name) {
+        return switch (name.toLowerCase(Locale.ROOT)) {
+            case "left" -> LEFT;
+            case "right" -> RIGHT;
+            default -> CENTER;
+        };
     }
 
     @FunctionalInterface
