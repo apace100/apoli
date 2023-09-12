@@ -23,7 +23,8 @@ import java.util.function.Predicate;
 public class EdibleItemPower extends Power implements Prioritized<EdibleItemPower> {
 
     private final Consumer<Entity> entityAction;
-    private final Consumer<Pair<World, ItemStack>> itemAction;
+    private final Consumer<Pair<World, ItemStack>> resultItemAction;
+    private final Consumer<Pair<World, ItemStack>> consumedItemAction;
 
     private final Predicate<ItemStack> itemCondition;
 
@@ -34,10 +35,11 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     private final int priority;
 
-    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> itemAction, Predicate<ItemStack> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
+    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> consumedItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<ItemStack> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
         super(powerType, livingEntity);
         this.entityAction = entityAction;
-        this.itemAction = itemAction;
+        this.consumedItemAction = consumedItemAction;
+        this.resultItemAction = resultItemAction;
         this.itemCondition = itemCondition;
         this.foodComponent = foodComponent;
         this.resultStack = resultStack;
@@ -61,10 +63,19 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
         }
     }
 
-    public void executeItemAction(ItemStack stack) {
-        if (itemAction != null) {
-            itemAction.accept(new Pair<>(entity.getWorld(), stack));
+    public ItemStack executeItemActions(ItemStack consumedStack) {
+
+        if (consumedItemAction != null) {
+            consumedItemAction.accept(new Pair<>(entity.getWorld(), consumedStack));
         }
+
+        ItemStack resultStack = this.resultStack != null ? this.resultStack.copy() : null;
+        if (resultStack != null && resultItemAction != null) {
+            resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
+        }
+
+        return resultStack;
+
     }
 
     public void applyEffects() {
@@ -88,10 +99,6 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
         return consumeAnimation;
     }
 
-    public ItemStack getResultStack() {
-        return resultStack != null ? resultStack.copy() : null;
-    }
-
     public SoundEvent getConsumeSoundEvent() {
         return consumeSoundEvent;
     }
@@ -102,6 +109,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
+                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("food_component", SerializableDataTypes.FOOD_COMPONENT)
                 .add("result_stack", SerializableDataTypes.ITEM_STACK, null)
@@ -113,6 +121,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
                 livingEntity,
                 data.get("entity_action"),
                 data.get("item_action"),
+                data.get("result_item_action"),
                 data.get("item_condition"),
                 data.get("food_component"),
                 data.get("result_stack"),

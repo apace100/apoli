@@ -9,6 +9,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import io.github.apace100.apoli.power.EdibleItemPower;
 import io.github.apace100.apoli.power.PreventItemUsePower;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -227,24 +228,25 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     }
 
     @ModifyExpressionValue(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
-    private TypedActionResult<ItemStack> apoli$consumeEdibleItem(TypedActionResult<ItemStack> original, World world, PlayerEntity user, Hand hand) {
+    private TypedActionResult<ItemStack> apoli$consumeCustomFood(TypedActionResult<ItemStack> original, World world, PlayerEntity user, Hand hand) {
 
-        Optional<EdibleItemPower> edibleItemPower = apoli$getEdiblePower();
-        if (edibleItemPower.isEmpty()) {
+        EdibleItemPower edibleItemPower = apoli$getEdiblePower().orElse(null);
+        if (edibleItemPower == null) {
             return original;
         }
 
-        ItemStack handStack = user.getStackInHand(hand);
-        if (user.canConsume(edibleItemPower.get().getFoodComponent().isAlwaysEdible())) {
-            user.setCurrentHand(hand);
+        ItemStack stackInHand = user.getStackInHand(hand);
+        if (!user.canConsume(edibleItemPower.getFoodComponent().isAlwaysEdible())) {
+            return original;
         }
 
-        return TypedActionResult.consume(handStack);
+        user.setCurrentHand(hand);
+        return TypedActionResult.consume(stackInHand);
 
     }
 
     @ModifyReturnValue(method = "finishUsing", at = @At("RETURN"))
-    private ItemStack apoli$afterConsuming(ItemStack original, World world, LivingEntity user) {
+    private ItemStack apoli$finishConsumingCustomFood(ItemStack original, World world, LivingEntity user) {
 
         EdibleItemPower edibleItemPower = apoli$getEdiblePower().orElse(null);
         if (edibleItemPower == null) {
@@ -255,36 +257,29 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
         edibleItemPower.executeEntityAction();
 
         ItemStack newStack = user.eatFood(world, this.copy());
-        ItemStack resultStack = null;
-
-        boolean matching = false;
+        ItemStack resultStack = edibleItemPower.executeItemActions(newStack);
 
         tryOfferingResultStack:
-        if (user instanceof PlayerEntity playerEntity && !playerEntity.isCreative()) {
+        if (resultStack != null) {
 
-            resultStack = edibleItemPower.getResultStack();
-            if (resultStack == null) {
+            if (newStack.isEmpty()) {
+                return resultStack;
+            }
+
+            if (ItemStack.canCombine(resultStack, newStack)) {
+                newStack.increment(1);
                 break tryOfferingResultStack;
             }
 
-            edibleItemPower.executeItemAction(resultStack);
-            matching = ItemStack.canCombine(resultStack, newStack);
-
-            if (!matching) {
+            if (user instanceof PlayerEntity playerEntity && !playerEntity.isCreative()) {
                 playerEntity.getInventory().offerOrDrop(resultStack);
+                break tryOfferingResultStack;
             }
 
+            InventoryUtil.throwItem(user, resultStack, false, false);
+
         }
 
-        if (!matching && (!(user instanceof PlayerEntity playerEntity) || !playerEntity.isCreative())) {
-            newStack.decrement(1);
-        }
-
-        if (newStack.isEmpty() && resultStack != null) {
-            return resultStack;
-        }
-
-        edibleItemPower.executeItemAction(newStack);
         return newStack;
 
     }
