@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import io.github.apace100.apoli.access.PotentiallyEdibleItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ItemOnItemPower;
 import io.github.apace100.apoli.power.ModifyFoodPower;
@@ -20,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(Item.class)
-public class ItemMixin {
+public abstract class ItemMixin implements PotentiallyEdibleItemStack {
 
     @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/TypedActionResult;fail(Ljava/lang/Object;)Lnet/minecraft/util/TypedActionResult;"), cancellable = true)
     private void tryItemAlwaysEdible(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {

@@ -124,6 +124,7 @@ public class PowerFactories {
         register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
         register(ModifyEnchantmentLevelPower::createFactory);
         register(ActionOnDeathPower::createFactory);
+        register(EdibleItemPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {
