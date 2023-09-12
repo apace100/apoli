@@ -8,6 +8,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
@@ -64,6 +65,19 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
         if (itemAction != null) {
             itemAction.accept(new Pair<>(entity.getWorld(), stack));
         }
+    }
+
+    public void applyEffects() {
+
+        if (entity.getWorld().isClient) {
+            return;
+        }
+
+        foodComponent.getStatusEffects()
+            .stream()
+            .filter(pair -> entity.getWorld().getRandom().nextFloat() < pair.getSecond())
+            .forEach(pair -> entity.addStatusEffect(new StatusEffectInstance(pair.getFirst())));
+
     }
 
     public FoodComponent getFoodComponent() {

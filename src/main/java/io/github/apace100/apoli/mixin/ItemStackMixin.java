@@ -251,6 +251,7 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
             return original;
         }
 
+        edibleItemPower.applyEffects();
         edibleItemPower.executeEntityAction();
 
         ItemStack newStack = user.eatFood(world, this.copy());
@@ -268,6 +269,10 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
             edibleItemPower.executeItemAction(resultStack);
             matching = ItemStack.canCombine(resultStack, newStack);
+
+            if (!matching) {
+                playerEntity.getInventory().offerOrDrop(resultStack);
+            }
 
         }
 
