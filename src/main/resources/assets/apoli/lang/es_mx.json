@@ -1,57 +1,90 @@
 {
-	"commands.apoli.grant.success.single": "Se le ha dado el poder %2$s a la entidad %1$s.",
-	"commands.apoli.grant.success.multiple": "Se le ha dado el poder %2$s a %1$s entidades.",
-	"commands.apoli.grant_from_source.success.single": "Se le ha dado el poder %2$s de la fuente %3$s a la entidad %1$s.",
-	"commands.apoli.grant_from_source.success.multiple": "Se le ha dado el poder %2$s de la fuente %3$s a %1$s entidades.",
-	"commands.apoli.grant.fail.single": "La entidad %s ya tenía el poder %s de la fuente %s.",
-	"commands.apoli.grant.fail.multiple": "Todas las %s entidades ya tenían el poder %s de la fuente %s.",
-	"commands.apoli.revoke.success.single": "Se le ha revocado el poder %2$s a la entidad %1$s.",
-	"commands.apoli.revoke.success.multiple": "Se le ha revocado el poder %2$s a %1$s entidades.",
-	"commands.apoli.revoke.fail.single": "La entidad %s no tenía el poder %s de la fuente %s.",
-	"commands.apoli.revoke.fail.multiple": "Ninguna de las entidades seleccionadas tenía el poder %s de la fuente %s.",
-	"commands.apoli.revoke_from_source.success.single": "Se le ha revocado el poder %2$s de la fuente %2$s a la entidad %1$s.",
-	"commands.apoli.revoke_from_source.success.multiple": "Se le ha revocado el poder %2$s de la fuente %2$s a %1$s entidades.",
-	"commands.apoli.revoke_all.success.single": "Se le han revocado %2$s poderes de la fuente %3$s a la entidad %1$s.",
-	"commands.apoli.revoke_all.success.multiple": "Se le han revocado %2$s poderes de la fuente %3$s a %1$s entidades.",
-	"commands.apoli.revoke_all.fail.single": "La entidad %s no tenía ningún poder de la fuente %s.",
-	"commands.apoli.revoke_all.fail.multiple": "Ninguna de las entidades seleccionadas tenía algún poder de la fuente %s.",
-	"commands.apoli.remove.success.single": "Se le ha removido el poder %2$s a la entidad %1$s",
-	"commands.apoli.remove.success.multiple": "Se le ha removido el poder %2$s a %1$s entidades.",
-	"commands.apoli.remove.fail.single": "La entidad %s no tenía el poder %s.",
-	"commands.apoli.remove.fail.multiple": "Ninguna de las entidades tenía el poder %s.",
-	"commands.apoli.clear.success.single": "Se le han eliminado %2$s poderes a la entidad %1$s.",
-	"commands.apoli.clear.success.multiple": "Se le han eliminado %2$s poderes a %1$s entidades.",
-	"commands.apoli.clear.fail.single": "La entidad %s no tenía ningún poder que eliminar.",
+
+	"argument.apoli.power_holder.not_found.multiple": "No living entities were found",
+	"argument.apoli.power_holder.not_found.single": "Entity %s is not a living entity",
+
 	"commands.apoli.clear.fail.multiple": "Ninguna de las entidades seleccionadas tenía poderes que eliminar.",
-	"commands.apoli.list.pass": "La entidad tiene %s poderes: [%s]",
+	"commands.apoli.clear.fail.single": "La entidad %s no tenía ningún poder que eliminar.",
+
+	"commands.apoli.clear.success.multiple": "Se le han eliminado %2$s poderes a %1$s entidades.",
+	"commands.apoli.clear.success.single": "Se le han eliminado %2$s poderes a la entidad %1$s.",
+
+	"commands.apoli.grant.fail.multiple": "Todas las %s entidades ya tenían el poder %s de la fuente %s.",
+	"commands.apoli.grant.fail.single": "La entidad %s ya tenía el poder %s de la fuente %s.",
+
+	"commands.apoli.grant.success.multiple": "Se le ha dado el poder %2$s a %1$s entidades.",
+	"commands.apoli.grant.success.single": "Se le ha dado el poder %2$s a la entidad %1$s.",
+
+	"commands.apoli.grant_from_source.success.multiple": "Se le ha dado el poder %2$s de la fuente %3$s a %1$s entidades.",
+	"commands.apoli.grant_from_source.success.single": "Se le ha dado el poder %2$s de la fuente %3$s a la entidad %1$s.",
+
 	"commands.apoli.list.fail": "La entidad seleccionada no está viva, así que no puede tener poderes.",
-	"commands.apoli.sources.pass": "La entidad %s tenía %s fuentes de las que consiguió el poder %s: [%s]",
+	"commands.apoli.list.pass": "La entidad tiene %s poderes: [%s]",
+
+	"commands.apoli.list.sources": "Sources: [%s]",
+	"commands.apoli.power_not_found": "Unknown power: %s",
+
+	"commands.apoli.remove.fail.multiple": "Ninguna de las entidades tenía el poder %s.",
+	"commands.apoli.remove.fail.single": "La entidad %s no tenía el poder %s.",
+
+	"commands.apoli.remove.success.multiple": "Se le ha removido el poder %2$s a %1$s entidades.",
+	"commands.apoli.remove.success.single": "Se le ha removido el poder %2$s a la entidad %1$s",
+
+	"commands.apoli.revoke.fail.multiple": "Ninguna de las entidades seleccionadas tenía el poder %s de la fuente %s.",
+	"commands.apoli.revoke.fail.single": "La entidad %s no tenía el poder %s de la fuente %s.",
+
+	"commands.apoli.revoke.success.multiple": "Se le ha revocado el poder %2$s a %1$s entidades.",
+	"commands.apoli.revoke.success.single": "Se le ha revocado el poder %2$s a la entidad %1$s.",
+
+	"commands.apoli.revoke_all.fail.multiple": "Ninguna de las entidades seleccionadas tenía algún poder de la fuente %s.",
+	"commands.apoli.revoke_all.fail.single": "La entidad %s no tenía ningún poder de la fuente %s.",
+
+	"commands.apoli.revoke_all.success.multiple": "Se le han revocado %2$s poderes de la fuente %3$s a %1$s entidades.",
+	"commands.apoli.revoke_all.success.single": "Se le han revocado %2$s poderes de la fuente %3$s a la entidad %1$s.",
+
+	"commands.apoli.revoke_from_source.success.multiple": "Se le ha revocado el poder %2$s de la fuente %2$s a %1$s entidades.",
+	"commands.apoli.revoke_from_source.success.single": "Se le ha revocado el poder %2$s de la fuente %2$s a la entidad %1$s.",
+
 	"commands.apoli.sources.fail": "La entidad %s es inerte o no tiene el poder %s.",
-	"commands.apoli.resource.invalid_entity": "La entidad seleccionada es inerte, así que no puede tener poderes.",
-	"tooltip.apoli.unusable.none.single": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.none.multiple": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.eat.single": "Incomible (%s)",
-	"tooltip.apoli.unusable.eat.multiple": "Incomible (%s)",
-	"tooltip.apoli.unusable.drink.single": "Imbebible (%s)",
-	"tooltip.apoli.unusable.drink.multiple": "Imbebible (%s)",
-	"tooltip.apoli.unusable.block.single": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.block.multiple": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.bow.single": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.bow.multiple": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.spear.single": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.spear.multiple": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.crossbow.single": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.crossbow.multiple": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.spyglass.single": "Inutilizable (%s)",
-	"tooltip.apoli.unusable.spyglass.multiple": "Inutilizable (%s)",
-	"text.autoconfig.power_config.title": "Configuración de Apoli",
-	"text.autoconfig.power_config.option.resourcesAndCooldowns": "Recursos y Cooldowns",
-	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetX": "HUD Offset X",
-	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetY": "HUD Offset Y",
+	"commands.apoli.sources.pass": "La entidad %s tenía %s fuentes de las que consiguió el poder %s: [%s]",
+
+	"death.attack.genericDamageOverTime": "%1$s died to a damage over time effect",
+	"death.attack.genericDamageOverTime.player": "%1$s died to a damage over time effect whilst fighting %2$s",
+
+	"text.apoli.cannot_sleep": "You cannot sleep",
+
 	"text.autoconfig.power_config.option.executeCommand": "Ejecución de Comandos.",
 	"text.autoconfig.power_config.option.executeCommand.permissionLevel": "Nivel de Permiso",
 	"text.autoconfig.power_config.option.executeCommand.showOutput": "Notificar ejecución de comandos en el chat",
+
+	"text.autoconfig.power_config.option.resourcesAndCooldowns": "Recursos y Cooldowns",
+	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetX": "HUD Offset X",
+	"text.autoconfig.power_config.option.resourcesAndCooldowns.hudOffsetY": "HUD Offset Y",
+
 	"text.autoconfig.power_config.option.tooltips": "Descripción de Objetos",
+
+	"text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compactar descripción de Usabilidad",
 	"text.autoconfig.power_config.option.tooltips.showUsabilityHints": "Mostrar Usabilidad",
-	"text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compactar descripción de Usabilidad"
+
+	"text.autoconfig.power_config.title": "Configuración de Apoli",
+
+	"tooltip.apoli.unusable.block.multiple": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.block.single": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.bow.multiple": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.bow.single": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.crossbow.multiple": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.crossbow.single": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.drink.multiple": "Imbebible (%s)",
+	"tooltip.apoli.unusable.drink.single": "Imbebible (%s)",
+	"tooltip.apoli.unusable.eat.multiple": "Incomible (%s)",
+	"tooltip.apoli.unusable.eat.single": "Incomible (%s)",
+	"tooltip.apoli.unusable.none.multiple": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.none.single": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.spear.multiple": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.spear.single": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.spyglass.multiple": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.spyglass.single": "Inutilizable (%s)",
+	"tooltip.apoli.unusable.toot_horn.multiple": "Untootable (%s)",
+	"tooltip.apoli.unusable.toot_horn.single": "Untootable (%s)"
+
 }

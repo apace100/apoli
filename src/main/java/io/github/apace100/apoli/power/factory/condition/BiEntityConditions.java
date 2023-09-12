@@ -19,26 +19,12 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
-import java.util.List;
 import java.util.function.Predicate;
 
 public class BiEntityConditions {
 
-    @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, pair) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BIENTITY_CONDITIONS),
-            (data, pair) -> ((List<ConditionFactory<Pair<Entity, Entity>>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(pair)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BIENTITY_CONDITIONS),
-            (data, pair) -> ((List<ConditionFactory<Pair<Entity, Entity>>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(pair)
-            )));
+        MetaConditions.register(ApoliDataTypes.BIENTITY_CONDITION, BiEntityConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("invert"), new SerializableData()
             .add("condition", ApoliDataTypes.BIENTITY_CONDITION),
             (data, pair) -> {

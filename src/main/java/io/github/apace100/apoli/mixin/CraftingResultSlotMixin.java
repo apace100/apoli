@@ -30,7 +30,7 @@ public class CraftingResultSlotMixin {
             if (!player.getWorld().isClient)
             {
                 PowerCraftingInventory pci = (PowerCraftingInventory) craftingInventory;
-                if (pci.getPower() instanceof ModifyCraftingPower mcp)
+                if (pci.apoli$getPower() instanceof ModifyCraftingPower mcp)
                 {
                     Optional<BlockPos> blockPos = ModifiedCraftingRecipe.getBlockFromInventory(craftingInventory);
                     mcp.executeActions(blockPos);

@@ -37,6 +37,8 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
     @Shadow public abstract @Nullable Entity getHolder();
 
+    @Shadow public abstract void setHolder(@Nullable Entity holder);
+
     @Unique
     private ItemStack apoli$usedItemStack;
 
@@ -44,23 +46,28 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     private Entity apoli$holdingEntity;
 
     @Override
-    public Entity getEntity() {
+    public Entity apoli$getEntity() {
+        return apoli$getEntity(true);
+    }
+
+    @Override
+    public Entity apoli$getEntity(boolean prioritiseVanillaHolder) {
         Entity vanillaHolder = getHolder();
-        if(vanillaHolder == null) {
+        if(!prioritiseVanillaHolder || vanillaHolder == null) {
             return apoli$holdingEntity;
         }
         return vanillaHolder;
     }
 
     @Override
-    public void setEntity(Entity entity) {
+    public void apoli$setEntity(Entity entity) {
         this.apoli$holdingEntity = entity;
     }
 
     @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void copyNewParams(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
         if (this.apoli$holdingEntity != null) {
-            ((EntityLinkedItemStack)itemStack).setEntity(apoli$holdingEntity);
+            ((EntityLinkedItemStack)itemStack).apoli$setEntity(apoli$holdingEntity);
         }
     }
 
@@ -153,14 +160,15 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     }
 
     @Override
-    public void setItem(Item item) {
+    public void apoli$setItem(Item item) {
         this.item = item;
     }
 
     @Override
-    public void setFrom(ItemStack stack) {
-        setItem(stack.getItem());
+    public void apoli$setFrom(ItemStack stack) {
+        apoli$setItem(stack.getItem());
         nbt = stack.getNbt();
         count = stack.getCount();
+        apoli$setEntity(((EntityLinkedItemStack)stack).apoli$getEntity(false));
     }
 }

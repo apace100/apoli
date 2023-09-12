@@ -10,6 +10,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
@@ -18,6 +19,7 @@ import net.minecraft.util.math.MathHelper;
 public class OverlayPower extends Power {
 
     private final Identifier texture;
+    private final Integer priority;
     private final float strength;
     private final float red;
     private final float green;
@@ -35,9 +37,10 @@ public class OverlayPower extends Power {
         BELOW_HUD, ABOVE_HUD
     }
 
-    public OverlayPower(PowerType<?> type, LivingEntity entity, Identifier texture, float strength, float red, float green, float blue, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson) {
+    public OverlayPower(PowerType<?> type, LivingEntity entity, Identifier texture, int priority, float strength, float red, float green, float blue, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson) {
         super(type, entity);
         this.texture = texture;
+        this.priority = priority;
         this.strength = strength;
         this.red = red;
         this.green = green;
@@ -46,6 +49,10 @@ public class OverlayPower extends Power {
         this.drawPhase = drawPhase;
         this.hideWithHud = hideWithHud;
         this.visibleInThirdPerson = visibleInThirdPerson;
+    }
+
+    public Integer getPriority() {
+        return priority;
     }
 
     public DrawPhase getDrawPhase() {
@@ -58,6 +65,13 @@ public class OverlayPower extends Power {
 
     public boolean doesHideWithHud() {
         return hideWithHud;
+    }
+
+    @Environment(EnvType.CLIENT)
+    public boolean shouldRender(GameOptions options, DrawPhase targetDrawPhase) {
+        return this.getDrawPhase() == targetDrawPhase
+            && (!options.hudHidden || !this.doesHideWithHud())
+            && (options.getPerspective().isFirstPerson() || this.shouldBeVisibleInThirdPerson());
     }
 
     @Environment(EnvType.CLIENT)
@@ -126,6 +140,7 @@ public class OverlayPower extends Power {
         return new PowerFactory<>(Apoli.identifier("overlay"),
             new SerializableData()
                 .add("texture", SerializableDataTypes.IDENTIFIER)
+                .add("priority", SerializableDataTypes.INT, 1)
                 .add("strength", SerializableDataTypes.FLOAT, 1.0F)
                 .add("red", SerializableDataTypes.FLOAT, 1.0F)
                 .add("green", SerializableDataTypes.FLOAT, 1.0F)
@@ -137,12 +152,13 @@ public class OverlayPower extends Power {
             data ->
                 (type, player) -> new OverlayPower(type, player,
                     data.getId("texture"),
+                    data.getInt("priority"),
                     data.getFloat("strength"),
                     data.getFloat("red"),
                     data.getFloat("green"),
                     data.getFloat("blue"),
-                    (OverlayPower.DrawMode) data.get("draw_mode"),
-                    (OverlayPower.DrawPhase) data.get("draw_phase"),
+                    data.get("draw_mode"),
+                    data.get("draw_phase"),
                     data.getBoolean("hide_with_hud"),
                     data.getBoolean("visible_in_third_person")))
             .allowCondition();

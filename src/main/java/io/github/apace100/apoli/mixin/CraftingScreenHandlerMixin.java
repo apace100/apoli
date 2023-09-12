@@ -30,7 +30,7 @@ public class CraftingScreenHandlerMixin {
 
     @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/recipe/RecipeManager;getFirstMatch(Lnet/minecraft/recipe/RecipeType;Lnet/minecraft/inventory/Inventory;Lnet/minecraft/world/World;)Ljava/util/Optional;"))
     private static void clearPowerCraftingInventory(ScreenHandler handler, World world, PlayerEntity player, RecipeInputInventory inventory, CraftingResultInventory resultInventory, CallbackInfo ci) {
-        if (inventory instanceof CraftingInventory craftingInventory) ((PowerCraftingInventory)craftingInventory).setPower(null);
+        if (inventory instanceof CraftingInventory craftingInventory) ((PowerCraftingInventory)craftingInventory).apoli$setPower(null);
     }
 
     @Inject(method = "canUse", at = @At("HEAD"), cancellable = true)
@@ -43,7 +43,7 @@ public class CraftingScreenHandlerMixin {
     @Inject(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void modifyOutputItems(PlayerEntity player, int index, CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack, Slot slot, ItemStack itemStack2) {
         if(input instanceof PowerCraftingInventory pci) {
-            if(pci.getPower() instanceof ModifyCraftingPower mcp) {
+            if(pci.apoli$getPower() instanceof ModifyCraftingPower mcp) {
                 mcp.applyAfterCraftingItemAction(itemStack2);
             }
         }

@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface ModifiableFoodEntity {
 
-    ItemStack getOriginalFoodStack();
-    void setOriginalFoodStack(ItemStack original);
+    ItemStack apoli$getOriginalFoodStack();
+    void apoli$setOriginalFoodStack(ItemStack original);
 
-    List<ModifyFoodPower> getCurrentModifyFoodPowers();
-    void setCurrentModifyFoodPowers(List<ModifyFoodPower> powers);
+    List<ModifyFoodPower> apoli$getCurrentModifyFoodPowers();
+    void apoli$setCurrentModifyFoodPowers(List<ModifyFoodPower> powers);
 }

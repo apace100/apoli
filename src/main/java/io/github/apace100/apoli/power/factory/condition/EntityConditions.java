@@ -6,7 +6,9 @@ import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
+import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.condition.entity.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
@@ -17,7 +19,6 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -35,8 +36,10 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
@@ -47,10 +50,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
@@ -60,19 +59,7 @@ public class EntityConditions {
 
     @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, entity) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.ENTITY_CONDITIONS),
-            (data, entity) -> ((List<ConditionFactory<Entity>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(entity)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.ENTITY_CONDITIONS),
-            (data, entity) -> ((List<ConditionFactory<Entity>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(entity)
-            )));
+        MetaConditions.register(ApoliDataTypes.ENTITY_CONDITION, EntityConditions::register);
         register(BlockCollisionCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("brightness"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -121,12 +108,12 @@ public class EntityConditions {
                 return false;
             }));
         register(new ConditionFactory<>(Apoli.identifier("submerged_in"), new SerializableData().add("fluid", SerializableDataTypes.FLUID_TAG),
-            (data, entity) -> ((SubmergableEntity)entity).isSubmergedInLoosely(data.get("fluid"))));
+            (data, entity) -> ((SubmergableEntity)entity).apoli$isSubmergedInLoosely(data.get("fluid"))));
         register(new ConditionFactory<>(Apoli.identifier("fluid_height"), new SerializableData()
             .add("fluid", SerializableDataTypes.FLUID_TAG)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.DOUBLE),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).getFluidHeightLoosely(data.get("fluid")), data.getDouble("compare_to"))));
+            (data, entity) -> ((Comparison)data.get("comparison")).compare(((SubmergableEntity)entity).apoli$getFluidHeightLoosely(data.get("fluid")), data.getDouble("compare_to"))));
         register(PowerCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("food_level"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -356,16 +343,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
             .add("tag", SerializableDataTypes.ENTITY_TAG),
             (data, entity) -> entity.getType().getRegistryEntry().isIn(data.get("tag"))));
-        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(),
-            (data, entity) -> {
-                if(entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()) {
-                    return true;
-                }
-                if(PowerHolderComponent.hasPower(entity, ClimbingPower.class)) {
-                    return true;
-                }
-                return false;
-            }));
+        register(ClimbingCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
             if(entity instanceof TameableEntity) {
                 return ((TameableEntity)entity).isTamed();
@@ -389,12 +367,13 @@ public class EntityConditions {
             return false;
         }));
         register(new ConditionFactory<>(Apoli.identifier("moving"), new SerializableData(),
-            (data, entity) -> ((MovingEntity)entity).isMoving()));
+            (data, entity) -> ((MovingEntity)entity).apoli$isMoving()));
         register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()
             .add("enchantment", SerializableDataTypes.ENCHANTMENT)
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT)
-            .add("calculation", SerializableDataTypes.STRING, "sum"),
+            .add("calculation", SerializableDataTypes.STRING, "sum")
+            .add("use_modifications", SerializableDataTypes.BOOLEAN, true),
             (data, entity) -> {
                 int value = 0;
                 if(entity instanceof LivingEntity le) {
@@ -403,11 +382,11 @@ public class EntityConditions {
                     switch(calculation) {
                         case "sum":
                             for(ItemStack stack : enchantment.getEquipment(le).values()) {
-                                value += EnchantmentHelper.getLevel(enchantment, stack);
+                                value += ModifyEnchantmentLevelPower.getLevel(le, enchantment, stack, data.getBoolean("use_modifications"));
                             }
                             break;
                         case "max":
-                            value = EnchantmentHelper.getEquipmentLevel(enchantment, le);
+                            value = ModifyEnchantmentLevelPower.getEquipmentLevel(enchantment, le, data.getBoolean("use_modifications"));
                             break;
                         default:
                             Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");
@@ -522,6 +501,8 @@ public class EntityConditions {
         register(RaycastCondition.getFactory());
         register(ElytraFlightPossibleCondition.getFactory());
         register(InventoryCondition.getFactory());
+        register(InSnowCondition.getFactory());
+        register(InThunderstormCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

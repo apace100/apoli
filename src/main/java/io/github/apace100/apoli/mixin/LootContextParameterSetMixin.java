@@ -13,12 +13,12 @@ public class LootContextParameterSetMixin implements ReplacingLootContextParamet
     private LootContextType apoli$lootContextType;
 
     @Override
-    public void setType(LootContextType type) {
+    public void apoli$setType(LootContextType type) {
         apoli$lootContextType = type;
     }
 
     @Override
-    public LootContextType getType() {
+    public LootContextType apoli$getType() {
         return apoli$lootContextType;
     }
 
