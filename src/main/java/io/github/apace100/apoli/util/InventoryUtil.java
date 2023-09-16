@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.ArgumentWrapper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,6 +20,7 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -248,7 +250,7 @@ public class InventoryUtil {
 
     }
 
-    private static final Map<Entity, ItemStack> ENTITY_EMPTY_STACK_MAP = new HashMap<>();
+    private static final Map<Entity, ItemStack> ENTITY_EMPTY_STACK_MAP = new ConcurrentHashMap<>();
 
     public static ItemStack getEntityLinkedEmptyStack(Entity entity) {
         return ENTITY_EMPTY_STACK_MAP.computeIfAbsent(entity, e -> new ItemStack((Void) null));
@@ -274,7 +276,7 @@ public class InventoryUtil {
             }
 
             ItemStack stack = stackReference.get();
-            if (!stack.isEmpty()) {
+            if (!stack.isEmpty() || emptyStackConsumer != null && stack == getEntityLinkedEmptyStack(entity)) {
                 itemStackConsumer.accept(stack);
                 continue;
             }
@@ -283,10 +285,12 @@ public class InventoryUtil {
                 continue;
             }
 
-            ItemStack newStack = getEntityLinkedEmptyStack(entity);
-            emptyStackConsumer.accept(newStack);
+            if (stack == ItemStack.EMPTY) {
+                ItemStack newStack = getEntityLinkedEmptyStack(entity);
+                emptyStackConsumer.accept(newStack);
 
-            ((MutableItemStack) stack).apoli$setFrom(newStack);
+                ((MutableItemStack) stack).apoli$setFrom(newStack);
+            }
 
         }
 
