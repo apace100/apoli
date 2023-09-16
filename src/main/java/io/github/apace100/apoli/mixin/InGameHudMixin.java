@@ -28,12 +28,12 @@ public class InGameHudMixin {
     @Shadow @Final private MinecraftClient client;
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;getCurrentGameMode()Lnet/minecraft/world/GameMode;", ordinal = 0))
-    private void renderOnHud(DrawContext context, float tickDelta, CallbackInfo ci) {
+    private void apoli$renderOnHud(DrawContext context, float tickDelta, CallbackInfo ci) {
 
-        //  Render overlays below the HUD
+        //  Render overlay powers over the vanilla overlays and below the vanilla status bars
         PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
             .stream()
-            .filter(overlayPower -> overlayPower.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
+            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
             .sorted(Comparator.comparing(OverlayPower::getPriority))
             .forEach(OverlayPower::render);
 

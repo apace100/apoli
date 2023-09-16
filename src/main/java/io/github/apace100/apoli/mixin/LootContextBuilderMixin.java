@@ -4,7 +4,6 @@ import io.github.apace100.apoli.access.ReplacingLootContext;
 import io.github.apace100.apoli.access.ReplacingLootContextParameterSet;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameterSet;
-import net.minecraft.loot.context.LootContextType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,6 +22,6 @@ public class LootContextBuilderMixin {
         ReplacingLootContextParameterSet rlcps = (ReplacingLootContextParameterSet) parameters;
 
         ReplacingLootContext rlc = (ReplacingLootContext) cir.getReturnValue();
-        rlc.setType(rlcps.getType());
+        rlc.apoli$setType(rlcps.apoli$getType());
     }
 }

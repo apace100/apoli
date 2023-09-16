@@ -5,7 +5,7 @@ import net.minecraft.registry.tag.TagKey;
 
 public interface SubmergableEntity {
 
-    boolean isSubmergedInLoosely(TagKey<Fluid> fluidTag);
+    boolean apoli$isSubmergedInLoosely(TagKey<Fluid> fluidTag);
 
-    double getFluidHeightLoosely(TagKey<Fluid> fluidTag);
+    double apoli$getFluidHeightLoosely(TagKey<Fluid> fluidTag);
 }

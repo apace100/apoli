@@ -15,7 +15,7 @@ public class DamageSourceMixin implements NameMutableDamageSource {
     private String apoli$mutableName;
 
     @Override
-    public void setName(String name) {
+    public void apoli$setName(String name) {
         apoli$mutableName = name;
     }
 

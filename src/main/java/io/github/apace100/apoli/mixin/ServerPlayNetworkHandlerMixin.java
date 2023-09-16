@@ -21,12 +21,12 @@ public class ServerPlayNetworkHandlerMixin {
 
     @Inject(method = "onClientStatus", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;respawnPlayer(Lnet/minecraft/server/network/ServerPlayerEntity;Z)Lnet/minecraft/server/network/ServerPlayerEntity;", ordinal = 0))
     private void saveEndRespawnStatus(ClientStatusC2SPacket packet, CallbackInfo ci) {
-        ((EndRespawningEntity)this.player).setEndRespawning(true);
+        ((EndRespawningEntity)this.player).apoli$setEndRespawning(true);
     }
 
     @Inject(method = "onClientStatus", at = @At(value = "INVOKE", target = "Lnet/minecraft/advancement/criterion/ChangedDimensionCriterion;trigger(Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/registry/RegistryKey;)V"))
     private void undoEndRespawnStatus(ClientStatusC2SPacket packet, CallbackInfo ci) {
-        ((EndRespawningEntity)this.player).setEndRespawning(false);
+        ((EndRespawningEntity)this.player).apoli$setEndRespawning(false);
     }
 
     @Inject(method = "onUpdateSelectedSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/c2s/play/UpdateSelectedSlotC2SPacket;getSelectedSlot()I", ordinal = 0))

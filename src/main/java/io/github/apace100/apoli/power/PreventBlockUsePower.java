@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.LivingEntity;
@@ -14,28 +13,28 @@ import java.util.function.Predicate;
 
 public class PreventBlockUsePower extends Power {
 
-    private final Predicate<CachedBlockPosition> predicate;
+    private final Predicate<CachedBlockPosition> blockCondition;
 
-    public PreventBlockUsePower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> predicate) {
+    public PreventBlockUsePower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition) {
         super(type, entity);
-        this.predicate = predicate;
+        this.blockCondition = blockCondition;
     }
 
     public boolean doesPrevent(WorldView world, BlockPos pos) {
-        if(predicate == null) {
-            return true;
-        }
-        CachedBlockPosition cbp = new CachedBlockPosition(world, pos, true);
-        return predicate.test(cbp);
+        return blockCondition == null || blockCondition.test(new CachedBlockPosition(world, pos, true));
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("prevent_block_use"),
+        return new PowerFactory<>(
+            Apoli.identifier("prevent_block_use"),
             new SerializableData()
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null),
-            data ->
-                (type, player) -> new PreventBlockUsePower(type, player,
-                    data.get("block_condition")))
-            .allowCondition();
+            data -> (powerType, livingEntity) -> new PreventBlockUsePower(
+                powerType,
+                livingEntity,
+                data.get("block_condition")
+            )
+        ).allowCondition();
     }
+
 }

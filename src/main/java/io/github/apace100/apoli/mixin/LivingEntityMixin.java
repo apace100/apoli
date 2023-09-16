@@ -1,9 +1,8 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.EntityLinkedItemStack;
-import io.github.apace100.apoli.access.HiddenEffectStatus;
-import io.github.apace100.apoli.access.ModifiableFoodEntity;
+import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.*;
@@ -16,6 +15,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
@@ -43,14 +43,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity {
+public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity, MovingEntity {
     @Shadow
     protected abstract float getJumpVelocity();
 
@@ -107,7 +105,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
                     effect.isAmbient(),
                     effect.shouldShowParticles(),
                     effect.shouldShowIcon(),
-                    ((HiddenEffectStatus) effect).getHiddenEffect(),
+                    ((HiddenEffectStatus) effect).apoli$getHiddenEffect(),
                     Optional.empty()
             );
         }
@@ -313,18 +311,13 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // SetEntityGroupPower
-    @Inject(at = @At("HEAD"), method = "getGroup", cancellable = true)
-    public void getGroup(CallbackInfoReturnable<EntityGroup> info) {
-        if((Object)this instanceof LivingEntity) {
-            PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
-            List<SetEntityGroupPower> groups = component.getPowers(SetEntityGroupPower.class);
-            if(groups.size() > 0) {
-                if(groups.size() > 1) {
-                    Apoli.LOGGER.warn("Entity " + this.getDisplayName().toString() + " has two instances of SetEntityGroupPower.");
-                }
-                info.setReturnValue(groups.get(0).group);
-            }
-        }
+    @ModifyReturnValue(method = "getGroup", at = @At("RETURN"))
+    private EntityGroup apoli$replaceGroup(EntityGroup original) {
+        return PowerHolderComponent.getPowers(this, SetEntityGroupPower.class)
+            .stream()
+            .max(Comparator.comparing(SetEntityGroupPower::getPriority))
+            .map(SetEntityGroupPower::getGroup)
+            .orElse(original);
     }
 
     // SPRINT_JUMP
@@ -347,29 +340,60 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
+
+    @Unique
+    private boolean apoli$activelyClimbing = false;
+
+    @Override
+    public boolean apoli$activelyClimbing() {
+        return apoli$activelyClimbing;
+    }
+
+    @Inject(method = "baseTick", at = @At("TAIL"))
+    private void apoli$getPrevY(CallbackInfo ci) {
+        this.apoli$activelyClimbing = false;
+    }
+
     // CLIMBING
-    @Inject(at = @At("RETURN"), method = "isClimbing", cancellable = true)
-    public void doSpiderClimbing(CallbackInfoReturnable<Boolean> info) {
-        if(!info.getReturnValue()) {
-            if((Entity)this instanceof LivingEntity) {
-                List<ClimbingPower> climbingPowers = PowerHolderComponent.KEY.get((Entity)this).getPowers(ClimbingPower.class, true);
-                // TODO: Rethink how "holding" is implemented
-                if(climbingPowers.size() > 0) {
-                    if(climbingPowers.stream().anyMatch(ClimbingPower::isActive)) {
-                        BlockPos pos = getBlockPos();
-                        this.climbingPos = Optional.of(pos);
-                        //origins_lastClimbingPos = getPos();
-                        info.setReturnValue(true);
-                    } else if(isHoldingOntoLadder()) {
-                        //if(origins_lastClimbingPos != null && isHoldingOntoLadder()) {
-                            if(climbingPowers.stream().anyMatch(ClimbingPower::canHold)) {
-                                    info.setReturnValue(true);
-                            }
-                        //}
-                    }
-                }
+    @ModifyReturnValue(method = "isClimbing", at = @At("RETURN"))
+    private boolean apoli$modifyClimbing(boolean original) {
+
+        if (original) {
+
+            if (this.getY() != this.prevY) {
+                this.apoli$activelyClimbing = true;
             }
+
+            return true;
+
         }
+
+        List<ClimbingPower> climbingPowers = PowerHolderComponent.getPowers(this, ClimbingPower.class);
+        if (this.isSpectator() || climbingPowers.isEmpty()) {
+            return false;
+        }
+
+        this.climbingPos = Optional.of(this.getBlockPos());
+        if (this.getY() != this.prevY) {
+            this.apoli$activelyClimbing = true;
+        }
+
+        return true;
+
+    }
+
+    @ModifyReturnValue(method = "isHoldingOntoLadder", at = @At("RETURN"))
+    private boolean apoli$overrideClimbHold(boolean original) {
+
+        List<ClimbingPower> climbingPowers = PowerHolderComponent.getPowers(this, ClimbingPower.class);
+        if (climbingPowers.isEmpty()) {
+            return original;
+        }
+
+        return climbingPowers
+            .stream()
+            .anyMatch(ClimbingPower::canHold);
+
     }
 
     // SLOW_FALLING
@@ -389,14 +413,19 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return in;
     }
 
-    @Inject(method = "getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", at = @At("RETURN"), cancellable = true)
-    private void modifyAttributeValue(EntityAttribute attribute, CallbackInfoReturnable<Double> cir) {
-        double originalValue = this.getAttributes().getValue(attribute);
-        double modified = PowerHolderComponent.modify(this, ModifyAttributePower.class, (float)originalValue, p -> p.getAttribute() == attribute);
-        if(originalValue != modified) {
-            cir.setReturnValue(modified);
+    @ModifyReturnValue(method = "getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", at = @At("RETURN"))
+    private double apoli$modifyAttributeValue(double original, EntityAttribute attribute) {
+        return PowerHolderComponent.modify(this, ModifyAttributePower.class, (float) original, p -> p.getAttribute() == attribute);
+    }
+
+    @Inject(method = "getAttributeInstance", at = @At("RETURN"))
+    private void apoli$setEntityToAttributeInstance(EntityAttribute attribute, CallbackInfoReturnable<EntityAttributeInstance> cir) {
+        EntityAttributeInstance instance = cir.getReturnValue();
+        if (instance != null) {
+            ((EntityAttributeInstanceAccess) instance).apoli$setEntity(this);
         }
     }
+
 
     @ModifyVariable(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isOnGround()Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
@@ -440,17 +469,17 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         for(ModifyFoodPower mfp : mfps) {
             newStack = mfp.getConsumedItemStack(newStack);
         }
-        ((ModifiableFoodEntity)this).setCurrentModifyFoodPowers(mfps);
-        ((ModifiableFoodEntity)this).setOriginalFoodStack(original);
+        ((ModifiableFoodEntity)this).apoli$setCurrentModifyFoodPowers(mfps);
+        ((ModifiableFoodEntity)this).apoli$setOriginalFoodStack(original);
         return newStack;
     }
 
     @ModifyVariable(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V", shift = At.Shift.AFTER))
     private ItemStack unmodifyEatenItemStack(ItemStack modified) {
         ModifiableFoodEntity foodEntity = (ModifiableFoodEntity)this;
-        ItemStack original = foodEntity.getOriginalFoodStack();
+        ItemStack original = foodEntity.apoli$getOriginalFoodStack();
         if(original != null) {
-            foodEntity.setOriginalFoodStack(null);
+            foodEntity.apoli$setOriginalFoodStack(null);
             return original;
         }
         return modified;
@@ -458,12 +487,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "eatFood", at = @At("TAIL"))
     private void removeCurrentModifyFoodPowers(World world, ItemStack stack, CallbackInfoReturnable<ItemStack> cir) {
-        setCurrentModifyFoodPowers(new LinkedList<>());
+        apoli$setCurrentModifyFoodPowers(new LinkedList<>());
     }
 
     @Redirect(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V"))
     private void preventApplyingFoodEffects(LivingEntity livingEntity, ItemStack stack, World world, LivingEntity targetEntity) {
-        if(getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
+        if(apoli$getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
             return;
         }
         this.applyFoodEffects(stack, world, targetEntity);
@@ -480,6 +509,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Shadow public abstract double getAttributeValue(EntityAttribute attribute);
 
     @Shadow public abstract AttributeContainer getAttributes();
+
+    @Shadow public abstract boolean isClimbing();
 
     @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
@@ -502,27 +533,27 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     private ItemStack apoli$originalFoodStack;
 
     @Override
-    public List<ModifyFoodPower> getCurrentModifyFoodPowers() {
+    public List<ModifyFoodPower> apoli$getCurrentModifyFoodPowers() {
         return apoli$currentModifyFoodPowers;
     }
 
     @Override
-    public void setCurrentModifyFoodPowers(List<ModifyFoodPower> powers) {
+    public void apoli$setCurrentModifyFoodPowers(List<ModifyFoodPower> powers) {
         apoli$currentModifyFoodPowers = powers;
     }
 
     @Override
-    public ItemStack getOriginalFoodStack() {
+    public ItemStack apoli$getOriginalFoodStack() {
         return apoli$originalFoodStack;
     }
 
     @Override
-    public void setOriginalFoodStack(ItemStack original) {
+    public void apoli$setOriginalFoodStack(ItemStack original) {
         apoli$originalFoodStack = original;
     }
 
     @Inject(method = "baseTick", at = @At("TAIL"))
     private void updateItemStackHolder(CallbackInfo ci) {
-        InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).setEntity(this), stack -> ((EntityLinkedItemStack) stack).setEntity(this));
+        InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this), stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this));
     }
 }

@@ -8,41 +8,22 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
-import java.util.Optional;
 
 public class BiomeConditions {
 
-    @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, biome) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BIOME_CONDITIONS),
-            (data, biome) -> ((List<ConditionFactory<RegistryEntry<Biome>>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(biome)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.BIOME_CONDITIONS),
-            (data, biome) -> ((List<ConditionFactory<RegistryEntry<Biome>>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(biome)
-            )));
-
+        MetaConditions.register(ApoliDataTypes.BIOME_CONDITION, BiomeConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("high_humidity"), new SerializableData(),
-            (data, biome) -> ((BiomeWeatherAccess)(Object)biome.value()).getDownfall() > 0.85f));
+            (data, biome) -> ((BiomeWeatherAccess)(Object)biome.value()).apoli$getDownfall() > 0.85f));
         register(new ConditionFactory<>(Apoli.identifier("temperature"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),

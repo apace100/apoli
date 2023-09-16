@@ -2,40 +2,27 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.damage.TypeCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.util.Pair;
-import net.minecraft.registry.Registry;
 
-import java.util.List;
 import java.util.function.Predicate;
 
 public class DamageConditions {
 
     @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, dmg) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.DAMAGE_CONDITIONS),
-            (data, dmg) -> ((List<ConditionFactory<Pair<DamageSource, Float>>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(dmg)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.DAMAGE_CONDITIONS),
-            (data, dmg) -> ((List<ConditionFactory<Pair<DamageSource, Float>>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(dmg)
-            )));
+        MetaConditions.register(ApoliDataTypes.DAMAGE_CONDITION, DamageConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("amount"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
@@ -85,6 +72,7 @@ public class DamageConditions {
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
                 .add("tag", SerializableDataType.tag(RegistryKeys.DAMAGE_TYPE)),
                 (data, dmg) -> dmg.getLeft().isIn(data.get("tag"))));
+        register(TypeCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Pair<DamageSource, Float>> conditionFactory) {

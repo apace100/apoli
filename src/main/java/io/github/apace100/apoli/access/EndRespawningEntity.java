@@ -2,7 +2,7 @@ package io.github.apace100.apoli.access;
 
 public interface EndRespawningEntity {
 
-    void setEndRespawning(boolean endSpawn);
-    boolean isEndRespawning();
-    boolean hasRealRespawnPoint();
+    void apoli$setEndRespawning(boolean endSpawn);
+    boolean apoli$isEndRespawning();
+    boolean apoli$hasRealRespawnPoint();
 }

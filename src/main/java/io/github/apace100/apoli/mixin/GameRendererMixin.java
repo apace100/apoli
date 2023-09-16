@@ -44,53 +44,94 @@ public abstract class GameRendererMixin {
 
     @Shadow
     @Final
-    private MinecraftClient client;
+    MinecraftClient client;
 
     @Shadow
-    protected abstract void loadPostProcessor(Identifier identifier);
+    abstract void loadPostProcessor(Identifier identifier);
 
     @Shadow
-    private PostEffectProcessor postProcessor;
+    PostEffectProcessor postProcessor;
     @Shadow
     private boolean postProcessorEnabled;
-    @Shadow @Final private ResourceManager resourceManager;
+
+    @Shadow
+    @Final
+    private ResourceManager resourceManager;
+
+    @Shadow
+    public abstract void disablePostProcessor();
+
     @Unique
-    private Identifier currentlyLoadedShader;
+    private Identifier apoli$currentlyLoadedShader;
 
     @Inject(at = @At("TAIL"), method = "onCameraEntitySet")
-    private void loadShaderFromPowerOnCameraEntity(Entity entity, CallbackInfo ci) {
-        PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
-            Identifier shaderLoc = shaderPower.getShaderLocation();
-            if(this.resourceManager.getResource(shaderLoc).isPresent()) {
-                loadPostProcessor(shaderLoc);
-                currentlyLoadedShader = shaderLoc;
-            }
-        });
+    private void apoli$loadShaderFromPowerOnCameraEntity(Entity entity, CallbackInfo ci) {
+
+        PowerHolderComponent.getPowers(client.getCameraEntity(), ShaderPower.class)
+            .stream()
+            .filter(p -> resourceManager.getResource(p.getShaderLocation()).isPresent())
+            .max(Comparator.comparing(ShaderPower::getPriority))
+            .ifPresent(p -> {
+
+                Identifier shaderLocation = p.getShaderLocation();
+
+                loadPostProcessor(shaderLocation);
+                apoli$currentlyLoadedShader = shaderLocation;
+
+            });
+
     }
 
     @Inject(at = @At("HEAD"), method = "render")
-    private void loadShaderFromPower(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
-        PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
-            Identifier shaderLoc = shaderPower.getShaderLocation();
-            if(currentlyLoadedShader != shaderLoc) {
-                if(this.resourceManager.getResource(shaderLoc).isPresent()) {
-                    loadPostProcessor(shaderLoc);
-                    currentlyLoadedShader = shaderLoc;
+    private void apoli$loadShaderFromPower(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+
+        //  Load a shader from a shader power with a high priority
+        PowerHolderComponent.getPowers(client.getCameraEntity(), ShaderPower.class)
+            .stream()
+            .filter(p -> resourceManager.getResource(p.getShaderLocation()).isPresent())
+            .max(Comparator.comparing(ShaderPower::getPriority))
+            .ifPresent(p -> {
+                Identifier shaderLocation = p.getShaderLocation();
+                if (shaderLocation != apoli$currentlyLoadedShader) {
+                    loadPostProcessor(shaderLocation);
+                    apoli$currentlyLoadedShader = shaderLocation;
                 }
+            });
+
+        //  Remove the currently loaded shader if the entity doesn't have any shader powers
+        if (!PowerHolderComponent.hasPower(client.getCameraEntity(), ShaderPower.class) && apoli$currentlyLoadedShader != null) {
+
+            if (postProcessor != null) {
+                disablePostProcessor();
             }
-        });
-        if(!PowerHolderComponent.hasPower(client.getCameraEntity(), ShaderPower.class) && currentlyLoadedShader != null) {
-            if(this.postProcessor != null) {
-                this.postProcessor.close();
-                this.postProcessor = null;
-            }
-            this.postProcessorEnabled = false;
-            currentlyLoadedShader = null;
+
+            postProcessorEnabled = false;
+            apoli$currentlyLoadedShader = null;
+
         }
+
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0))
+    private void apoli$renderOverlayPowersBelowHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+
+        //  Skip this method if the HUD is not hidden or if the current screen is not null
+        //  (to make sure the overlay is not rendered twice)
+        if (!client.options.hudHidden || client.currentScreen != null) {
+            return;
+        }
+
+        //  Otherwise, render overlay powers specified to render below the HUD
+        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
+            .stream()
+            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
+            .sorted(Comparator.comparing(OverlayPower::getPriority))
+            .forEach(OverlayPower::render);
+
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
-    private void renderOverlayPowers(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+    private void apoli$renderOverlayPowersAboveHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
             .stream()
             .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.ABOVE_HUD))
@@ -102,7 +143,7 @@ public abstract class GameRendererMixin {
     private void disableShaderToggle(CallbackInfo ci) {
         PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, null, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
-            if(!shaderPower.isToggleable() && currentlyLoadedShader == shaderLoc) {
+            if(!shaderPower.isToggleable() && apoli$currentlyLoadedShader == shaderLoc) {
                 ci.cancel();
             }
         });

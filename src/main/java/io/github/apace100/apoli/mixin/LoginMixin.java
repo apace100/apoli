@@ -78,7 +78,7 @@ public abstract class LoginMixin {
 	private void preventEndExitSpawnPointSetting(ServerPlayerEntity serverPlayerEntity, RegistryKey<World> dimension, BlockPos pos, float angle, boolean spawnPointSet, boolean bl, ServerPlayerEntity playerEntity, boolean alive) {
 		EndRespawningEntity ere = (EndRespawningEntity)playerEntity;
 		// Prevent setting the spawn point if the player has a "fake" respawn point
-		if(ere.hasRealRespawnPoint()) {
+		if(ere.apoli$hasRealRespawnPoint()) {
 			serverPlayerEntity.setSpawnPoint(dimension, pos, angle, spawnPointSet, bl);
 		}
 	}
