@@ -6,7 +6,6 @@ import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
-import io.github.apace100.apoli.power.ClimbingPower;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -344,16 +343,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
             .add("tag", SerializableDataTypes.ENTITY_TAG),
             (data, entity) -> entity.getType().getRegistryEntry().isIn(data.get("tag"))));
-        register(new ConditionFactory<>(Apoli.identifier("climbing"), new SerializableData(),
-            (data, entity) -> {
-                if(entity instanceof LivingEntity && ((LivingEntity)entity).isClimbing()) {
-                    return true;
-                }
-                if(PowerHolderComponent.hasPower(entity, ClimbingPower.class)) {
-                    return true;
-                }
-                return false;
-            }));
+        register(ClimbingCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
             if(entity instanceof TameableEntity) {
                 return ((TameableEntity)entity).isTamed();
