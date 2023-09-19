@@ -55,6 +55,8 @@
 		"ServerPlayNetworkHandlerMixin",
 		"ServerWorldMixin",
 		"StatusEffectInstanceMixin",
+		"VibrationsListenerDataMixin",
+		"VibrationsTickerMixin",
 		"WeightedListEntryAccessor"
 	],
 	"client": [
