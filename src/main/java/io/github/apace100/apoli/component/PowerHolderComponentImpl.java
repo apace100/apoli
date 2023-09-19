@@ -88,18 +88,14 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     public void removePower(PowerType<?> powerType, Identifier source) {
 
+        StringBuilder errorMessage = new StringBuilder("Cannot remove a non-existing power");
         if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
-
             powerType = powerTypeRef.getReferencedPowerType();
-            if (powerType == null) {
-                Apoli.LOGGER.error("Cannot remove power \"{}\" from entity {}, as it doesn't exist!", powerTypeRef.getIdentifier(), owner.getName().getString());
-                return;
-            }
-
+            errorMessage.append(" (ID: \"").append(powerType.getIdentifier()).append("\")");
         }
 
         if (powerType == null) {
-            Apoli.LOGGER.error("Cannot remove a non-existing power from entity {}!", owner.getName().getString());
+            Apoli.LOGGER.error(errorMessage.append(" from entity ").append(owner.getName().getString()));
             return;
         }
 
@@ -109,16 +105,13 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         }
 
         sources.remove(source);
-        removeLastPowerType: if (sources.isEmpty()) {
+        if (sources.isEmpty()) {
 
-            powerSources.remove(powerType);
             Power power = powers.remove(powerType);
-            if (power == null) {
-                break removeLastPowerType;
+            if (power != null) {
+                power.onRemoved();
+                power.onLost();
             }
-
-            power.onRemoved();
-            power.onLost();
 
         }
 
@@ -151,18 +144,14 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     public boolean addPower(PowerType<?> powerType, Identifier source) {
 
+        StringBuilder errorMessage = new StringBuilder("Cannot add a non-existing power");
         if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
-
             powerType = powerTypeRef.getReferencedPowerType();
-            if (powerType == null) {
-                Apoli.LOGGER.error("Cannot add power \"{}\" to entity {}, as it doesn't exist!", powerTypeRef.getIdentifier(), owner.getName().getString());
-                return false;
-            }
-
+            errorMessage.append(" (ID: \"").append(powerTypeRef.getIdentifier()).append("\")");
         }
 
         if (powerType == null) {
-            Apoli.LOGGER.error("Cannot add a non-existing power to entity {}!", owner.getName().getString());
+            Apoli.LOGGER.error(errorMessage.append(" to entity ").append(owner.getName().getString()));
             return false;
         }
 
@@ -211,17 +200,14 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             return;
         }
 
-        powers.entrySet().removeIf(entry -> {
-
-            if (callPowerOnAdd) {
-                entry.getValue().onRemoved();
-                entry.getValue().onLost();
+        if (callPowerOnAdd) {
+            for (Power power : powers.values()) {
+                power.onRemoved();
+                power.onLost();
             }
+        }
 
-            return true;
-
-        });
-
+        powers.clear();
         NbtList powersTag = compoundTag.getList("Powers", NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < powersTag.size(); i++) {
 
