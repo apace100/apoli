@@ -1,0 +1,44 @@
+{
+  "type": "apoli:active_self",
+  "cooldown": 1,
+  "key": {
+    "key": "key.use",
+    "continuous": false
+  },
+  "entity_action": {
+    "type": "apoli:passenger_action",
+    "bientity_action": {
+      "type": "apoli:and",
+      "actions": [
+        {
+          "type": "apoli:actor_action",
+          "action": {
+            "type": "apoli:dismount"
+          }
+        },
+        {
+          "type": "apoli:invert",
+          "action": {
+            "type": "apoli:delay",
+            "action": {
+              "type": "apoli:add_velocity",
+              "reference": "rotation",
+              "z": 1.2
+            },
+            "ticks": 1
+          }
+        },
+        {
+          "type": "apoli:target_action",
+          "action": {
+            "type": "apoli:swing_hand",
+            "hand": "MAIN_HAND"
+          }
+        }
+      ]
+    }
+  },
+  "condition": {
+    "type": "apoli:sneaking"
+  }
+}

@@ -4,12 +4,11 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.networking.ModPackets;
+import io.github.apace100.apoli.power.factory.action.bientity.AddVelocityAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.power.factory.action.bientity.DamageAction;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataTypes;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
@@ -19,9 +18,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Pair;
-import org.joml.Vector3f;
 import net.minecraft.registry.Registry;
-import org.apache.logging.log4j.util.TriConsumer;
 
 public class BiEntityActions {
 
@@ -76,27 +73,7 @@ public class BiEntityActions {
                     }
                 }
             }));
-        register(new ActionFactory<>(Apoli.identifier("add_velocity"), new SerializableData()
-            .add("x", SerializableDataTypes.FLOAT, 0F)
-            .add("y", SerializableDataTypes.FLOAT, 0F)
-            .add("z", SerializableDataTypes.FLOAT, 0F)
-            .add("client", SerializableDataTypes.BOOLEAN, true)
-            .add("server", SerializableDataTypes.BOOLEAN, true)
-            .add("set", SerializableDataTypes.BOOLEAN, false),
-            (data, entities) -> {
-                Entity actor = entities.getLeft(), target = entities.getRight();
-                if (target instanceof PlayerEntity
-                    && (target.getWorld().isClient ?
-                        !data.getBoolean("client") : !data.getBoolean("server")))
-                    return;
-                Vector3f vec = new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z"));
-                TriConsumer<Float, Float, Float> method = target::addVelocity;
-                if(data.getBoolean("set"))
-                    method = target::setVelocity;
-                Space.transformVectorToBase(target.getPos().subtract(actor.getPos()), vec, actor.getYaw(), true); // vector normalized by method
-                method.accept(vec.x, vec.y, vec.z);
-                target.velocityModified = true;
-            }));
+        register(AddVelocityAction.getFactory());
         register(DamageAction.getFactory());
     }
 
