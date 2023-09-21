@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
@@ -25,9 +26,10 @@ import java.util.function.Predicate;
 public class ActionOnBlockUsePower extends ActiveInteractionPower {
 
     private final Consumer<Entity> entityAction;
+    private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
+
     private final Predicate<CachedBlockPosition> blockCondition;
     private final EnumSet<Direction> directions;
-    private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
 
     public ActionOnBlockUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, Predicate<CachedBlockPosition> blockCondition, EnumSet<Direction> directions, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
         super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, resultItemAction, priority);
@@ -37,30 +39,30 @@ public class ActionOnBlockUsePower extends ActiveInteractionPower {
         this.blockAction = blockAction;
     }
 
-
-    public boolean shouldExecute(BlockPos blockPos, Direction direction, Hand hand, ItemStack heldStack) {
-        if(!super.shouldExecute(hand, heldStack)) {
-            return false;
-        }
-        if(!directions.contains(direction)) {
-            return false;
-        }
-        return blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), blockPos, true));
+    public boolean shouldExecute(BlockHitResult hitResult, Hand hand, ItemStack heldStack) {
+        return super.shouldExecute(hand, heldStack)
+            && directions.contains(hitResult.getSide())
+            && (blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), hitResult.getBlockPos(), true)));
     }
 
-    public ActionResult executeAction(BlockPos blockPos, Direction direction, Hand hand) {
+    public ActionResult executeAction(BlockHitResult hitResult, Hand hand) {
+
         if(blockAction != null) {
-            blockAction.accept(Triple.of(entity.getWorld(), blockPos, direction));
+            blockAction.accept(Triple.of(entity.getWorld(), hitResult.getBlockPos(), hitResult.getSide()));
         }
+
         if(entityAction != null) {
             entityAction.accept(entity);
         }
+
         performActorItemStuff(this, (PlayerEntity) entity, hand);
         return getActionResult();
+
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("action_on_block_use"),
+        return new PowerFactory<>(
+            Apoli.identifier("action_on_block_use"),
             new SerializableData()
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
@@ -73,19 +75,20 @@ public class ActionOnBlockUsePower extends ActiveInteractionPower {
                 .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("action_result", SerializableDataTypes.ACTION_RESULT, ActionResult.SUCCESS)
                 .add("priority", SerializableDataTypes.INT, 0),
-            data ->
-                (type, player) -> new ActionOnBlockUsePower(type, player,
-                    data.get("hands"),
-                    data.get("action_result"),
-                    data.get("item_condition"),
-                    data.get("held_item_action"),
-                    data.get("result_stack"),
-                    data.get("result_item_action"),
-                    data.get("entity_action"),
-                    data.get("block_condition"),
-                    data.get("directions"),
-                    data.get("block_action"),
-                    data.get("priority")))
-            .allowCondition();
+            data -> (powerType, livingEntity) -> new ActionOnBlockUsePower(
+                powerType,
+                livingEntity,
+                data.get("hands"),
+                data.get("action_result"),
+                data.get("item_condition"),
+                data.get("held_item_action"),
+                data.get("result_stack"),
+                data.get("result_item_action"),
+                data.get("entity_action"),
+                data.get("block_condition"),
+                data.get("directions"),
+                data.get("block_action"),
+                data.get("priority"))
+        ).allowCondition();
     }
 }

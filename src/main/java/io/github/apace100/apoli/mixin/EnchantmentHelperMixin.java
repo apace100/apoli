@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import net.minecraft.enchantment.Enchantment;
@@ -19,54 +21,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EnchantmentHelper.class)
 public class EnchantmentHelperMixin {
 
-    @Redirect(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private static boolean forEachIsEmpty(ItemStack instance) {
-        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).apoli$getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
-            return false;
-        }
-        return instance.isEmpty();
-    }
-
-    @Unique
-    private static ItemStack apugli$runIterationOnItem;
-
-    @Inject(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "HEAD"))
-    private static void getEnchantmentItemStack(EnchantmentHelper.Consumer enchantmentVisitor, ItemStack itemStack, CallbackInfo ci) {
-        apugli$runIterationOnItem = itemStack;
+    @ModifyExpressionValue(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private static boolean forEachIsEmpty(boolean original, EnchantmentHelper.Consumer consumer, ItemStack stack) {
+        return original || !(((EntityLinkedItemStack) stack).apoli$getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living));
     }
 
     @ModifyVariable(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/item/ItemStack;getEnchantments()Lnet/minecraft/nbt/NbtList;"))
-    private static NbtList getEnchantmentsForEachEnchantment(NbtList original) {
-        return ModifyEnchantmentLevelPower.getEnchantments(apugli$runIterationOnItem, original);
+    private static NbtList getEnchantmentsForEachEnchantment(NbtList original, EnchantmentHelper.Consumer consumer, ItemStack stack) {
+        return ModifyEnchantmentLevelPower.getEnchantments(stack, original);
     }
 
-    @Unique
-    private static ItemStack apugli$itemEnchantmentLevelStack;
-
-    @Inject(method = "getLevel", at = @At("HEAD"))
-    private static void getEnchantmentItemStack(Enchantment enchantment, ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
-        apugli$itemEnchantmentLevelStack = itemStack;
-    }
-
-    @Redirect(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private static boolean getLevelIsEmpty(ItemStack instance) {
-        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).apoli$getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
-            return false;
-        }
-        return instance.isEmpty();
+    @ModifyExpressionValue(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private static boolean getLevelIsEmpty(boolean original, Enchantment enchantment, ItemStack stack) {
+        return original || !(((EntityLinkedItemStack) stack).apoli$getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living));
     }
 
     @ModifyVariable(method = "getLevel", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/item/ItemStack;getEnchantments()Lnet/minecraft/nbt/NbtList;"))
-    private static NbtList getEnchantmentsGetLevel(NbtList original) {
-        return ModifyEnchantmentLevelPower.getEnchantments(apugli$itemEnchantmentLevelStack, original);
+    private static NbtList getEnchantmentsGetLevel(NbtList original, Enchantment enchantment, ItemStack stack) {
+        return ModifyEnchantmentLevelPower.getEnchantments(stack, original);
     }
 
-    @Redirect(method = "chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private static boolean allowEmptyEquipmentChoosing(ItemStack instance) {
-        if (instance.isEmpty() && ((EntityLinkedItemStack) instance).apoli$getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living)) {
-            return false;
-        }
-        return instance.isEmpty();
+    @ModifyExpressionValue(method = "chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private static boolean allowEmptyEquipmentChoosing(boolean original, @Local ItemStack stack) {
+        return original || !(((EntityLinkedItemStack) stack).apoli$getEntity() instanceof LivingEntity living && ModifyEnchantmentLevelPower.isInEnchantmentMap(living));
     }
 
 }
