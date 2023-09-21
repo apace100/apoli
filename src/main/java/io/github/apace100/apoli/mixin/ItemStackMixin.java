@@ -82,9 +82,7 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
     @Override
     public Optional<FoodComponent> apoli$getFoodComponent() {
-        return apoli$getEdiblePower()
-            .map(EdibleItemPower::getFoodComponent)
-            .or(() -> Optional.ofNullable(this.getItem().getFoodComponent()));
+        return apoli$getEdiblePower().map(EdibleItemPower::getFoodComponent);
     }
 
     @Unique
