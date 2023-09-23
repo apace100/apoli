@@ -204,7 +204,12 @@ public class ApoliDataTypes {
         return KEY.read(jsonElement);
     });
 
-    public static final SerializableDataType<HudRender> HUD_RENDER = SerializableDataType.compound(HudRender.class, new
+    public static final SerializableDataType<HudRender> HUD_RENDER = new SerializableDataType<>(HudRender.class,
+            (packetByteBuf, hudRender) -> hudRender.send(packetByteBuf),
+            HudRender::receive,
+            HudRender::read);
+
+    public static final SerializableDataType<HudRender.Inner> INNER_HUD_RENDER = SerializableDataType.compound(HudRender.Inner.class, new
             SerializableData()
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
@@ -212,7 +217,7 @@ public class ApoliDataTypes {
             .add("sprite_location", SerializableDataTypes.IDENTIFIER, new Identifier("apoli", "textures/gui/resource_bar.png"))
             .add("condition", ENTITY_CONDITION, null)
             .add("inverted", SerializableDataTypes.BOOLEAN, false),
-        (dataInst) -> new HudRender(
+        (dataInst) -> new HudRender.Inner(
             dataInst.getBoolean("should_render"),
             dataInst.getInt("bar_index"),
             dataInst.getInt("icon_index"),
@@ -222,13 +227,15 @@ public class ApoliDataTypes {
         (data, inst) -> {
             SerializableData.Instance dataInst = data.new Instance();
             dataInst.set("should_render", inst.shouldRender());
-            dataInst.set("bar_index", inst.getBarIndex());
-            dataInst.set("icon_index", inst.getIconIndex());
-            dataInst.set("sprite_location", inst.getSpriteLocation());
-            dataInst.set("condition", inst.getCondition());
-            dataInst.set("inverted", inst.isInverted());
+            dataInst.set("bar_index", inst.barIndex());
+            dataInst.set("icon_index", inst.iconIndex());
+            dataInst.set("sprite_location", inst.spriteLocation());
+            dataInst.set("condition", inst.playerCondition());
+            dataInst.set("inverted", inst.inverted());
             return dataInst;
         });
+
+    public static final SerializableDataType<List<HudRender.Inner>> INNER_HUD_RENDERS = SerializableDataType.list(INNER_HUD_RENDER);
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));

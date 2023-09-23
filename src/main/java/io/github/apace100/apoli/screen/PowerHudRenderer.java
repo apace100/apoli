@@ -17,6 +17,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class PowerHudRenderer implements GameHudRender {
 
@@ -54,7 +55,9 @@ public class PowerHudRenderer implements GameHudRender {
             .stream()
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)
-            .sorted(Comparator.comparing(hudRendered -> hudRendered.getRenderSettings().getSpriteLocation()))
+            .filter(hudRendered -> hudRendered.getRenderSettings().filter(player).findFirst().isPresent())
+            .sorted(Comparator.comparing(hudRendered -> hudRendered.getRenderSettings().order()))
+            .sorted(Comparator.comparing(hudRendered -> hudRendered.getRenderSettings().filter(player).findFirst().get().spriteLocation()))
             .toList();
 
         for (HudRendered hudRenderedPower : hudRenderedPowers) {
@@ -62,21 +65,31 @@ public class PowerHudRenderer implements GameHudRender {
             //  Get the HUD render settings of the HUD power. Skip the drawing process if the HUD of the HUD power
             //  is specified to not render or if the condition is not fulfilled by the player
             HudRender hudRender = hudRenderedPower.getRenderSettings();
-            if (!(hudRender.shouldRender(player) && hudRenderedPower.shouldRender())) {
+            if (!hudRenderedPower.shouldRender()) {
                 continue;
             }
 
+            Optional<HudRender.Inner> opt$innerHudRender = hudRender.filter(player).findFirst();
+
+            //  The below shouldn't happen as we're filtering based on first being present
+            //  but you can never be so sure.
+            if (opt$innerHudRender.isEmpty()) {
+                continue;
+            }
+
+            HudRender.Inner innerHudRender = opt$innerHudRender.get();
+
             //  Get the identifier of the sprite sheet and draw the base texture of the bar
-            Identifier currentSpriteLocation = hudRender.getSpriteLocation();
+            Identifier currentSpriteLocation = innerHudRender.spriteLocation();
             context.drawTexture(currentSpriteLocation, x, y, 0, 0, barWidth, 5);
 
             //  Get the V coordinate for the bar and icon and the U coordinate for the icon
-            int barV = barHeight + hudRender.getBarIndex() * barIndexOffset;
-            int iconU = (barWidth + 2) + hudRender.getIconIndex() * iconIndexOffset;
+            int barV = barHeight + innerHudRender.barIndex() * barIndexOffset;
+            int iconU = (barWidth + 2) + innerHudRender.iconIndex() * iconIndexOffset;
 
             //  Get the fill portion of the bar
             float barFill = hudRenderedPower.getFill();
-            if (hudRender.isInverted()) {
+            if (innerHudRender.inverted()) {
                 barFill = 1f - barFill;
             }
 
