@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.bientity.EqualCondition;
 import io.github.apace100.apoli.power.factory.condition.bientity.OwnerCondition;
 import io.github.apace100.apoli.power.factory.condition.bientity.RelativeRotationCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -136,6 +137,7 @@ public class BiEntityConditions {
             }
         ));
         register(RelativeRotationCondition.getFactory());
+        register(EqualCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Pair<Entity, Entity>> conditionFactory) {
