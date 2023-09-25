@@ -112,9 +112,12 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
                 .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("food_component", SerializableDataTypes.FOOD_COMPONENT)
-                .add("result_stack", SerializableDataTypes.ITEM_STACK, null)
-                .add("consume_animation", SerializableDataType.enumValue(ConsumeAnimation.class), ConsumeAnimation.EAT)
-                .add("consume_sound", SerializableDataTypes.SOUND_EVENT, SoundEvents.ENTITY_GENERIC_EAT)
+                .add("return_stack", SerializableDataTypes.ITEM_STACK, null)
+                .addFunctionedDefault("result_stack", SerializableDataTypes.ITEM_STACK, data -> data.get("return_stack"))
+                .add("use_action", SerializableDataType.enumValue(ConsumeAnimation.class), ConsumeAnimation.EAT)
+                .addFunctionedDefault("consume_animation", SerializableDataType.enumValue(ConsumeAnimation.class), data -> data.get("use_action"))
+                .add("sound", SerializableDataTypes.SOUND_EVENT, SoundEvents.ENTITY_GENERIC_EAT)
+                .addFunctionedDefault("consume_sound", SerializableDataTypes.SOUND_EVENT, data -> data.get("sound"))
                 .add("priority", SerializableDataTypes.INT, 0),
             data -> (powerType, livingEntity) -> new EdibleItemPower(
                 powerType,
