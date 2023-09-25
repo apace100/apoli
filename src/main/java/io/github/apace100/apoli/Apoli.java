@@ -18,7 +18,7 @@ import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliClassData;
-import io.github.apace100.apoli.screen.ApoliScreenHandlerType;
+import io.github.apace100.apoli.screen.ApoliScreenHandlerTypes;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
@@ -93,7 +93,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		Registry.register(Registries.LOOT_CONDITION_TYPE, Apoli.identifier("power"), PowerLootCondition.TYPE);
 
 		ApoliClassData.registerAll();
-		ApoliScreenHandlerType.registerAll();
+		ApoliScreenHandlerTypes.registerAll();
 
 		ModifierOperations.registerAll();
 		DynamicContainerType.registerAll();

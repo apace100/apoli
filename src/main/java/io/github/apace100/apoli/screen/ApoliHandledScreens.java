@@ -5,10 +5,10 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 
 @Environment(EnvType.CLIENT)
-public class ApoliScreenHandler {
+public class ApoliHandledScreens {
 
     public static void registerAll() {
-        HandledScreens.register(ApoliScreenHandlerType.DYNAMIC_CONTAINER, DynamicContainerScreen::new);
+        HandledScreens.register(ApoliScreenHandlerTypes.DYNAMIC_CONTAINER, DynamicContainerScreen::new);
     }
 
 }

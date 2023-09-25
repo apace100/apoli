@@ -7,7 +7,7 @@ import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 
-public class ApoliScreenHandlerType {
+public class ApoliScreenHandlerTypes {
 
     public static ScreenHandlerType<DynamicContainerScreenHandler> DYNAMIC_CONTAINER;
 

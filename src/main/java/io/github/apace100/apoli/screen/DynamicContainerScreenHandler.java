@@ -28,7 +28,7 @@ public class DynamicContainerScreenHandler extends ScreenHandler {
     }
 
     public DynamicContainerScreenHandler(DynamicContainerType containerType, int syncId, PlayerInventory playerInventory, Inventory otherInventory) {
-        super(ApoliScreenHandlerType.DYNAMIC_CONTAINER, syncId);
+        super(ApoliScreenHandlerTypes.DYNAMIC_CONTAINER, syncId);
 
         PlayerEntity playerEntity = playerInventory.player;
         if (containerType == null || otherInventory == null) {
