@@ -1,0 +1,30 @@
+{
+	"type": "apoli:edible_item",
+	"item_condition": {
+		"type": "apoli:ingredient",
+		"ingredient": {
+			"item": "minecraft:axolotl_bucket"
+		}
+	},
+	"food_component": {
+		"hunger": 8,
+		"saturation": 2.5,
+		"meat": true
+	},
+	"result_stack": {
+		"item": "minecraft:water_bucket"
+	},
+	"condition": {
+		"type": "apoli:or",
+		"conditions": [
+			{
+				"type": "apoli:raycast",
+				"block": true,
+				"inverted": true
+			},
+			{
+				"type": "apoli:sneaking"
+			}
+		]
+	}
+}
