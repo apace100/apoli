@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ItemOnItemPower;
 import io.github.apace100.apoli.power.ModifyFoodPower;
@@ -20,16 +21,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(Item.class)
-public class ItemMixin {
+public abstract class ItemMixin {
 
-    @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/TypedActionResult;fail(Ljava/lang/Object;)Lnet/minecraft/util/TypedActionResult;"), cancellable = true)
-    private void tryItemAlwaysEdible(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-        ItemStack itemStack = user.getStackInHand(hand);
-        if (PowerHolderComponent.KEY.get(user).getPowers(ModifyFoodPower.class).stream()
-            .anyMatch(p -> p.doesMakeAlwaysEdible() && p.doesApply(itemStack))) {
-            user.setCurrentHand(hand);
-            cir.setReturnValue(TypedActionResult.consume(itemStack));
+    @ModifyExpressionValue(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/TypedActionResult;fail(Ljava/lang/Object;)Lnet/minecraft/util/TypedActionResult;"))
+    private TypedActionResult<ItemStack> apoli$tryAlwaysMakingItemEdible(TypedActionResult<ItemStack> original, World world, PlayerEntity user, Hand hand) {
+
+        ItemStack stackInHand = user.getStackInHand(hand);
+        if (!PowerHolderComponent.hasPower(user, ModifyFoodPower.class, mfp -> mfp.doesMakeAlwaysEdible() && mfp.doesApply(stackInHand))) {
+            return original;
         }
+
+        user.setCurrentHand(hand);
+        return TypedActionResult.consume(stackInHand);
+
     }
 
     @Inject(method = "onClicked", at = @At("RETURN"), cancellable = true)
