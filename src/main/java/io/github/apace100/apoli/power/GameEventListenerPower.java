@@ -77,15 +77,15 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
 
     @Override
     public void onAdded() {
-        if (!entity.getWorld().isClient) {
-            entity.updateEventHandler(EntityGameEventHandler::onEntitySetPos);
+        if (entity.getWorld() instanceof ServerWorld serverWorld) {
+            getGameEventHandler().onEntitySetPos(serverWorld);
         }
     }
 
     @Override
     public void onRemoved() {
-        if (!entity.getWorld().isClient) {
-            entity.updateEventHandler(EntityGameEventHandler::onEntityRemoval);
+        if (entity.getWorld() instanceof ServerWorld serverWorld) {
+            getGameEventHandler().onEntityRemoval(serverWorld);
         }
     }
 
