@@ -88,8 +88,8 @@ dependencies {
 	modApi "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 
-	modApi "com.github.apace100:calio:v${project.calio_version}"
-	include "com.github.apace100:calio:v${project.calio_version}"
+	modApi "com.github.apace100:calio:${project.calio_version}"
+	include "com.github.apace100:calio:${project.calio_version}"
 
 	modCompileOnlyApi "com.jamieswhiteshirt:reach-entity-attributes:${rea_version}"
 

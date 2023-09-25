@@ -3,7 +3,9 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.item.EnchantmentCondition;
+import io.github.apace100.apoli.power.factory.condition.item.FoodCondition;
 import io.github.apace100.apoli.power.factory.condition.item.FuelCondition;
+import io.github.apace100.apoli.power.factory.condition.item.MeatCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.StackPowerUtil;
@@ -23,8 +25,7 @@ public class ItemConditions {
 
     public static void register() {
         MetaConditions.register(ApoliDataTypes.ITEM_CONDITION, ItemConditions::register);
-        register(new ConditionFactory<>(Apoli.identifier("food"), new SerializableData(),
-            (data, stack) -> stack.isFood()));
+        register(FoodCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("ingredient"), new SerializableData()
             .add("ingredient", SerializableDataTypes.INGREDIENT),
             (data, stack) -> ((Ingredient)data.get("ingredient")).test(stack)));
@@ -51,8 +52,7 @@ public class ItemConditions {
                 return ((Comparison)data.get("comparison")).compare(harvestLevel, data.getInt("compare_to"));
             }));
         register(EnchantmentCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("meat"), new SerializableData(),
-            (data, stack) -> stack.isFood() && stack.getItem().getFoodComponent().isMeat()));
+        register(MeatCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("nbt"), new SerializableData()
             .add("nbt", SerializableDataTypes.NBT), (data, stack) -> NbtHelper.matches(data.get("nbt"), stack.getNbt(), true)));
         register(new ConditionFactory<>(Apoli.identifier("fireproof"), new SerializableData(),

@@ -9,3 +9,4 @@ accessible class net/minecraft/server/command/AdvancementCommand$Operation
 accessible class net/minecraft/server/command/AdvancementCommand$Selection
 accessible method net/minecraft/server/command/AdvancementCommand$Operation processEach (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;)Z
 accessible method net/minecraft/server/command/AdvancementCommand$Operation processEachCriterion (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;Ljava/lang/String;)Z
+extendable class net/minecraft/world/event/Vibrations$ListenerData

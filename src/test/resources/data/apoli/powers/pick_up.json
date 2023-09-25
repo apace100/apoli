@@ -1,0 +1,19 @@
+{
+  "type": "apoli:action_on_entity_use",
+  "bientity_action": {
+    "type": "apoli:invert",
+    "action": {
+      "type": "apoli:mount"
+    }
+  },
+  "item_condition": {
+    "type": "apoli:empty"
+  },
+  "hands": [
+    "main_hand"
+  ],
+  "condition": {
+    "type": "apoli:sneaking",
+    "inverted": true
+  }
+}

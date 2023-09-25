@@ -30,6 +30,7 @@
 		"GrindstoneScreenHandlerOutputSlotMixin",
 		"GrindstoneScreenHandlerTopInputSlotMixin",
 		"HungerManagerMixin",
+		"ItemEntityMixin",
 		"ItemMixin",
 		"ItemPredicateMixin",
 		"ItemSlotArgumentTypeAccessor",
@@ -54,7 +55,10 @@
 		"ServerPlayerInteractionManagerMixin",
 		"ServerPlayNetworkHandlerMixin",
 		"ServerWorldMixin",
+		"SlotMixin",
 		"StatusEffectInstanceMixin",
+		"VibrationsListenerDataMixin",
+		"VibrationsTickerMixin",
 		"WeightedListEntryAccessor"
 	],
 	"client": [
@@ -74,6 +78,7 @@
 		"InGameHudMixin",
 		"InGameOverlayRendererMixin",
 		"ItemStackMixinClient",
+		"KeyBindingAccessor",
 		"LightmapTextureManagerMixin",
 		"LivingEntityRendererMixin",
 		"MinecraftClientMixin",

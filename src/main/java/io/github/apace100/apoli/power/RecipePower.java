@@ -8,13 +8,20 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.recipe.Recipe;
 
-public class RecipePower extends Power {
+public class RecipePower extends Power implements Prioritized<RecipePower> {
 
     private final Recipe<CraftingInventory> recipe;
+    private final int priority;
 
-    public RecipePower(PowerType<?> type, LivingEntity entity, Recipe<CraftingInventory> recipe) {
+    public RecipePower(PowerType<?> type, LivingEntity entity, Recipe<CraftingInventory> recipe, int priority) {
         super(type, entity);
         this.recipe = recipe;
+        this.priority = priority;
+    }
+
+    @Override
+    public int getPriority() {
+        return priority;
     }
 
     public Recipe<CraftingInventory> getRecipe() {
@@ -22,14 +29,18 @@ public class RecipePower extends Power {
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("recipe"),
+        return new PowerFactory<>(
+            Apoli.identifier("recipe"),
             new SerializableData()
-                .add("recipe", SerializableDataTypes.RECIPE),
-            data ->
-                (type, player) -> {
-                    Recipe<CraftingInventory> recipe = (Recipe<CraftingInventory>)data.get("recipe");
-                    return new RecipePower(type, player, recipe);
-                })
-            .allowCondition();
+                .add("recipe", SerializableDataTypes.RECIPE)
+                .add("priority", SerializableDataTypes.INT, 0),
+            data -> (powerType, livingEntity) -> new RecipePower(
+                powerType,
+                livingEntity,
+                data.get("recipe"),
+                data.get("priority")
+            )
+        ).allowCondition();
     }
+
 }

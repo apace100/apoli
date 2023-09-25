@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.util.modifier;
 
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -11,7 +12,7 @@ import java.util.Locale;
 public interface IModifierOperation {
 
     SerializableDataType<IModifierOperation> STRICT_DATA_TYPE =
-        SerializableDataType.registry(IModifierOperation.class, ApoliRegistries.MODIFIER_OPERATION);
+        SerializableDataType.registry(IModifierOperation.class, ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID, true);
 
     SerializableDataType<IModifierOperation> DATA_TYPE = new SerializableDataType<>(IModifierOperation.class,
         STRICT_DATA_TYPE::send, STRICT_DATA_TYPE::receive, (jsonElement -> {

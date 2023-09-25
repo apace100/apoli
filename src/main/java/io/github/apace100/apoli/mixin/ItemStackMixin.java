@@ -1,18 +1,28 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.access.MutableItemStack;
+import io.github.apace100.apoli.access.PotentiallyEdibleItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.ActionOnItemUsePower;
+import io.github.apace100.apoli.power.EdibleItemPower;
+import io.github.apace100.apoli.power.PreventItemUsePower;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,8 +34,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.Comparator;
+import java.util.Optional;
+
 @Mixin(ItemStack.class)
-public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedItemStack {
+public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedItemStack, PotentiallyEdibleItemStack {
 
     @Shadow @Deprecated private Item item;
 
@@ -37,7 +50,11 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
 
     @Shadow public abstract @Nullable Entity getHolder();
 
-    @Shadow public abstract void setHolder(@Nullable Entity holder);
+    @Shadow public abstract Item getItem();
+
+    @Shadow public abstract boolean isEmpty();
+
+    @Shadow public abstract ItemStack copy();
 
     @Unique
     private ItemStack apoli$usedItemStack;
@@ -62,6 +79,28 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     @Override
     public void apoli$setEntity(Entity entity) {
         this.apoli$holdingEntity = entity;
+    }
+
+    @Override
+    public Optional<FoodComponent> apoli$getFoodComponent() {
+        return apoli$getEdiblePower().map(EdibleItemPower::getFoodComponent);
+    }
+
+    @Unique
+    private Optional<EdibleItemPower> apoli$getEdiblePower() {
+
+        EdibleItemPower edibleItemPower = PowerHolderComponent.getPowers(apoli$getEntity(), EdibleItemPower.class)
+            .stream()
+            .filter(p -> p.doesApply((ItemStack) (Object) this))
+            .max(Comparator.comparing(EdibleItemPower::getPriority))
+            .orElse(null);
+
+        if (edibleItemPower == null || (this.getItem().isFood() && edibleItemPower.getPriority() <= 0)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(edibleItemPower);
+
     }
 
     @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
@@ -157,6 +196,93 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
             ActionOnItemUsePower.executeActions(user, (ItemStack)(Object)this, (ItemStack)(Object)this,
                     ActionOnItemUsePower.TriggerType.DURING, ActionOnItemUsePower.PriorityPhase.AFTER);
         }
+    }
+
+    @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
+    private UseAction apoli$replaceUseAction(UseAction original) {
+        return apoli$getEdiblePower()
+            .map(p -> p.getConsumeAnimation().getAction())
+            .orElse(original);
+    }
+
+    @ModifyReturnValue(method = "getEatSound", at = @At("RETURN"))
+    private SoundEvent apoli$replaceEatingSound(SoundEvent original) {
+        return apoli$getEdiblePower()
+            .map(EdibleItemPower::getConsumeSoundEvent)
+            .orElse(original);
+    }
+
+    @ModifyReturnValue(method = "getDrinkSound", at = @At("RETURN"))
+    private SoundEvent apoli$replaceDrinkingSound(SoundEvent original) {
+        return apoli$getEdiblePower()
+            .map(EdibleItemPower::getConsumeSoundEvent)
+            .orElse(original);
+    }
+
+    @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
+    private int apoli$modifyMaxConsumingTime(int original) {
+        return apoli$getEdiblePower()
+            .map(p -> p.getFoodComponent().isSnack() ? 16 : 32)
+            .orElse(original);
+    }
+
+    @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
+    private TypedActionResult<ItemStack> apoli$consumeCustomFood(Item instance, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
+
+        EdibleItemPower edibleItemPower = apoli$getEdiblePower().orElse(null);
+        if (edibleItemPower == null) {
+            return original.call(instance, world, user, hand);
+        }
+
+        ItemStack stackInHand = user.getStackInHand(hand);
+        if (!user.canConsume(edibleItemPower.getFoodComponent().isAlwaysEdible())) {
+            return original.call(instance, world, user, hand);
+        }
+
+        user.setCurrentHand(hand);
+        return TypedActionResult.consume(stackInHand);
+
+    }
+
+    @ModifyReturnValue(method = "finishUsing", at = @At("RETURN"))
+    private ItemStack apoli$finishConsumingCustomFood(ItemStack original, World world, LivingEntity user) {
+
+        EdibleItemPower edibleItemPower = apoli$getEdiblePower().orElse(null);
+        if (edibleItemPower == null) {
+            return original;
+        }
+
+        edibleItemPower.applyEffects();
+        edibleItemPower.executeEntityAction();
+
+        ItemStack newStack = user.eatFood(world, this.copy());
+        ItemStack resultStack = edibleItemPower.executeItemActions(newStack);
+
+        tryOfferingResultStack:
+        if (resultStack != null) {
+
+            if (newStack.isEmpty()) {
+                return resultStack;
+            }
+
+            if (ItemStack.canCombine(resultStack, newStack)) {
+                newStack.increment(1);
+                break tryOfferingResultStack;
+            }
+
+            if (user instanceof PlayerEntity playerEntity && !playerEntity.isCreative()) {
+                playerEntity.getInventory().offerOrDrop(resultStack);
+                break tryOfferingResultStack;
+            }
+
+            if (!(user instanceof PlayerEntity)) {
+                InventoryUtil.throwItem(user, resultStack, false, false);
+            }
+
+        }
+
+        return newStack;
+
     }
 
     @Override
