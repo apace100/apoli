@@ -30,7 +30,7 @@
 		"GrindstoneScreenHandlerOutputSlotMixin",
 		"GrindstoneScreenHandlerTopInputSlotMixin",
 		"HungerManagerMixin",
-        "ItemEntityMixin",
+		"ItemEntityMixin",
 		"ItemMixin",
 		"ItemPredicateMixin",
 		"ItemSlotArgumentTypeAccessor",
@@ -55,6 +55,7 @@
 		"ServerPlayerInteractionManagerMixin",
 		"ServerPlayNetworkHandlerMixin",
 		"ServerWorldMixin",
+		"SlotMixin",
 		"StatusEffectInstanceMixin",
 		"WeightedListEntryAccessor"
 	],

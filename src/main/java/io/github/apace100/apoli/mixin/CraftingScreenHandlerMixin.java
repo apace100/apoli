@@ -1,7 +1,9 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
+import io.github.apace100.apoli.access.SlotState;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
@@ -12,6 +14,7 @@ import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(CraftingScreenHandler.class)
 public class CraftingScreenHandlerMixin {
@@ -43,20 +45,30 @@ public class CraftingScreenHandlerMixin {
         return original || context.get((world, pos) -> pos.equals(playerEntity.getBlockPos()), false);
     }
 
-    @Inject(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void apoli$modifyResultStack(PlayerEntity player, int index, CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack, Slot slot, ItemStack itemStack2) {
+    @Inject(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;", shift = At.Shift.AFTER))
+    private void apoli$modifyResultStackOnQuickMove(PlayerEntity player, int slotIndex, CallbackInfoReturnable<ItemStack> cir, @Local(ordinal = 1) ItemStack itemStack2, @Local Slot slot) {
 
-        /*
-            FIXME: Currently, this does not account for whether the item can be inserted into the player's inventory,
-                   resulting in the item action being executed
-        */
-        if(input instanceof PowerCraftingInventory pci) {
+        if (!(input instanceof PowerCraftingInventory pci && pci.apoli$getPower() instanceof ModifyCraftingPower mcp)) {
+            return;
+        }
 
-            if(pci.apoli$getPower() instanceof ModifyCraftingPower mcp) {
-                mcp.applyAfterCraftingItemAction(itemStack2);
-            }
+        //  Check if the player's inventory have room for the item stack
+        int availableSlotIndex = player.getInventory().getOccupiedSlotWithRoomForStack(itemStack2);
+
+        //  If the player's inventory don't have room for the item stack, check for empty slots
+        if (availableSlotIndex == -1) {
+            availableSlotIndex = player.getInventory().getEmptySlot();
+        }
+
+        //  If there's either room for the item stack in the player's inventory or if the item stack
+        //  can be inserted into the player's inventory, execute the item action
+        if (availableSlotIndex != -1) {
+
+            ((SlotState) slot).apoli$setState(new Identifier("apoli:modified_result_stack"));
+            mcp.applyAfterCraftingItemAction(itemStack2);
 
         }
 
     }
+
 }
