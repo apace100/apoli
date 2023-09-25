@@ -275,7 +275,9 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
                 break tryOfferingResultStack;
             }
 
-            InventoryUtil.throwItem(user, resultStack, false, false);
+            if (!(user instanceof PlayerEntity)) {
+                InventoryUtil.throwItem(user, resultStack, false, false);
+            }
 
         }
 
