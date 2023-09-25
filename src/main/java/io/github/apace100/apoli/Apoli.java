@@ -7,6 +7,7 @@ import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
+import io.github.apace100.apoli.data.DynamicContainerType;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerTypes;
@@ -17,6 +18,7 @@ import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliClassData;
+import io.github.apace100.apoli.screen.ApoliScreenHandlerTypes;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
@@ -32,10 +34,10 @@ import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -91,8 +93,10 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		Registry.register(Registries.LOOT_CONDITION_TYPE, Apoli.identifier("power"), PowerLootCondition.TYPE);
 
 		ApoliClassData.registerAll();
+		ApoliScreenHandlerTypes.registerAll();
 
 		ModifierOperations.registerAll();
+		DynamicContainerType.registerAll();
 
 		PowerFactories.register();
 		EntityConditions.register();

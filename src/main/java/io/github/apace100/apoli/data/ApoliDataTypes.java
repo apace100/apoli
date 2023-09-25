@@ -2,6 +2,7 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.gson.JsonPrimitive;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -12,6 +13,8 @@ import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.power.factory.condition.ConditionTypes;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.slot.SlotBiFilter;
+import io.github.apace100.apoli.util.slot.SlotFilter;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
@@ -30,13 +33,13 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
@@ -265,6 +268,91 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 
     public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class);
+
+    public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
+
+    public static final SerializableDataType<DynamicContainerType> CONTAINER_TYPE = SerializableDataType.compound(
+        DynamicContainerType.class,
+        new SerializableData()
+            .add("title_alignment", ApoliDataTypes.TEXT_ALIGNMENT, TextAlignment.CENTER)
+            .add("sprite_location", SerializableDataTypes.IDENTIFIER, DynamicContainerType.DEFAULT_SPRITE_LOCATION)
+            .add("columns", SerializableDataTypes.INT, 1)
+            .add("rows", SerializableDataTypes.INT, 1),
+        data -> DynamicContainerType.of(
+            "apoli:custom",
+            data.getInt("columns"),
+            data.getInt("rows"),
+            data.getId("sprite_location"),
+            data.get("title_alignment")
+        ),
+        (serializableData, dynamicContainerType) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("name", dynamicContainerType.getName());
+            data.set("title_alignment", dynamicContainerType.getTitleAlignment());
+            data.set("sprite_location", dynamicContainerType.getSpriteLocation());
+            data.set("columns", dynamicContainerType.getColumns());
+            data.set("rows", dynamicContainerType.getRows());
+
+            return data;
+
+        }
+    );
+
+    public static final SerializableDataType<DynamicContainerType> BACKWARDS_COMPATIBLE_CONTAINER_TYPE = new SerializableDataType<>(
+        DynamicContainerType.class,
+        CONTAINER_TYPE::send,
+        CONTAINER_TYPE::receive,
+        jsonElement -> jsonElement instanceof JsonPrimitive jsonPrimitive && jsonPrimitive.isString() ?
+                       DynamicContainerType.get(jsonPrimitive.getAsString()) : CONTAINER_TYPE.read(jsonElement)
+    );
+
+    public static final SerializableDataType<SlotFilter> SLOT_FILTER = SerializableDataType.compound(
+        SlotFilter.class,
+        new SerializableData()
+            .add("slot", SerializableDataTypes.INT, null)
+            .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null),
+        data -> new SlotFilter(
+            data.get("slot"),
+            data.get("item_condition")
+        ),
+        (serializableData, slotFilter) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("slot", slotFilter.slot());
+            data.set("item_condition", slotFilter.stackPredicate());
+
+            return data;
+
+        }
+    );
+
+    public static final SerializableDataType<List<SlotFilter>> SLOT_FILTERS = SerializableDataType.list(SLOT_FILTER);
+
+    public static final SerializableDataType<SlotBiFilter> SLOT_BIFILTER = SerializableDataType.compound(
+        SlotBiFilter.class,
+        new SerializableData()
+            .add("inserting_to_slot_filter", ApoliDataTypes.SLOT_FILTER, null)
+            .add("on_slot_filter", ApoliDataTypes.SLOT_FILTER, null),
+        data -> new SlotBiFilter(
+            data.get("inserting_to_slot_filter"),
+            data.get("on_slot_filter")
+        ),
+        (serializableData, slotBiFilter) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("inserting_to_slot_filter", slotBiFilter.getLeft());
+            data.set("on_slot_filter", slotBiFilter.getRight());
+
+            return data;
+
+        }
+    );
+
+    public static final SerializableDataType<List<SlotBiFilter>> SLOT_BIFILTERS = SerializableDataType.list(SLOT_BIFILTER);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);
