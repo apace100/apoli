@@ -70,11 +70,11 @@ public class InventoryPower extends Power implements Active, Inventory {
     public enum ContainerType {
 
         CHEST("chest", name -> DynamicContainerType.of(name, 9, 3, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x3(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X3, syncId, playerInventory, inventory, rows)
         )),
 
         DOUBLE_CHEST("double_chest", name -> DynamicContainerType.of(name, 9, 6, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x6(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X6, syncId, playerInventory, inventory, rows)
         )),
 
         DROPPER("dropper", name -> DynamicContainerType.of(name, 3, 3, (inventory, columns, rows) ->

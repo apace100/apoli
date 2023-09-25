@@ -8,6 +8,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
 
 import java.util.LinkedHashMap;
@@ -62,27 +63,27 @@ public class DynamicContainerType {
         }
 
         register(DynamicContainerType.of("generic_9x1", 9, 1, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x1(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X1, syncId, playerInventory, inventory, rows)
         ));
 
         register(DynamicContainerType.of("generic_9x2", 9, 2, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x2(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X2, syncId, playerInventory, inventory, rows)
         ));
 
         register(DynamicContainerType.of("generic_9x3", 9, 3, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x3(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X3, syncId, playerInventory, inventory, rows)
         ));
 
         register(DynamicContainerType.of("generic_9x4", 9, 4, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x4(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X4, syncId, playerInventory, inventory, rows)
         ));
 
         register(DynamicContainerType.of("generic_9x5", 9, 5, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x5(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X5, syncId, playerInventory, inventory, rows)
         ));
 
         register(DynamicContainerType.of("generic_9x6", 9, 6, (inventory, columns, rows) ->
-            (syncId, playerInventory, player) -> GenericContainerScreenHandler.createGeneric9x6(syncId, playerInventory)
+            (syncId, playerInventory, player) -> new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X6, syncId, playerInventory, inventory, rows)
         ));
 
     }
