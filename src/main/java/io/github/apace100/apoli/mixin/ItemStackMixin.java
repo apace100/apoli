@@ -1,7 +1,8 @@
 package io.github.apace100.apoli.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.access.PotentiallyEdibleItemStack;
@@ -225,17 +226,17 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
             .orElse(original);
     }
 
-    @ModifyExpressionValue(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
-    private TypedActionResult<ItemStack> apoli$consumeCustomFood(TypedActionResult<ItemStack> original, World world, PlayerEntity user, Hand hand) {
+    @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
+    private TypedActionResult<ItemStack> apoli$consumeCustomFood(Item instance, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
 
         EdibleItemPower edibleItemPower = apoli$getEdiblePower().orElse(null);
         if (edibleItemPower == null) {
-            return original;
+            return original.call(instance, world, user, hand);
         }
 
         ItemStack stackInHand = user.getStackInHand(hand);
         if (!user.canConsume(edibleItemPower.getFoodComponent().isAlwaysEdible())) {
-            return original;
+            return original.call(instance, world, user, hand);
         }
 
         user.setCurrentHand(hand);
