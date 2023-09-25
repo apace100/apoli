@@ -13,7 +13,6 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.PotionUtil;
@@ -23,7 +22,6 @@ import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -58,23 +56,7 @@ public class EntityActions {
                     ((LivingEntity)entity).heal(data.getFloat("amount"));
                 }
             }));
-        register(new ActionFactory<>(Apoli.identifier("play_sound"), new SerializableData()
-                .add("sound", SerializableDataTypes.SOUND_EVENT)
-                .add("volume", SerializableDataTypes.FLOAT, 1F)
-                .add("pitch", SerializableDataTypes.FLOAT, 1F),
-                (data, entity) -> {
-                    SoundCategory category;
-                    if(entity instanceof PlayerEntity) {
-                        category = SoundCategory.PLAYERS;
-                    } else
-                    if(entity instanceof HostileEntity) {
-                        category = SoundCategory.HOSTILE;
-                    } else {
-                        category = SoundCategory.NEUTRAL;
-                    }
-                    entity.getWorld().playSound(null, (entity).getX(), (entity).getY(), (entity).getZ(), data.get("sound"),
-                        category, data.getFloat("volume"), data.getFloat("pitch"));
-                }));
+        register(PlaySoundAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("exhaust"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT),
             (data, entity) -> {
