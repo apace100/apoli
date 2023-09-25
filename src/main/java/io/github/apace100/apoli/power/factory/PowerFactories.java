@@ -126,6 +126,7 @@ public class PowerFactories {
         register(ActionOnDeathPower::createFactory);
         register(ActionOnItemPickupPower::createFactory);
         register(PreventItemPickupPower::createFactory);
+        register(EdibleItemPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {
