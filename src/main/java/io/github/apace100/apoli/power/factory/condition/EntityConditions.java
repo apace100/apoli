@@ -22,8 +22,6 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
@@ -90,23 +88,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("sprinting"), new SerializableData(), (data, entity) -> entity.isSprinting()));
         register(new ConditionFactory<>(Apoli.identifier("power_active"), new SerializableData().add("power", ApoliDataTypes.POWER_TYPE),
             (data, entity) -> ((PowerTypeReference<?>)data.get("power")).isActive(entity)));
-        register(new ConditionFactory<>(Apoli.identifier("status_effect"), new SerializableData()
-            .add("effect", SerializableDataTypes.STATUS_EFFECT)
-            .add("min_amplifier", SerializableDataTypes.INT, 0)
-            .add("max_amplifier", SerializableDataTypes.INT, Integer.MAX_VALUE)
-            .add("min_duration", SerializableDataTypes.INT, 0)
-            .add("max_duration", SerializableDataTypes.INT, Integer.MAX_VALUE),
-            (data, entity) -> {
-                StatusEffect effect = data.get("effect");
-                if(entity instanceof LivingEntity living) {
-                    if (living.hasStatusEffect(effect)) {
-                        StatusEffectInstance instance = living.getStatusEffect(effect);
-                        return instance.getDuration() <= data.getInt("max_duration") && instance.getDuration() >= data.getInt("min_duration")
-                            && instance.getAmplifier() <= data.getInt("max_amplifier") && instance.getAmplifier() >= data.getInt("min_amplifier");
-                    }
-                }
-                return false;
-            }));
+        register(StatusEffectCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("submerged_in"), new SerializableData().add("fluid", SerializableDataTypes.FLUID_TAG),
             (data, entity) -> ((SubmergableEntity)entity).apoli$isSubmergedInLoosely(data.get("fluid"))));
         register(new ConditionFactory<>(Apoli.identifier("fluid_height"), new SerializableData()
