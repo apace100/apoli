@@ -44,58 +44,59 @@ public class InGameHudMixin {
 
     }
 
-    @ModifyArg(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
-    public Identifier changeStatusBarTextures(Identifier original) {
-        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
-        if (power.isPresent()) {
-            return power.get().getStatusBarTexture();
-        }
-        return original;
-    }
-
-    @ModifyArg(method = "drawHeart", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
-    public Identifier changeHearts(Identifier original)
-    {
-        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
-        if (power.isPresent()) {
-            return power.get().getStatusBarTexture();
-        }
-        return original;
-    }
-
-    @ModifyArg(method = "renderExperienceBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
-    public Identifier changeXpBarTextures(Identifier original) {
-        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
-        if (power.isPresent()) {
-            return power.get().getStatusBarTexture();
-        }
-        return original;
-    }
-
-    @ModifyArg(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
-    public Identifier changeCrosshair(Identifier original) {
-        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
-        if (power.isPresent()) {
-            return power.get().getStatusBarTexture();
-        }
-        return original;
-    }
-
-    @ModifyArg(method = "renderMountJumpBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
-    public Identifier changeMountJumpBar(Identifier original) {
-        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
-        if (power.isPresent()) {
-            return power.get().getStatusBarTexture();
-        }
-        return original;
-    }
-
-    @ModifyArg(method = "renderMountHealth", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
-    public Identifier changeMountHealth(Identifier original) {
-        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
-        if (power.isPresent()) {
-            return power.get().getStatusBarTexture();
-        }
-        return original;
-    }
+    //  TODO: Re-implement `status_bar_texture` power type
+//    @ModifyArg(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
+//    public Identifier changeStatusBarTextures(Identifier original) {
+//        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
+//        if (power.isPresent()) {
+//            return power.get().getStatusBarTexture();
+//        }
+//        return original;
+//    }
+//
+//    @ModifyArg(method = "drawHeart", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
+//    public Identifier changeHearts(Identifier original)
+//    {
+//        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
+//        if (power.isPresent()) {
+//            return power.get().getStatusBarTexture();
+//        }
+//        return original;
+//    }
+//
+//    @ModifyArg(method = "renderExperienceBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
+//    public Identifier changeXpBarTextures(Identifier original) {
+//        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
+//        if (power.isPresent()) {
+//            return power.get().getStatusBarTexture();
+//        }
+//        return original;
+//    }
+//
+//    @ModifyArg(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
+//    public Identifier changeCrosshair(Identifier original) {
+//        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
+//        if (power.isPresent()) {
+//            return power.get().getStatusBarTexture();
+//        }
+//        return original;
+//    }
+//
+//    @ModifyArg(method = "renderMountJumpBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
+//    public Identifier changeMountJumpBar(Identifier original) {
+//        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
+//        if (power.isPresent()) {
+//            return power.get().getStatusBarTexture();
+//        }
+//        return original;
+//    }
+//
+//    @ModifyArg(method = "renderMountHealth", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
+//    public Identifier changeMountHealth(Identifier original) {
+//        Optional<OverrideHudTexturePower> power = PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class).stream().findFirst();
+//        if (power.isPresent()) {
+//            return power.get().getStatusBarTexture();
+//        }
+//        return original;
+//    }
 }

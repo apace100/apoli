@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
+import net.minecraft.screen.slot.CraftingResultSlot;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
@@ -62,7 +63,7 @@ public class CraftingScreenHandlerMixin {
 
         //  If there's either room for the item stack in the player's inventory or if the item stack
         //  can be inserted into the player's inventory, execute the item action
-        if (availableSlotIndex != -1) {
+        if (availableSlotIndex != -1 && slot instanceof CraftingResultSlot) {
 
             ((SlotState) slot).apoli$setState(new Identifier("apoli:modified_result_stack"));
             mcp.applyAfterCraftingItemAction(itemStack2);

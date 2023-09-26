@@ -2,6 +2,7 @@ package io.github.apace100.apoli.networking;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.networking.packet.SyncPowerTypeRegistryS2CPacket;
 import io.github.apace100.apoli.power.MultiplePowerType;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
@@ -41,15 +42,19 @@ public class ModPacketsS2C {
 
     @Environment(EnvType.CLIENT)
     public static void register() {
+
+        //  TODO: Use the new client configuration networking API to handle the version check handshake
         ClientLoginNetworking.registerGlobalReceiver(ModPackets.HANDSHAKE, ModPacketsS2C::handleHandshake);
         ClientPlayConnectionEvents.INIT.register(((clientPlayNetworkHandler, minecraftClient) -> {
             ClientPlayNetworking.registerReceiver(ModPackets.POWER_LIST, ModPacketsS2C::receivePowerList);
+            ClientPlayNetworking.registerReceiver(SyncPowerTypeRegistryS2CPacket.TYPE, SyncPowerTypeRegistryS2CPacket::handle);
             ClientPlayNetworking.registerReceiver(ModPackets.SYNC_POWER, ModPacketsS2C::onPowerSync);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_MOUNT, ModPacketsS2C::onPlayerMount);
             ClientPlayNetworking.registerReceiver(ModPackets.PLAYER_DISMOUNT, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(ModPackets.SET_ATTACKER, ModPacketsS2C::onSetAttacker);
             ClientPlayNetworking.registerReceiver(ModPackets.SYNC_STATUS_EFFECT, ModPacketsS2C::onStatusEffectSync);
         }));
+
     }
 
     private static void onStatusEffectSync(MinecraftClient minecraftClient, ClientPlayNetworkHandler clientPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {

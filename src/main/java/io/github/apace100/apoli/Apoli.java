@@ -19,7 +19,6 @@ import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
-import io.github.apace100.calio.mixin.CriteriaRegistryInvoker;
 import io.github.apace100.calio.resource.OrderedResourceListenerInitializer;
 import io.github.apace100.calio.resource.OrderedResourceListenerManager;
 import io.github.ladysnake.pal.AbilitySource;
@@ -30,6 +29,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.ResourceType;
@@ -111,7 +111,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));
 		ResourceConditions.register(ApoliResourceConditions.ALL_NAMESPACES_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, true));
 
-		CriteriaRegistryInvoker.callRegister(GainedPowerCriterion.INSTANCE);
+		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);
 
 		IdentifierAlias.addPathAlias("holder", "holder_action");
 

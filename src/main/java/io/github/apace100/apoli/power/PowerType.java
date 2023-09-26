@@ -10,12 +10,16 @@ import net.minecraft.util.Identifier;
 
 public class PowerType<T extends Power> {
 
-    private Identifier identifier;
-    private PowerFactory<T>.Instance factory;
-    private boolean isHidden = false;
+    private final PowerFactory<T>.Instance factory;
+    private final Identifier identifier;
 
     private String nameTranslationKey;
     private String descriptionTranslationKey;
+
+    private Text name;
+    private Text description;
+
+    private boolean isHidden = false;
 
     public PowerType(Identifier id, PowerFactory<T>.Instance factory) {
         this.identifier = id;
@@ -38,6 +42,11 @@ public class PowerType<T extends Power> {
     public void setTranslationKeys(String name, String description) {
         this.nameTranslationKey = name;
         this.descriptionTranslationKey = description;
+    }
+
+    public void setDisplayTexts(Text name, Text description) {
+        this.name = name;
+        this.description = description;
     }
 
     public T create(LivingEntity entity) {
@@ -75,7 +84,7 @@ public class PowerType<T extends Power> {
     }
 
     public MutableText getName() {
-        return Text.translatable(getOrCreateNameTranslationKey());
+        return name != null ? name.copy() : Text.translatable(getOrCreateNameTranslationKey());
     }
 
     public String getOrCreateDescriptionTranslationKey() {
@@ -87,7 +96,7 @@ public class PowerType<T extends Power> {
     }
 
     public MutableText getDescription() {
-        return Text.translatable(getOrCreateDescriptionTranslationKey());
+        return description != null ? description.copy() : Text.translatable(getOrCreateDescriptionTranslationKey());
     }
 
     @Override

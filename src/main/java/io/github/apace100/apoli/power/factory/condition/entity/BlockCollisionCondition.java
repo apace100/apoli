@@ -18,9 +18,9 @@ public class BlockCollisionCondition {
 
         Box entityBoundingBox = entity.getBoundingBox();
         Box offsetEntityBoundingBox = entityBoundingBox.offset(
-            data.getFloat("offset_x") * entityBoundingBox.getXLength(),
-            data.getFloat("offset_y") * entityBoundingBox.getYLength(),
-            data.getFloat("offset_z") * entityBoundingBox.getZLength()
+            data.getFloat("offset_x") * entityBoundingBox.getLengthX(),
+            data.getFloat("offset_y") * entityBoundingBox.getLengthY(),
+            data.getFloat("offset_z") * entityBoundingBox.getLengthZ()
         );
 
         if (data.isPresent("block_condition")) {
@@ -35,7 +35,9 @@ public class BlockCollisionCondition {
                 for (int y = minBlockPos.getY(); y <= maxBlockPos.getY(); y++) {
                     for (int z = minBlockPos.getZ(); z <= maxBlockPos.getZ(); z++) {
                         mutableBlockPos.set(x, y, z);
-                        if (blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) matchingBlocks++;
+                        if (blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) {
+                            matchingBlocks++;
+                        }
                     }
                 }
             }

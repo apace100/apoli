@@ -1,29 +1,20 @@
 package io.github.apace100.apoli.mixin;
 
-import com.google.common.collect.ImmutableList;
-import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.networking.ModPackets;
-import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
+import io.github.apace100.apoli.power.Power;
 import net.minecraft.entity.Dismounting;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -37,42 +28,6 @@ import java.util.Optional;
 @SuppressWarnings("rawtypes")
 @Mixin(value = PlayerManager.class, priority = 800)
 public abstract class LoginMixin {
-
-	@Shadow public abstract List<ServerPlayerEntity> getPlayerList();
-
-	@Inject(at = @At("TAIL"), method = "Lnet/minecraft/server/PlayerManager;onPlayerConnect(Lnet/minecraft/network/ClientConnection;Lnet/minecraft/server/network/ServerPlayerEntity;)V")
-	private void syncPowerTypes(ClientConnection connection, ServerPlayerEntity player, CallbackInfo info) {
-		PacketByteBuf powerListData = new PacketByteBuf(Unpooled.buffer());
-		powerListData.writeInt(PowerTypeRegistry.size());
-		PowerTypeRegistry.entries().forEach((entry) -> {
-			PowerType<?> type = entry.getValue();
-			PowerFactory.Instance factory = type.getFactory();
-			if(factory != null) {
-				powerListData.writeIdentifier(entry.getKey());
-				factory.write(powerListData);
-				if(type instanceof MultiplePowerType) {
-					powerListData.writeBoolean(true);
-					ImmutableList<Identifier> subPowers = ((MultiplePowerType<?>)type).getSubPowers();
-					powerListData.writeVarInt(subPowers.size());
-					subPowers.forEach(powerListData::writeIdentifier);
-				} else {
-					powerListData.writeBoolean(false);
-				}
-				powerListData.writeString(type.getOrCreateNameTranslationKey());
-				powerListData.writeString(type.getOrCreateDescriptionTranslationKey());
-				powerListData.writeBoolean(type.isHidden());
-			}
-		});
-
-		ServerPlayNetworking.send(player, ModPackets.POWER_LIST, powerListData);
-
-		List<ServerPlayerEntity> playerList = getPlayerList();
-		playerList.forEach(spe -> {
-			PowerHolderComponent.KEY.syncWith(spe, (ComponentProvider) player);
-			PowerHolderComponent.KEY.syncWith(player, (ComponentProvider) spe);
-		});
-		PowerHolderComponent.sync(player);
-	}
 
 	@Redirect(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"))
 	private void preventEndExitSpawnPointSetting(ServerPlayerEntity serverPlayerEntity, RegistryKey<World> dimension, BlockPos pos, float angle, boolean spawnPointSet, boolean bl, ServerPlayerEntity playerEntity, boolean alive) {

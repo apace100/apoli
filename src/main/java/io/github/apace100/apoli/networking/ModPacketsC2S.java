@@ -17,13 +17,17 @@ import net.minecraft.util.Identifier;
 public class ModPacketsC2S {
 
     public static void register() {
-        if(Apoli.PERFORM_VERSION_CHECK) {
+
+        //  TODO: Use the new server configuration networking API for version check handshake
+        if (Apoli.PERFORM_VERSION_CHECK) {
             ServerLoginConnectionEvents.QUERY_START.register(ModPacketsC2S::handshake);
             ServerLoginNetworking.registerGlobalReceiver(ModPackets.HANDSHAKE, ModPacketsC2S::handleHandshakeReply);
         }
+
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.USE_ACTIVE_POWERS, ModPacketsC2S::useActivePowers);
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.PLAYER_LANDED, ModPacketsC2S::playerLanded);
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.PREVENTED_ENTITY_USE, ModPacketsC2S::interactionPrevented);
+
     }
 
     private static void playerLanded(MinecraftServer minecraftServer, ServerPlayerEntity playerEntity, ServerPlayNetworkHandler serverPlayNetworkHandler, PacketByteBuf packetByteBuf, PacketSender packetSender) {

@@ -21,6 +21,8 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import java.util.Optional;
+
 public class ModifyAction {
 
     public static void action(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
@@ -48,7 +50,7 @@ public class ModifyAction {
             .add(LootContextParameters.TOOL, stack)
             .addOptional(LootContextParameters.THIS_ENTITY, stackHolder)
             .build(ApoliLootContextTypes.ANY);
-        LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(null);
+        LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(Optional.empty());
 
         ItemStack newStack = itemModifier.apply(stack, lootContext);
         ((MutableItemStack) stack).apoli$setFrom(newStack);

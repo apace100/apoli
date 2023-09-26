@@ -11,10 +11,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.recipe.SpecialCraftingRecipe;
-import net.minecraft.recipe.SpecialRecipeSerializer;
+import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.CraftingScreenHandler;
@@ -31,15 +28,15 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
 
     public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(PowerRestrictedCraftingRecipe::new);
 
-    public PowerRestrictedCraftingRecipe(Identifier id, CraftingRecipeCategory category) {
-        super(id, category);
+    public PowerRestrictedCraftingRecipe(CraftingRecipeCategory category) {
+        super(category);
     }
 
     @Override
     public boolean matches(RecipeInputInventory inventory, World world) {
         return inventory instanceof CraftingInventory craftingInventory && getRecipePowers(craftingInventory)
             .stream()
-            .anyMatch(rp -> rp.getRecipe().matches(craftingInventory, world));
+            .anyMatch(rp -> rp.getRecipe().value().matches(craftingInventory, world));
     }
 
     @Override
@@ -56,17 +53,17 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
 
         Optional<RecipePower> recipePower = getRecipePowers(craftingInventory)
             .stream()
-            .filter(rp -> rp.getRecipe().matches(craftingInventory, playerEntity.getWorld()))
+            .filter(rp -> rp.getRecipe().value().matches(craftingInventory, playerEntity.getWorld()))
             .max(Comparator.comparing(RecipePower::getPriority));
 
         if (recipePower.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        Recipe<CraftingInventory> recipe = recipePower.get().getRecipe();
-        Identifier recipeId = recipe.getId();
+        RecipeEntry<Recipe<CraftingInventory>> recipe = recipePower.get().getRecipe();
+        Identifier recipeId = recipe.id();
 
-        ItemStack newResultStack = recipe.craft(craftingInventory, registryManager);
+        ItemStack newResultStack = recipe.value().craft(craftingInventory, registryManager);
         Optional<ModifyCraftingPower> modifyCraftingPower = PowerHolderComponent.getPowers(playerEntity, ModifyCraftingPower.class)
             .stream()
             .filter(mcp -> mcp.doesApply(recipeId, newResultStack))
@@ -89,11 +86,6 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
     @Override
     public RecipeSerializer<?> getSerializer() {
         return SERIALIZER;
-    }
-
-    @Override
-    public ItemStack getOutput(DynamicRegistryManager registryManager) {
-        return super.getOutput(registryManager);
     }
 
     private PlayerEntity getPlayerFromInventory(CraftingInventory inv) {

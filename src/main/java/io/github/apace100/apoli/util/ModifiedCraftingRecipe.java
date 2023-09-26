@@ -28,8 +28,8 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
     public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(ModifiedCraftingRecipe::new);
 
-    public ModifiedCraftingRecipe(Identifier id, CraftingRecipeCategory category) {
-        super(id, category);
+    public ModifiedCraftingRecipe(CraftingRecipeCategory category) {
+        super(category);
     }
 
     @Override
@@ -39,14 +39,14 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
             return false;
         }
 
-        CraftingRecipe originalRecipe = getOriginalRecipe(craftingInventory)
+        RecipeEntry<CraftingRecipe> originalRecipe = getOriginalRecipe(craftingInventory)
             .orElse(null);
         if (originalRecipe == null) {
             return false;
         }
 
-        Identifier id = originalRecipe.getId();
-        ItemStack resultStack = originalRecipe.craft(craftingInventory, world.getRegistryManager());
+        Identifier id = originalRecipe.id();
+        ItemStack resultStack = originalRecipe.value().craft(craftingInventory, world.getRegistryManager());
 
         return getModifyCraftingPowers(craftingInventory)
             .stream()
@@ -67,13 +67,14 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
             return newResultStack;
         }
 
-        Optional<CraftingRecipe> originalRecipe = getOriginalRecipe(craftingInventory);
-        if (originalRecipe.isEmpty()) {
+        RecipeEntry<CraftingRecipe> originalRecipe = getOriginalRecipe(craftingInventory)
+            .orElse(null);
+        if (originalRecipe == null) {
             return newResultStack;
         }
 
-        Identifier recipeId = originalRecipe.get().getId();
-        ItemStack resultStack = originalRecipe.get().craft(craftingInventory, registryManager);
+        Identifier recipeId = originalRecipe.id();
+        ItemStack resultStack = originalRecipe.value().craft(craftingInventory, registryManager);
 
         Optional<ModifyCraftingPower> modifyCraftingPower = getModifyCraftingPowers(craftingInventory)
             .stream()
@@ -126,7 +127,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
     }
 
-    private Optional<CraftingRecipe> getOriginalRecipe(CraftingInventory craftingInventory) {
+    private Optional<RecipeEntry<CraftingRecipe>> getOriginalRecipe(CraftingInventory craftingInventory) {
 
         ScreenHandler screenHandler = ((CraftingInventoryAccessor) craftingInventory).getHandler();
         PlayerEntity playerEntity = getPlayerFromHandler(screenHandler);
@@ -137,8 +138,8 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
         return playerEntity.getServer().getRecipeManager().listAllOfType(RecipeType.CRAFTING)
             .stream()
-            .filter(recipe -> !(recipe instanceof ModifiedCraftingRecipe)
-                           && recipe.matches(craftingInventory, playerEntity.getWorld()))
+            .filter(entry -> !(entry.value() instanceof ModifiedCraftingRecipe)
+                          && entry.value().matches(craftingInventory, playerEntity.getWorld()))
             .findFirst();
 
     }

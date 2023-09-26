@@ -485,6 +485,7 @@ public class EntityConditions {
         register(InventoryCondition.getFactory());
         register(InSnowCondition.getFactory());
         register(InThunderstormCondition.getFactory());
+        register(AdvancementCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

@@ -1,10 +1,14 @@
 package io.github.apace100.apoli.power;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.PowerClearCallback;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 public class PowerTypeRegistry {
@@ -54,8 +58,17 @@ public class PowerTypeRegistry {
         return idToPower.entrySet();
     }
 
+    public static void forEach(BiConsumer<Identifier, PowerType<?>> powerTypeBiConsumer) {
+        idToPower.forEach(powerTypeBiConsumer::accept);
+    }
+
     public static Iterable<PowerType> values() {
         return idToPower.values();
+    }
+
+    @Nullable
+    public static PowerType getNullable(Identifier id) {
+        return idToPower.get(id);
     }
 
     public static PowerType get(Identifier id) {
@@ -78,7 +91,7 @@ public class PowerTypeRegistry {
         PowerClearCallback.EVENT.invoker().onPowerClear();
         idToPower.clear();
     }
-    
+
     public static void clearDisabledPowers() {
         disabledPowers.clear();
     }
