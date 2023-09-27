@@ -9,7 +9,7 @@ import net.minecraft.registry.Registry;
 public class ItemConditionsServer {
 
     public static void register() {
-        register(SmeltableCondition.getFactory(Apoli.server.getOverworld()));
+        register(SmeltableCondition.getFactory(() -> Apoli.server.getOverworld()));
     }
 
     private static void register(ConditionFactory<ItemStack> conditionFactory) {

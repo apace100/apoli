@@ -8,15 +8,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.world.World;
 
+import java.util.function.Supplier;
+
 public class SmeltableCondition {
 
-    public static boolean condition(SerializableData.Instance data, ItemStack stack, World world) {
+    public static boolean condition(SerializableData.Instance data, ItemStack stack, Supplier<World> worldSupplier) {
+        World world = worldSupplier.get();
         return world != null && world.getRecipeManager()
             .getFirstMatch(RecipeType.SMELTING, new SimpleInventory(stack), world)
             .isPresent();
     }
 
-    public static ConditionFactory<ItemStack> getFactory(World world) {
+    public static ConditionFactory<ItemStack> getFactory(Supplier<World> world) {
         return new ConditionFactory<>(
             Apoli.identifier("smeltable"),
             new SerializableData(),

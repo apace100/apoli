@@ -12,7 +12,7 @@ import net.minecraft.registry.Registry;
 public class ItemConditionsClient {
 
     public static void register() {
-        register(SmeltableCondition.getFactory(MinecraftClient.getInstance().world));
+        register(SmeltableCondition.getFactory(() -> MinecraftClient.getInstance().world));
     }
 
     private static void register(ConditionFactory<ItemStack> conditionFactory) {
