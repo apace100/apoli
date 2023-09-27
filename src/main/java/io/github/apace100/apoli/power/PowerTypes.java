@@ -5,7 +5,7 @@ import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.*;
-import io.github.apace100.apoli.networking.packet.SyncPowerTypeRegistryS2CPacket;
+import io.github.apace100.apoli.networking.packet.s2c.SyncPowerTypeRegistryS2CPacket;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ApoliResourceConditions;

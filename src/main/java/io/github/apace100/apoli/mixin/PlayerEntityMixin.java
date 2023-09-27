@@ -2,9 +2,8 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.networking.ModPackets;
+import io.github.apace100.apoli.networking.packet.s2c.DismountPlayerS2CPacket;
 import io.github.apace100.apoli.power.*;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
@@ -12,7 +11,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -213,11 +211,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     }
 
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
-    private void sendPlayerDismountPacket(CallbackInfo ci) {
-        if(!getWorld().isClient && getVehicle() instanceof PlayerEntity) {
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeInt(getId());
-            ServerPlayNetworking.send((ServerPlayerEntity) getVehicle(), ModPackets.PLAYER_DISMOUNT, buf);
+    private void apoli$sendPlayerDismountPacket(CallbackInfo ci) {
+        if (this.getVehicle() instanceof ServerPlayerEntity player) {
+            ServerPlayNetworking.send(player, new DismountPlayerS2CPacket(player.getId()));
         }
     }
 

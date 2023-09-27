@@ -3,22 +3,18 @@ package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.power.factory.action.bientity.AddVelocityAction;
-import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.power.factory.action.bientity.DamageAction;
+import io.github.apace100.apoli.power.factory.action.bientity.MountAction;
+import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
-import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Pair;
 import net.minecraft.registry.Registry;
+import net.minecraft.util.Pair;
 
 public class BiEntityActions {
 
@@ -49,16 +45,7 @@ public class BiEntityActions {
                 ((ActionFactory<Entity>.Instance)data.get("action")).accept(entities.getRight());
             }));
 
-        register(new ActionFactory<>(Apoli.identifier("mount"), new SerializableData(),
-            (data, entities) -> {
-                entities.getLeft().startRiding(entities.getRight(), true);
-                if(!entities.getLeft().getWorld().isClient && entities.getRight() instanceof PlayerEntity) {
-                    PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-                    buf.writeInt(entities.getLeft().getId());
-                    buf.writeInt(entities.getRight().getId());
-                    ServerPlayNetworking.send((ServerPlayerEntity) entities.getRight(), ModPackets.PLAYER_MOUNT, buf);
-                }
-            }));
+        register(MountAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("set_in_love"), new SerializableData(),
             (data, entities) -> {
                 if(entities.getRight() instanceof AnimalEntity && entities.getLeft() instanceof PlayerEntity) {

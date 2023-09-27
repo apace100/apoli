@@ -6,12 +6,11 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDamageTypes;
-import io.github.apace100.apoli.networking.ModPackets;
+import io.github.apace100.apoli.networking.packet.s2c.SyncAttackerS2CPacket;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
@@ -25,7 +24,6 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.registry.tag.FluidTags;
@@ -71,64 +69,60 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     @Inject(method = "onStatusEffectApplied", at = @At("TAIL"))
-    private void updateStatusEffectWhenApplied(StatusEffectInstance effectInstance, Entity source, CallbackInfo ci) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.APPLY, effectInstance);
+    private void apoli$updateStatusEffectWhenApplied(StatusEffectInstance effectInstance, Entity source, CallbackInfo ci) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity) (Object) this, SyncStatusEffectsUtil.UpdateType.APPLY, effectInstance);
     }
 
     @Inject(method = "onStatusEffectUpgraded", at = @At("TAIL"))
-    private void updateStatusEffectWhenUpgraded(StatusEffectInstance effectInstance, boolean reapplyEffect, Entity source, CallbackInfo ci) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.UPGRADE, effectInstance);
+    private void apoli$updateStatusEffectWhenUpgraded(StatusEffectInstance effectInstance, boolean reapplyEffect, Entity source, CallbackInfo ci) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity) (Object) this, SyncStatusEffectsUtil.UpdateType.UPGRADE, effectInstance);
     }
 
     @Inject(method = "onStatusEffectRemoved", at = @At("TAIL"))
-    private void updateStatusEffectWhenRemoved(StatusEffectInstance effectInstance, CallbackInfo ci) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.REMOVE, effectInstance);
+    private void apoli$updateStatusEffectWhenRemoved(StatusEffectInstance effectInstance, CallbackInfo ci) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity) (Object) this, SyncStatusEffectsUtil.UpdateType.REMOVE, effectInstance);
     }
 
     @Inject(method = "clearStatusEffects", at = @At("RETURN"))
-    private void updateStatusEffectWhenCleared(CallbackInfoReturnable<Boolean> cir) {
-        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity)(Object)this, SyncStatusEffectsUtil.UpdateType.CLEAR, null);
+    private void apoli$updateStatusEffectWhenCleared(CallbackInfoReturnable<Boolean> cir) {
+        SyncStatusEffectsUtil.sendStatusEffectUpdatePacket((LivingEntity) (Object) this, SyncStatusEffectsUtil.UpdateType.CLEAR, null);
     }
 
-    @ModifyVariable(method = "addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"))
-    private StatusEffectInstance modifyStatusEffect(StatusEffectInstance effect) {
-        StatusEffect effectType = effect.getEffectType();
-        int originalAmp = effect.getAmplifier();
-        int originalDur = effect.getDuration();
+    @ModifyVariable(method = "addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"), argsOnly = true)
+    private StatusEffectInstance apoli$modifyStatusEffect(StatusEffectInstance original) {
 
-        int amplifier = Math.round(PowerHolderComponent.modify(this, ModifyStatusEffectAmplifierPower.class, originalAmp, power -> power.doesApply(effectType)));
-        int duration = Math.round(PowerHolderComponent.modify(this, ModifyStatusEffectDurationPower.class, originalDur, power -> power.doesApply(effectType)));
+        StatusEffect effectType = original.getEffectType();
 
-        if (amplifier != originalAmp || duration != originalDur) {
-            return new StatusEffectInstance(
-                    effectType,
-                    duration,
-                    amplifier,
-                    effect.isAmbient(),
-                    effect.shouldShowParticles(),
-                    effect.shouldShowIcon(),
-                    ((HiddenEffectStatus) effect).apoli$getHiddenEffect(),
-                    Optional.empty()
-            );
-        }
-        return effect;
+        float amplifier = PowerHolderComponent.modify(this, ModifyStatusEffectAmplifierPower.class, original.getAmplifier(), p -> p.doesApply(effectType));
+        float duration = PowerHolderComponent.modify(this, ModifyStatusEffectDurationPower.class, original.getDuration(), p -> p.doesApply(effectType));
+
+        return new StatusEffectInstance(
+            effectType,
+            Math.round(duration),
+            Math.round(amplifier),
+            original.isAmbient(),
+            original.shouldShowParticles(),
+            original.shouldShowIcon(),
+            ((HiddenEffectStatus) original).apoli$getHiddenEffect(),
+            original.getFactorCalculationData()
+        );
+
     }
 
     @Inject(method = "setAttacker", at = @At("TAIL"))
-    private void syncAttacker(LivingEntity attacker, CallbackInfo ci) {
-        if(!getWorld().isClient) {
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeInt(getId());
-            if(this.attacker == null) {
-                buf.writeBoolean(false);
-            } else {
-                buf.writeBoolean(true);
-                buf.writeInt(this.attacker.getId());
-            }
-            for (ServerPlayerEntity player : PlayerLookup.tracking(this)) {
-                ServerPlayNetworking.send(player, ModPackets.SET_ATTACKER, buf);
-            }
+    private void apoli$syncAttacker(LivingEntity attacker, CallbackInfo ci) {
+
+        if (this.getWorld().isClient) {
+            return;
         }
+
+        OptionalInt attackerId = this.attacker != null ? OptionalInt.of(this.attacker.getId()) : OptionalInt.empty();
+        SyncAttackerS2CPacket syncAttackerPacket = new SyncAttackerS2CPacket(this.getId(), attackerId);
+
+        for (ServerPlayerEntity player : PlayerLookup.tracking(this)) {
+            ServerPlayNetworking.send(player, syncAttackerPacket);
+        }
+
     }
 
     @Inject(method = "getEquipmentChanges", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/AttributeContainer;removeModifiers(Lcom/google/common/collect/Multimap;)V"), locals = LocalCapture.CAPTURE_FAILHARD)

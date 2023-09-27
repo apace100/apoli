@@ -1,16 +1,13 @@
-package io.github.apace100.apoli.networking.packet;
+package io.github.apace100.apoli.networking.packet.s2c;
 
 import com.google.gson.JsonSyntaxException;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.MultiplePowerType;
+import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.FabricPacket;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.PacketType;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
@@ -110,12 +107,6 @@ public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> power
 
         });
 
-    }
-
-    @Environment(EnvType.CLIENT)
-    public void handle(ClientPlayerEntity clientPlayerEntity, PacketSender packetSender) {
-        PowerTypeRegistry.clear();
-        powers.forEach(PowerTypeRegistry::register);
     }
 
     @Override

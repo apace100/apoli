@@ -1,12 +1,57 @@
 package io.github.apace100.apoli.power;
 
-import java.util.Objects;
+import io.github.apace100.apoli.ApoliClient;
+import io.github.apace100.apoli.component.PowerHolderComponent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
+
+import java.util.*;
 
 public interface Active {
 
     void onUse();
-    Key getKey();
     void setKey(Key key);
+
+    Key getKey();
+
+    @Environment(EnvType.CLIENT)
+    static void integrateCallback(MinecraftClient client) {
+
+        if (client.player == null) {
+            return;
+        }
+
+        List<Power> powers = PowerHolderComponent.KEY.get(client.player).getPowers();
+        List<Power> triggeredPowers = new LinkedList<>();
+
+        Map<String, Boolean> currentKeybindingStates = new HashMap<>();
+        for (Power power : powers) {
+
+            if (!(power instanceof Active activePower)) {
+                continue;
+            }
+
+            Key key = activePower.getKey();
+            KeyBinding keyBinding = ApoliClient.getKeyBinding(key.key);
+
+            if (keyBinding == null) {
+                continue;
+            }
+
+            if (currentKeybindingStates.computeIfAbsent(key.key, k -> keyBinding.isPressed()) && (key.continuous || !ApoliClient.lastKeyBindingStates.getOrDefault(key.key, false))) {
+                triggeredPowers.add(power);
+            }
+
+        }
+
+        ApoliClient.lastKeyBindingStates.putAll(currentKeybindingStates);
+        if (!triggeredPowers.isEmpty()) {
+            ApoliClient.performActivePowers(triggeredPowers);
+        }
+
+    }
 
     class Key {
 
@@ -29,4 +74,5 @@ public interface Active {
             return Objects.hash(this.key, this.continuous);
         }
     }
+
 }
