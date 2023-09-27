@@ -3,6 +3,7 @@ package io.github.apace100.apoli.networking;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.SyncPowerTypeRegistryS2CPacket;
+import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.power.MultiplePowerType;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
@@ -11,17 +12,13 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import io.github.apace100.calio.SerializationHelper;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.networking.v1.ClientLoginNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -35,16 +32,14 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 public class ModPacketsS2C {
 
     @Environment(EnvType.CLIENT)
     public static void register() {
 
-        //  TODO: Use the new client configuration networking API to handle the version check handshake
-        ClientLoginNetworking.registerGlobalReceiver(ModPackets.HANDSHAKE, ModPacketsS2C::handleHandshake);
+        ClientConfigurationNetworking.registerGlobalReceiver(VersionHandshakePacket.TYPE, ModPacketsS2C::handleHandshake);
+
         ClientPlayConnectionEvents.INIT.register(((clientPlayNetworkHandler, minecraftClient) -> {
             ClientPlayNetworking.registerReceiver(ModPackets.POWER_LIST, ModPacketsS2C::receivePowerList);
             ClientPlayNetworking.registerReceiver(SyncPowerTypeRegistryS2CPacket.TYPE, SyncPowerTypeRegistryS2CPacket::handle);
@@ -107,15 +102,8 @@ public class ModPacketsS2C {
         });
     }
 
-
-    @Environment(EnvType.CLIENT)
-    private static CompletableFuture<PacketByteBuf> handleHandshake(MinecraftClient minecraftClient, ClientLoginNetworkHandler clientLoginNetworkHandler, PacketByteBuf packetByteBuf, Consumer<GenericFutureListener<? extends Future<? super Void>>> genericFutureListenerConsumer) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(Apoli.SEMVER.length);
-        for(int i = 0; i < Apoli.SEMVER.length; i++) {
-            buf.writeInt(Apoli.SEMVER[i]);
-        }
-        return CompletableFuture.completedFuture(buf);
+    private static void handleHandshake(VersionHandshakePacket packet, PacketSender responseSender) {
+        responseSender.sendPacket(new VersionHandshakePacket(Apoli.SEMVER));
     }
 
     @Environment(EnvType.CLIENT)

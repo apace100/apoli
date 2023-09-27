@@ -3,6 +3,7 @@ package io.github.apace100.apoli.networking;
 import io.github.apace100.apoli.Apoli;
 import net.minecraft.util.Identifier;
 
+//  TODO: Refactor how packets are handled
 public class ModPackets {
 
     public static final Identifier HANDSHAKE = Apoli.identifier("handshake");

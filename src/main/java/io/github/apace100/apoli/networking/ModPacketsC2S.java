@@ -2,12 +2,14 @@ package io.github.apace100.apoli.networking;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
+import io.github.apace100.apoli.networking.task.VersionHandshakeTask;
 import io.github.apace100.apoli.power.*;
 import net.fabricmc.fabric.api.networking.v1.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerLoginNetworkHandler;
+import net.minecraft.server.network.ServerConfigurationNetworkHandler;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -18,10 +20,9 @@ public class ModPacketsC2S {
 
     public static void register() {
 
-        //  TODO: Use the new server configuration networking API for version check handshake
         if (Apoli.PERFORM_VERSION_CHECK) {
-            ServerLoginConnectionEvents.QUERY_START.register(ModPacketsC2S::handshake);
-            ServerLoginNetworking.registerGlobalReceiver(ModPackets.HANDSHAKE, ModPacketsC2S::handleHandshakeReply);
+            ServerConfigurationConnectionEvents.CONFIGURE.register(ModPacketsC2S::handshake);
+            ServerConfigurationNetworking.registerGlobalReceiver(VersionHandshakePacket.TYPE, ModPacketsC2S::handleHandshakeReply);
         }
 
         ServerPlayNetworking.registerGlobalReceiver(ModPackets.USE_ACTIVE_POWERS, ModPacketsC2S::useActivePowers);
@@ -85,33 +86,43 @@ public class ModPacketsC2S {
         });
     }
 
-    private static void handleHandshakeReply(MinecraftServer minecraftServer, ServerLoginNetworkHandler serverLoginNetworkHandler, boolean understood, PacketByteBuf packetByteBuf, ServerLoginNetworking.LoginSynchronizer loginSynchronizer, PacketSender packetSender) {
-        if (understood) {
-            int clientSemVerLength = packetByteBuf.readInt();
-            int[] clientSemVer = new int[clientSemVerLength];
-            boolean mismatch = clientSemVerLength != Apoli.SEMVER.length;
-            for(int i = 0; i < clientSemVerLength; i++) {
-                clientSemVer[i] = packetByteBuf.readInt();
-                if(i < clientSemVerLength - 1 && clientSemVer[i] != Apoli.SEMVER[i]) {
-                    mismatch = true;
-                }
+    private static void handleHandshakeReply(VersionHandshakePacket packet, ServerConfigurationNetworkHandler handler, PacketSender responseSender) {
+
+        boolean mismatch = packet.semver().length != Apoli.SEMVER.length;
+        for (int i = 0; !mismatch && i < packet.semver().length - 1; i++) {
+
+            if (packet.semver()[i] != Apoli.SEMVER[i]) {
+                mismatch = true;
+                break;
             }
-            if(mismatch) {
-                StringBuilder clientVersionString = new StringBuilder();
-                for(int i = 0; i < clientSemVerLength; i++) {
-                    clientVersionString.append(clientSemVer[i]);
-                    if(i < clientSemVerLength - 1) {
-                        clientVersionString.append(".");
-                    }
-                }
-                serverLoginNetworkHandler.disconnect(Text.translatable("apoli.gui.version_mismatch", Apoli.VERSION, clientVersionString));
-            }
-        } else {
-            serverLoginNetworkHandler.disconnect(Text.literal("This server requires you to install the Apoli mod (v" + Apoli.VERSION + ") to play."));
+
         }
+
+        if (!mismatch) {
+            handler.completeTask(VersionHandshakeTask.KEY);
+            return;
+        }
+
+        StringBuilder semverString = new StringBuilder();
+        String separator = "";
+
+        for (int i : packet.semver()) {
+            semverString.append(separator).append(i);
+            separator = ".";
+        }
+
+        handler.disconnect(Text.translatable("apoli.gui.version_mismatch", Apoli.VERSION, semverString));
+
     }
 
-    private static void handshake(ServerLoginNetworkHandler serverLoginNetworkHandler, MinecraftServer minecraftServer, PacketSender packetSender, ServerLoginNetworking.LoginSynchronizer loginSynchronizer) {
-        packetSender.sendPacket(ModPackets.HANDSHAKE, PacketByteBufs.empty());
+    private static void handshake(ServerConfigurationNetworkHandler handler, MinecraftServer server) {
+
+        if (ServerConfigurationNetworking.canSend(handler, VersionHandshakePacket.TYPE)) {
+            handler.addTask(new VersionHandshakeTask(Apoli.SEMVER));
+        } else {
+            handler.disconnect(Text.of("This server requires you to install the Apoli mod (v" + Apoli.VERSION + ") to play."));
+        }
+
     }
+
 }
