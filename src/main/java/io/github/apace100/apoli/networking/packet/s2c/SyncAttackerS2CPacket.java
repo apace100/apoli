@@ -14,17 +14,22 @@ public record SyncAttackerS2CPacket(int targetId, OptionalInt attackerId) implem
     );
 
     private static SyncAttackerS2CPacket read(PacketByteBuf buffer) {
+
+        int targetId = buffer.readVarInt();
         OptionalInt attackerId = buffer.readBoolean() ? OptionalInt.of(buffer.readVarInt()) : OptionalInt.empty();
-        return new SyncAttackerS2CPacket(buffer.readVarInt(), attackerId);
+
+        return new SyncAttackerS2CPacket(targetId, attackerId);
+
     }
 
     @Override
     public void write(PacketByteBuf buffer) {
 
-        buffer.writeBoolean(attackerId.isPresent());
         buffer.writeVarInt(targetId);
+        buffer.writeBoolean(attackerId.isPresent());
 
         attackerId.ifPresent(buffer::writeVarInt);
+
 
     }
 
