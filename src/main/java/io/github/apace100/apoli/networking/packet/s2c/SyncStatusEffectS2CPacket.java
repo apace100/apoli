@@ -21,8 +21,8 @@ public record SyncStatusEffectS2CPacket(int targetId, NbtCompound statusEffectDa
     @Override
     public void write(PacketByteBuf buffer) {
         buffer.writeVarInt(updateType.ordinal());
-        buffer.writeNbt(statusEffectData);
         buffer.writeVarInt(targetId);
+        buffer.writeNbt(statusEffectData);
     }
 
     @Override
