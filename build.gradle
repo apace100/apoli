@@ -114,10 +114,10 @@ dependencies {
 
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-//	modApi "maven.modrinth:additionalentityattributes:${project.aea_version}"
-//	include "maven.modrinth:additionalentityattributes:${project.aea_version}"
-	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
-	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
+	modApi "maven.modrinth:additionalentityattributes:${project.aea_version}"
+	include "maven.modrinth:additionalentityattributes:${project.aea_version}"
+//	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
+//	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 
 }
 
