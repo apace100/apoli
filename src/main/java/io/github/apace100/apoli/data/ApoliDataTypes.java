@@ -2,6 +2,9 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -30,20 +33,23 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ApoliDataTypes {
 
@@ -265,6 +271,50 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 
     public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class);
+
+    public static final SerializableDataType<Map<Identifier, Identifier>> IDENTIFIER_MAP = new SerializableDataType<>(
+        ClassUtil.castClass(Map.class),
+        (buffer, idMap) -> buffer.writeMap(
+            idMap,
+            PacketByteBuf::writeIdentifier,
+            PacketByteBuf::writeIdentifier
+        ),
+        buffer -> buffer.readMap(
+            PacketByteBuf::readIdentifier,
+            PacketByteBuf::readIdentifier
+        ),
+        jsonElement -> {
+
+            if (!(jsonElement instanceof JsonObject jsonObject)) {
+                throw new JsonParseException("Expected a JSON object");
+            }
+
+            Map<Identifier, Identifier> map = new LinkedHashMap<>();
+            for (String key : jsonObject.keySet()) {
+
+                if (!(jsonObject.get(key) instanceof JsonPrimitive jsonPrimitive) || !jsonPrimitive.isString()) {
+                    continue;
+                }
+
+                Identifier keyId = new Identifier(key);
+                Identifier valId = new Identifier(jsonPrimitive.getAsString());
+
+                map.put(keyId, valId);
+
+            }
+
+            return map;
+
+        },
+        idMap -> {
+
+            JsonObject jsonObject = new JsonObject();
+            idMap.forEach((keyId, valId) -> jsonObject.addProperty(keyId.toString(), valId.toString()));
+
+            return jsonObject;
+
+        }
+    );
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
         return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);
