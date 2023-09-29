@@ -13,31 +13,27 @@ import java.util.function.Predicate;
 public class ConditionFactory<T> implements Factory {
 
     private final Identifier identifier;
-    protected SerializableData data;
     private final BiFunction<SerializableData.Instance, T, Boolean> condition;
+
+    protected final SerializableData data;
 
     public ConditionFactory(Identifier identifier, SerializableData data, BiFunction<SerializableData.Instance, T, Boolean> condition) {
         this.identifier = identifier;
         this.condition = condition;
-        this.data = data;
-        this.data.add("inverted", SerializableDataTypes.BOOLEAN, false);
+        this.data = data
+            .add("inverted", SerializableDataTypes.BOOLEAN, false);
     }
 
     public class Instance implements Predicate<T> {
 
         private final SerializableData.Instance dataInstance;
-
         private Instance(SerializableData.Instance data) {
             this.dataInstance = data;
         }
 
+        @Override
         public final boolean test(T t) {
-            boolean fulfilled = isFulfilled(t);
-            if(dataInstance.getBoolean("inverted")) {
-                return !fulfilled;
-            } else {
-                return fulfilled;
-            }
+            return dataInstance.getBoolean("inverted") != isFulfilled(t);
         }
 
         public boolean isFulfilled(T t) {
@@ -48,6 +44,16 @@ public class ConditionFactory<T> implements Factory {
             buf.writeIdentifier(identifier);
             data.write(buf, dataInstance);
         }
+
+        public JsonObject toJson() {
+
+            JsonObject jsonObject = data.write(dataInstance);
+            jsonObject.addProperty("type", identifier.toString());
+
+            return jsonObject;
+
+        }
+
     }
 
     @Override
@@ -67,4 +73,5 @@ public class ConditionFactory<T> implements Factory {
     public Instance read(PacketByteBuf buffer) {
         return new Instance(data.read(buffer));
     }
+
 }
