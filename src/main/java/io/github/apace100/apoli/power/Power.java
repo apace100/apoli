@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.power;
 
+import com.google.gson.JsonObject;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
@@ -17,6 +19,9 @@ public class Power {
 
     protected LivingEntity entity;
     protected PowerType<?> type;
+
+    protected SerializableData.Instance dataInstance;
+    protected SerializableData serializableData;
 
     private boolean shouldTick = false;
     private boolean shouldTickWhenInactive = false;
@@ -41,6 +46,14 @@ public class Power {
     protected void setTicking(boolean evenWhenInactive) {
         this.shouldTick = true;
         this.shouldTickWhenInactive = evenWhenInactive;
+    }
+
+    protected final void setDataInstance(SerializableData.Instance dataInstance) {
+        this.dataInstance = dataInstance;
+    }
+
+    protected final void setSerializableData(SerializableData serializableData) {
+        this.serializableData = serializableData;
     }
 
     public boolean shouldTick() {
@@ -87,6 +100,10 @@ public class Power {
 
     }
 
+    public JsonObject toJson() {
+        return serializableData.write(dataInstance);
+    }
+
     public PowerType<?> getType() {
         return type;
     }
@@ -95,4 +112,5 @@ public class Power {
         return new PowerFactory<>(identifier,
             new SerializableData(), data -> powerConstructor::apply).allowCondition();
     }
+
 }

@@ -13,14 +13,16 @@ import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -60,6 +62,13 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
 
     public PowerTypes() {
         super(GSON, "powers", ResourceType.SERVER_DATA);
+
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (!(entity instanceof PlayerEntity)) {
+                postLoad(entity, false);
+            }
+        });
+
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register((player, joined) -> {
 
             Map<Identifier, PowerType<?>> powers = new HashMap<>();
@@ -67,11 +76,10 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
 
             ServerPlayNetworking.send(player, new SyncPowerTypeRegistryS2CPacket(powers));
 
-            //region Sync power holder CCA component upon the player joining the server
-            MinecraftServer server = player.getServer();
-            if (joined && server != null) {
+            //  Sync power holder CCA component upon the player joining the server
+            if (joined) {
 
-                List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
+                List<ServerPlayerEntity> players = player.getServerWorld().getServer().getPlayerManager().getPlayerList();
                 players.remove(player);
 
                 players.forEach(otherPlayer -> {
@@ -80,35 +88,76 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
                 });
 
             }
-            //endregion
 
-            postLoad(player);
+            postLoad(player, joined);
 
         });
+
     }
 
-    private void postLoad(Entity entity) {
+    private void postLoad(Entity entity, boolean init) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        if (entity.getWorld().isClient || component == null) {
+        if (entity.getWorld().isClient || component == null || !(entity instanceof LivingEntity livingEntity)) {
             return;
         }
 
-        for (PowerType<?> powerType : component.getPowerTypes(true)) {
+        boolean mismatch = false;
+        for (PowerType<?> oldPowerType : component.getPowerTypes(true)) {
 
-            Identifier powerTypeId = powerType.getIdentifier();
-            if (PowerTypeRegistry.contains(powerTypeId)) {
+            Identifier oldPowerTypeId = oldPowerType.getIdentifier();
+            if (PowerTypeRegistry.contains(oldPowerTypeId)) {
+
+                PowerType<?> newPowerType = PowerTypeRegistry.get(oldPowerTypeId);
+
+                Power oldPower = component.getPower(oldPowerType);
+                Power newPower = newPowerType.create(livingEntity);
+
+                if (oldPower.toJson().equals(newPower.toJson())) {
+                    continue;
+                }
+
+                Apoli.LOGGER.warn("Mismatched data fields of power \"{}\" from entity {}! Updating...", oldPowerTypeId, entity.getName().getString());
+                mismatch = true;
+
+                for (Identifier source : component.getSources(oldPowerType)) {
+                    component.removePower(oldPowerType, source);
+                    component.addPower(newPowerType, source);
+                }
+
+                newPower = component.getPower(newPowerType);
+                if (oldPower.getClass().isAssignableFrom(newPower.getClass())) {
+                    //  Transfer the data of the old power to the new power if the old power is an instance of the new power
+                    Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", oldPowerTypeId);
+                    newPower.fromTag(oldPower.toTag());
+                } else {
+                    //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
+                    //  occurs if the power no longer uses the same power type as it used to
+                    Apoli.LOGGER.warn("Couldn't transfer old data of power \"{}\", as it's using a different power type!", oldPowerTypeId);
+                }
+
                 continue;
+
             }
 
-            Apoli.LOGGER.error("Removed unregistered power \"{}\" from entity {}!", powerTypeId, entity.getName().getString());
-            for (Identifier sourceId : component.getSources(powerType)) {
-                component.removePower(powerType, sourceId);
+            Apoli.LOGGER.error("Removed unregistered power \"{}\" from entity {}!", oldPowerTypeId, entity.getName().getString());
+            mismatch = true;
+
+            for (Identifier sourceId : component.getSources(oldPowerType)) {
+                component.removePower(oldPowerType, sourceId);
             }
 
         }
 
-        component.sync();
+        if (init || mismatch) {
+
+            if (mismatch) {
+                Apoli.LOGGER.info("Finished updating power data of entity {}.", entity.getName().getString());
+            }
+
+            component.sync();
+
+        }
 
     }
 

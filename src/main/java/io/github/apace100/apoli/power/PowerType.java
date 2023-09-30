@@ -50,7 +50,14 @@ public class PowerType<T extends Power> {
     }
 
     public T create(LivingEntity entity) {
-        return getFactory().apply(this, entity);
+
+        T power = factory.apply(this, entity);
+
+        power.setSerializableData(factory.getFactory().getSerializableData());
+        power.setDataInstance(factory.getDataInstance());
+
+        return power;
+
     }
 
     public boolean isHidden() {
