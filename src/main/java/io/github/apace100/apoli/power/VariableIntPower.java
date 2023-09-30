@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
+import net.minecraft.util.math.MathHelper;
 
 public class VariableIntPower extends Power {
 
@@ -33,11 +34,7 @@ public class VariableIntPower extends Power {
     }
 
     public int setValue(int newValue) {
-        if(newValue > getMax())
-            newValue = getMax();
-        if(newValue < getMin())
-            newValue = getMin();
-        return currentValue = newValue;
+        return currentValue = MathHelper.clamp(newValue, min, max);
     }
 
     public int increment() {
@@ -55,6 +52,7 @@ public class VariableIntPower extends Power {
 
     @Override
     public void fromTag(NbtElement tag) {
-        currentValue = ((NbtInt)tag).intValue();
+        currentValue = MathHelper.clamp(((NbtInt) tag).intValue(), min, max);
     }
+
 }
