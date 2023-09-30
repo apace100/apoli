@@ -55,7 +55,7 @@ public class HudRender {
             int order = JsonHelper.getInt((JsonObject) json, "order", 0);
             hudRender = new HudRender(order);
             if (!((JsonObject) json).has("hud_render")) {
-                throw new RuntimeException("Hud render with `order` field does not have a `hud_renders` field. No hud renders will be present.");
+                throw new RuntimeException("Hud render with `order` field does not have a `hud_render` field. No hud renders will be present.");
             }
             ApoliDataTypes.INNER_HUD_RENDERS.read(((JsonObject) json).get("hud_render")).forEach(hudRender::addRender);
             return hudRender;
