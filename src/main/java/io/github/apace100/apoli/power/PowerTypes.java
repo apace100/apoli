@@ -13,6 +13,7 @@ import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
+import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -39,6 +40,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
     public static final Set<Identifier> DEPENDENCIES = new HashSet<>();
     public static final Set<String> LOADED_NAMESPACES = new HashSet<>();
 
+    public static final Identifier PHASE = Apoli.identifier("phase/power_types");
     private static final Identifier MULTIPLE = Apoli.identifier("multiple");
     private static final Identifier SIMPLE = Apoli.identifier("simple");
 
@@ -69,7 +71,8 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             }
         });
 
-        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register((player, joined) -> {
+        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
+        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(PHASE, (player, joined) -> {
 
             Map<Identifier, PowerType<?>> powers = new HashMap<>();
             PowerTypeRegistry.forEach(powers::put);
