@@ -291,6 +291,8 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class);
 
+    public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
+
     public static final SerializableDataType<Map<Identifier, Identifier>> IDENTIFIER_MAP = new SerializableDataType<>(
         ClassUtil.castClass(Map.class),
         (buffer, idMap) -> buffer.writeMap(
