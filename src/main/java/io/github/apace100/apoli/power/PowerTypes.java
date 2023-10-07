@@ -165,7 +165,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
     }
 
     @Override
-    protected void apply(List<MultiJsonDataContainer> prepared, ResourceManager manager, Profiler profiler) {
+    protected void apply(MultiJsonDataContainer prepared, ResourceManager manager, Profiler profiler) {
 
         PowerTypeRegistry.reset();
         LOADING_PRIORITIES.clear();
@@ -176,19 +176,19 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         PowerReloadCallback.EVENT.invoker().onPowerReload();
         PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
 
-        prepared.forEach(multiJsonDataContainer -> multiJsonDataContainer.forEach((packName, fileId, jsonElement) -> {
+        prepared.forEach((packName, id, jsonElement) -> {
             try {
 
-                SerializableData.CURRENT_NAMESPACE = fileId.getNamespace();
-                SerializableData.CURRENT_PATH = fileId.getPath();
+                SerializableData.CURRENT_NAMESPACE = id.getNamespace();
+                SerializableData.CURRENT_PATH = id.getPath();
 
                 JsonObject jsonObject = jsonElement.getAsJsonObject();
-                PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(fileId, jsonObject);
+                PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(id, jsonObject);
 
                 Identifier powerFactoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
 
                 if (!isMultiple(powerFactoryId)) {
-                    readPower(packName, fileId, jsonObject);
+                    readPower(packName, id, jsonObject);
                     return;
                 }
 
@@ -200,32 +200,32 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
                         continue;
                     }
 
-                    Identifier subPowerId = new Identifier(fileId + "_" + field);
+                    Identifier subPowerId = new Identifier(id + "_" + field);
                     try {
                         PowerType<?> subPower = readSubPower(packName, subPowerId, entry.getValue().getAsJsonObject());
                         if (subPower != null) {
                             subPowerIds.add(subPowerId);
                         }
                     } catch (Exception e) {
-                        Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power file \"{}\" (skipping): {}", subPowerId, fileId, e.getMessage());
+                        Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power file \"{}\" (skipping): {}", subPowerId, id, e.getMessage());
                     }
 
                 }
 
-                MultiplePowerType<?> superPower = readSuperPower(packName, fileId, jsonObject);
+                MultiplePowerType<?> superPower = readSuperPower(packName, id, jsonObject);
                 if (superPower == null) {
                     subPowerIds.forEach(PowerTypeRegistry::disable);
                     return;
                 }
 
                 superPower.setSubPowers(subPowerIds);
-                handleAdditionalData(fileId, powerFactoryId, false, jsonObject, superPower);
-                PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(fileId, powerFactoryId, false, jsonObject, superPower);
+                handleAdditionalData(id, powerFactoryId, false, jsonObject, superPower);
+                PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(id, powerFactoryId, false, jsonObject, superPower);
 
             } catch (Exception e) {
-                Apoli.LOGGER.error("There was a problem reading power file \"{}\" (skipping): {}", fileId, e.getMessage());
+                Apoli.LOGGER.error("There was a problem reading power file \"{}\" (skipping): {}", id, e.getMessage());
             }
-        }));
+        });
 
         PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
         LOADING_PRIORITIES.clear();
