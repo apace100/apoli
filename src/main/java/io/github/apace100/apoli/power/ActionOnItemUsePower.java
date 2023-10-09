@@ -18,13 +18,13 @@ import java.util.function.Predicate;
 
 public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnItemUsePower> {
 
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
     private final Consumer<Entity> entityAction;
     private final Consumer<Pair<World, ItemStack>> itemAction;
     private final TriggerType triggerType;
     private final int priority;
 
-    public ActionOnItemUsePower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> itemAction, TriggerType triggerType, int priority) {
+    public ActionOnItemUsePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> itemAction, TriggerType triggerType, int priority) {
         super(type, entity);
         this.itemCondition = itemCondition;
         this.entityAction = entityAction;
@@ -34,7 +34,7 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
     }
 
     public boolean doesApply(ItemStack stack) {
-        return itemCondition == null || itemCondition.test(stack);
+        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
     public void executeActions(ItemStack stack) {

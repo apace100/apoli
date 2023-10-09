@@ -19,6 +19,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
+import net.minecraft.world.World;
 
 import java.util.List;
 import java.util.Map;
@@ -31,9 +32,9 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     private static final ConcurrentHashMap<Entity, ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new ConcurrentHashMap<>();
 
     private final Enchantment enchantment;
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
 
-    public ModifyEnchantmentLevelPower(PowerType<?> type, LivingEntity entity, Enchantment enchantment, Predicate<ItemStack> itemCondition) {
+    public ModifyEnchantmentLevelPower(PowerType<?> type, LivingEntity entity, Enchantment enchantment, Predicate<Pair<World, ItemStack>> itemCondition) {
         super(type, entity);
         this.enchantment = enchantment;
         this.itemCondition = itemCondition;
@@ -65,7 +66,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     }
 
     public boolean checkItemCondition(ItemStack self) {
-        return itemCondition == null || itemCondition.test(self);
+        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), self));
     }
 
     private static Optional<Integer> findEnchantIndex(Identifier id, NbtList enchants) {

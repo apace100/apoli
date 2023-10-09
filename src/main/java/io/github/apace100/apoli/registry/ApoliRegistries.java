@@ -25,7 +25,7 @@ public class ApoliRegistries {
     public static final Registry<PowerFactory> POWER_FACTORY;
     public static final Registry<ConditionFactory<Entity>> ENTITY_CONDITION;
     public static final Registry<ConditionFactory<Pair<Entity, Entity>>> BIENTITY_CONDITION;
-    public static final Registry<ConditionFactory<ItemStack>> ITEM_CONDITION;
+    public static final Registry<ConditionFactory<Pair<World, ItemStack>>> ITEM_CONDITION;
     public static final Registry<ConditionFactory<CachedBlockPosition>> BLOCK_CONDITION;
     public static final Registry<ConditionFactory<Pair<DamageSource, Float>>> DAMAGE_CONDITION;
     public static final Registry<ConditionFactory<FluidState>> FLUID_CONDITION;

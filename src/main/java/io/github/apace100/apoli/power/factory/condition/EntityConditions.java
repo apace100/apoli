@@ -48,6 +48,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
@@ -120,11 +121,7 @@ public class EntityConditions {
             (data, entity) -> entity.isOnGround() &&
                 (!data.isPresent("block_condition") || ((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")).test(
                     new CachedBlockPosition(entity.getWorld(), BlockPos.ofFloored(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ()), true)))));
-        register(new ConditionFactory<>(Apoli.identifier("equipped_item"), new SerializableData()
-            .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
-            .add("item_condition", ApoliDataTypes.ITEM_CONDITION),
-            (data, entity) -> entity instanceof LivingEntity && ((ConditionFactory<ItemStack>.Instance) data.get("item_condition")).test(
-                ((LivingEntity) entity).getEquippedStack(data.get("equipment_slot")))));
+        register(EquippedCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("attribute"), new SerializableData()
             .add("attribute", SerializableDataTypes.ATTRIBUTE)
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -332,22 +329,7 @@ public class EntityConditions {
             }
             return false;
         }));
-        register(new ConditionFactory<>(Apoli.identifier("using_item"), new SerializableData()
-            .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null), (data, entity) -> {
-            if(entity instanceof LivingEntity living) {
-                if (living.isUsingItem()) {
-                    ConditionFactory<ItemStack>.Instance condition = data.get("item_condition");
-                    if (condition != null) {
-                        Hand activeHand = living.getActiveHand();
-                        ItemStack handStack = living.getStackInHand(activeHand);
-                        return condition.test(handStack);
-                    } else {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }));
+        register(UsingItemCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("moving"), new SerializableData(),
             (data, entity) -> ((MovingEntity)entity).apoli$isMoving()));
         register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()

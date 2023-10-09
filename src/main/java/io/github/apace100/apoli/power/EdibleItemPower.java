@@ -26,7 +26,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
     private final Consumer<Pair<World, ItemStack>> resultItemAction;
     private final Consumer<Pair<World, ItemStack>> consumedItemAction;
 
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
 
     private final FoodComponent foodComponent;
     private final ItemStack resultStack;
@@ -35,7 +35,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     private final int priority;
 
-    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> consumedItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<ItemStack> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
+    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> consumedItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
         super(powerType, livingEntity);
         this.entityAction = entityAction;
         this.consumedItemAction = consumedItemAction;
@@ -54,7 +54,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
     }
 
     public boolean doesApply(ItemStack stack) {
-        return itemCondition == null || itemCondition.test(stack);
+        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
     public void executeEntityAction() {

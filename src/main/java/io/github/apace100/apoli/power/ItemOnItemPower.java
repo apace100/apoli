@@ -19,8 +19,8 @@ import java.util.function.Predicate;
 
 public class ItemOnItemPower extends Power {
 
-    private final Predicate<ItemStack> usingItemCondition;
-    private final Predicate<ItemStack> onItemCondition;
+    private final Predicate<Pair<World, ItemStack>> usingItemCondition;
+    private final Predicate<Pair<World, ItemStack>> onItemCondition;
 
     private final int resultFromOnStack;
     private final ItemStack newStack;
@@ -30,7 +30,7 @@ public class ItemOnItemPower extends Power {
     private final Consumer<Pair<World, ItemStack>> resultItemAction;
     private final Consumer<Entity> entityAction;
 
-    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> usingItemCondition, Predicate<ItemStack> onItemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> usingItemAction, Consumer<Pair<World, ItemStack>> onItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, int resultFromOnStack, ClickType clickType) {
+    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> usingItemCondition, Predicate<Pair<World, ItemStack>> onItemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> usingItemAction, Consumer<Pair<World, ItemStack>> onItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, int resultFromOnStack, ClickType clickType) {
         super(type, entity);
         this.usingItemCondition = usingItemCondition;
         this.onItemCondition = onItemCondition;
@@ -45,8 +45,8 @@ public class ItemOnItemPower extends Power {
 
     public boolean doesApply(ItemStack usingStack, ItemStack onStack, ClickType clickType) {
         return this.clickType == clickType
-            && (onItemCondition == null || onItemCondition.test(onStack))
-            && (usingItemCondition == null || usingItemCondition.test(usingStack));
+            && (onItemCondition == null || onItemCondition.test(new Pair<>(entity.getWorld(), onStack)))
+            && (usingItemCondition == null || usingItemCondition.test(new Pair<>(entity.getWorld(), usingStack)));
     }
 
     public void execute(ItemStack usingStack, ItemStack onStack, Slot slot) {

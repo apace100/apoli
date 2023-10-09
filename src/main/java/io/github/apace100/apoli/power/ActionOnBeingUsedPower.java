@@ -24,7 +24,7 @@ public class ActionOnBeingUsedPower extends ActiveInteractionPower {
     private final Consumer<Pair<Entity, Entity>> biEntityAction;
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
-    public ActionOnBeingUsedPower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition, int priority) {
+    public ActionOnBeingUsedPower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition, int priority) {
         super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, itemAction, priority);
         this.biEntityAction = biEntityAction;
         this.bientityCondition = bientityCondition;

@@ -22,7 +22,7 @@ import java.util.function.Predicate;
 public class ModifyCraftingPower extends ValueModifyingPower implements Prioritized<ModifyCraftingPower> {
 
     private final Identifier recipeIdentifier;
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
 
     private final ItemStack newStack;
     private final Consumer<Pair<World, ItemStack>> itemAction;
@@ -32,7 +32,7 @@ public class ModifyCraftingPower extends ValueModifyingPower implements Prioriti
 
     private final int priority;
 
-    public ModifyCraftingPower(PowerType<?> type, LivingEntity entity, Identifier recipeIdentifier, Predicate<ItemStack> itemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<World, ItemStack>> itemActionAfterCrafting, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
+    public ModifyCraftingPower(PowerType<?> type, LivingEntity entity, Identifier recipeIdentifier, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<World, ItemStack>> itemActionAfterCrafting, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
         super(type, entity);
         this.recipeIdentifier = recipeIdentifier;
         this.itemCondition = itemCondition;
@@ -51,7 +51,7 @@ public class ModifyCraftingPower extends ValueModifyingPower implements Prioriti
 
     public boolean doesApply(Identifier recipeId, ItemStack originalResultStack) {
         return (recipeIdentifier == null || recipeIdentifier.equals(recipeId))
-            && (itemCondition == null || itemCondition.test(originalResultStack));
+            && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), originalResultStack)));
     }
 
     public void applyAfterCraftingItemAction(ItemStack output) {

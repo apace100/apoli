@@ -69,10 +69,10 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<ConditionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS =
         SerializableDataType.list(BIENTITY_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<ItemStack>.Instance> ITEM_CONDITION =
+    public static final SerializableDataType<ConditionFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION =
         condition(ApoliRegistries.ITEM_CONDITION, "Item condition");
 
-    public static final SerializableDataType<List<ConditionFactory<ItemStack>.Instance>> ITEM_CONDITIONS =
+    public static final SerializableDataType<List<ConditionFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS =
         SerializableDataType.list(ITEM_CONDITION);
 
     public static final SerializableDataType<ConditionFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION =

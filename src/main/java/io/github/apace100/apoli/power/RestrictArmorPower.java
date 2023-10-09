@@ -8,14 +8,16 @@ import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Pair;
+import net.minecraft.world.World;
 
 import java.util.HashMap;
 import java.util.function.Predicate;
 
 public class RestrictArmorPower extends Power {
-    private final HashMap<EquipmentSlot, Predicate<ItemStack>> armorConditions;
+    private final HashMap<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions;
 
-    public RestrictArmorPower(PowerType<?> type, LivingEntity entity, HashMap<EquipmentSlot, Predicate<ItemStack>> armorConditions) {
+    public RestrictArmorPower(PowerType<?> type, LivingEntity entity, HashMap<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions) {
         super(type, entity);
         this.armorConditions = armorConditions;
     }
@@ -37,7 +39,7 @@ public class RestrictArmorPower extends Power {
 
     public boolean canEquip(ItemStack itemStack, EquipmentSlot slot) {
         if (armorConditions.get(slot) == null) return true;
-        return !armorConditions.get(slot).test(itemStack);
+        return !armorConditions.get(slot).test(new Pair<>(entity.getWorld(), itemStack));
     }
 
     public static PowerFactory createFactory() {
@@ -49,18 +51,18 @@ public class RestrictArmorPower extends Power {
                 .add("feet", ApoliDataTypes.ITEM_CONDITION, null),
             data ->
                 (type, player) -> {
-                    HashMap<EquipmentSlot, Predicate<ItemStack>> restrictions = new HashMap<>();
+                    HashMap<EquipmentSlot, Predicate<Pair<World, ItemStack>>> restrictions = new HashMap<>();
                     if(data.isPresent("head")) {
-                        restrictions.put(EquipmentSlot.HEAD, (ConditionFactory<ItemStack>.Instance)data.get("head"));
+                        restrictions.put(EquipmentSlot.HEAD, data.get("head"));
                     }
                     if(data.isPresent("chest")) {
-                        restrictions.put(EquipmentSlot.CHEST, (ConditionFactory<ItemStack>.Instance)data.get("chest"));
+                        restrictions.put(EquipmentSlot.CHEST, data.get("chest"));
                     }
                     if(data.isPresent("legs")) {
-                        restrictions.put(EquipmentSlot.LEGS, (ConditionFactory<ItemStack>.Instance)data.get("legs"));
+                        restrictions.put(EquipmentSlot.LEGS, data.get("legs"));
                     }
                     if(data.isPresent("feet")) {
-                        restrictions.put(EquipmentSlot.FEET, (ConditionFactory<ItemStack>.Instance)data.get("feet"));
+                        restrictions.put(EquipmentSlot.FEET, data.get("feet"));
                     }
                     return new RestrictArmorPower(type, player, restrictions);
                 });

@@ -18,7 +18,9 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.screen.*;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Pair;
 import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.world.World;
 
 import java.util.function.Predicate;
 
@@ -27,13 +29,13 @@ public class InventoryPower extends Power implements Active, Inventory {
     private final DefaultedList<ItemStack> container;
     private final MutableText containerTitle;
     private final ScreenHandlerFactory containerScreen;
-    private final Predicate<ItemStack> dropOnDeathFilter;
+    private final Predicate<Pair<World, ItemStack>> dropOnDeathFilter;
 
     private final boolean shouldDropOnDeath;
     private final boolean recoverable;
     private final int containerSize;
 
-    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, boolean recoverable) {
+    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<Pair<World, ItemStack>> dropOnDeathFilter, boolean recoverable) {
         super(type, entity);
         switch (containerType) {
             case DOUBLE_CHEST:
@@ -161,7 +163,7 @@ public class InventoryPower extends Power implements Active, Inventory {
     }
 
     public boolean shouldDropOnDeath(ItemStack stack) {
-        return shouldDropOnDeath && dropOnDeathFilter.test(stack);
+        return shouldDropOnDeath && dropOnDeathFilter.test(new Pair<>(entity.getWorld(), stack));
     }
 
     public void dropItemsOnDeath() {

@@ -34,10 +34,10 @@ public class ItemActions {
         register(AndAction.getFactory(ApoliDataTypes.ITEM_ACTIONS));
         register(ChanceAction.getFactory(ApoliDataTypes.ITEM_ACTION));
         register(IfElseAction.getFactory(ApoliDataTypes.ITEM_ACTION, ApoliDataTypes.ITEM_CONDITION,
-            Pair::getRight));
+            worldItemStackPair -> worldItemStackPair));
         register(ChoiceAction.getFactory(ApoliDataTypes.ITEM_ACTION));
         register(IfElseListAction.getFactory(ApoliDataTypes.ITEM_ACTION, ApoliDataTypes.ITEM_CONDITION,
-            Pair::getRight));
+            worldItemStackPair -> worldItemStackPair));
         register(DelayAction.getFactory(ApoliDataTypes.ITEM_ACTION));
         register(NothingAction.getFactory());
         register(SideAction.getFactory(ApoliDataTypes.ITEM_ACTION, worldAndStack -> !worldAndStack.getLeft().isClient));

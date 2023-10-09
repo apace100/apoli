@@ -22,6 +22,7 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,11 +42,11 @@ public class ReplaceLootTablePower extends Power {
 
     private final int priority;
 
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
     private final Predicate<Pair<Entity, Entity>> biEntityCondition;
     private final Predicate<CachedBlockPosition> blockCondition;
 
-    public ReplaceLootTablePower(PowerType<?> type, LivingEntity entity, Map<String, Identifier> replacements, int priority, Predicate<ItemStack> itemCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<CachedBlockPosition> blockCondition) {
+    public ReplaceLootTablePower(PowerType<?> type, LivingEntity entity, Map<String, Identifier> replacements, int priority, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<CachedBlockPosition> blockCondition) {
         super(type, entity);
         this.replacements = replacements;
         this.priority = priority;
@@ -69,7 +70,7 @@ public class ReplaceLootTablePower extends Power {
         }
         if(itemCondition != null
             && lootContext.hasParameter(LootContextParameters.TOOL)
-            && !itemCondition.test(lootContext.get(LootContextParameters.TOOL))) {
+            && !itemCondition.test(new Pair<>(entity.getWorld(), lootContext.get(LootContextParameters.TOOL)))) {
             return false;
         }
         if(blockCondition != null && lootContext.hasParameter(LootContextParameters.ORIGIN)) {

@@ -17,12 +17,12 @@ public class InteractionPower extends Power {
 
     private final EnumSet<Hand> hands;
     private final ActionResult actionResult;
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
     protected final Consumer<Pair<World, ItemStack>> heldItemAction;
     protected final ItemStack itemResult;
     protected final Consumer<Pair<World, ItemStack>> resultItemAction;
 
-    public InteractionPower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction) {
+    public InteractionPower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction) {
         super(type, entity);
         this.hands = hands;
         this.actionResult = actionResult;
@@ -47,7 +47,7 @@ public class InteractionPower extends Power {
     }
 
     public boolean doesApplyToItem(ItemStack heldStack) {
-        return itemCondition == null || itemCondition.test(heldStack);
+        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), heldStack));
     }
 
     public ActionResult getActionResult() {

@@ -6,24 +6,23 @@ import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.RecipeType;
+import net.minecraft.util.Pair;
 import net.minecraft.world.World;
-
-import java.util.function.Supplier;
 
 public class SmeltableCondition {
 
-    public static boolean condition(SerializableData.Instance data, ItemStack stack, Supplier<World> worldSupplier) {
-        World world = worldSupplier.get();
+    public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
+        World world = worldAndStack.getLeft();
         return world != null && world.getRecipeManager()
-            .getFirstMatch(RecipeType.SMELTING, new SimpleInventory(stack), world)
+            .getFirstMatch(RecipeType.SMELTING, new SimpleInventory(worldAndStack.getRight()), world)
             .isPresent();
     }
 
-    public static ConditionFactory<ItemStack> getFactory(Supplier<World> world) {
+    public static ConditionFactory<Pair<World, ItemStack>> getFactory() {
         return new ConditionFactory<>(
             Apoli.identifier("smeltable"),
             new SerializableData(),
-            (data, stack) -> condition(data, stack, world)
+            SmeltableCondition::condition
         );
     }
 

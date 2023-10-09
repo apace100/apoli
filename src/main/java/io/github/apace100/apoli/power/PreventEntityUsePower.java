@@ -24,7 +24,7 @@ public class PreventEntityUsePower extends InteractionPower {
     private final Consumer<Pair<Entity, Entity>> biEntityAction;
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
-    public PreventEntityUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
+    public PreventEntityUsePower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
         super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, itemAction);
         this.biEntityAction = biEntityAction;
         this.bientityCondition = bientityCondition;
@@ -60,7 +60,7 @@ public class PreventEntityUsePower extends InteractionPower {
                     return new PreventEntityUsePower(type, player,
                         (EnumSet<Hand>)data.get("hands"),
                         ActionResult.FAIL,
-                        (Predicate<ItemStack>)data.get("item_condition"),
+                        (Predicate<Pair<World, ItemStack>>)data.get("item_condition"),
                         (Consumer<Pair<World, ItemStack>>)data.get("held_item_action"),
                         (ItemStack)data.get("result_stack"),
                         (Consumer<Pair<World, ItemStack>>)data.get("result_item_action"),
