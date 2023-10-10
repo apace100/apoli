@@ -7,9 +7,7 @@ import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.VariableIntPower;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import me.shedaniel.clothconfig2.api.animator.ValueProvider;
 import net.minecraft.data.client.BlockStateVariantMap;
 import net.minecraft.entity.Entity;
 
@@ -155,4 +153,5 @@ public enum ModifierOperation implements IModifierOperation {
                 .collect(Collectors.toList()),
             base, current);
     }
+
 }
