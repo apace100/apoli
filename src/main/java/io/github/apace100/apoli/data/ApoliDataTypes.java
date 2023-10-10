@@ -49,6 +49,7 @@ import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
 public class ApoliDataTypes {
@@ -331,6 +332,50 @@ public class ApoliDataTypes {
 
             JsonObject jsonObject = new JsonObject();
             idMap.forEach((keyId, valId) -> jsonObject.addProperty(keyId.toString(), valId.toString()));
+
+            return jsonObject;
+
+        }
+    );
+
+    public static final SerializableDataType<Map<Pattern, Identifier>> REGEX_MAP = new SerializableDataType<>(
+        ClassUtil.castClass(Map.class),
+        (buffer, regexMap) -> buffer.writeMap(
+            regexMap,
+            (keyBuffer, pattern) -> keyBuffer.writeString(pattern.toString()),
+            PacketByteBuf::writeIdentifier
+        ),
+        buffer -> buffer.readMap(
+            keyBuffer -> Pattern.compile(keyBuffer.readString()),
+            PacketByteBuf::readIdentifier
+        ),
+        jsonElement -> {
+
+            if (!(jsonElement instanceof JsonObject jsonObject)) {
+                throw new JsonSyntaxException("Expected a JSON object.");
+            }
+
+            Map<Pattern, Identifier> regexMap = new HashMap<>();
+            for (String key : jsonObject.keySet()) {
+
+                if (!(jsonObject.get(key) instanceof JsonPrimitive jsonPrimitive) || !jsonPrimitive.isString()) {
+                    continue;
+                }
+
+                Pattern pattern = Pattern.compile(key);
+                Identifier id = new Identifier(jsonPrimitive.getAsString());
+
+                regexMap.put(pattern, id);
+
+            }
+
+            return regexMap;
+
+        },
+        regexMap -> {
+
+            JsonObject jsonObject = new JsonObject();
+            regexMap.forEach((regex, id) -> jsonObject.addProperty(regex.pattern(), id.toString()));
 
             return jsonObject;
 
