@@ -109,8 +109,12 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
             Power power = powers.remove(powerType);
             if (power != null) {
+
                 power.onRemoved();
+                power.onRemoved(false);
+
                 power.onLost();
+
             }
 
         }
@@ -170,7 +174,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
         Power power = powerType.create(owner);
         power.onGained();
+
         power.onAdded();
+        power.onAdded(false);
 
         powerSources.put(powerType, sources);
         powers.put(powerType, power);
@@ -200,11 +206,17 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             return;
         }
 
-        if (callPowerOnAdd) {
-            for (Power power : powers.values()) {
+        for (Power power : powers.values()) {
+
+            if (callPowerOnAdd) {
+
                 power.onRemoved();
                 power.onLost();
+
             }
+
+            power.onRemoved(!callPowerOnAdd);
+
         }
 
         powers.clear();
@@ -242,9 +254,12 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 }
 
                 powers.put(powerType, power);
+
                 if (callPowerOnAdd) {
                     power.onAdded();
                 }
+
+                power.onAdded(!callPowerOnAdd);
 
             } catch (IllegalArgumentException e) {
                 //  Occurs when the power is either not registered in the power registry,

@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power;
 
 import com.google.gson.JsonObject;
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
@@ -80,7 +79,15 @@ public class Power {
 
     }
 
+    public void onAdded(boolean onSync) {
+
+    }
+
     public void onRemoved() {
+
+    }
+
+    public void onRemoved(boolean onSync) {
 
     }
 
