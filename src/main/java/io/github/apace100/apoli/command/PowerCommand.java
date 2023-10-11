@@ -173,7 +173,7 @@ public class PowerCommand {
 			if (targetsSize == 1) {
 				source.sendError(Text.translatable("commands.apoli.revoke.fail.single", targetName, powerTypeName, powerSource));
 			} else {
-				source.sendError(Text.translatable("commands.apoli.revoke.fail.multiple", targetsSize, powerTypeName, powerSource));
+				source.sendError(Text.translatable("commands.apoli.revoke.fail.multiple", powerTypeName, powerSource));
 			}
 
 			return processedTargetsSize;
