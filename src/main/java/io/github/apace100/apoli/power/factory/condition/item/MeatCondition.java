@@ -11,11 +11,15 @@ import net.minecraft.world.World;
 
 public class MeatCondition {
 
-    public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> stackAndWorld) {
-        return ((PotentiallyEdibleItemStack) stackAndWorld.getRight())
+    public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
+        ItemStack stack = worldAndStack.getRight();
+        return ((PotentiallyEdibleItemStack) stack)
             .apoli$getFoodComponent()
             .map(FoodComponent::isMeat)
-            .orElse(false);
+            .orElseGet(() -> {
+                FoodComponent foodComponent = stack.getItem().getFoodComponent();
+                return foodComponent != null && foodComponent.isMeat();
+            });
     }
 
     public static ConditionFactory<Pair<World, ItemStack>> getFactory() {
