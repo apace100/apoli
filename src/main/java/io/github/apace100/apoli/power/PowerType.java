@@ -1,7 +1,9 @@
 package io.github.apace100.apoli.power;
 
+import com.google.gson.JsonObject;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.MutableText;
@@ -104,6 +106,17 @@ public class PowerType<T extends Power> {
 
     public MutableText getDescription() {
         return description != null ? description.copy() : Text.translatable(getOrCreateDescriptionTranslationKey());
+    }
+
+    public JsonObject toJson() {
+
+        JsonObject jsonObject = factory.toJson();
+
+        jsonObject.add("name", SerializableDataTypes.TEXT.write(getName()));
+        jsonObject.add("description", SerializableDataTypes.TEXT.write(getDescription()));
+
+        return jsonObject;
+
     }
 
     @Override

@@ -51,13 +51,28 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     public Set<PowerType<?>> getPowerTypes(boolean getSubPowerTypes) {
-        HashSet<PowerType<?>> powerTypes = new HashSet<>(powers.keySet());
-        for (PowerType<?> type : powers.keySet()) {
-            if(!getSubPowerTypes && type instanceof MultiplePowerType<?>) {
-                ((MultiplePowerType<?>)type).getSubPowers().stream().map(PowerTypeRegistry::get).forEach(powerTypes::remove);
+
+        Set<PowerType<?>> powerTypes = new HashSet<>(powers.keySet());
+        if (!getSubPowerTypes) {
+
+            for (PowerType<?> powerType : powers.keySet()) {
+
+                if (!(powerType instanceof MultiplePowerType<?> multiplePowerType)) {
+                    continue;
+                }
+
+                multiplePowerType.getSubPowers()
+                    .stream()
+                    .filter(PowerTypeRegistry::contains)
+                    .map(PowerTypeRegistry::get)
+                    .forEach(powerTypes::remove);
+
             }
+
         }
+
         return powerTypes;
+
     }
 
     @Override
@@ -122,6 +137,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         if (powerType instanceof MultiplePowerType<?> multiplePowerType) {
             multiplePowerType.getSubPowers()
                 .stream()
+                .filter(PowerTypeRegistry::contains)
                 .map(PowerTypeRegistry::get)
                 .forEach(pt -> removePower(pt, source));
         }
@@ -168,6 +184,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         if (powerType instanceof MultiplePowerType<?> multiplePowerType) {
             multiplePowerType.getSubPowers()
                 .stream()
+                .filter(PowerTypeRegistry::contains)
                 .map(PowerTypeRegistry::get)
                 .forEach(pt -> addPower(pt, source));
         }

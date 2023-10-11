@@ -20,7 +20,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
@@ -101,7 +100,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
     private void postLoad(Entity entity, boolean init) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        if (entity.getWorld().isClient || component == null || !(entity instanceof LivingEntity livingEntity)) {
+        if (entity.getWorld().isClient || component == null) {
             return;
         }
 
@@ -109,45 +108,43 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         for (PowerType<?> oldPowerType : component.getPowerTypes(true)) {
 
             Identifier oldPowerTypeId = oldPowerType.getIdentifier();
-            if (PowerTypeRegistry.contains(oldPowerTypeId)) {
+            if (!PowerTypeRegistry.contains(oldPowerTypeId)) {
 
-                PowerType<?> newPowerType = PowerTypeRegistry.get(oldPowerTypeId);
-
-                Power oldPower = component.getPower(oldPowerType);
-                Power newPower = newPowerType.create(livingEntity);
-
-                if (oldPower.toJson().equals(newPower.toJson())) {
-                    continue;
-                }
-
-                Apoli.LOGGER.warn("Mismatched data fields of power \"{}\" from entity {}! Updating...", oldPowerTypeId, entity.getName().getString());
+                Apoli.LOGGER.error("Removed unregistered power \"{}\" from entity {}!", oldPowerTypeId, entity.getName().getString());
                 mismatch = true;
 
-                for (Identifier source : component.getSources(oldPowerType)) {
-                    component.removePower(oldPowerType, source);
-                    component.addPower(newPowerType, source);
-                }
-
-                newPower = component.getPower(newPowerType);
-                if (oldPower.getClass().isAssignableFrom(newPower.getClass())) {
-                    //  Transfer the data of the old power to the new power if the old power is an instance of the new power
-                    Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", oldPowerTypeId);
-                    newPower.fromTag(oldPower.toTag());
-                } else {
-                    //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
-                    //  occurs if the power no longer uses the same power type as it used to
-                    Apoli.LOGGER.warn("Couldn't transfer old data of power \"{}\", as it's using a different power type!", oldPowerTypeId);
+                for (Identifier sourceId : component.getSources(oldPowerType)) {
+                    component.removePower(oldPowerType, sourceId);
                 }
 
                 continue;
 
             }
 
-            Apoli.LOGGER.error("Removed unregistered power \"{}\" from entity {}!", oldPowerTypeId, entity.getName().getString());
+            PowerType<?> newPowerType = PowerTypeRegistry.get(oldPowerTypeId);
+            Power oldPower = component.getPower(oldPowerType);
+
+            if (oldPowerType.toJson().equals(newPowerType.toJson())) {
+                continue;
+            }
+
+            Apoli.LOGGER.warn("Mismatched data fields of power \"{}\" from entity {}! Updating...", oldPowerTypeId, entity.getName().getString());
             mismatch = true;
 
-            for (Identifier sourceId : component.getSources(oldPowerType)) {
-                component.removePower(oldPowerType, sourceId);
+            for (Identifier source : component.getSources(oldPowerType)) {
+                component.removePower(oldPowerType, source);
+                component.addPower(newPowerType, source);
+            }
+
+            Power newPower = component.getPower(newPowerType);
+            if (oldPower.getClass().isAssignableFrom(newPower.getClass())) {
+                //  Transfer the data of the old power to the new power if the old power is an instance of the new power
+                Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", oldPowerTypeId);
+                newPower.fromTag(oldPower.toTag());
+            } else {
+                //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
+                //  occurs if the power no longer uses the same power type as it used to
+                Apoli.LOGGER.warn("Couldn't transfer old data of power \"{}\", as it's using a different power type!", oldPowerTypeId);
             }
 
         }
