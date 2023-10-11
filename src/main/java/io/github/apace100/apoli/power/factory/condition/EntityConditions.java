@@ -26,12 +26,6 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootDataType;
-import net.minecraft.loot.condition.LootCondition;
-import net.minecraft.loot.context.LootContext;
-import net.minecraft.loot.context.LootContextParameterSet;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.registry.Registry;
@@ -43,12 +37,10 @@ import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
@@ -259,24 +251,7 @@ public class EntityConditions {
                 }
                 return false;
             }));
-        register(new ConditionFactory<>(Apoli.identifier("predicate"), new SerializableData()
-            .add("predicate", SerializableDataTypes.IDENTIFIER),
-            (data, entity) -> {
-                MinecraftServer server = entity.getWorld().getServer();
-                if (server != null) {
-                    LootCondition lootCondition = server.getLootManager().getElement(LootDataType.PREDICATES, data.get("predicate"));
-                    if (lootCondition != null) {
-                        LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder((ServerWorld) entity.getWorld())
-                                .add(LootContextParameters.ORIGIN, entity.getPos())
-                                .addOptional(LootContextParameters.THIS_ENTITY, entity)
-                                .build(LootContextTypes.COMMAND);
-                        LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(null);
-                        return lootCondition.test(lootContext);
-                    }
-                }
-                return false;
-            }
-        ));
+        register(PredicateCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("fall_distance"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
