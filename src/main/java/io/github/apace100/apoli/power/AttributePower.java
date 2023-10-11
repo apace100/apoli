@@ -62,7 +62,7 @@ public class AttributePower extends Power {
         modifiers.stream()
             .filter(mod -> entity.getAttributes().hasAttribute(mod.getAttribute()))
             .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.getAttribute())))
-            .filter(pair -> pair.getSecond() != null)
+            .filter(pair -> pair.getSecond() != null && !pair.getSecond().hasModifier(pair.getFirst().getModifier()))
             .forEach(pair -> pair.getSecond().addTemporaryModifier(pair.getFirst().getModifier()));
 
         float currentMaxHealth = entity.getMaxHealth();
@@ -84,7 +84,7 @@ public class AttributePower extends Power {
         modifiers.stream()
             .filter(mod -> entity.getAttributes().hasAttribute(mod.getAttribute()))
             .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.getAttribute())))
-            .filter(pair -> pair.getSecond() != null)
+            .filter(pair -> pair.getSecond() != null && pair.getSecond().hasModifier(pair.getFirst().getModifier()))
             .forEach(pair -> pair.getSecond().removeModifier(pair.getFirst().getModifier().getId()));
 
         float currentMaxHealth = entity.getMaxHealth();
