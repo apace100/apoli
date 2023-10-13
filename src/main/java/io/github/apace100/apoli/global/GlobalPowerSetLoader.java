@@ -52,6 +52,8 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
     protected void apply(MultiJsonDataContainer prepared, ResourceManager manager, Profiler profiler) {
 
         ALL.clear();
+        prevId = null;
+
         Map<Identifier, List<GlobalPowerSet>> loadedGlobalPowerSets = new HashMap<>();
 
         prepared.forEach((packName, id, jsonElement) -> {
