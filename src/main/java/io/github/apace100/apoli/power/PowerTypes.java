@@ -64,7 +64,8 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
     public PowerTypes() {
         super(GSON, "powers", ResourceType.SERVER_DATA);
 
-        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+        ServerEntityEvents.ENTITY_LOAD.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
+        ServerEntityEvents.ENTITY_LOAD.register(PHASE, (entity, world) -> {
             if (!(entity instanceof PlayerEntity)) {
                 postLoad(entity, false);
             }

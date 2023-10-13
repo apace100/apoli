@@ -18,6 +18,7 @@ public class GlobalPowerSetUtil {
 
     public static List<GlobalPowerSet> getApplicableSets(EntityType<?> type) {
         return GlobalPowerSetLoader.ALL
+            .values()
             .stream()
             .filter(gps -> gps.doesApply(type))
             .sorted(GlobalPowerSet::compareTo)
