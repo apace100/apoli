@@ -54,14 +54,15 @@ public class ActionOverTimePower extends Power {
 
             if (!wasActive && risingAction != null) {
                 risingAction.accept(entity);
-                wasActive = true;
             }
 
             if (entityAction != null) {
                 entityAction.accept(entity);
             }
 
-        } else {
+            wasActive = true;
+
+        } else if (wasActive) {
 
             if (endTicks == null) {
 
@@ -76,10 +77,11 @@ public class ActionOverTimePower extends Power {
                 return;
             }
 
-            if (wasActive && fallingAction != null) {
+            if (fallingAction != null) {
                 fallingAction.accept(entity);
-                wasActive = false;
             }
+
+            wasActive = false;
 
         }
 
