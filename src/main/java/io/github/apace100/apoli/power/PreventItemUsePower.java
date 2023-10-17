@@ -34,6 +34,7 @@ public class PreventItemUsePower extends Power {
                 LivingEntity,
                 data.get("item_condition")
             )
-        );
+        ).allowCondition();
     }
+
 }
