@@ -151,7 +151,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         }
 
         @Override
-        public void accept(ServerWorld world, BlockPos pos, GameEvent event, @Nullable Entity sourceEntity, @Nullable Entity actor, float distance) {
+        public void accept(ServerWorld world, BlockPos pos, GameEvent event, @Nullable Entity sourceEntity, @Nullable Entity projectileOwner, float distance) {
 
             use();
             if (blockAction != null) {
@@ -159,7 +159,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
             }
 
             if (biEntityAction != null) {
-                biEntityAction.accept(new Pair<>(actor, entity));
+                biEntityAction.accept(new Pair<>(sourceEntity, GameEventListenerPower.this.entity));
             }
 
         }
