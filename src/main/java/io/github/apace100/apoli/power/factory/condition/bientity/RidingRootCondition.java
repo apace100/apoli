@@ -6,19 +6,26 @@ import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
 
-import java.util.Objects;
-
-public class EqualCondition {
+public class RidingRootCondition {
 
     public static boolean condition(SerializableData.Instance data, Pair<Entity, Entity> actorAndTarget) {
-        return Objects.equals(actorAndTarget.getLeft(), actorAndTarget.getRight());
+
+        Entity actor = actorAndTarget.getLeft();
+        Entity target = actorAndTarget.getRight();
+
+        if ((actor == null || target == null) || !actor.hasVehicle()) {
+            return false;
+        }
+
+        return actor.getRootVehicle().equals(target);
+
     }
 
     public static ConditionFactory<Pair<Entity, Entity>> getFactory() {
         return new ConditionFactory<>(
-            Apoli.identifier("equal"),
+            Apoli.identifier("riding_root"),
             new SerializableData(),
-            EqualCondition::condition
+            RidingRootCondition::condition
         );
     }
 
