@@ -84,7 +84,7 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
         //  can be inserted into the player's inventory, execute the item action
         if (availableSlotIndex != -1 && slot instanceof CraftingResultSlot) {
 
-            ((SlotState) slot).apoli$setState(new Identifier("apoli:modified_result_stack"));
+            ((SlotState) slot).apoli$setState(ModifyCraftingPower.MODIFIED_RESULT_STACK);
             mcp.applyAfterCraftingItemAction(itemStack2);
 
         }

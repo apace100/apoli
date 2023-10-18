@@ -21,6 +21,8 @@ import java.util.function.Predicate;
 
 public class ModifyCraftingPower extends ValueModifyingPower implements Prioritized<ModifyCraftingPower> {
 
+    public static final Identifier MODIFIED_RESULT_STACK = Apoli.identifier("modified_result_stack");
+
     private final Identifier recipeIdentifier;
     private final Predicate<Pair<World, ItemStack>> itemCondition;
 

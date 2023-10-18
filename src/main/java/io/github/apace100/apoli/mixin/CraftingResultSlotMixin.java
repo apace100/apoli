@@ -11,7 +11,6 @@ import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.CraftingResultSlot;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,7 +44,7 @@ public class CraftingResultSlotMixin extends Slot {
         }
 
         modifyCraftingPower.executeActions(ModifiedCraftingRecipe.getBlockFromInventory(craftingInventory));
-        if (slotState.apoli$getState().map(id -> !id.equals(new Identifier("apoli:modified_result_stack"))).orElse(true)) {
+        if (slotState.apoli$getState().map(id -> !id.equals(ModifyCraftingPower.MODIFIED_RESULT_STACK)).orElse(true)) {
             modifyCraftingPower.applyAfterCraftingItemAction(stack);
         }
 

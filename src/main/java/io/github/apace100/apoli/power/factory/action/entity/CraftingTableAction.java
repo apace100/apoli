@@ -11,6 +11,7 @@ import net.minecraft.stat.Stats;
 import net.minecraft.text.Text;
 
 public class CraftingTableAction {
+
     private static final Text TITLE = Text.translatable("container.crafting");
 
     public static void action(SerializableData.Instance data, Entity entity) {
