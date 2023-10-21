@@ -1,30 +1,19 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.predicate.item.ItemPredicate;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemPredicate.class)
 public class ItemPredicateMixin {
 
-    @Unique
-    private ItemStack apugli$itemStack;
-
-    @Inject(method = "test", at = @At("HEAD"))
-    private void captureItemStack(ItemStack itemStack, CallbackInfoReturnable<Boolean> cir) {
-        apugli$itemStack = itemStack;
-    }
-
-    @ModifyArg(method = "test", at = @At(value = "INVOKE", target = "Lnet/minecraft/enchantment/EnchantmentHelper;fromNbt(Lnet/minecraft/nbt/NbtList;)Ljava/util/Map;"))
-    private NbtList getEnchantmentsForEachEnchantment(NbtList original) {
-        return ModifyEnchantmentLevelPower.getEnchantments(apugli$itemStack, original);
+    @ModifyExpressionValue(method = "test", at = {@At(value = "INVOKE", target = "Lnet/minecraft/item/EnchantedBookItem;getEnchantmentNbt(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/nbt/NbtList;"), @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getEnchantments()Lnet/minecraft/nbt/NbtList;")})
+    private NbtList apoli$getEnchantments(NbtList original, ItemStack stack) {
+        return ModifyEnchantmentLevelPower.getEnchantments(stack, original);
     }
 
 }

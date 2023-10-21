@@ -23,9 +23,9 @@ import java.util.function.Predicate;
 
 public class ModifyGrindstonePower extends Power {
 
-    private final Predicate<ItemStack> topItemCondition;
-    private final Predicate<ItemStack> bottomItemCondition;
-    private final Predicate<ItemStack> outputItemCondition;
+    private final Predicate<Pair<World, ItemStack>> topItemCondition;
+    private final Predicate<Pair<World, ItemStack>> bottomItemCondition;
+    private final Predicate<Pair<World, ItemStack>> outputItemCondition;
     private final Predicate<CachedBlockPosition> blockCondition;
 
     private final ItemStack newResultStack;
@@ -38,7 +38,7 @@ public class ModifyGrindstonePower extends Power {
 
     private final Modifier experienceModifier;
 
-    public ModifyGrindstonePower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> topItemCondition, Predicate<ItemStack> bottomItemCondition, Predicate<ItemStack> outputItemCondition, Predicate<CachedBlockPosition> blockCondition, ItemStack newResultStack, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Pair<World, ItemStack>> lateItemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, ResultType resultType, Modifier experienceModifier) {
+    public ModifyGrindstonePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> topItemCondition, Predicate<Pair<World, ItemStack>> bottomItemCondition, Predicate<Pair<World, ItemStack>> outputItemCondition, Predicate<CachedBlockPosition> blockCondition, ItemStack newResultStack, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Pair<World, ItemStack>> lateItemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, ResultType resultType, Modifier experienceModifier) {
         super(type, entity);
         this.topItemCondition = topItemCondition;
         this.bottomItemCondition = bottomItemCondition;
@@ -54,11 +54,11 @@ public class ModifyGrindstonePower extends Power {
     }
 
     public boolean allowsInTop(ItemStack inputTop) {
-        return topItemCondition == null || topItemCondition.test(inputTop);
+        return topItemCondition == null || topItemCondition.test(new Pair<>(entity.getWorld(), inputTop));
     }
 
     public boolean allowsInBottom(ItemStack inputBottom) {
-        return bottomItemCondition == null || bottomItemCondition.test(inputBottom);
+        return bottomItemCondition == null || bottomItemCondition.test(new Pair<>(entity.getWorld(), inputBottom));
     }
 
     public void applyAfterGrindingItemAction(ItemStack output) {
@@ -69,13 +69,13 @@ public class ModifyGrindstonePower extends Power {
     }
 
     public boolean doesApply(ItemStack inputTop, ItemStack inputBottom, ItemStack originalOutput, Optional<BlockPos> grindstonePos) {
-        if(topItemCondition != null && !topItemCondition.test(inputTop)) {
+        if(topItemCondition != null && !topItemCondition.test(new Pair<>(entity.getWorld(), inputTop))) {
             return false;
         }
-        if(bottomItemCondition != null && !bottomItemCondition.test(inputBottom)) {
+        if(bottomItemCondition != null && !bottomItemCondition.test(new Pair<>(entity.getWorld(), inputBottom))) {
             return false;
         }
-        if(outputItemCondition != null && !outputItemCondition.test(originalOutput)) {
+        if(outputItemCondition != null && !outputItemCondition.test(new Pair<>(entity.getWorld(), originalOutput))) {
             return false;
         }
         if(blockCondition != null && grindstonePos.isPresent() && !blockCondition.test(new CachedBlockPosition(entity.getWorld(), grindstonePos.get(), true))) {

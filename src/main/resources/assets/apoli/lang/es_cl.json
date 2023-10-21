@@ -1,4 +1,5 @@
 {
+	"apoli.gui.version_mismatch": "This server is running a different version of Apoli (v%1$s) which is incompatible with the one you have installed (v%2$s).",
 	"argument.apoli.power_holder.not_found.multiple": "No living entities were found",
 	"argument.apoli.power_holder.not_found.single": "Entity %s is not a living entity",
 	"category.apoli": "Apoli",

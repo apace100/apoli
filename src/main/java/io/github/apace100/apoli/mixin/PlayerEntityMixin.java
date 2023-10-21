@@ -2,9 +2,8 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.networking.ModPackets;
+import io.github.apace100.apoli.networking.packet.s2c.DismountPlayerS2CPacket;
 import io.github.apace100.apoli.power.*;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
@@ -12,7 +11,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -34,7 +32,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput {
@@ -70,16 +67,25 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     }
 
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
-    private ItemStack modifyEatenItemStack(ItemStack original) {
-        List<ModifyFoodPower> mfps = PowerHolderComponent.getPowers(this, ModifyFoodPower.class);
-        mfps = mfps.stream().filter(mfp -> mfp.doesApply(original)).collect(Collectors.toList());
+    private ItemStack apoli$modifyEatenItemStack(ItemStack original) {
+
         ItemStack newStack = original;
-        for(ModifyFoodPower mfp : mfps) {
-            newStack = mfp.getConsumedItemStack(newStack);
+        ModifiableFoodEntity modifiableFoodEntity = (ModifiableFoodEntity) this;
+
+        List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
+            .stream()
+            .filter(mfp -> mfp.doesApply(original))
+            .toList();
+
+        for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
+            newStack = modifyFoodPower.getConsumedItemStack(newStack);
         }
-        ((ModifiableFoodEntity)this).apoli$setCurrentModifyFoodPowers(mfps);
-        ((ModifiableFoodEntity)this).apoli$setOriginalFoodStack(original);
+
+        modifiableFoodEntity.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
+        modifiableFoodEntity.apoli$setOriginalFoodStack(original);
+
         return newStack;
+
     }
 
     @Unique
@@ -205,11 +211,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     }
 
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
-    private void sendPlayerDismountPacket(CallbackInfo ci) {
-        if(!getWorld().isClient && getVehicle() instanceof PlayerEntity) {
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeInt(getId());
-            ServerPlayNetworking.send((ServerPlayerEntity) getVehicle(), ModPackets.PLAYER_DISMOUNT, buf);
+    private void apoli$sendPlayerDismountPacket(CallbackInfo ci) {
+        if (this.getVehicle() instanceof ServerPlayerEntity player) {
+            ServerPlayNetworking.send(player, new DismountPlayerS2CPacket(player.getId()));
         }
     }
 

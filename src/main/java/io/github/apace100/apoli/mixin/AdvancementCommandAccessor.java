@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
-import net.minecraft.advancement.Advancement;
+import net.minecraft.advancement.AdvancementEntry;
+import net.minecraft.advancement.PlacedAdvancement;
 import net.minecraft.server.command.AdvancementCommand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -11,7 +12,7 @@ import java.util.List;
 public interface AdvancementCommandAccessor {
 
     @Invoker
-    static List<Advancement> callSelect(Advancement advancement, AdvancementCommand.Selection selection) {
+    static void callAddChildrenRecursivelyToList(PlacedAdvancement parent, List<AdvancementEntry> children) {
         throw new AssertionError();
     }
 

@@ -1,19 +1,17 @@
 package io.github.apace100.apoli.util;
 
-import com.google.common.collect.Lists;
+import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.CraftingInventoryAccessor;
 import io.github.apace100.apoli.mixin.CraftingScreenHandlerAccessor;
 import io.github.apace100.apoli.mixin.PlayerScreenHandlerAccessor;
+import io.github.apace100.apoli.power.ModifyCraftingPower;
 import io.github.apace100.apoli.power.RecipePower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.recipe.SpecialCraftingRecipe;
-import net.minecraft.recipe.SpecialRecipeSerializer;
+import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.CraftingScreenHandler;
@@ -22,44 +20,62 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
 
-    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<PowerRestrictedCraftingRecipe>(PowerRestrictedCraftingRecipe::new);
+    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(PowerRestrictedCraftingRecipe::new);
 
-    public PowerRestrictedCraftingRecipe(Identifier id, CraftingRecipeCategory category) {
-        super(id, category);
+    public PowerRestrictedCraftingRecipe(CraftingRecipeCategory category) {
+        super(category);
     }
 
     @Override
     public boolean matches(RecipeInputInventory inventory, World world) {
-        if (inventory instanceof CraftingInventory craftingInventory)
-        {
-            return getRecipes(craftingInventory).stream().anyMatch(r -> r.matches(craftingInventory, world));
-        }
-
-        return false;
+        return inventory instanceof CraftingInventory craftingInventory && getRecipePowers(craftingInventory)
+            .stream()
+            .anyMatch(rp -> rp.getRecipe().value().matches(craftingInventory, world));
     }
 
     @Override
     public ItemStack craft(RecipeInputInventory inventory, DynamicRegistryManager registryManager) {
-        if (inventory instanceof CraftingInventory craftingInventory)
-        {
-            PlayerEntity player = getPlayerFromInventory(craftingInventory);
-            if (player != null)
-            {
-                Optional<Recipe<CraftingInventory>> optional = getRecipes(craftingInventory).stream().filter(r -> r.matches(craftingInventory, player.getWorld())).findFirst();
-                if (optional.isPresent())
-                {
-                    Recipe<CraftingInventory> recipe = optional.get();
-                    return recipe.craft(craftingInventory, registryManager);
-                }
-            }
+
+        if (!(inventory instanceof CraftingInventory craftingInventory)) {
+            return ItemStack.EMPTY;
         }
-        return ItemStack.EMPTY;
+
+        PlayerEntity playerEntity = getPlayerFromInventory(craftingInventory);
+        if (playerEntity == null) {
+            return ItemStack.EMPTY;
+        }
+
+        Optional<RecipePower> recipePower = getRecipePowers(craftingInventory)
+            .stream()
+            .filter(rp -> rp.getRecipe().value().matches(craftingInventory, playerEntity.getWorld()))
+            .max(Comparator.comparing(RecipePower::getPriority));
+
+        if (recipePower.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        RecipeEntry<Recipe<CraftingInventory>> recipe = recipePower.get().getRecipe();
+        Identifier recipeId = recipe.id();
+
+        ItemStack newResultStack = recipe.value().craft(craftingInventory, registryManager);
+        Optional<ModifyCraftingPower> modifyCraftingPower = PowerHolderComponent.getPowers(playerEntity, ModifyCraftingPower.class)
+            .stream()
+            .filter(mcp -> mcp.doesApply(recipeId, newResultStack))
+            .max(Comparator.comparing(ModifyCraftingPower::getPriority));
+
+        if (modifyCraftingPower.isEmpty()) {
+            return newResultStack;
+        }
+
+        ((PowerCraftingInventory) craftingInventory).apoli$setPower(modifyCraftingPower.get());
+        return modifyCraftingPower.get().getNewResult(newResultStack);
+
     }
 
     @Override
@@ -77,22 +93,27 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
         return getPlayerFromHandler(handler);
     }
 
-    private List<Recipe<CraftingInventory>> getRecipes(CraftingInventory inv) {
-        ScreenHandler handler = ((CraftingInventoryAccessor)inv).getHandler();
-        PlayerEntity player = getPlayerFromHandler(handler);
-        if(player != null) {
-            return PowerHolderComponent.getPowers(player, RecipePower.class).stream().map(RecipePower::getRecipe).collect(Collectors.toList());
-        }
-        return Lists.newArrayList();
+    private List<RecipePower> getRecipePowers(CraftingInventory craftingInventory) {
+
+        ScreenHandler screenHandler = ((CraftingInventoryAccessor) craftingInventory).getHandler();
+        PlayerEntity player = getPlayerFromHandler(screenHandler);
+
+        return PowerHolderComponent.getPowers(player, RecipePower.class);
+
     }
 
     private PlayerEntity getPlayerFromHandler(ScreenHandler screenHandler) {
+
         if(screenHandler instanceof CraftingScreenHandler) {
             return ((CraftingScreenHandlerAccessor)screenHandler).getPlayer();
         }
+
         if(screenHandler instanceof PlayerScreenHandler) {
             return ((PlayerScreenHandlerAccessor)screenHandler).getOwner();
         }
+
         return null;
+
     }
+
 }

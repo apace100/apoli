@@ -19,6 +19,8 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
+import net.minecraft.util.Pair;
+import net.minecraft.world.World;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -27,7 +29,7 @@ import java.util.function.Predicate;
 
 public class TooltipPower extends Power {
 
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
     private final List<Text> texts;
     private final int tickRate;
     private final int order;
@@ -36,7 +38,7 @@ public class TooltipPower extends Power {
     private Integer initialTicks;
     private boolean shouldResolve;
 
-    public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> itemCondition, Text text, List<Text> texts, boolean shouldResolve, int tickRate, int order) {
+    public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Text text, List<Text> texts, boolean shouldResolve, int tickRate, int order) {
         super(type, entity);
         this.texts = new LinkedList<>();
         this.tooltipTexts = new LinkedList<>();
@@ -125,7 +127,7 @@ public class TooltipPower extends Power {
     }
 
     public boolean doesApply(ItemStack stack) {
-        return itemCondition == null || itemCondition.test(stack);
+        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
     private List<Text> parseTexts() {

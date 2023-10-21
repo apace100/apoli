@@ -5,26 +5,32 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.Comparison;
+import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Pair;
+import net.minecraft.world.World;
 
 public class EnchantmentCondition {
 
-    public static boolean condition(SerializableData.Instance data, ItemStack stack) {
+    public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
         Enchantment enchantment = data.get("enchantment");
         Comparison comparison = data.get("comparison");
-        int compareTo = data.get("compare_to");
-        boolean useModifications = data.getBoolean("use_modifications");
 
-        if (enchantment != null) return comparison.compare(ModifyEnchantmentLevelPower.getLevel(enchantment, stack, useModifications), compareTo);
-        else return comparison.compare(ModifyEnchantmentLevelPower.get(stack, useModifications).size(), compareTo);
+        boolean useModifications = data.get("use_modifications");
+        int compareTo = data.get("compare_to");
+
+        int level = enchantment != null ? ModifyEnchantmentLevelPower.getLevel(enchantment, worldAndStack.getRight(), useModifications)
+                                        : ModifyEnchantmentLevelPower.get(worldAndStack.getRight(), useModifications).size();
+
+        return comparison.compare(level, compareTo);
 
     }
 
-    public static ConditionFactory<ItemStack> getFactory() {
+    public static ConditionFactory<Pair<World, ItemStack>> getFactory() {
         return new ConditionFactory<>(
             Apoli.identifier("enchantment"),
             new SerializableData()

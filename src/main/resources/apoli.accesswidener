@@ -7,5 +7,9 @@ accessible class net/minecraft/enchantment/EnchantmentHelper$Consumer
 accessible class net/minecraft/client/render/BackgroundRenderer$FogData
 accessible class net/minecraft/server/command/AdvancementCommand$Operation
 accessible class net/minecraft/server/command/AdvancementCommand$Selection
-accessible method net/minecraft/server/command/AdvancementCommand$Operation processEach (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;)Z
-accessible method net/minecraft/server/command/AdvancementCommand$Operation processEachCriterion (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;Ljava/lang/String;)Z
+accessible method net/minecraft/server/command/AdvancementCommand$Operation processEach (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/AdvancementEntry;)Z
+accessible method net/minecraft/server/command/AdvancementCommand$Operation processEachCriterion (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/AdvancementEntry;Ljava/lang/String;)Z
+extendable class net/minecraft/world/event/Vibrations$ListenerData
+accessible field net/minecraft/server/command/AdvancementCommand$Selection before Z
+accessible field net/minecraft/server/command/AdvancementCommand$Selection after Z
+accessible class net/minecraft/client/gui/hud/InGameHud$HeartType

@@ -11,6 +11,24 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+	exclusiveContent {
+
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+
+		filter {
+			includeGroup "maven.modrinth"
+		}
+
+	}
+	maven {
+		name = "QuiltMC"
+		url = "https://maven.quiltmc.org/repository/release"
+	}
 	maven {
 		name = 'Ladysnake Mods'
 		url = 'https://maven.ladysnake.org/releases'
@@ -88,8 +106,8 @@ dependencies {
 	modApi "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 
-	modApi "com.github.apace100:calio:v${project.calio_version}"
-	include "com.github.apace100:calio:v${project.calio_version}"
+	modApi "com.github.apace100:calio:${project.calio_version}"
+	include "com.github.apace100:calio:${project.calio_version}"
 
 	modCompileOnlyApi "com.jamieswhiteshirt:reach-entity-attributes:${rea_version}"
 
@@ -100,10 +118,11 @@ dependencies {
 
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-	modApi "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
-	include "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
-	// modImplementation "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
-	// include "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
+	modApi "maven.modrinth:additionalentityattributes:${project.aea_version}"
+	include "maven.modrinth:additionalentityattributes:${project.aea_version}"
+//	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
+//	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
+
 }
 
 processResources {

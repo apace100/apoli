@@ -26,7 +26,7 @@ public class ApoliRegistryKeys {
 
     public static final RegistryKey<Registry<ConditionFactory<Entity>>> ENTITY_CONDITION;
     public static final RegistryKey<Registry<ConditionFactory<Pair<Entity, Entity>>>> BIENTITY_CONDITION;
-    public static final RegistryKey<Registry<ConditionFactory<ItemStack>>> ITEM_CONDITION;
+    public static final RegistryKey<Registry<ConditionFactory<Pair<World, ItemStack>>>> ITEM_CONDITION;
     public static final RegistryKey<Registry<ConditionFactory<CachedBlockPosition>>> BLOCK_CONDITION;
     public static final RegistryKey<Registry<ConditionFactory<Pair<DamageSource, Float>>>> DAMAGE_CONDITION;
     public static final RegistryKey<Registry<ConditionFactory<FluidState>>> FLUID_CONDITION;

@@ -8,21 +8,23 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.fabricmc.fabric.api.registry.FuelRegistry;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Pair;
+import net.minecraft.world.World;
 
 public class FuelCondition {
 
-	public static boolean condition(SerializableData.Instance data, ItemStack stack) {
+	public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
-		Integer fuelTime = FuelRegistry.INSTANCE.get(stack.getItem());
+		Integer fuelTime = FuelRegistry.INSTANCE.get(worldAndStack.getRight().getItem());
 		Comparison comparison = data.get("comparison");
-		Integer compareTo = data.get("compare_to");
+		int compareTo = data.get("compare_to");
 
 		return fuelTime != null
 			&& comparison.compare(fuelTime, compareTo);
 
 	}
 
-	public static ConditionFactory<ItemStack> getFactory() {
+	public static ConditionFactory<Pair<World, ItemStack>> getFactory() {
 		return new ConditionFactory<>(
 			Apoli.identifier("fuel"),
 			new SerializableData()

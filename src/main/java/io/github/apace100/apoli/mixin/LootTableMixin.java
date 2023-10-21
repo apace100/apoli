@@ -49,48 +49,71 @@ public class LootTableMixin implements IdentifiedLootTable {
 
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At("HEAD"), cancellable = true)
     private void modifyLootTable(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
-        if(((ReplacingLootContext)context).apoli$isReplaced((LootTable)(Object)this)) {
+
+        if (((ReplacingLootContext) context).apoli$isReplaced((LootTable) (Object) this)) {
             return;
         }
-        if(context.hasParameter(LootContextParameters.THIS_ENTITY)) {
-            LootContextType type = ((ReplacingLootContext)context).apoli$getType();
-            Entity entity = context.get(LootContextParameters.THIS_ENTITY);
-            if(type == LootContextTypes.FISHING) {
-                if(entity instanceof FishingBobberEntity bobber) {
-                    entity = bobber.getPlayerOwner();
-                }
-            } else if(type == LootContextTypes.ENTITY) {
-                if(context.hasParameter(LootContextParameters.KILLER_ENTITY)) {
-                    entity = context.get(LootContextParameters.KILLER_ENTITY);
-                }
-            } else if(type == LootContextTypes.BARTER) {
-                if(entity instanceof PiglinEntity piglin) {
-                    Optional<PlayerEntity> optional = piglin.getBrain().getOptionalMemory(MemoryModuleType.NEAREST_VISIBLE_PLAYER);
-                    if(optional.isPresent()) {
-                        entity = optional.get();
-                    }
-                }
-            }
-            List<ReplaceLootTablePower> powers = PowerHolderComponent.getPowers(entity, ReplaceLootTablePower.class);
-            powers = powers.stream()
-                .filter(p -> p.hasReplacement(apoli$id) && p.doesApply(context))
-                .sorted(Comparator.comparing(ReplaceLootTablePower::getPriority))
-                .toList();
-            if(powers.size() == 0) {
-                return;
-            }
-            ReplaceLootTablePower.addToStack((LootTable)(Object)this);
-            LootTable replacement = null;
-            for (ReplaceLootTablePower power : powers) {
-                Identifier id = power.getReplacement(apoli$id);
-                replacement = apoli$lootManager.getLootTable(id);
-                ReplaceLootTablePower.addToStack(replacement);
-            }
-            ((ReplacingLootContext)context).apoli$setReplaced((LootTable)(Object)this);
-            replacement.generateUnprocessedLoot(context, lootConsumer);
-            ReplaceLootTablePower.clearStack();
-            ci.cancel();
+
+        if (!context.hasParameter(LootContextParameters.THIS_ENTITY)) {
+            return;
         }
+
+        LootContextType lootContextType = ((ReplacingLootContext) context).apoli$getType();
+        Entity entity = context.get(LootContextParameters.THIS_ENTITY);
+
+        if (lootContextType == LootContextTypes.FISHING) {
+            if (entity instanceof FishingBobberEntity fishingBobberEntity) {
+                entity = fishingBobberEntity.getOwner();
+            }
+        } else if (lootContextType == LootContextTypes.ENTITY) {
+            if (context.hasParameter(LootContextParameters.KILLER_ENTITY)) {
+                entity = context.get(LootContextParameters.KILLER_ENTITY);
+            }
+        } else if (lootContextType == LootContextTypes.BARTER) {
+            if (entity instanceof PiglinEntity piglinEntity) {
+
+                Optional<PlayerEntity> playerEntity = piglinEntity.getBrain().getOptionalMemory(MemoryModuleType.NEAREST_VISIBLE_PLAYER);
+
+                if (playerEntity != null && playerEntity.isPresent()) {
+                    entity = playerEntity.get();
+                }
+
+            }
+        }
+
+        List<ReplaceLootTablePower> replaceLootTablePowers = PowerHolderComponent.getPowers(entity, ReplaceLootTablePower.class)
+            .stream()
+            .filter(p -> p.hasReplacement(apoli$id) && p.doesApply(context))
+            .sorted(Comparator.comparing(ReplaceLootTablePower::getPriority))
+            .toList();
+
+        if (replaceLootTablePowers.isEmpty()) {
+            return;
+        }
+
+        ReplaceLootTablePower.addToStack((LootTable) (Object) this);
+        LootTable replacement = null;
+
+        for (ReplaceLootTablePower replaceLootTablePower : replaceLootTablePowers) {
+
+            Identifier replacementId = replaceLootTablePower.getReplacement(apoli$id);
+            if (replacementId == null) {
+                continue;
+            }
+
+            replacement = apoli$lootManager.getLootTable(replacementId);
+            ReplaceLootTablePower.addToStack(replacement);
+
+        }
+
+        if (replacement != null) {
+            ((ReplacingLootContext) context).apoli$setReplaced((LootTable) (Object) this);
+            replacement.generateUnprocessedLoot(context, lootConsumer);
+        }
+
+        ReplaceLootTablePower.clearStack();
+        ci.cancel();
+
     }
 
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markActive(Lnet/minecraft/loot/context/LootContext$Entry;)Z"))
@@ -102,4 +125,5 @@ public class LootTableMixin implements IdentifiedLootTable {
     private void restoreReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
         ReplaceLootTablePower.restore();
     }
+
 }

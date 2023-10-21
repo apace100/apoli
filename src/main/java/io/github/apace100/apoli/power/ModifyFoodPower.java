@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 
 public class ModifyFoodPower extends Power {
 
-    private final Predicate<ItemStack> applicableFood;
+    private final Predicate<Pair<World, ItemStack>> applicableFood;
     private final ItemStack replaceStack;
     private final Consumer<Pair<World, ItemStack>> consumableAction;
     private final List<Modifier> foodModifiers;
@@ -28,7 +28,7 @@ public class ModifyFoodPower extends Power {
     private final boolean preventFoodEffects;
     private final boolean makeAlwaysEdible;
 
-    public ModifyFoodPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> applicableFood, ItemStack replaceStack, Consumer<Pair<World, ItemStack>> consumableAction, Modifier foodModifier, List<Modifier> foodModifiers, Modifier saturationModifier, List<Modifier> saturationModifiers, Consumer<Entity> entityActionWhenEaten, boolean makeAlwaysEdible, boolean preventFoodEffects) {
+    public ModifyFoodPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> applicableFood, ItemStack replaceStack, Consumer<Pair<World, ItemStack>> consumableAction, Modifier foodModifier, List<Modifier> foodModifiers, Modifier saturationModifier, List<Modifier> saturationModifiers, Consumer<Entity> entityActionWhenEaten, boolean makeAlwaysEdible, boolean preventFoodEffects) {
 
         super(type, entity);
 
@@ -51,7 +51,7 @@ public class ModifyFoodPower extends Power {
     }
 
     public boolean doesApply(ItemStack stack) {
-        return applicableFood == null || applicableFood.test(stack);
+        return applicableFood == null || applicableFood.test(new Pair<>(entity.getWorld(), stack));
     }
 
     public ItemStack getConsumedItemStack(ItemStack stack) {

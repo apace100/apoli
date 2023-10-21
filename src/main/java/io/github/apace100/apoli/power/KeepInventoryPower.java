@@ -8,6 +8,8 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Pair;
+import net.minecraft.world.World;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,12 +18,12 @@ import java.util.function.Predicate;
 
 public class KeepInventoryPower extends Power {
 
-    private final Predicate<ItemStack> keepItemCondition;
+    private final Predicate<Pair<World, ItemStack>> keepItemCondition;
     private final Set<Integer> slots;
 
     private ItemStack[] savedStacks;
 
-    public KeepInventoryPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> keepItemCondition, Collection<Integer> slots) {
+    public KeepInventoryPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> keepItemCondition, Collection<Integer> slots) {
         super(type, entity);
         this.keepItemCondition = keepItemCondition;
         if(slots == null) {
@@ -39,7 +41,7 @@ public class KeepInventoryPower extends Power {
             }
             ItemStack stack = inventory.getStack(i);
             if(!stack.isEmpty()) {
-                if(keepItemCondition == null || keepItemCondition.test(stack)) {
+                if(keepItemCondition == null || keepItemCondition.test(new Pair<>(entity.getWorld(), stack))) {
                     savedStacks[i] = stack;
                     inventory.setStack(i, ItemStack.EMPTY);
                 }

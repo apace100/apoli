@@ -1,0 +1,52 @@
+{
+	"type": "apoli:game_event_listener",
+	"bientity_action": {
+		"type": "apoli:target_action",
+		"action": {
+			"type": "apoli:apply_effect",
+			"effects": [
+				{
+					"effect": "minecraft:speed",
+					"duration": 100,
+					"amplifier": 1
+				},
+				{
+					"effect": "minecraft:jump_boost",
+					"duration": 100,
+					"amplifier": 0
+				}
+			]
+		}
+	},
+	"block_condition": {
+		"type": "apoli:or",
+		"conditions": [
+			{
+				"type": "apoli:block",
+				"block": "minecraft:bell"
+			},
+			{
+				"type": "apoli:and",
+				"conditions": [
+					{
+						"type": "apoli:block",
+						"block": "minecraft:note_block"
+					},
+					{
+						"type": "apoli:block_state",
+						"property": "instrument",
+						"enum": "bell"
+					}
+				]
+			}
+		]
+	},
+	"events": [
+		"minecraft:block_change",
+		"minecraft:note_block_play"
+	],
+	"cooldown": 100,
+	"hud_render": {
+		"should_render": true
+	}
+}

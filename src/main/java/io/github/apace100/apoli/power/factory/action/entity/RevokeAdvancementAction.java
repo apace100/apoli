@@ -2,12 +2,11 @@ package io.github.apace100.apoli.power.factory.action.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.AdvancementCommandAccessor;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.util.AdvancementUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.advancement.Advancement;
+import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerAdvancementLoader;
@@ -35,8 +34,8 @@ public class RevokeAdvancementAction {
         } else if (data.isPresent("advancement")) {
 
             Identifier advancementId = data.get("advancement");
-            Advancement advancement = advancementLoader.get(advancementId);
-            if (advancement == null) {
+            AdvancementEntry advancementEntry = advancementLoader.get(advancementId);
+            if (advancementEntry == null) {
                 Apoli.LOGGER.warn("Unknown advancement (\"" + advancementId + "\") referenced in `revoke_advancement` entity action type!");
                 return;
             }
@@ -47,9 +46,9 @@ public class RevokeAdvancementAction {
             data.ifPresent("criteria", criteria::addAll);
 
             if (criteria.isEmpty()) {
-                AdvancementUtil.processAdvancements(AdvancementCommandAccessor.callSelect(advancement, selection), AdvancementCommand.Operation.REVOKE, serverPlayerEntity);
+                AdvancementUtil.processAdvancements(AdvancementUtil.selectEntries(server.getAdvancementLoader().getManager(), advancementEntry, selection), AdvancementCommand.Operation.REVOKE, serverPlayerEntity);
             } else {
-                AdvancementUtil.processCriteria(advancement, criteria, AdvancementCommand.Operation.REVOKE, serverPlayerEntity);
+                AdvancementUtil.processCriteria(advancementEntry, criteria, AdvancementCommand.Operation.REVOKE, serverPlayerEntity);
             }
 
         }

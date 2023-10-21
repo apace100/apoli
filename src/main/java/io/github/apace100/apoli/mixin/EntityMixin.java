@@ -22,6 +22,7 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
@@ -29,6 +30,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import net.minecraft.world.event.listener.EntityGameEventHandler;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,6 +45,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
@@ -257,6 +260,13 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
             cir.setReturnValue(MathHelper.packRgb(r / colorAmount, g / colorAmount, b / colorAmount));
         }
 
+    }
+
+    @Inject(method = "updateEventHandler", at = @At("HEAD"))
+    private void apoli$updateCustomEventHandlers(BiConsumer<EntityGameEventHandler<?>, ServerWorld> callback, CallbackInfo ci) {
+        if (world instanceof ServerWorld serverWorld) {
+            PowerHolderComponent.getPowers((Entity) (Object) this, GameEventListenerPower.class).forEach(gelp -> callback.accept(gelp.getGameEventHandler(), serverWorld));
+        }
     }
 
 }

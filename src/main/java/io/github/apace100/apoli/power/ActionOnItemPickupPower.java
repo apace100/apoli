@@ -20,11 +20,11 @@ public class ActionOnItemPickupPower extends Power implements Prioritized<Action
     private final Consumer<Pair<World, ItemStack>> itemAction;
 
     private final Predicate<Pair<Entity, Entity>> biEntityCondition;
-    private final Predicate<ItemStack> itemCondition;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
 
     private final int priority;
 
-    public ActionOnItemPickupPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Pair<Entity, Entity>> biEntityAction, Consumer<Pair<World, ItemStack>> itemAction, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<ItemStack> itemCondition, int priority) {
+    public ActionOnItemPickupPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Pair<Entity, Entity>> biEntityAction, Consumer<Pair<World, ItemStack>> itemAction, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<Pair<World, ItemStack>> itemCondition, int priority) {
         super(powerType, livingEntity);
         this.biEntityAction = biEntityAction;
         this.itemAction = itemAction;
@@ -39,7 +39,7 @@ public class ActionOnItemPickupPower extends Power implements Prioritized<Action
     }
 
     public boolean doesApply(ItemStack stack, Entity thrower) {
-        return (itemCondition == null || itemCondition.test(stack))
+        return (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))
             && (biEntityCondition == null || biEntityCondition.test(new Pair<>(thrower, entity)));
     }
 

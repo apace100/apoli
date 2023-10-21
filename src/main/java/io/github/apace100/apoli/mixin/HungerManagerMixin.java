@@ -1,6 +1,8 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
+import io.github.apace100.apoli.access.PotentiallyEdibleItemStack;
 import io.github.apace100.apoli.power.ModifyFoodPower;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
@@ -16,7 +18,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
@@ -24,70 +25,96 @@ import java.util.List;
 @Mixin(HungerManager.class)
 public class HungerManagerMixin {
 
-    @Shadow private int foodLevel;
-    @Shadow private float saturationLevel;
+    @Shadow
+    private int foodLevel;
+
+    @Shadow
+    private float saturationLevel;
+
     @Unique
-    private PlayerEntity player;
+    private PlayerEntity apoli$cachedPlayer;
 
     @Unique
     private boolean apoli$ShouldUpdateManually = false;
 
-    @Redirect(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FoodComponent;getHunger()I"))
-    private int modifyHunger(FoodComponent foodComponent, Item item, ItemStack stack) {
+    @ModifyExpressionValue(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;isFood()Z"))
+    private boolean apoli$allowConsumingStack(boolean original, Item item, ItemStack stack) {
+        return original || ((PotentiallyEdibleItemStack) stack).apoli$getFoodComponent().isPresent();
+    }
+
+    @ModifyExpressionValue(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;getFoodComponent()Lnet/minecraft/item/FoodComponent;"))
+    private FoodComponent apoli$getOrReplaceFoodComponent(FoodComponent original, Item item, ItemStack stack) {
+        return ((PotentiallyEdibleItemStack) stack)
+            .apoli$getFoodComponent()
+            .orElse(original);
+    }
+
+    @ModifyExpressionValue(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FoodComponent;getHunger()I"))
+    private int apoli$modifyHunger(int original, Item item, ItemStack stack) {
 
         apoli$ShouldUpdateManually = false;
-        int baseValue = foodComponent.getHunger();
+        if (apoli$cachedPlayer == null) {
+            return original;
+        }
 
-        if (player == null) return baseValue;
-
-        List<Modifier> modifiers = ((ModifiableFoodEntity) player).apoli$getCurrentModifyFoodPowers()
+        List<Modifier> modifiers = ((ModifiableFoodEntity) apoli$cachedPlayer).apoli$getCurrentModifyFoodPowers()
             .stream()
             .filter(p -> p.doesApply(stack))
             .flatMap(p -> p.getFoodModifiers().stream())
             .toList();
 
-        int newFood = (int) ModifierUtil.applyModifiers(player, modifiers, baseValue);
-        if (newFood != baseValue && newFood == 0) apoli$ShouldUpdateManually = true;
+        int newFood = (int) ModifierUtil.applyModifiers(apoli$cachedPlayer, modifiers, original);
+        if (newFood != original && newFood == 0) {
+            apoli$ShouldUpdateManually = true;
+        }
 
         return newFood;
 
     }
 
-    @Redirect(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FoodComponent;getSaturationModifier()F"))
-    private float modifySaturation(FoodComponent foodComponent, Item item, ItemStack stack) {
+    @ModifyExpressionValue(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FoodComponent;getSaturationModifier()F"))
+    private float apoli$modifySaturation(float original, Item item, ItemStack stack) {
 
-        float baseValue = foodComponent.getSaturationModifier();
-        if (player == null) return baseValue;
+        if (apoli$cachedPlayer == null) {
+            return original;
+        }
 
-        List<Modifier> modifiers = ((ModifiableFoodEntity) player).apoli$getCurrentModifyFoodPowers()
+        List<Modifier> modifiers = ((ModifiableFoodEntity) apoli$cachedPlayer).apoli$getCurrentModifyFoodPowers()
             .stream()
             .filter(p -> p.doesApply(stack))
             .flatMap(p -> p.getSaturationModifiers().stream())
             .toList();
 
-        float newSaturation = (float) ModifierUtil.applyModifiers(player, modifiers, baseValue);
-        if (newSaturation != baseValue && newSaturation == 0) apoli$ShouldUpdateManually = true;
+        float newSaturation = (float) ModifierUtil.applyModifiers(apoli$cachedPlayer, modifiers, original);
+        if (newSaturation != original && newSaturation == 0) {
+            apoli$ShouldUpdateManually = true;
+        }
 
         return newSaturation;
 
     }
 
     @Inject(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V", shift = At.Shift.AFTER))
-    private void executeAdditionalEatAction(Item item, ItemStack stack, CallbackInfo ci) {
+    private void apoli$executeAdditionalEatAction(Item item, ItemStack stack, CallbackInfo ci) {
 
-        if (player == null || player.getWorld().isClient) return;
+        if (apoli$cachedPlayer == null || apoli$cachedPlayer.getWorld().isClient) {
+            return;
+        }
 
-        ((ModifiableFoodEntity) player).apoli$getCurrentModifyFoodPowers()
+        ((ModifiableFoodEntity) apoli$cachedPlayer).apoli$getCurrentModifyFoodPowers()
             .stream()
             .filter(p -> p.doesApply(stack))
             .forEach(ModifyFoodPower::eat);
 
-        if (apoli$ShouldUpdateManually) ((ServerPlayerEntity) player).networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), foodLevel, saturationLevel));
+        if (apoli$ShouldUpdateManually) {
+            ((ServerPlayerEntity) apoli$cachedPlayer).networkHandler.sendPacket(new HealthUpdateS2CPacket(apoli$cachedPlayer.getHealth(), foodLevel, saturationLevel));
+        }
 
     }
 
     @Inject(method = "update", at = @At("HEAD"))
-    private void cachePlayer(PlayerEntity player, CallbackInfo ci) {
-        this.player = player;
+    private void apoli$cachePlayer(PlayerEntity player, CallbackInfo ci) {
+        this.apoli$cachedPlayer = player;
     }
+
 }

@@ -1,7 +1,9 @@
 package io.github.apace100.apoli.power;
 
+import com.google.gson.JsonObject;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.MutableText;
@@ -10,12 +12,16 @@ import net.minecraft.util.Identifier;
 
 public class PowerType<T extends Power> {
 
-    private Identifier identifier;
-    private PowerFactory<T>.Instance factory;
-    private boolean isHidden = false;
+    private final PowerFactory<T>.Instance factory;
+    private final Identifier identifier;
 
     private String nameTranslationKey;
     private String descriptionTranslationKey;
+
+    private Text name;
+    private Text description;
+
+    private boolean isHidden = false;
 
     public PowerType(Identifier id, PowerFactory<T>.Instance factory) {
         this.identifier = id;
@@ -40,8 +46,20 @@ public class PowerType<T extends Power> {
         this.descriptionTranslationKey = description;
     }
 
+    public void setDisplayTexts(Text name, Text description) {
+        this.name = name;
+        this.description = description;
+    }
+
     public T create(LivingEntity entity) {
-        return getFactory().apply(this, entity);
+
+        T power = factory.apply(this, entity);
+
+        power.setSerializableData(factory.getFactory().getSerializableData());
+        power.setDataInstance(factory.getDataInstance());
+
+        return power;
+
     }
 
     public boolean isHidden() {
@@ -75,7 +93,7 @@ public class PowerType<T extends Power> {
     }
 
     public MutableText getName() {
-        return Text.translatable(getOrCreateNameTranslationKey());
+        return name != null ? name.copy() : Text.translatable(getOrCreateNameTranslationKey());
     }
 
     public String getOrCreateDescriptionTranslationKey() {
@@ -87,7 +105,18 @@ public class PowerType<T extends Power> {
     }
 
     public MutableText getDescription() {
-        return Text.translatable(getOrCreateDescriptionTranslationKey());
+        return description != null ? description.copy() : Text.translatable(getOrCreateDescriptionTranslationKey());
+    }
+
+    public JsonObject toJson() {
+
+        JsonObject jsonObject = factory.toJson();
+
+        jsonObject.add("name", SerializableDataTypes.TEXT.write(getName()));
+        jsonObject.add("description", SerializableDataTypes.TEXT.write(getDescription()));
+
+        return jsonObject;
+
     }
 
     @Override
