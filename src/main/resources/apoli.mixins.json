@@ -32,6 +32,7 @@
         "HungerManagerMixin",
         "ItemEntityMixin",
         "ItemMixin",
+        "ItemUsageContextAccessor",
         "ItemPredicateMixin",
         "ItemSlotArgumentTypeAccessor",
         "ItemStackMixin",

@@ -128,6 +128,8 @@ public class PowerFactories {
         register(PreventItemPickupPower::createFactory);
         register(EdibleItemPower::createFactory);
         register(GameEventListenerPower::createFactory);
+        register(ActionOnBlockPlacePower::createFactory);
+        register(PreventBlockPlacePower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {
