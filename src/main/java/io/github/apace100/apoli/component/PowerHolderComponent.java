@@ -82,8 +82,13 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         }
 
         NbtCompound powerData = new NbtCompound();
-        powerData.put("Data", component.getPower(powerType).toTag());
+        Power power = component.getPower(powerType);
 
+        if (power == null) {
+            return;
+        }
+
+        powerData.put("Data", power.toTag());
         SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), powerType.getIdentifier(), powerData);
 
         for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
