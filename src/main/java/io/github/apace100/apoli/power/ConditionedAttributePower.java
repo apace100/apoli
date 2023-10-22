@@ -7,7 +7,6 @@ import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.AttributeContainer;
 
 import java.util.List;
 
@@ -34,18 +33,6 @@ public class ConditionedAttributePower extends AttributePower {
             this.removeTempMods();
         }
 
-    }
-
-    @Override
-    public boolean isActive() {
-        return super.isActive() && hasModifiersApplied();
-    }
-
-    private boolean hasModifiersApplied() {
-        AttributeContainer container = entity.getAttributes();
-        return modifiers.stream()
-            .filter(mod -> container.hasAttribute(mod.getAttribute()))
-            .anyMatch(mod -> container.hasModifierForAttribute(mod.getAttribute(), mod.getModifier().getId()));
     }
 
     public static PowerFactory createFactory() {
