@@ -223,7 +223,7 @@ public abstract class ItemStackMixin implements MutableItemStack, EntityLinkedIt
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
     private int apoli$modifyMaxConsumingTime(int original) {
         return apoli$getEdiblePower()
-            .map(p -> p.getFoodComponent().isSnack() ? 16 : 32)
+            .map(EdibleItemPower::getConsumingTime)
             .orElse(original);
     }
 

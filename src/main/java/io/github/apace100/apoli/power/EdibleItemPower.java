@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.modifier.Modifier;
+import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -17,6 +19,8 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -28,6 +32,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     private final Predicate<Pair<World, ItemStack>> itemCondition;
 
+    private final List<Modifier> consumingTimeModifiers;
     private final FoodComponent foodComponent;
     private final ItemStack resultStack;
     private final ConsumeAnimation consumeAnimation;
@@ -35,8 +40,9 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     private final int priority;
 
-    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> consumedItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
+    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> consumedItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, Modifier consumingTimeModifier, List<Modifier> consumingTimeModifiers, int priority) {
         super(powerType, livingEntity);
+
         this.entityAction = entityAction;
         this.consumedItemAction = consumedItemAction;
         this.resultItemAction = resultItemAction;
@@ -45,7 +51,18 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
         this.resultStack = resultStack;
         this.consumeAnimation = consumeAnimation;
         this.consumeSoundEvent = consumeSoundEvent;
+
+        this.consumingTimeModifiers = new LinkedList<>();
+        if (consumingTimeModifier != null) {
+            this.consumingTimeModifiers.add(consumingTimeModifier);
+        }
+
+        if (consumingTimeModifiers != null) {
+            this.consumingTimeModifiers.addAll(consumingTimeModifiers);
+        }
+
         this.priority = priority;
+
     }
 
     @Override
@@ -103,6 +120,10 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
         return consumeSoundEvent;
     }
 
+    public int getConsumingTime() {
+        return (int) ModifierUtil.applyModifiers(entity, consumingTimeModifiers, this.getFoodComponent().isSnack() ? 16 : 32);
+    }
+
     public static PowerFactory createFactory() {
         return new PowerFactory<>(
             Apoli.identifier("edible_item"),
@@ -118,6 +139,8 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
                 .addFunctionedDefault("consume_animation", SerializableDataType.enumValue(ConsumeAnimation.class), data -> data.get("use_action"))
                 .add("sound", SerializableDataTypes.SOUND_EVENT, SoundEvents.ENTITY_GENERIC_EAT)
                 .addFunctionedDefault("consume_sound", SerializableDataTypes.SOUND_EVENT, data -> data.get("sound"))
+                .add("consuming_time_modifier", Modifier.DATA_TYPE, null)
+                .add("consuming_time_modifiers", Modifier.LIST_TYPE, null)
                 .add("priority", SerializableDataTypes.INT, 0),
             data -> (powerType, livingEntity) -> new EdibleItemPower(
                 powerType,
@@ -130,6 +153,8 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
                 data.get("result_stack"),
                 data.get("consume_animation"),
                 data.get("consume_sound"),
+                data.get("consuming_time_modifier"),
+                data.get("consuming_time_modifiers"),
                 data.get("priority")
             )
         ).allowCondition();
