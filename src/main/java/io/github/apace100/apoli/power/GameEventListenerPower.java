@@ -6,6 +6,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.HudRender;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
@@ -22,6 +23,7 @@ import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.event.PositionSource;
 import net.minecraft.world.event.Vibrations;
 import net.minecraft.world.event.listener.EntityGameEventHandler;
+import net.minecraft.world.event.listener.GameEventListener;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,13 +44,17 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
     private final TagKey<GameEvent> acceptedGameEventTag;
 
     private EntityGameEventHandler<VibrationListener> gameEventHandler;
+
+    private final GameEventListener.TriggerOrder triggerOrder;
     private final ListenerData vibrationListenerData;
     private final Callback vibrationCallback;
 
+    private final boolean listenToEntityEvents;
+    private final boolean listenToBlockEvents;
     private final boolean showParticle;
     private final int range;
 
-    public GameEventListenerPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, int cooldownDuration, HudRender hudRender, int range, GameEvent acceptedGameEvent, List<GameEvent> acceptedGameEvents, TagKey<GameEvent> acceptedGameEventTag, boolean showParticle) {
+    public GameEventListenerPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, int cooldownDuration, HudRender hudRender, int range, GameEvent acceptedGameEvent, List<GameEvent> acceptedGameEvents, TagKey<GameEvent> acceptedGameEventTag, boolean showParticle, boolean listenToEntityEvents, boolean listenToBlockEvents, GameEventListener.TriggerOrder triggerOrder) {
         super(powerType, livingEntity, Math.max(cooldownDuration, 1), hudRender);
 
         this.blockAction = blockAction;
@@ -66,11 +72,15 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         }
 
         this.gameEventHandler = null;
+        this.triggerOrder = triggerOrder;
+
         this.vibrationListenerData = new ListenerData();
         this.vibrationCallback = new Callback();
 
         this.acceptedGameEventTag = acceptedGameEventTag;
         this.showParticle = showParticle;
+        this.listenToEntityEvents = listenToEntityEvents;
+        this.listenToBlockEvents = listenToBlockEvents;
         this.setTicking();
 
     }
@@ -120,15 +130,36 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
     public EntityGameEventHandler<VibrationListener> getGameEventHandler() {
 
         if (!canListen()) {
-            gameEventHandler = new EntityGameEventHandler<>(new VibrationListener(this));
+            gameEventHandler = new EntityGameEventHandler<>(new Listener());
         }
 
         return gameEventHandler;
 
     }
 
+    public boolean shouldListenToEntityEvents(GameEvent.Emitter emitter) {
+        return listenToEntityEvents && (biEntityCondition == null || biEntityCondition.test(new Pair<>(emitter.sourceEntity(), entity)));
+    }
+
+    public boolean shouldListenToBlockEvents(GameEvent.Emitter emitter, CachedBlockPosition cachedBlockPosition) {
+        return listenToBlockEvents && (emitter.sourceEntity() == null && (blockCondition == null || blockCondition.test(cachedBlockPosition)));
+    }
+
     public boolean shouldShowParticle() {
         return showParticle;
+    }
+
+    public class Listener extends VibrationListener {
+
+        public Listener() {
+            super(GameEventListenerPower.this);
+        }
+
+        @Override
+        public TriggerOrder getTriggerOrder() {
+            return triggerOrder;
+        }
+
     }
 
     public class Callback implements Vibrations.Callback {
@@ -146,8 +177,8 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         @Override
         public boolean accepts(ServerWorld world, BlockPos pos, GameEvent event, GameEvent.Emitter emitter) {
             return entity.getWorld() == world
-                && (blockCondition == null || blockCondition.test(new CachedBlockPosition(world, pos, true)))
-                && (biEntityCondition == null || biEntityCondition.test(new Pair<>(emitter.sourceEntity(), entity)));
+                && (shouldListenToBlockEvents(emitter, new CachedBlockPosition(world, pos, true))
+                || shouldListenToEntityEvents(emitter));
         }
 
         @Override
@@ -193,7 +224,10 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
                 .add("events", SerializableDataTypes.GAME_EVENTS, null)
                 .add("tag", SerializableDataTypes.GAME_EVENT_TAG, GameEventTags.VIBRATIONS)
                 .addFunctionedDefault("event_tag", SerializableDataTypes.GAME_EVENT_TAG, data -> data.get("tag"))
-                .add("show_particle", SerializableDataTypes.BOOLEAN, true),
+                .add("show_particle", SerializableDataTypes.BOOLEAN, true)
+                .add("entity", SerializableDataTypes.BOOLEAN, true)
+                .add("block", SerializableDataTypes.BOOLEAN, true)
+                .add("trigger_order", SerializableDataType.enumValue(GameEventListener.TriggerOrder.class), GameEventListener.TriggerOrder.UNSPECIFIED),
             data -> (powerType, livingEntity) -> new GameEventListenerPower(
                 powerType,
                 livingEntity,
@@ -207,7 +241,10 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
                 data.get("event"),
                 data.get("events"),
                 data.get("event_tag"),
-                data.get("show_particle")
+                data.get("show_particle"),
+                data.get("entity"),
+                data.get("block"),
+                data.get("trigger_order")
             )
         ).allowCondition();
     }
