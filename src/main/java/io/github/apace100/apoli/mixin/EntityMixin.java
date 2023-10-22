@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
@@ -267,6 +269,16 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         if (world instanceof ServerWorld serverWorld) {
             PowerHolderComponent.getPowers((Entity) (Object) this, GameEventListenerPower.class).forEach(gelp -> callback.accept(gelp.getGameEventHandler(), serverWorld));
         }
+    }
+
+    @ModifyExpressionValue(method = "pushAwayFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isConnectedThroughVehicle(Lnet/minecraft/entity/Entity;)Z"))
+    private boolean apoli$preventEntityPushing2(boolean original, Entity fromEntity) {
+        return original || PreventEntityCollisionPower.doesApply(fromEntity, (Entity) (Object) this);
+    }
+
+    @ModifyReturnValue(method = "collidesWith", at = @At("RETURN"))
+    private boolean apoli$preventEntityCollision(boolean original, Entity other) {
+        return !PreventEntityCollisionPower.doesApply((Entity) (Object) this, other) && original;
     }
 
 }

@@ -460,14 +460,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
-    @Inject(method = "pushAway", at = @At("HEAD"), cancellable = true)
-    private void preventPushing(Entity entity, CallbackInfo ci) {
-        if(PowerHolderComponent.hasPower(this, PreventEntityCollisionPower.class, p -> p.doesApply(entity))
-            || PowerHolderComponent.hasPower(entity, PreventEntityCollisionPower.class, p -> p.doesApply(this))) {
-            ci.cancel();
-        }
-    }
-
     @Unique
     private float cachedDamageAmount;
 
