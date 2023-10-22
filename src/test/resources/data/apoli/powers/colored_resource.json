@@ -1,0 +1,77 @@
+{
+    "type": "apoli:resource",
+    "min": 1,
+    "max": 7,
+    "hud_render": [
+        {
+            "sprite_location": "apoli:textures/gui/colored_bar.png",
+            "bar_index": 0,
+            "condition": {
+                "type": "apoli:resource",
+                "resource": "*:*",
+                "comparison": "==",
+                "compare_to": 1
+            }
+        },
+        {
+            "sprite_location": "apoli:textures/gui/colored_bar.png",
+            "bar_index": 1,
+            "condition": {
+                "type": "apoli:resource",
+                "resource": "*:*",
+                "comparison": "==",
+                "compare_to": 2
+            }
+        },
+        {
+            "sprite_location": "apoli:textures/gui/colored_bar.png",
+            "bar_index": 2,
+            "condition": {
+                "type": "apoli:resource",
+                "resource": "*:*",
+                "comparison": "==",
+                "compare_to": 3
+            }
+        },
+        {
+            "sprite_location": "apoli:textures/gui/colored_bar.png",
+            "bar_index": 3,
+            "condition": {
+                "type": "apoli:resource",
+                "resource": "*:*",
+                "comparison": "==",
+                "compare_to": 4
+            }
+        },
+        {
+            "sprite_location": "apoli:textures/gui/colored_bar.png",
+            "bar_index": 4,
+            "condition": {
+                "type": "apoli:resource",
+                "resource": "*:*",
+                "comparison": "==",
+                "compare_to": 5
+            }
+        },
+        {
+            "sprite_location": "apoli:textures/gui/colored_bar.png",
+            "bar_index": 5,
+            "condition": {
+                "type": "apoli:resource",
+                "resource": "*:*",
+                "comparison": "==",
+                "compare_to": 6
+            }
+        },
+        {
+            "sprite_location": "apoli:textures/gui/colored_bar.png",
+            "bar_index": 6,
+            "condition": {
+                "type": "apoli:resource",
+                "resource": "*:*",
+                "comparison": "==",
+                "compare_to": 7
+            }
+        }
+    ]
+}

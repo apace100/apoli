@@ -15,13 +15,20 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.Identifier;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Environment(EnvType.CLIENT)
 public class PowerHudRenderer implements GameHudRender {
 
+    private static final int BAR_WIDTH = 71;
+    private static final int BAR_HEIGHT = 8;
+    private static final int ICON_SIZE = 8;
+
+    private static final int BAR_INDEX_OFFSET = BAR_HEIGHT + 2;
+    private static final int ICON_INDEX_OFFSET = ICON_SIZE + 1;
+
     @Override
-    @Environment(EnvType.CLIENT)
     public void render(DrawContext context, float delta) {
 
         MinecraftClient client = MinecraftClient.getInstance();
@@ -41,51 +48,43 @@ public class PowerHudRenderer implements GameHudRender {
             y -= 8 * multiplier;
         }
 
-        int barWidth = 71;
-        int barHeight = 8;
-        int iconSize = 8;
-
-        //  Used for selecting bars/icons depending on the specified bar/icon index
-        int barIndexOffset = barHeight + 2;
-        int iconIndexOffset = iconSize + 1;
-
-        //  Get and sort the HUD powers
-        List<HudRendered> hudRenderedPowers = component.getPowers()
+        //  Get and sort the HUD powers and its HUD render settings
+        //  TODO: Improve handling of overriding inherited order value
+        Map<HudRendered, HudRender> hudRenderedMap = component.getPowers()
             .stream()
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)
-            .sorted(Comparator.comparing(hudRendered -> hudRendered.getRenderSettings().getSpriteLocation()))
-            .toList();
+            .filter(HudRendered::shouldRender)
+            .map(hudRendered -> Map.entry(hudRendered, hudRendered.getRenderSettings().getChildOrSelf(player)))
+            .filter(e -> e.getValue().isPresent())
+            .sorted(Map.Entry.comparingByValue(Comparator.comparing(Optional::get)))
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(), (hudRender, hudRender2) -> hudRender, LinkedHashMap::new));
 
-        for (HudRendered hudRenderedPower : hudRenderedPowers) {
+        for (Map.Entry<HudRendered, HudRender> hudRenderedEntry : hudRenderedMap.entrySet()) {
 
-            //  Get the HUD render settings of the HUD power. Skip the drawing process if the HUD of the HUD power
-            //  is specified to not render or if the condition is not fulfilled by the player
-            HudRender hudRender = hudRenderedPower.getRenderSettings();
-            if (!(hudRender.shouldRender(player) && hudRenderedPower.shouldRender())) {
-                continue;
-            }
+            HudRendered hudRenderedPower = hudRenderedEntry.getKey();
+            HudRender childHudRender = hudRenderedEntry.getValue();
 
             //  Get the identifier of the sprite sheet and draw the base texture of the bar
-            Identifier currentSpriteLocation = hudRender.getSpriteLocation();
-            context.drawTexture(currentSpriteLocation, x, y, 0, 0, barWidth, 5);
+            Identifier currentSpriteLocation = childHudRender.getSpriteLocation();
+            context.drawTexture(currentSpriteLocation, x, y, 0, 0, BAR_WIDTH, 5);
 
             //  Get the V coordinate for the bar and icon and the U coordinate for the icon
-            int barV = barHeight + hudRender.getBarIndex() * barIndexOffset;
-            int iconU = (barWidth + 2) + hudRender.getIconIndex() * iconIndexOffset;
+            int barV = BAR_HEIGHT + childHudRender.getBarIndex() * BAR_INDEX_OFFSET;
+            int iconU = (BAR_WIDTH + 2) + childHudRender.getIconIndex() * ICON_INDEX_OFFSET;
 
             //  Get the fill portion of the bar
             float barFill = hudRenderedPower.getFill();
-            if (hudRender.isInverted()) {
+            if (childHudRender.isInverted()) {
                 barFill = 1f - barFill;
             }
 
             //  Draw the fill portion of the bar
-            int barFillWidth = (int) (barFill * barWidth);
-            context.drawTexture(currentSpriteLocation, x, y - 2, 0, barV, barFillWidth, barHeight);
+            int barFillWidth = (int) (barFill * BAR_WIDTH);
+            context.drawTexture(currentSpriteLocation, x, y - 2, 0, barV, barFillWidth, BAR_HEIGHT);
 
             //  Draw the icon of the bar
-            context.drawTexture(currentSpriteLocation, x - iconSize - 2, y - 2, iconU, barV, iconSize, iconSize);
+            context.drawTexture(currentSpriteLocation, x - ICON_SIZE - 2, y - 2, iconU, barV, ICON_SIZE, ICON_SIZE);
             y -= 8;
 
         }

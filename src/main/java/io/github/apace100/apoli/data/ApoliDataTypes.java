@@ -2,10 +2,8 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -230,31 +228,71 @@ public class ApoliDataTypes {
         KEY::write
     );
 
-    public static final SerializableDataType<HudRender> HUD_RENDER = SerializableDataType.compound(HudRender.class, new
-            SerializableData()
+    public static final SerializableDataType<HudRender> SINGLE_HUD_RENDER = SerializableDataType.compound(
+        HudRender.class,
+        new SerializableData()
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
             .add("icon_index", SerializableDataTypes.INT, 0)
-            .add("sprite_location", SerializableDataTypes.IDENTIFIER, new Identifier("apoli", "textures/gui/resource_bar.png"))
+            .add("sprite_location", SerializableDataTypes.IDENTIFIER, Apoli.identifier("textures/gui/resource_bar.png"))
             .add("condition", ENTITY_CONDITION, null)
-            .add("inverted", SerializableDataTypes.BOOLEAN, false),
-        (dataInst) -> new HudRender(
-            dataInst.getBoolean("should_render"),
-            dataInst.getInt("bar_index"),
-            dataInst.getInt("icon_index"),
-            dataInst.getId("sprite_location"),
-            dataInst.get("condition"),
-            dataInst.getBoolean("inverted")),
-        (data, inst) -> {
-            SerializableData.Instance dataInst = data.new Instance();
-            dataInst.set("should_render", inst.shouldRender());
-            dataInst.set("bar_index", inst.getBarIndex());
-            dataInst.set("icon_index", inst.getIconIndex());
-            dataInst.set("sprite_location", inst.getSpriteLocation());
-            dataInst.set("condition", inst.getCondition());
-            dataInst.set("inverted", inst.isInverted());
-            return dataInst;
-        });
+            .add("inverted", SerializableDataTypes.BOOLEAN, false)
+            .add("order", SerializableDataTypes.INT, 0),
+        (data) -> new HudRender(
+            data.get("should_render"),
+            data.get("bar_index"),
+            data.get("icon_index"),
+            data.get("sprite_location"),
+            data.get("condition"),
+            data.get("inverted"),
+            data.get("order")
+        ),
+        (serializableData, hudRender) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("should_render", hudRender.shouldRender());
+            data.set("bar_index", hudRender.getBarIndex());
+            data.set("icon_index", hudRender.getIconIndex());
+            data.set("sprite_location", hudRender.getSpriteLocation());
+            data.set("condition", hudRender.getCondition());
+            data.set("inverted", hudRender.isInverted());
+            data.set("order", hudRender.getOrder());
+
+            return data;
+
+        }
+    );
+
+    public static final SerializableDataType<List<HudRender>> MULTIPLE_HUD_RENDERS = SerializableDataType.list(SINGLE_HUD_RENDER);
+
+    /**
+     *  <p>A HUD render data type that accepts either a single HUD render or multiple HUD renders. The first HUD render will be considered
+     *  the <b>"parent"</b> and the following HUD renders will be considered its <b>"children."</b></p>
+     *
+     *  <p>If the children don't specify an order value, the order value of the parent will be inherited instead.</p>
+     */
+    public static final SerializableDataType<HudRender> HUD_RENDER = new SerializableDataType<>(
+        HudRender.class,
+        (buf, hudRender) -> hudRender.send(buf),
+        HudRender::receive,
+        jsonElement -> {
+
+            LinkedList<HudRender> hudRenders = (LinkedList<HudRender>) MULTIPLE_HUD_RENDERS.read(jsonElement);
+            if (hudRenders.isEmpty()) {
+                return HudRender.DONT_RENDER;
+            }
+
+            HudRender parentHudRender = hudRenders.removeFirst();
+            for (HudRender hudRender : hudRenders) {
+                parentHudRender.addChild(hudRender);
+            }
+
+            return parentHudRender;
+
+        },
+        SINGLE_HUD_RENDER::write
+    );
 
     public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
         SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
