@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -17,7 +18,6 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -239,44 +239,32 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     }
 
-    @Inject(method = "applyArmorToDamage", at = @At("HEAD"), cancellable = true)
-    private void apoli$modifyArmorApplicance(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
+    @ModifyExpressionValue(method = "applyArmorToDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/damage/DamageSource;isIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
+    private boolean apoli$allowApplyingOrDamagingArmor(boolean original, DamageSource source, float amount) {
 
-        if (apoli$shouldApplyArmor.isEmpty()) {
-
-            if (apoli$shouldDamageArmor.map(bl -> bl && source.isIn(DamageTypeTags.BYPASSES_ARMOR)).orElse(false)) {
-                this.damageArmor(source, amount);
-            }
-
-            return;
-
-        }
-
-        if (!apoli$shouldApplyArmor.get()) {
-            cir.setReturnValue(amount);
-            return;
-        }
-
-        if (apoli$shouldDamageArmor.orElse(false)) {
+        if (apoli$shouldApplyArmor.isEmpty() && (original && apoli$shouldDamageArmor.orElse(false))) {
             this.damageArmor(source, amount);
         }
 
-        cir.setReturnValue(DamageUtil.getDamageLeft(amount, this.getArmor(), (float) this.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS)));
+        return apoli$shouldApplyArmor
+            .map(result -> !result)
+            .orElse(original);
 
     }
 
-    @Redirect(method = "applyArmorToDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;damageArmor(Lnet/minecraft/entity/damage/DamageSource;F)V"))
-    private void apoli$preventArmorDamaging(LivingEntity instance, DamageSource source, float amount) {
-        if (apoli$shouldDamageArmor.orElse(false)) {
-            this.damageArmor(source, amount);
-        }
+    @WrapWithCondition(method = "applyArmorToDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;damageArmor(Lnet/minecraft/entity/damage/DamageSource;F)V"))
+    private boolean apoli$allowDamagingArmor(LivingEntity instance, DamageSource source, float amount) {
+        return apoli$shouldDamageArmor.orElse(true);
     }
 
-    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"), cancellable = true)
-    private void apoli$preventHitIfDamageIsZero(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if(apoli$hasModifiedDamage && amount <= 0f) {
-            cir.setReturnValue(false);
-        }
+    @ModifyExpressionValue(method = "applyArmorToDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/DamageUtil;getDamageLeft(FFF)F"))
+    private float apoli$allowApplyingArmor(float modified, DamageSource source, float original) {
+        return apoli$shouldApplyArmor.orElse(true) ? modified : original;
+    }
+
+    @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 0))
+    private boolean apoli$preventHitIfDamageIsZero(boolean original, DamageSource source, float amount) {
+        return original || apoli$hasModifiedDamage && amount <= 0F;
     }
 
     @Inject(method = "damage", at = @At("RETURN"))
