@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class MiscUtil {
 
     public static void createExplosion(World world, Vec3d pos, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
@@ -90,31 +91,38 @@ public final class MiscUtil {
     }
 
     public static Optional<Entity> getEntityWithPassengers(World world, EntityType<?> entityType, @Nullable NbtCompound entityNbt, Vec3d pos, float yaw, float pitch) {
+        return getEntityWithPassengers(world, entityType, entityNbt, pos, Optional.of(yaw), Optional.of(pitch));
+    }
 
-        if (world.isClient) return Optional.empty();
-        ServerWorld serverWorld = (ServerWorld) world;
+    public static Optional<Entity> getEntityWithPassengers(World world, EntityType<?> entityType, @Nullable NbtCompound entityNbt, Vec3d pos, Optional<Float> yaw, Optional<Float> pitch) {
+
+        if (!(world instanceof ServerWorld serverWorld)) {
+            return Optional.empty();
+        }
 
         NbtCompound entityToSpawnNbt = new NbtCompound();
-        if (entityNbt != null) entityToSpawnNbt.copyFrom(entityNbt);
-        entityToSpawnNbt.putString("id", Registries.ENTITY_TYPE.getId(entityType).toString());
+        if (entityNbt != null && !entityNbt.isEmpty()) {
+            entityToSpawnNbt.copyFrom(entityNbt);
+        }
 
+        entityToSpawnNbt.putString("id", Registries.ENTITY_TYPE.getId(entityType).toString());
         Entity entityToSpawn = EntityType.loadEntityWithPassengers(
             entityToSpawnNbt,
             serverWorld,
             entity -> {
-                entity.refreshPositionAndAngles(pos.x, pos.y, pos.z, yaw, pitch);
+                entity.refreshPositionAndAngles(pos.x, pos.y, pos.z, yaw.orElse(entity.getYaw()), pitch.orElse(entity.getPitch()));
                 return entity;
             }
         );
-        if (entityToSpawn == null) return Optional.empty();
 
-        if (entityNbt == null && entityToSpawn instanceof MobEntity mobToSpawn) mobToSpawn.initialize(
-            serverWorld,
-            serverWorld.getLocalDifficulty(BlockPos.ofFloored(pos)),
-            SpawnReason.COMMAND,
-            null,
-            null
-        );
+        if (entityToSpawn == null) {
+            return Optional.empty();
+        }
+
+        if ((entityNbt == null || entityNbt.isEmpty()) && entityToSpawn instanceof MobEntity mobToSpawn) {
+            mobToSpawn.initialize(serverWorld, serverWorld.getLocalDifficulty(BlockPos.ofFloored(pos)), SpawnReason.COMMAND, null, null);
+        }
+
         return Optional.of(entityToSpawn);
 
     }
