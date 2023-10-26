@@ -130,6 +130,7 @@ public class PowerFactories {
         register(GameEventListenerPower::createFactory);
         register(ActionOnBlockPlacePower::createFactory);
         register(PreventBlockPlacePower::createFactory);
+        register(EntitySetPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

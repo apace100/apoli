@@ -443,6 +443,7 @@ public class EntityConditions {
         register(InSnowCondition.getFactory());
         register(InThunderstormCondition.getFactory());
         register(AdvancementCondition.getFactory());
+        register(SetSizeCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

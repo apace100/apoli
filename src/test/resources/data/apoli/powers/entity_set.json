@@ -1,0 +1,105 @@
+{
+  "type": "apoli:multiple",
+  "set": {
+    "type": "apoli:entity_set"
+  },
+  "give_apples": {
+    "type": "apoli:action_on_entity_use",
+    "bientity_condition": {
+      "type": "apoli:and",
+      "conditions": [
+        {
+          "type": "apoli:actor_condition",
+          "condition": {
+            "type": "apoli:set_size",
+            "set": "*:*_set",
+            "comparison": "<",
+            "compare_to": 3
+          }
+        },
+        {
+          "type": "apoli:in_set",
+          "set": "*:*_set",
+          "inverted": true
+        },
+        {
+          "type": "apoli:target_condition",
+          "condition": {
+            "type": "apoli:entity_type",
+            "entity_type": "minecraft:zombie"
+          }
+        }
+      ]
+    },
+    "bientity_action": {
+      "type": "apoli:add_to_set",
+      "set": "*:*_set"
+    },
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:apple"
+      }
+    },
+    "held_item_action": {
+      "type": "apoli:consume"
+    }
+  },
+  "give_stick": {
+    "type": "apoli:action_on_entity_use",
+    "bientity_condition": {
+      "type": "apoli:and",
+      "conditions": [
+        {
+          "type": "apoli:in_set",
+          "set": "*:*_set"
+        },
+        {
+          "type": "apoli:target_condition",
+          "condition": {
+            "type": "apoli:entity_type",
+            "entity_type": "minecraft:zombie"
+          }
+        }
+      ]
+    },
+    "bientity_action": {
+      "type": "apoli:remove_from_set",
+      "set": "*:*_set"
+    },
+    "item_condition": {
+      "type": "apoli:ingredient",
+      "ingredient": {
+        "item": "minecraft:stick"
+      }
+    },
+    "held_item_action": {
+      "type": "apoli:consume"
+    }
+  },
+  "no_damage_dealt": {
+    "type": "apoli:modify_damage_dealt",
+    "modifier": {
+      "operation": "multiply_total",
+      "value": -1
+    },
+    "bientity_condition": {
+      "type": "apoli:in_set",
+      "set": "*:*_set"
+    }
+  },
+  "no_damage_taken": {
+    "type": "apoli:modify_damage_taken",
+    "modifier": {
+      "operation": "multiply_total",
+      "value": -1
+    },
+    "bientity_condition": {
+      "type": "apoli:invert",
+      "condition": {
+        "type": "apoli:in_set",
+        "set": "*:*_set"
+      }
+    }
+  }
+}

@@ -18,6 +18,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -29,6 +30,7 @@ import net.minecraft.world.explosion.ExplosionBehavior;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -124,6 +126,26 @@ public final class MiscUtil {
         }
 
         return Optional.of(entityToSpawn);
+
+    }
+
+    @Nullable
+    public static Entity getEntityByUuid(UUID uuid, @Nullable MinecraftServer server) {
+
+        if (server == null) {
+            return null;
+        }
+
+        Entity entity;
+        for (ServerWorld serverWorld : server.getWorlds()) {
+
+            if ((entity = serverWorld.getEntity(uuid)) != null) {
+                return entity;
+            }
+
+        }
+
+        return null;
 
     }
 
