@@ -1,6 +1,10 @@
 package io.github.apace100.apoli.util;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,6 +32,29 @@ public enum Shape {
             }
         }
         return positions;
+    }
+
+    public static Set<Entity> getEntities(Shape shape, World world, Vec3d center, double radius) {
+
+        Set<Entity> entities = new HashSet<>();
+
+        double diameter = radius * 2;
+        double x, y, z;
+
+        for (Entity entity : world.getNonSpectatingEntities(Entity.class, Box.of(center, diameter, diameter, diameter))) {
+
+            x = Math.abs(entity.getX() - center.getX());
+            y = Math.abs(entity.getY() - center.getY());
+            z = Math.abs(entity.getZ() - center.getZ());
+
+            if (getDistance(shape, x, y, z) < radius) {
+                entities.add(entity);
+            }
+
+        }
+
+        return entities;
+
     }
 
     public static double getDistance(Shape shape, double xDistance, double yDistance, double zDistance){
