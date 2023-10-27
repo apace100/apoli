@@ -23,33 +23,28 @@ public class BlockCollisionCondition {
             data.getFloat("offset_z") * entityBoundingBox.getLengthZ()
         );
 
-        if (data.isPresent("block_condition")) {
+        Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
 
-            Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
-            BlockPos minBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
-            BlockPos maxBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
-            BlockPos.Mutable mutableBlockPos = new BlockPos.Mutable();
-            int matchingBlocks = 0;
+        BlockPos minBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
+        BlockPos maxBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
 
-            for (int x = minBlockPos.getX(); x <= maxBlockPos.getX(); x++) {
-                for (int y = minBlockPos.getY(); y <= maxBlockPos.getY(); y++) {
-                    for (int z = minBlockPos.getZ(); z <= maxBlockPos.getZ(); z++) {
-                        mutableBlockPos.set(x, y, z);
-                        if (blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) {
-                            matchingBlocks++;
-                        }
+        BlockPos.Mutable mutableBlockPos = new BlockPos.Mutable();
+
+        for (int x = minBlockPos.getX(); x <= maxBlockPos.getX(); x++) {
+            for (int y = minBlockPos.getY(); y <= maxBlockPos.getY(); y++) {
+                for (int z = minBlockPos.getZ(); z <= maxBlockPos.getZ(); z++) {
+
+                    mutableBlockPos.set(x, y, z);
+
+                    if (blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) {
+                        return true;
                     }
+
                 }
             }
-
-            return matchingBlocks > 0;
-
         }
 
-        else return entity.getWorld()
-            .getBlockCollisions(entity, offsetEntityBoundingBox)
-            .iterator()
-            .hasNext();
+        return false;
 
     }
 
