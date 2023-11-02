@@ -83,7 +83,7 @@ public class LootTableMixin implements IdentifiedLootTable {
 
         List<ReplaceLootTablePower> replaceLootTablePowers = PowerHolderComponent.getPowers(entity, ReplaceLootTablePower.class)
             .stream()
-            .filter(p -> p.hasReplacement(apoli$id) && p.doesApply(context))
+            .filter(p -> apoli$id != null && (p.hasReplacement(apoli$id) && p.doesApply(context)))
             .sorted(Comparator.comparing(ReplaceLootTablePower::getPriority))
             .toList();
 
