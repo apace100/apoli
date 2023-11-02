@@ -174,10 +174,10 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     private boolean apoli$hasModifiedDamage;
 
     @Unique
-    private Optional<Boolean> apoli$shouldApplyArmor;
+    private Optional<Boolean> apoli$shouldApplyArmor = Optional.empty();
 
     @Unique
-    private Optional<Boolean> apoli$shouldDamageArmor;
+    private Optional<Boolean> apoli$shouldDamageArmor = Optional.empty();
 
     @ModifyExpressionValue(method = "onDamaged", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/damage/DamageSources;generic()Lnet/minecraft/entity/damage/DamageSource;"))
     private DamageSource apoli$overrideDamageSourceOnSync(DamageSource original, DamageSource source) {
