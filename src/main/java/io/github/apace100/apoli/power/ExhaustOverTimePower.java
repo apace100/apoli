@@ -14,25 +14,28 @@ public class ExhaustOverTimePower extends Power {
 
     public ExhaustOverTimePower(PowerType<?> type, LivingEntity entity, int exhaustInterval, float exhaustion) {
         super(type, entity);
-        if(exhaustInterval <= 0) exhaustInterval = 1;
         this.exhaustInterval = exhaustInterval;
         this.exhaustion = exhaustion;
         this.setTicking();
     }
 
     public void tick() {
-        if(entity instanceof PlayerEntity && entity.age % exhaustInterval == 0) {
-            ((PlayerEntity)entity).addExhaustion(exhaustion);
+        if(entity instanceof PlayerEntity playerEntity && entity.age % exhaustInterval == 0) {
+            playerEntity.addExhaustion(exhaustion);
         }
     }
 
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("exhaust"),
             new SerializableData()
-                .add("interval", SerializableDataTypes.INT, 20)
+                .add("interval", SerializableDataTypes.POSITIVE_INT, 20)
                 .add("exhaustion", SerializableDataTypes.FLOAT),
-            data ->
-                (type, player) -> new ExhaustOverTimePower(type, player, data.getInt("interval"), data.getFloat("exhaustion")))
-            .allowCondition();
+            data -> (powerType, livingEntity) -> new ExhaustOverTimePower(
+                powerType,
+                livingEntity,
+                data.getInt("interval"),
+                data.getFloat("exhaustion")
+            )
+        ).allowCondition();
     }
 }

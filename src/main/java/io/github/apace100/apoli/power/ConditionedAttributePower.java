@@ -16,8 +16,8 @@ public class ConditionedAttributePower extends AttributePower {
 
     public ConditionedAttributePower(PowerType<?> type, LivingEntity entity, int tickRate, boolean updateHealth) {
         super(type, entity, updateHealth);
-        this.setTicking(true);
         this.tickRate = tickRate;
+        this.setTicking(true);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class ConditionedAttributePower extends AttributePower {
             new SerializableData()
                 .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
                 .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
-                .add("tick_rate", SerializableDataTypes.INT, 20)
+                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 20)
                 .add("update_health", SerializableDataTypes.BOOLEAN, true),
             data -> (powerType, livingEntity) -> {
 

@@ -27,7 +27,7 @@ public class ActionOverTimePower extends Power {
 
     public ActionOverTimePower(PowerType<?> type, LivingEntity entity, int interval, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction) {
         super(type, entity);
-        this.interval = Math.max(interval, 1);
+        this.interval = interval;
         this.entityAction = entityAction;
         this.risingAction = risingAction;
         this.fallingAction = fallingAction;
@@ -101,7 +101,7 @@ public class ActionOverTimePower extends Power {
         return new PowerFactory<>(
             Apoli.identifier("action_over_time"),
             new SerializableData()
-                .add("interval", SerializableDataTypes.INT, 20)
+                .add("interval", SerializableDataTypes.POSITIVE_INT, 20)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("rising_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("falling_action", ApoliDataTypes.ENTITY_ACTION, null),

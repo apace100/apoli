@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.EquipmentSlot;
@@ -54,7 +53,7 @@ public class ConditionedRestrictArmorPower extends Power {
                 .add("chest", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("legs", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("feet", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("tick_rate", SerializableDataTypes.INT, 80),
+                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 80),
             data ->
                 (type, player) -> {
                     HashMap<EquipmentSlot, Predicate<Pair<World, ItemStack>>> restrictions = new HashMap<>();
