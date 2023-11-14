@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
@@ -305,8 +304,7 @@ public class EntityConditions {
             return false;
         }));
         register(UsingItemCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("moving"), new SerializableData(),
-            (data, entity) -> ((MovingEntity)entity).apoli$isMoving()));
+        register(MovingCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()
             .add("enchantment", SerializableDataTypes.ENCHANTMENT)
             .add("comparison", ApoliDataTypes.COMPARISON)

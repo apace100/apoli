@@ -356,32 +356,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-
-    @Unique
-    private boolean apoli$activelyClimbing = false;
-
-    @Override
-    public boolean apoli$activelyClimbing() {
-        return apoli$activelyClimbing;
-    }
-
-    @Inject(method = "baseTick", at = @At("TAIL"))
-    private void apoli$getPrevY(CallbackInfo ci) {
-        this.apoli$activelyClimbing = false;
-    }
-
     // CLIMBING
     @ModifyReturnValue(method = "isClimbing", at = @At("RETURN"))
     private boolean apoli$modifyClimbing(boolean original) {
 
         if (original) {
-
-            if (this.getY() != this.prevY) {
-                this.apoli$activelyClimbing = true;
-            }
-
             return true;
-
         }
 
         List<ClimbingPower> climbingPowers = PowerHolderComponent.getPowers(this, ClimbingPower.class);
@@ -390,10 +370,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
 
         this.climbingPos = Optional.of(this.getBlockPos());
-        if (this.getY() != this.prevY) {
-            this.apoli$activelyClimbing = true;
-        }
-
         return true;
 
     }

@@ -60,19 +60,13 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     }
 
     @Shadow
-    public World world;
+    private World world;
 
     @Shadow
     public abstract double getFluidHeight(TagKey<Fluid> fluid);
 
     @Shadow
-    public abstract Vec3d getVelocity();
-
-    @Shadow
-    public float distanceTraveled;
-
-    @Shadow
-    protected boolean onGround;
+    private boolean onGround;
 
     @Final
     @Shadow
@@ -80,6 +74,14 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     private Set<TagKey<Fluid>> submergedFluidTag;
 
     @Shadow protected Object2DoubleMap<TagKey<Fluid>> fluidHeight;
+
+    @Shadow public abstract Vec3d getPos();
+
+    @Shadow public abstract double getX();
+
+    @Shadow public abstract double getY();
+
+    @Shadow public abstract double getZ();
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -131,7 +133,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;ofFloored(DDD)Lnet/minecraft/util/math/BlockPos;"), method = "pushOutOfBlocks", cancellable = true)
     protected void pushOutOfBlocks(double x, double y, double z, CallbackInfo info) {
         List<PhasingPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, PhasingPower.class);
-        if(powers.size() > 0) {
+        if(!powers.isEmpty()) {
             if(powers.stream().anyMatch(phasingPower -> phasingPower.doesApply(BlockPos.ofFloored(x, y, z)))) {
                 info.cancel();
             }
@@ -143,35 +145,19 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         return state.getCollisionShape(world, pos, ShapeContext.of((Entity)(Object)this));
     }
 
-    @Unique
-    private boolean apoli$isMoving;
-    @Unique
-    private float apoli$distanceBefore;
-
-    @Inject(method = "move", at = @At("HEAD"))
-    private void saveDistanceTraveled(MovementType type, Vec3d movement, CallbackInfo ci) {
-        this.apoli$isMoving = false;
-        this.apoli$distanceBefore = this.distanceTraveled;
-    }
-
-    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
-    private void checkIsMoving(MovementType type, Vec3d movement, CallbackInfo ci) {
-        if (this.distanceTraveled > this.apoli$distanceBefore) {
-            this.apoli$isMoving = true;
-        }
-    }
-
     @ModifyVariable(method = "move", at = @At("HEAD"), argsOnly = true)
     private Vec3d modifyMovementVelocity(Vec3d original, MovementType movementType) {
-        if(movementType != MovementType.SELF) {
+
+        if (movementType != MovementType.SELF) {
             return original;
         }
-        Vec3d modified = new Vec3d(
-            PowerHolderComponent.modify((Entity)(Object)this, ModifyVelocityPower.class, original.x, p -> p.axes.contains(Direction.Axis.X), null),
-            PowerHolderComponent.modify((Entity)(Object)this, ModifyVelocityPower.class, original.y, p -> p.axes.contains(Direction.Axis.Y), null),
-            PowerHolderComponent.modify((Entity)(Object)this, ModifyVelocityPower.class, original.z, p -> p.axes.contains(Direction.Axis.Z), null)
+
+        return new Vec3d(
+            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPower.class, original.x, p -> p.axes.contains(Direction.Axis.X), null),
+            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPower.class, original.y, p -> p.axes.contains(Direction.Axis.Y), null),
+            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPower.class, original.z, p -> p.axes.contains(Direction.Axis.Z), null)
         );
-        return modified;
+
     }
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLandingPos()Lnet/minecraft/util/math/BlockPos;"))
@@ -183,13 +169,12 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Override
     public boolean apoli$isSubmergedInLoosely(TagKey<Fluid> tag) {
-        if(tag == null || submergedFluidTag == null) {
+
+        if (tag == null || submergedFluidTag == null) {
             return false;
         }
-        if(submergedFluidTag.contains(tag)) {
-            return true;
-        }
-        return false;
+
+        return submergedFluidTag.contains(tag);
         //return Calio.areTagsEqual(Registry.FLUID_KEY, tag, submergedFluidTag);
     }
 
@@ -207,11 +192,6 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
             }
         }
         return 0;
-    }
-
-    @Override
-    public boolean apoli$isMoving() {
-        return apoli$isMoving;
     }
 
     @Environment(EnvType.CLIENT)
@@ -272,13 +252,67 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     }
 
     @ModifyExpressionValue(method = "pushAwayFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isConnectedThroughVehicle(Lnet/minecraft/entity/Entity;)Z"))
-    private boolean apoli$preventEntityPushing2(boolean original, Entity fromEntity) {
+    private boolean apoli$preventEntityPushing(boolean original, Entity fromEntity) {
         return original || PreventEntityCollisionPower.doesApply(fromEntity, (Entity) (Object) this);
     }
 
     @ModifyReturnValue(method = "collidesWith", at = @At("RETURN"))
     private boolean apoli$preventEntityCollision(boolean original, Entity other) {
         return !PreventEntityCollisionPower.doesApply((Entity) (Object) this, other) && original;
+    }
+
+    @Unique
+    private boolean apoli$movingHorizontally;
+
+    @Unique
+    private boolean apoli$movingVertically;
+
+    @Unique
+    private Vec3d apoli$prevPos;
+
+    @Override
+    public boolean apoli$isMovingHorizontally() {
+        return apoli$movingHorizontally;
+    }
+
+    @Override
+    public boolean apoli$isMovingVertically() {
+        return apoli$movingVertically;
+    }
+
+    @Override
+    public boolean apoli$isMoving() {
+        return apoli$movingHorizontally || apoli$movingVertically;
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void apoli$resetMovingFlags(CallbackInfo ci) {
+        this.apoli$movingHorizontally = false;
+        this.apoli$movingVertically = false;
+    }
+
+    @Inject(method = "baseTick", at = @At("TAIL"))
+    private void apoli$setMovingFlags(CallbackInfo ci) {
+
+        if (apoli$prevPos == null) {
+            this.apoli$prevPos = this.getPos();
+            return;
+        }
+
+        double dx = apoli$prevPos.x - this.getX();
+        double dy = apoli$prevPos.y - this.getY();
+        double dz = apoli$prevPos.z - this.getZ();
+
+        this.apoli$prevPos = this.getPos();
+
+        if (Math.sqrt(dx * dx + dz * dz) >= 0.01) {
+            this.apoli$movingHorizontally = true;
+        }
+
+        if (Math.sqrt(dy * dy) >= 0.01) {
+            this.apoli$movingVertically = true;
+        }
+
     }
 
 }
