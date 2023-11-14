@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power.factory.condition.entity;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.WorldUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -24,6 +25,11 @@ public class BlockCollisionCondition {
         );
 
         Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
+        if (blockCondition == null) {
+            return WorldUtil.getBlockCollisions(entity.getWorld(), entity, offsetEntityBoundingBox)
+                .iterator()
+                .hasNext();
+        }
 
         BlockPos minBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
         BlockPos maxBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
@@ -36,7 +42,7 @@ public class BlockCollisionCondition {
 
                     mutableBlockPos.set(x, y, z);
 
-                    if (blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) {
+                    if (blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) {
                         return true;
                     }
 
