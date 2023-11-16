@@ -1,15 +1,17 @@
 package io.github.apace100.apoli.power.factory.condition.entity;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.BlockCollisionSpliteratorAccess;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
-import io.github.apace100.apoli.util.WorldUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.world.BlockCollisionSpliterator;
+import net.minecraft.world.World;
 
 import java.util.function.Predicate;
 
@@ -25,29 +27,19 @@ public class BlockCollisionCondition {
         );
 
         Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
-        if (blockCondition == null) {
-            return WorldUtil.getOriginalBlockCollisions(entity.getWorld(), entity, offsetEntityBoundingBox)
-                .iterator()
-                .hasNext();
-        }
+        World world = entity.getWorld();
 
-        BlockPos minBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
-        BlockPos maxBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
+        BlockCollisionSpliterator<BlockPos> spliterator = new BlockCollisionSpliterator<>(entity.getWorld(), entity, offsetEntityBoundingBox, false, (pos, shape) -> pos);
+        ((BlockCollisionSpliteratorAccess) spliterator).apoli$setGetOriginalShapes(true);
 
-        BlockPos.Mutable mutableBlockPos = new BlockPos.Mutable();
+        while (spliterator.hasNext()) {
 
-        for (int x = minBlockPos.getX(); x <= maxBlockPos.getX(); x++) {
-            for (int y = minBlockPos.getY(); y <= maxBlockPos.getY(); y++) {
-                for (int z = minBlockPos.getZ(); z <= maxBlockPos.getZ(); z++) {
+            BlockPos blockPos = spliterator.next();
 
-                    mutableBlockPos.set(x, y, z);
-
-                    if (blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) {
-                        return true;
-                    }
-
-                }
+            if (blockCondition == null || blockCondition.test(new CachedBlockPosition(world, blockPos, true))) {
+                return true;
             }
+
         }
 
         return false;
