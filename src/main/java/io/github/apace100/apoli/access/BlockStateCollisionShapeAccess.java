@@ -5,6 +5,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 
-public interface BlockStateCollisionShapeAccessor {
-    VoxelShape apoli$getCollisionShape(BlockView world, BlockPos pos, ShapeContext context);
+public interface BlockStateCollisionShapeAccess {
+    VoxelShape apoli$getOriginalCollisionShape(BlockView world, BlockPos pos, ShapeContext context);
 }

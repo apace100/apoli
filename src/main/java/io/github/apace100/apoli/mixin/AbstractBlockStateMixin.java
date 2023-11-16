@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.serialization.MapCodec;
-import io.github.apace100.apoli.access.BlockStateCollisionShapeAccessor;
+import io.github.apace100.apoli.access.BlockStateCollisionShapeAccess;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PhasingPower;
 import io.github.apace100.apoli.power.PreventBlockSelectionPower;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.function.Predicate;
 
 @Mixin(AbstractBlock.AbstractBlockState.class)
-public abstract class AbstractBlockStateMixin extends State<Block, BlockState> implements BlockStateCollisionShapeAccessor {
+public abstract class AbstractBlockStateMixin extends State<Block, BlockState> implements BlockStateCollisionShapeAccess {
 
     @Shadow public abstract Block getBlock();
 
@@ -73,7 +73,7 @@ public abstract class AbstractBlockStateMixin extends State<Block, BlockState> i
 
     @SuppressWarnings("deprecation")
     @Override
-    public VoxelShape apoli$getCollisionShape(BlockView world, BlockPos pos, ShapeContext context) {
+    public VoxelShape apoli$getOriginalCollisionShape(BlockView world, BlockPos pos, ShapeContext context) {
         return this.getBlock().getCollisionShape(this.asBlockState(), world, pos, context);
     }
 

@@ -26,7 +26,7 @@ public class BlockCollisionCondition {
 
         Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
         if (blockCondition == null) {
-            return WorldUtil.getBlockCollisions(entity.getWorld(), entity, offsetEntityBoundingBox)
+            return WorldUtil.getOriginalBlockCollisions(entity.getWorld(), entity, offsetEntityBoundingBox)
                 .iterator()
                 .hasNext();
         }

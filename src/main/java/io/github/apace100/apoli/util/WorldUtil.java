@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.util;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.Identifiable;
+import io.github.apace100.apoli.access.BlockCollisionSpliteratorAccess;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -16,10 +16,10 @@ import java.util.Arrays;
 
 public class WorldUtil {
 
-    public static Iterable<VoxelShape> getBlockCollisions(World world, @Nullable Entity entity, Box box) {
+    public static Iterable<VoxelShape> getOriginalBlockCollisions(World world, @Nullable Entity entity, Box box) {
 
         BlockCollisionSpliterator<VoxelShape> spliterator = new BlockCollisionSpliterator<>(world, entity, box, false, (pos, voxelShape) -> voxelShape);
-        ((Identifiable) spliterator).apoli$setId(Apoli.identifier("world_util"));
+        ((BlockCollisionSpliteratorAccess) spliterator).apoli$setGetOriginalShapes(true);
 
         return () -> spliterator;
 
