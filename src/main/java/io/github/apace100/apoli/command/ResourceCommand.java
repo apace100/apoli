@@ -74,18 +74,35 @@ public class ResourceCommand {
 
         return switch (subCommand) {
             case HAS -> {
+
+                if (isPowerInvalid(power)) {
+                    source.sendError(Text.translatable("commands.execute.conditional.fail"));
+                    yield 0;
+                }
+
                 source.sendFeedback(() -> Text.translatable("commands.execute.conditional.pass"), true);
                 yield  1;
+
             }
             case GET -> {
 
-                int value = getValue(power);
+                if (isPowerInvalid(power)) {
+                    source.sendError(Text.translatable("commands.scoreboard.players.get.null", powerType.getIdentifier(), target.getName().getString()));
+                    yield 0;
+                }
 
+                int value = getValue(power);
                 source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.get.success", target.getName().getString(), value, powerType.getIdentifier()), true);
+
                 yield value;
 
             }
             case SET -> {
+
+                if (isPowerInvalid(power)) {
+                    source.sendError(Text.translatable("argument.scoreHolder.empty"));
+                    yield 0;
+                }
 
                 int value = IntegerArgumentType.getInteger(context, "value");
                 setValue(power, value);
@@ -93,10 +110,15 @@ public class ResourceCommand {
                 PowerHolderComponent.syncPower(target, powerType);
                 source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.set.success.single", powerType.getIdentifier(), target.getName().getString(), value), true);
 
-                yield 1;
+                yield value;
 
             }
             case CHANGE -> {
+
+                if (isPowerInvalid(power)) {
+                    source.sendError(Text.translatable("argument.scoreHolder.empty"));
+                    yield 0;
+                }
 
                 int value = IntegerArgumentType.getInteger(context, "value");
                 int total = getValue(power) + value;
@@ -105,10 +127,15 @@ public class ResourceCommand {
                 PowerHolderComponent.syncPower(target, powerType);
 
                 source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.add.success.single", value, powerType.getIdentifier(), target.getName().getString(), total), true);
-                yield 1;
+                yield total;
 
             }
             case OPERATION -> {
+
+                if (isPowerInvalid(power)) {
+                    source.sendError(Text.translatable("argument.scoreHolder.empty"));
+                    yield 0;
+                }
 
                 String scoreHolder = ScoreHolderArgumentType.getScoreHolder(context, "entity");
                 ScoreboardObjective scoreboardObjective = ScoreboardObjectiveArgumentType.getObjective(context, "objective");
@@ -117,9 +144,10 @@ public class ResourceCommand {
                 context.getArgument("operation", PowerOperation.Operation.class).apply(power, scoreboardPlayerScore);
 
                 int value = getValue(power);
-                source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), target.getName().getString(), value), true);
+                PowerHolderComponent.syncPower(target, powerType);
 
-                yield 1;
+                source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), target.getName().getString(), value), true);
+                yield value;
 
             }
         };
@@ -142,6 +170,10 @@ public class ResourceCommand {
         } else if (power instanceof CooldownPower cp) {
             cp.setCooldown(newValue);
         }
+    }
+
+    private static boolean isPowerInvalid(Power power) {
+        return !(power instanceof VariableIntPower) && !(power instanceof CooldownPower);
     }
 
 }
