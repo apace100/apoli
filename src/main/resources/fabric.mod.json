@@ -33,6 +33,9 @@
     "modmenu": [
       "io.github.apace100.apoli.integration.ModMenuIntegration"
     ],
+    "appleskin": [
+      "io.github.apace100.apoli.integration.AppleSkinIntegration"
+    ],
     "calio:ordered-resource-listener": [
       "io.github.apace100.apoli.Apoli"
     ],

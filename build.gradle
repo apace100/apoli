@@ -55,6 +55,9 @@ repositories {
 	maven {
 		url "https://maven.terraformersmc.com/"
 	}
+	maven {
+		url "https://maven.ryanliptak.com/"
+	}
 	mavenLocal()
 }
 
@@ -123,6 +126,11 @@ dependencies {
 //	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 //	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 
+	modCompileOnly("squeek.appleskin:appleskin-fabric:${appleskin_version}:api") {
+		transitive = false
+	}
+	modCompileOnly "squeek.appleskin:appleskin-fabric:${appleskin_version}"
+	modLocalRuntime "squeek.appleskin:appleskin-fabric:${appleskin_version}"
 }
 
 processResources {
