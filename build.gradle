@@ -130,7 +130,7 @@ dependencies {
 		transitive = false
 	}
 	modCompileOnly "squeek.appleskin:appleskin-fabric:${appleskin_version}"
-	modLocalRuntime "squeek.appleskin:appleskin-fabric:${appleskin_version}"
+//	modLocalRuntime "squeek.appleskin:appleskin-fabric:${appleskin_version}"
 }
 
 processResources {
