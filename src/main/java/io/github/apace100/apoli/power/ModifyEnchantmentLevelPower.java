@@ -4,7 +4,9 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -49,6 +51,8 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
             modifiers.forEach(this::addModifier);
         }
 
+        this.setTicking();
+
     }
 
     @Override
@@ -72,6 +76,16 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
             ENTITY_ITEM_ENCHANTS.remove(entity);
         }
 
+    }
+
+    @Override
+    public void tick() {
+        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
+        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand"));
+        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.chest"));
+        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.feet"));
+        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.head"));
+        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.legs"));
     }
 
     public static boolean isInEnchantmentMap(LivingEntity entity) {
@@ -238,6 +252,8 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
     private static boolean updateIfDifferent(ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> map, ModifyEnchantmentLevelPower power, int modifierValue, boolean conditionValue) {
 
+
+
         map.computeIfAbsent(power, (p) -> new Pair<>(0, false));
         boolean value = false;
 
@@ -249,6 +265,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         if (map.get(power).getRight() != conditionValue) {
             map.get(power).setRight(conditionValue);
             value = true;
+
         }
 
         return value;

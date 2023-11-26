@@ -1,9 +1,11 @@
 package io.github.apace100.apoli.util;
 
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.InventoryPower;
+import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.ArgumentWrapper;
@@ -99,6 +101,7 @@ public class InventoryUtil {
         modifyingItemsLoop:
         for (int slot : slots) {
 
+            setToWorkableEmpty(entity, inventoryPower, null, slot);
             ItemStack stack = getStack(entity, inventoryPower, slot);
             if (stack.isEmpty() || !(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
                 continue;
@@ -120,6 +123,8 @@ public class InventoryUtil {
 
             }
 
+            setToGlobalEmpty(entity, inventoryPower, null, slot);
+
         }
 
     }
@@ -139,7 +144,9 @@ public class InventoryUtil {
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
         for (int slot : slots) {
 
+            setToWorkableEmpty(entity, inventoryPower, null, slot);
             ItemStack stack = getStack(entity, inventoryPower, slot);
+
             if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
                 continue;
             }
@@ -158,6 +165,8 @@ public class InventoryUtil {
             if (itemAction != null) {
                 itemAction.accept(new Pair<>(entity.getWorld(), stackAfterReplacement));
             }
+
+            setToGlobalEmpty(entity, inventoryPower, null, slot);
 
         }
 
@@ -179,6 +188,7 @@ public class InventoryUtil {
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
         for (int slot : slots) {
 
+            setToWorkableEmpty(entity, inventoryPower, null, slot);
             ItemStack stack = getStack(entity, inventoryPower, slot);
             if (stack.isEmpty() || !(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
                 continue;
@@ -200,6 +210,8 @@ public class InventoryUtil {
 
             throwItem(entity, droppedStack.isEmpty() ? stack : droppedStack, throwRandomly, retainOwnership);
             setStack(entity, inventoryPower, droppedStack.isEmpty() ? ItemStack.EMPTY : stack, slot);
+
+            setToGlobalEmpty(entity, inventoryPower, null, slot);
 
         }
 
@@ -249,12 +261,6 @@ public class InventoryUtil {
 
     }
 
-    private static final Map<Entity, ItemStack> ENTITY_EMPTY_STACK_MAP = new ConcurrentHashMap<>();
-
-    public static ItemStack getEntityLinkedEmptyStack(Entity entity) {
-        return ENTITY_EMPTY_STACK_MAP.computeIfAbsent(entity, e -> new ItemStack((Void) null));
-    }
-
     public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
         forEachStack(entity, itemStackConsumer, null);
     }
@@ -275,20 +281,13 @@ public class InventoryUtil {
             }
 
             ItemStack stack = stackReference.get();
-            if (!stack.isEmpty() || emptyStackConsumer != null && stack == getEntityLinkedEmptyStack(entity)) {
+            if (!stack.isEmpty()) {
                 itemStackConsumer.accept(stack);
                 continue;
             }
 
-            if (emptyStackConsumer == null) {
-                continue;
-            }
-
-            if (stack == ItemStack.EMPTY) {
-                ItemStack newStack = getEntityLinkedEmptyStack(entity);
-                emptyStackConsumer.accept(newStack);
-
-                ((MutableItemStack) stack).apoli$setFrom(newStack);
+            if (emptyStackConsumer != null && stack != ItemStack.EMPTY) {
+                emptyStackConsumer.accept(stack);
             }
 
         }
@@ -308,16 +307,51 @@ public class InventoryUtil {
                     continue;
                 }
 
-                if (emptyStackConsumer == null) {
-                    continue;
+                if (emptyStackConsumer != null && stack != ItemStack.EMPTY) {
+                    emptyStackConsumer.accept(stack);
                 }
-
-                ItemStack newStack = getEntityLinkedEmptyStack(entity);
-                emptyStackConsumer.accept(newStack);
 
             }
         }
 
+    }
+
+    public static StackReference setToWorkableEmpty(Entity entity, InventoryPower inventoryPower, @Nullable ItemStack itemStack, int slot) {
+
+        StackReference reference = itemStack != null ? getStackReferenceFromStack(entity, itemStack) : entity.getStackReference(slot);
+
+        if (reference.get() == ItemStack.EMPTY) {
+            ItemStack newStack = new ItemStack((Void)null);
+            ((EntityLinkedItemStack)newStack).apoli$setEntity(entity);
+            reference.set(newStack);
+        }
+
+        return reference;
+
+    }
+
+    public static void setToGlobalEmpty(Entity entity, InventoryPower inventoryPower, @Nullable ItemStack itemStack, int slot) {
+
+        StackReference reference = itemStack != null ? getStackReferenceFromStack(entity, itemStack) : entity.getStackReference(slot);
+
+        if (ItemStack.areItemsEqual(reference.get(), ItemStack.EMPTY) && canSetToGlobalEmpty(entity, reference.get())) {
+            reference.set(ItemStack.EMPTY);
+        }
+
+    }
+
+    private static boolean canSetToGlobalEmpty(Entity entity, ItemStack stack) {
+        return PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class).stream().noneMatch(p -> p.checkItemCondition(stack));
+    }
+
+    private static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack) {
+        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+            StackReference stackReference = entity.getStackReference(slot);
+            if (stack == stackReference.get()) {
+                return stackReference;
+            }
+        }
+        return StackReference.EMPTY;
     }
 
     private static void deduplicateSlots(Entity entity, Set<Integer> slots) {

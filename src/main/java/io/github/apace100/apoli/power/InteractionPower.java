@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.power;
 
+import io.github.apace100.apoli.util.ActionUtil;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -57,12 +59,12 @@ public class InteractionPower extends Power {
     protected void performActorItemStuff(InteractionPower power, PlayerEntity actor, Hand hand) {
         ItemStack heldStack = actor.getStackInHand(hand);
         if(power.heldItemAction != null) {
-            power.heldItemAction.accept(new Pair<>(actor.getWorld(), heldStack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), heldStack, heldItemAction);
         }
         ItemStack resultingStack = power.itemResult == null ? heldStack : power.itemResult.copy();
         boolean modified = power.itemResult != null;
         if(power.resultItemAction != null) {
-            power.resultItemAction.accept(new Pair<>(actor.getWorld(), resultingStack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), resultingStack, resultItemAction);
             modified = true;
         }
         if(modified) {

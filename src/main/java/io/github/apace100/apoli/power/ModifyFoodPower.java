@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ActionUtil;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -59,7 +61,10 @@ public class ModifyFoodPower extends Power {
         if(replaceStack != null) stack = replaceStack;
         ItemStack consumed = stack.copy();
 
-        if(consumableAction != null) consumableAction.accept(new Pair<>(entity.getWorld(), consumed));
+        if(consumableAction != null) {
+            ActionUtil.executeEntityDependentItemAction(entity, null, consumed, consumableAction);
+        }
+
         return consumed;
 
     }

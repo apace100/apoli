@@ -18,9 +18,7 @@ public class HolderAction {
 
     public static void action(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
-        if(worldAndStack.getRight().isEmpty()) {
-            return;
-        }
+
 
         Entity holder = ((EntityLinkedItemStack) worldAndStack.getRight()).apoli$getEntity();
         if(holder == null) {

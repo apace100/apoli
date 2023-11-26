@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ActionUtil;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -83,12 +85,12 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
     public ItemStack executeItemActions(ItemStack consumedStack) {
 
         if (consumedItemAction != null) {
-            consumedItemAction.accept(new Pair<>(entity.getWorld(), consumedStack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), consumedStack, consumedItemAction);
         }
 
         ItemStack resultStack = this.resultStack != null ? this.resultStack.copy() : null;
         if (resultStack != null && resultItemAction != null) {
-            resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), resultStack, resultItemAction);
         }
 
         return resultStack;

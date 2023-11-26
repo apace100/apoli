@@ -2,10 +2,15 @@ package io.github.apace100.apoli.power.factory.action;
 
 import com.google.gson.JsonObject;
 import io.github.apace100.apoli.power.factory.Factory;
+import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
+import net.minecraft.world.World;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -13,7 +18,7 @@ import java.util.function.Consumer;
 public class ActionFactory<T> implements Factory {
 
     private final Identifier identifier;
-    private final BiConsumer<SerializableData.Instance, T> effect;
+    protected final BiConsumer<SerializableData.Instance, T> effect;
 
     protected final SerializableData data;
 
@@ -26,8 +31,8 @@ public class ActionFactory<T> implements Factory {
 
     public class Instance implements Consumer<T> {
 
-        private final SerializableData.Instance dataInstance;
-        private Instance(SerializableData.Instance data) {
+        protected final SerializableData.Instance dataInstance;
+        protected Instance(SerializableData.Instance data) {
             this.dataInstance = data;
         }
 

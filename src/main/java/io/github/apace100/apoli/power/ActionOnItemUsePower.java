@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ActionUtil;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -39,7 +41,7 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
 
     public void executeActions(ItemStack stack) {
         if(itemAction != null) {
-            itemAction.accept(new Pair<>(entity.getWorld(), stack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), stack, itemAction);
         }
         if(entityAction != null) {
             entityAction.accept(entity);

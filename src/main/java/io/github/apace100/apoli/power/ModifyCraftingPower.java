@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ActionUtil;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -58,7 +60,7 @@ public class ModifyCraftingPower extends ValueModifyingPower implements Prioriti
 
     public void applyAfterCraftingItemAction(ItemStack output) {
         if (itemActionAfterCrafting != null) {
-            itemActionAfterCrafting.accept(new Pair<>(entity.getWorld(), output));
+            ActionUtil.executeEntityDependentItemAction(entity, null, output, itemActionAfterCrafting);
         }
     }
 
@@ -66,7 +68,7 @@ public class ModifyCraftingPower extends ValueModifyingPower implements Prioriti
 
         ItemStack newResultStack = newStack != null ? newStack.copy() : originalResultStack;
         if (itemAction != null) {
-            itemAction.accept(new Pair<>(entity.getWorld(), newResultStack));
+            ActionUtil.executeEntityDependentItemAction(entity, null, newResultStack, itemAction);
         }
 
         return newResultStack;

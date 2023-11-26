@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ActionUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -65,7 +66,7 @@ public class ModifyGrindstonePower extends Power {
         if(lateItemAction == null) {
             return;
         }
-        lateItemAction.accept(new Pair<>(entity.getWorld(), output));
+        ActionUtil.executeEntityDependentItemAction(entity, null, output, lateItemAction);
     }
 
     public boolean doesApply(ItemStack inputTop, ItemStack inputBottom, ItemStack originalOutput, Optional<BlockPos> grindstonePos) {
@@ -96,7 +97,7 @@ public class ModifyGrindstonePower extends Power {
             case FROM_TOP -> output = inputTop.copy();
         }
         if(resultItemAction != null) {
-            resultItemAction.accept(new Pair<>(entity.getWorld(), output));
+            ActionUtil.executeEntityDependentItemAction(entity, null, output, resultItemAction);
         }
         return output;
     }

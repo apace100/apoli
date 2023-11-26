@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ActionUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -44,7 +45,7 @@ public class ActionOnItemPickupPower extends Power implements Prioritized<Action
     }
 
     public void executeActions(ItemStack stack, Entity thrower) {
-        if (itemAction != null) itemAction.accept(new Pair<>(entity.getWorld(), stack));
+        if (itemAction != null) ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), stack, itemAction);
         if (biEntityAction != null) biEntityAction.accept(new Pair<>(thrower, entity));
     }
 

@@ -3,6 +3,8 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.ActionUtil;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -55,15 +57,15 @@ public class ItemOnItemPower extends Power {
                                                  : resultFromOnStack > 0 ? onStack.split(resultFromOnStack) : onStack;
 
         if (resultItemAction != null) {
-            resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), resultStack, resultItemAction);
         }
 
         if (usingItemAction != null) {
-            usingItemAction.accept(new Pair<>(entity.getWorld(), usingStack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), usingStack, usingItemAction);
         }
 
         if (onItemAction != null) {
-            onItemAction.accept(new Pair<>(entity.getWorld(), onStack));
+            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), onStack, onItemAction);
         }
 
         tryOffer:
