@@ -29,11 +29,11 @@ public class FoodHelperMixin {
 
     @ModifyReturnValue(method = "canConsume", at = @At("RETURN"))
     private static boolean apoli$powerCanConsume(boolean original, ItemStack stack, PlayerEntity player) {
-        if (PowerHolderComponent.getPowers(((EntityLinkedItemStack)stack).apoli$getEntity(), EdibleItemPower.class).stream().anyMatch(p -> p.doesApply(stack))) {
-            return true;
-        }
         if (PowerHolderComponent.getPowers(player, PreventItemUsePower.class).stream().anyMatch(p -> p.doesPrevent(stack))) {
             return false;
+        }
+        if (PowerHolderComponent.getPowers(((EntityLinkedItemStack)stack).apoli$getEntity(), EdibleItemPower.class).stream().anyMatch(p -> p.doesApply(stack))) {
+            return true;
         }
         return original;
     }
