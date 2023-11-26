@@ -62,7 +62,8 @@
         "StatusEffectInstanceMixin",
         "VibrationsListenerDataMixin",
         "VibrationsTickerMixin",
-        "WeightedListEntryAccessor"
+        "WeightedListEntryAccessor",
+        "integration.appleskin.FoodHelperMixin"
     ],
     "client": [
         "BackgroundRendererMixin",
