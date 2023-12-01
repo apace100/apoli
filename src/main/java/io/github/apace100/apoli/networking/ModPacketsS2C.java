@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.networking;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.ToastViewer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.networking.packet.s2c.*;
@@ -39,6 +40,7 @@ public class ModPacketsS2C {
             ClientPlayNetworking.registerReceiver(DismountPlayerS2CPacket.TYPE, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(SyncAttackerS2CPacket.TYPE, ModPacketsS2C::onAttackerSync);
             ClientPlayNetworking.registerReceiver(SyncStatusEffectS2CPacket.TYPE, ModPacketsS2C::onStatusEffectSync);
+            ClientPlayNetworking.registerReceiver(ShowToastS2CPacket.TYPE, ModPacketsS2C::onShowToast);
         }));
 
     }
@@ -157,6 +159,12 @@ public class ModPacketsS2C {
             power.fromTag(packet.powerData().get("Data"));
         }
 
+    }
+
+    public static void onShowToast(ShowToastS2CPacket packet, ClientPlayerEntity player, PacketSender responseSender) {
+        if (player instanceof ToastViewer viewer) {
+            viewer.apoli$showToast(packet.toastData());
+        }
     }
 
 }

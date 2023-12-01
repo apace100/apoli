@@ -3,12 +3,16 @@ package io.github.apace100.apoli.mixin;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.EndRespawningEntity;
+import io.github.apace100.apoli.access.ToastViewer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.DynamicToastData;
+import io.github.apace100.apoli.networking.packet.s2c.ShowToastS2CPacket;
 import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import io.github.apace100.apoli.power.KeepInventoryPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
 import io.github.apace100.apoli.util.InventoryUtil;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
@@ -43,7 +47,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Mixin(ServerPlayerEntity.class)
-public abstract class ServerPlayerEntityMixin extends PlayerEntity implements ScreenHandlerListener, EndRespawningEntity {
+public abstract class ServerPlayerEntityMixin extends PlayerEntity implements ScreenHandlerListener, EndRespawningEntity, ToastViewer {
 
     @Shadow
     private RegistryKey<World> spawnPointDimension;
@@ -190,4 +194,10 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     public boolean apoli$hasRealRespawnPoint() {
         return spawnPointPosition != null && !hasObstructedSpawn();
     }
+
+    @Override
+    public void apoli$showToast(DynamicToastData toastData) {
+        ServerPlayNetworking.send((ServerPlayerEntity) (Object) this, new ShowToastS2CPacket(toastData));
+    }
+
 }
