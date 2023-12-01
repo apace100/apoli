@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.screen.toast;
 
-import io.github.apace100.apoli.data.DynamicToastData;
+import io.github.apace100.apoli.data.CustomToastData;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class DynamicToast implements Toast {
+public class CustomToast implements Toast {
 
     private static final Identifier TEXTURE = new Identifier("toast/advancement");
 
@@ -37,11 +37,11 @@ public class DynamicToast implements Toast {
     private final int duration;
     private boolean playedSound = false;
 
-    public DynamicToast(DynamicToastData toastData) {
+    public CustomToast(CustomToastData toastData) {
         this(toastData.title(), toastData.description(), toastData.iconStack(), toastData.soundEvent(), toastData.duration());
     }
 
-    public DynamicToast(Text title, Text description, ItemStack iconStack, @Nullable SoundEvent soundEvent, int duration) {
+    public CustomToast(Text title, Text description, ItemStack iconStack, @Nullable SoundEvent soundEvent, int duration) {
         this.title = title;
         this.description = MinecraftClient.getInstance().textRenderer.wrapLines(description, this.getWidth() - 13);
         this.iconStack = iconStack;
@@ -70,6 +70,7 @@ public class DynamicToast implements Toast {
         }
 
         //  Otherwise, fit the description text into the toast window
+        //  TODO: Make the toast expand horizontally if the description and title is too long (e.g: more than 1 line)
         else {
 
             int yOffset = Math.max(7, this.getHeight() / 2 - description.size() * 9 / 2);

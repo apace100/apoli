@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.networking;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.ToastViewer;
+import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.networking.packet.s2c.*;
@@ -162,7 +162,7 @@ public class ModPacketsS2C {
     }
 
     public static void onShowToast(ShowToastS2CPacket packet, ClientPlayerEntity player, PacketSender responseSender) {
-        if (player instanceof ToastViewer viewer) {
+        if (player instanceof CustomToastViewer viewer) {
             viewer.apoli$showToast(packet.toastData());
         }
     }

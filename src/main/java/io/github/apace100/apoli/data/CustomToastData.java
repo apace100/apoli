@@ -8,17 +8,17 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public record DynamicToastData(Text title, Text description, ItemStack iconStack, @Nullable SoundEvent soundEvent, int duration) {
+public record CustomToastData(Text title, Text description, ItemStack iconStack, @Nullable SoundEvent soundEvent, int duration) {
 
-    public static final SerializableDataType<DynamicToastData> DATA_TYPE = SerializableDataType.compound(
-        DynamicToastData.class,
+    public static final SerializableDataType<CustomToastData> DATA_TYPE = SerializableDataType.compound(
+        CustomToastData.class,
         new SerializableData()
             .add("title", SerializableDataTypes.TEXT)
             .add("description", SerializableDataTypes.TEXT)
             .add("icon", SerializableDataTypes.ITEM_STACK, ItemStack.EMPTY)
             .add("sound_event", SerializableDataTypes.SOUND_EVENT, null)
             .add("duration", SerializableDataTypes.POSITIVE_INT, 5000),
-        data -> new DynamicToastData(
+        data -> new CustomToastData(
             data.get("title"),
             data.get("description"),
             data.get("icon"),
