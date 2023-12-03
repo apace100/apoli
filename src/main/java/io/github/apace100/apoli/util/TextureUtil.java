@@ -72,16 +72,12 @@ public class TextureUtil {
         }
 
         AbstractTexture prevTexture = textureManagerAccessor.getTextures().put(id, texture);
-        if (prevTexture != texture) {
+        if (prevTexture != null && prevTexture != MissingSprite.getMissingSpriteTexture()) {
+            textureManagerAccessor.callCloseTexture(id, prevTexture);
+        }
 
-            if (prevTexture != null && prevTexture != MissingSprite.getMissingSpriteTexture()) {
-                textureManagerAccessor.callCloseTexture(id, prevTexture);
-            }
-
-            if (texture instanceof TextureTickListener textureTickListener) {
-                textureManagerAccessor.getTickListeners().add(textureTickListener);
-            }
-
+        if (texture != MissingSprite.getMissingSpriteTexture()) {
+            textureManagerAccessor.callCloseTexture(id, texture);
         }
 
         return err.isEmpty()
