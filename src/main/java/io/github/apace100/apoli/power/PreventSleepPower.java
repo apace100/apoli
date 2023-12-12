@@ -59,7 +59,7 @@ public class PreventSleepPower extends Power implements Prioritized<PreventSleep
             Apoli.identifier("prevent_sleep"),
             new SerializableData()
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
-                .add("message", SerializableDataTypes.TEXT, Text.translatable("text.apoli.cannot_sleep"))
+                .add("message", ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT, Text.translatable("text.apoli.cannot_sleep"))
                 .add("set_spawn_point", SerializableDataTypes.BOOLEAN, false)
                 .add("priority", SerializableDataTypes.INT, 0),
             data -> (powerType, livingEntity) -> new PreventSleepPower(
@@ -72,4 +72,5 @@ public class PreventSleepPower extends Power implements Prioritized<PreventSleep
             )
         ).allowCondition();
     }
+
 }
