@@ -45,7 +45,7 @@ public class ScreenHandlerMixin {
             }
 
             PowerCraftingInventory powerCraftingInventory = (PowerCraftingInventory) craftingInventory;
-            SlotState slotState = (SlotState) this;
+            SlotState slotState = (SlotState) craftingResultSlot;
 
             if (!(powerCraftingInventory.apoli$getPower() instanceof ModifyCraftingPower modifyCraftingPower)) {
                 return value;
@@ -83,7 +83,7 @@ public class ScreenHandlerMixin {
             }
 
             PowerCraftingInventory powerCraftingInventory = (PowerCraftingInventory) craftingInventory;
-            SlotState slotState = (SlotState) this;
+            SlotState slotState = (SlotState) craftingResultSlot;
 
             if (!(powerCraftingInventory.apoli$getPower() instanceof ModifyCraftingPower modifyCraftingPower)) {
                 return value;
