@@ -49,7 +49,7 @@ public class SpawnParticlesAction {
             new SerializableData()
                 .add("particle", SerializableDataTypes.PARTICLE_EFFECT_OR_TYPE)
                 .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
-                .add("count", SerializableDataTypes.INT)
+                .add("count", SerializableDataTypes.INT, 1)
                 .add("speed", SerializableDataTypes.FLOAT, 0.0F)
                 .add("force", SerializableDataTypes.BOOLEAN, false)
                 .add("spread", SerializableDataTypes.VECTOR, new Vec3d(0.5, 0.5, 0.5))
