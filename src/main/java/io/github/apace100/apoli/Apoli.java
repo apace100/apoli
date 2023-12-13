@@ -113,8 +113,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);
 
-		IdentifierAlias.addPathAlias("holder", "holder_action");
-
 		LOGGER.info("Apoli " + VERSION + " has initialized. Ready to power up your game!");
 	}
 

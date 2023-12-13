@@ -5,8 +5,6 @@ import io.github.apace100.apoli.networking.ModPacketsS2C;
 import io.github.apace100.apoli.networking.packet.c2s.UseActivePowersC2SPacket;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.condition.EntityConditionsClient;
-import io.github.apace100.apoli.power.factory.condition.ItemConditionsClient;
 import io.github.apace100.apoli.registry.ApoliClassDataClient;
 import io.github.apace100.apoli.screen.GameHudRender;
 import io.github.apace100.apoli.screen.PowerHudRenderer;
@@ -52,9 +50,6 @@ public class ApoliClient implements ClientModInitializer {
 		ModPacketsS2C.register();
 
 		ApoliClassDataClient.registerAll();
-
-		EntityConditionsClient.register();
-		ItemConditionsClient.register();
 		PowerIntegrationClient.register();
 
 		GameHudRender.HUD_RENDERS.add(new PowerHudRenderer());
