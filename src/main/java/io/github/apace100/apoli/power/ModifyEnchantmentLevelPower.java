@@ -94,7 +94,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     public void tick() {
         for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
             StackReference stackReference = entity.getStackReference(slot);
-            if (stackReference.get() == ItemStack.EMPTY && itemCondition.test(new Pair<>(entity.getWorld(), stackReference.get()))) {
+            if (stackReference.get() == ItemStack.EMPTY  && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stackReference.get())))) {
                 stackReference.set(MODIFIED_EMPTY_STACKS.get(entity));
             }
         }
