@@ -2,12 +2,11 @@ package io.github.apace100.apoli.power.factory.action.item;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
-import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.loot.context.ApoliLootContextTypes;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootDataType;
 import net.minecraft.loot.context.LootContext;
@@ -25,7 +24,7 @@ import java.util.Optional;
 
 public class ModifyAction {
 
-    public static void action(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
+    public static void action(SerializableData.Instance data, Pair<World, StackReference> worldAndStack) {
 
         MinecraftServer server = worldAndStack.getLeft().getServer();
         if (server == null) {
@@ -41,24 +40,24 @@ public class ModifyAction {
 
         ServerWorld overworld = server.getOverworld();
 
-        ItemStack stack = worldAndStack.getRight();
+        StackReference stack = worldAndStack.getRight();
         BlockPos blockPos = overworld.getSpawnPos();
-        Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity();
+        Entity stackHolder = ((EntityLinkedItemStack) stack.get()).apoli$getEntity();
 
         LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(overworld)
             .add(LootContextParameters.ORIGIN, blockPos.toCenterPos())
-            .add(LootContextParameters.TOOL, stack)
+            .add(LootContextParameters.TOOL, stack.get())
             .addOptional(LootContextParameters.THIS_ENTITY, stackHolder)
             .build(ApoliLootContextTypes.ANY);
         LootContext lootContext = new LootContext.Builder(lootContextParameterSet).build(Optional.empty());
 
-        ItemStack newStack = itemModifier.apply(stack, lootContext);
-        ((MutableItemStack) stack).apoli$setFrom(newStack);
+        ItemStack newStack = itemModifier.apply(stack.get(), lootContext);
+        stack.set(newStack);
 
     }
 
-    public static ActionFactory<Pair<World, ItemStack>> getFactory() {
-        return new ActionFactory<>(
+    public static ItemActionFactory getFactory() {
+        return new ItemActionFactory(
             Apoli.identifier("modify"),
             new SerializableData()
                 .add("modifier", SerializableDataTypes.IDENTIFIER),

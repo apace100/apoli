@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ItemOnItemPower;
 import io.github.apace100.apoli.power.ModifyFoodPower;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.Item;
@@ -50,7 +51,7 @@ public abstract class ItemMixin {
             .toList();
 
         if(!itemOnItemPowers.isEmpty()) {
-            itemOnItemPowers.forEach(p -> p.execute(otherStack, stack, slot));
+            itemOnItemPowers.forEach(p -> p.execute(InventoryUtil.getStackReferenceFromStack(player, otherStack), InventoryUtil.getStackReferenceFromStack(player, stack), slot));
             cir.setReturnValue(true);
         }
 

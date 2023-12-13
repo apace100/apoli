@@ -3,13 +3,13 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.util.ActionUtil;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.ClickType;
@@ -27,12 +27,12 @@ public class ItemOnItemPower extends Power {
     private final int resultFromOnStack;
     private final ItemStack newStack;
     private final ClickType clickType;
-    private final Consumer<Pair<World, ItemStack>> usingItemAction;
-    private final Consumer<Pair<World, ItemStack>> onItemAction;
-    private final Consumer<Pair<World, ItemStack>> resultItemAction;
+    private final Consumer<Pair<World, StackReference>> usingItemAction;
+    private final Consumer<Pair<World, StackReference>> onItemAction;
+    private final Consumer<Pair<World, StackReference>> resultItemAction;
     private final Consumer<Entity> entityAction;
 
-    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> usingItemCondition, Predicate<Pair<World, ItemStack>> onItemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> usingItemAction, Consumer<Pair<World, ItemStack>> onItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, int resultFromOnStack, ClickType clickType) {
+    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> usingItemCondition, Predicate<Pair<World, ItemStack>> onItemCondition, ItemStack newStack, Consumer<Pair<World, StackReference>> usingItemAction, Consumer<Pair<World, StackReference>> onItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Entity> entityAction, int resultFromOnStack, ClickType clickType) {
         super(type, entity);
         this.usingItemCondition = usingItemCondition;
         this.onItemCondition = onItemCondition;
@@ -51,21 +51,21 @@ public class ItemOnItemPower extends Power {
             && (usingItemCondition == null || usingItemCondition.test(new Pair<>(entity.getWorld(), usingStack)));
     }
 
-    public void execute(ItemStack usingStack, ItemStack onStack, Slot slot) {
+    public void execute(StackReference usingStack, StackReference onStack, Slot slot) {
 
-        ItemStack resultStack = newStack != null ? newStack.copy()
-                                                 : resultFromOnStack > 0 ? onStack.split(resultFromOnStack) : onStack;
+        StackReference resultStack = InventoryUtil.createStackReference(newStack != null ? newStack.copy()
+                                                 : resultFromOnStack > 0 ? onStack.get().split(resultFromOnStack) : onStack.get());
 
         if (resultItemAction != null) {
-            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), resultStack, resultItemAction);
+            resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
         }
 
         if (usingItemAction != null) {
-            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), usingStack, usingItemAction);
+            usingItemAction.accept(new Pair<>(entity.getWorld(), usingStack));
         }
 
         if (onItemAction != null) {
-            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), onStack, onItemAction);
+            onItemAction.accept(new Pair<>(entity.getWorld(), onStack));
         }
 
         tryOffer:
@@ -76,9 +76,9 @@ public class ItemOnItemPower extends Power {
             }
 
             if (slot.hasStack()) {
-                playerEntity.getInventory().offerOrDrop(resultStack);
+                playerEntity.getInventory().offerOrDrop(resultStack.get());
             } else {
-                slot.setStackNoCallbacks(resultStack);
+                slot.setStackNoCallbacks(resultStack.get());
             }
 
         }

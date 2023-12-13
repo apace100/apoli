@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.util;
 
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
-import io.github.apace100.apoli.access.MutableItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.InventoryPower;
@@ -21,7 +20,6 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -93,7 +91,7 @@ public class InventoryUtil {
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<Pair<World, ItemStack>> itemCondition = data.get("item_condition");
-        ActionFactory<Pair<World, ItemStack>>.Instance itemAction = data.get("item_action");
+        ActionFactory<Pair<World, StackReference>>.Instance itemAction = data.get("item_action");
 
         int processedItems = 0;
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
@@ -101,13 +99,12 @@ public class InventoryUtil {
         modifyingItemsLoop:
         for (int slot : slots) {
 
-            setToWorkableEmpty(entity, inventoryPower, null, slot);
-            ItemStack stack = getStack(entity, inventoryPower, slot);
-            if (stack.isEmpty() || !(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
+            StackReference stack = getStackReference(entity, inventoryPower, slot);
+            if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack.get())))) {
                 continue;
             }
 
-            int amount = processor.apply(stack);
+            int amount = processor.apply(stack.get());
             for (int i = 0; i < amount; i++) {
 
                 if (entityAction != null) {
@@ -123,8 +120,6 @@ public class InventoryUtil {
 
             }
 
-            setToGlobalEmpty(entity, inventoryPower, null, slot);
-
         }
 
     }
@@ -136,7 +131,7 @@ public class InventoryUtil {
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<Pair<World, ItemStack>> itemCondition = data.get("item_condition");
-        Consumer<Pair<World, ItemStack>> itemAction = data.get("item_action");
+        Consumer<Pair<World, StackReference>> itemAction = data.get("item_action");
 
         ItemStack replacementStack = data.get("stack");
         boolean mergeNbt = data.getBoolean("merge_nbt");
@@ -144,10 +139,9 @@ public class InventoryUtil {
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
         for (int slot : slots) {
 
-            setToWorkableEmpty(entity, inventoryPower, null, slot);
-            ItemStack stack = getStack(entity, inventoryPower, slot);
+            StackReference stack = getStackReference(entity, inventoryPower, slot);
 
-            if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
+            if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack.get())))) {
                 continue;
             }
 
@@ -156,17 +150,15 @@ public class InventoryUtil {
             }
 
             ItemStack stackAfterReplacement = replacementStack.copy();
-            if (mergeNbt && stack.hasNbt()) {
-                stack.getOrCreateNbt().copyFrom(stackAfterReplacement.getOrCreateNbt());
-                stackAfterReplacement.setNbt(stack.getOrCreateNbt());
+            if (mergeNbt && stack.get().hasNbt()) {
+                stack.get().getOrCreateNbt().copyFrom(stackAfterReplacement.getOrCreateNbt());
+                stackAfterReplacement.setNbt(stack.get().getOrCreateNbt());
             }
 
-            setStack(entity, inventoryPower, stackAfterReplacement, slot);
+            stack.set(stackAfterReplacement);
             if (itemAction != null) {
-                itemAction.accept(new Pair<>(entity.getWorld(), stackAfterReplacement));
+                itemAction.accept(new Pair<>(entity.getWorld(), stack));
             }
-
-            setToGlobalEmpty(entity, inventoryPower, null, slot);
 
         }
 
@@ -183,14 +175,13 @@ public class InventoryUtil {
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<Pair<World, ItemStack>> itemCondition = data.get("item_condition");
-        Consumer<Pair<World, ItemStack>> itemAction = data.get("item_action");
+        Consumer<Pair<World, StackReference>> itemAction = data.get("item_action");
 
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
         for (int slot : slots) {
 
-            setToWorkableEmpty(entity, inventoryPower, null, slot);
-            ItemStack stack = getStack(entity, inventoryPower, slot);
-            if (stack.isEmpty() || !(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
+            StackReference stack = getStackReference(entity, inventoryPower, slot);
+            if (stack.get().isEmpty() || !(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack.get())))) {
                 continue;
             }
 
@@ -202,16 +193,15 @@ public class InventoryUtil {
                 itemAction.accept(new Pair<>(entity.getWorld(), stack));
             }
 
+            ItemStack newStack = stack.get();
             ItemStack droppedStack = ItemStack.EMPTY;
             if (amount != 0) {
                 int newAmount = amount < 0 ? amount * -1 : amount;
-                droppedStack = stack.split(newAmount);
+                droppedStack = newStack.split(newAmount);
             }
 
-            throwItem(entity, droppedStack.isEmpty() ? stack : droppedStack, throwRandomly, retainOwnership);
-            setStack(entity, inventoryPower, droppedStack.isEmpty() ? ItemStack.EMPTY : stack, slot);
-
-            setToGlobalEmpty(entity, inventoryPower, null, slot);
+            throwItem(entity, droppedStack.isEmpty() ? stack.get() : droppedStack, throwRandomly, retainOwnership);
+            stack.set(droppedStack.isEmpty() ? ItemStack.EMPTY : newStack);
 
         }
 
@@ -316,7 +306,7 @@ public class InventoryUtil {
 
     }
 
-    public static StackReference setToWorkableEmpty(Entity entity, InventoryPower inventoryPower, @Nullable ItemStack itemStack, int slot) {
+    public static StackReference setToWorkableEmpty(Entity entity, @Nullable ItemStack itemStack, int slot) {
 
         StackReference reference = itemStack != null ? getStackReferenceFromStack(entity, itemStack) : entity.getStackReference(slot);
 
@@ -330,7 +320,7 @@ public class InventoryUtil {
 
     }
 
-    public static void setToGlobalEmpty(Entity entity, InventoryPower inventoryPower, @Nullable ItemStack itemStack, int slot) {
+    public static void setToGlobalEmpty(Entity entity, @Nullable ItemStack itemStack, int slot) {
 
         StackReference reference = itemStack != null ? getStackReferenceFromStack(entity, itemStack) : entity.getStackReference(slot);
 
@@ -344,7 +334,7 @@ public class InventoryUtil {
         return PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class).stream().noneMatch(p -> p.checkItemCondition(stack));
     }
 
-    private static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack) {
+    public static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack) {
         for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
             StackReference stackReference = entity.getStackReference(slot);
             if (stack == stackReference.get()) {
@@ -393,6 +383,22 @@ public class InventoryUtil {
     }
 
     /**
+     *      <p>Get the stack reference from the entity or frin the inventory of the specified {@link InventoryPower} (if it's not null).</p>
+     *
+     *      <p><b>Make sure to only call this method after you filter out the slots that aren't within the bounds
+     *      of the entity's {@linkplain StackReference stack reference} or {@link InventoryPower} using {@link
+     *      #slotNotWithinBounds(Entity, InventoryPower, int)}</b></p>
+     *
+     *      @param entity            The entity to get the item stack from its {@linkplain StackReference stack reference}
+     *      @param inventoryPower    The {@link InventoryPower} to get the item stack from (can be null)
+     *      @param slot              The (numerical) slot to get the item stack from
+     *      @return                  The stack reference of the specified slot
+     */
+    public static StackReference getStackReference(Entity entity, @Nullable InventoryPower inventoryPower, int slot) {
+        return inventoryPower == null ? entity.getStackReference(slot) : inventoryPower.getStackReference(slot);
+    }
+
+    /**
      *      <p>Get the item stack from the entity's {@linkplain StackReference stack reference} or the inventory of
      *      the specified {@link InventoryPower} (if it's not null).</p>
      *
@@ -428,6 +434,33 @@ public class InventoryUtil {
         } else {
             inventoryPower.setStack(slot, stack);
         }
+    }
+
+    /**(
+     *      <p>Creates a stack reference that is not linked to any entity for use with item actions.</p>
+     *
+     *      <p>Recommended for usage when either you don't have an entity for this operation, or you
+     *      don't want to set the entity's StackReference.</p>
+     *
+     *      @param startingStack The ItemStack that this reference will start with.
+     *      @return A {@linkplain StackReference} that contains an ItemStack.
+     */
+    public static StackReference createStackReference(ItemStack startingStack) {
+        StackReference reference = new StackReference() {
+            ItemStack stack;
+            @Override
+            public ItemStack get() {
+                return stack;
+            }
+
+            @Override
+            public boolean set(ItemStack stack) {
+                this.stack = stack;
+                return true;
+            }
+        };
+        reference.set(startingStack.copy());
+        return reference;
     }
 
 }

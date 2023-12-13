@@ -9,6 +9,7 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -33,7 +34,7 @@ public class PreventBlockPlacePower extends ActiveInteractionPower {
 
     private final EnumSet<Direction> directions;
 
-    public PreventBlockPlacePower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> placeToAction, Consumer<Triple<World, BlockPos, Direction>> placeOnAction, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<CachedBlockPosition> placeToCondition, Predicate<CachedBlockPosition> placeOnCondition, EnumSet<Direction> directions, EnumSet<Hand> hands, ItemStack resultStack, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Pair<World, ItemStack>> heldItemAction, int priority) {
+    public PreventBlockPlacePower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> placeToAction, Consumer<Triple<World, BlockPos, Direction>> placeOnAction, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<CachedBlockPosition> placeToCondition, Predicate<CachedBlockPosition> placeOnCondition, EnumSet<Direction> directions, EnumSet<Hand> hands, ItemStack resultStack, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> heldItemAction, int priority) {
         super(powerType, livingEntity, hands, ActionResult.FAIL, itemCondition, heldItemAction, resultStack, resultItemAction, priority);
         this.entityAction = entityAction;
         this.placeToAction = placeToAction;

@@ -9,6 +9,7 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
@@ -33,7 +34,7 @@ public class ApoliRegistryKeys {
     public static final RegistryKey<Registry<ConditionFactory<RegistryEntry<Biome>>>> BIOME_CONDITION;
 
     public static final RegistryKey<Registry<ActionFactory<Entity>>> ENTITY_ACTION;
-    public static final RegistryKey<Registry<ActionFactory<Pair<World, ItemStack>>>> ITEM_ACTION;
+    public static final RegistryKey<Registry<ActionFactory<Pair<World, StackReference>>>> ITEM_ACTION;
     public static final RegistryKey<Registry<ActionFactory<Triple<World, BlockPos, Direction>>>> BLOCK_ACTION;
     public static final RegistryKey<Registry<ActionFactory<Pair<Entity, Entity>>>> BIENTITY_ACTION;
     public static final RegistryKey<Registry<IModifierOperation>> MODIFIER_OPERATION;

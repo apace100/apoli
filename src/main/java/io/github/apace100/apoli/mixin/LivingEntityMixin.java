@@ -23,6 +23,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -450,20 +451,20 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             return original;
         }
 
-        ItemStack newStack = original;
+        StackReference newStack = InventoryUtil.createStackReference(original);
         List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
             .stream()
             .filter(mfp -> mfp.doesApply(original))
             .toList();
 
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
-            newStack = modifyFoodPower.getConsumedItemStack(newStack);
+            modifyFoodPower.setConsumedItemStackReference(newStack);
         }
 
         this.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         this.apoli$setOriginalFoodStack(original);
 
-        return newStack;
+        return newStack.get();
 
     }
 
@@ -522,6 +523,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Shadow public abstract boolean hasStatusEffect(StatusEffect effect);
 
     @Shadow public abstract boolean damage(DamageSource source, float amount);
+
+    @Shadow protected abstract void onStatusEffectRemoved(StatusEffectInstance effect);
 
     @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {

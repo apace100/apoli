@@ -74,18 +74,40 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
         if (PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class).isEmpty()) {
             ENTITY_ITEM_ENCHANTS.remove(entity);
+            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
+            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand"));
+            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.head"));
+            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.chest"));
+            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.legs"));
+            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.feet"));
         }
 
     }
 
     @Override
     public void tick() {
-        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
-        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand"));
-        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.chest"));
-        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.feet"));
-        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.head"));
-        InventoryUtil.setToWorkableEmpty(entity, null, null, ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.legs"));
+        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
+        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand"));
+        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.head"));
+        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.chest"));
+        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.legs"));
+        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.feet"));
+    }
+
+    public static boolean isWorkableEmptyStack(Entity entity, int slotMapping) {
+        return entity.getStackReference(slotMapping).get().isEmpty() && entity.getStackReference(slotMapping).get() != ItemStack.EMPTY;
+    }
+
+    private void setToWorkableEmpty(int slotMapping) {
+        if (entity.getStackReference(slotMapping).get() == ItemStack.EMPTY && itemCondition.test(new Pair<>(entity.getWorld(), entity.getStackReference(slotMapping).get()))) {
+            InventoryUtil.setToWorkableEmpty(entity, null, slotMapping);
+        }
+    }
+
+    private void setToGlobalEmpty(int slotMapping) {
+        if (entity.getStackReference(slotMapping).get().isEmpty() && isWorkableEmptyStack(entity, slotMapping)) {
+            InventoryUtil.setToGlobalEmpty(entity, null, slotMapping);
+        }
     }
 
     public static boolean isInEnchantmentMap(LivingEntity entity) {

@@ -3,13 +3,12 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.util.ActionUtil;
-import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
@@ -22,11 +21,11 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
 
     private final Predicate<Pair<World, ItemStack>> itemCondition;
     private final Consumer<Entity> entityAction;
-    private final Consumer<Pair<World, ItemStack>> itemAction;
+    private final Consumer<Pair<World, StackReference>> itemAction;
     private final TriggerType triggerType;
     private final int priority;
 
-    public ActionOnItemUsePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> itemAction, TriggerType triggerType, int priority) {
+    public ActionOnItemUsePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> itemAction, TriggerType triggerType, int priority) {
         super(type, entity);
         this.itemCondition = itemCondition;
         this.entityAction = entityAction;
@@ -39,9 +38,9 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
         return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
-    public void executeActions(ItemStack stack) {
+    public void executeActions(StackReference stack) {
         if(itemAction != null) {
-            ActionUtil.executeEntityDependentItemAction(entity, entity.getWorld(), stack, itemAction);
+            itemAction.accept(new Pair<>(entity.getWorld(), stack));
         }
         if(entityAction != null) {
             entityAction.accept(entity);
@@ -65,7 +64,7 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
         BEFORE, AFTER, ALL
     }
 
-    public static void executeActions(Entity user, ItemStack useStack, ItemStack checkStack, TriggerType triggerType, PriorityPhase phase) {
+    public static void executeActions(Entity user, StackReference useStack, ItemStack checkStack, TriggerType triggerType, PriorityPhase phase) {
         if(user.getWorld().isClient) {
             return;
         }

@@ -74,7 +74,7 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
         }
 
         ((PowerCraftingInventory) craftingInventory).apoli$setPower(modifyCraftingPower.get());
-        return modifyCraftingPower.get().getNewResult(newResultStack);
+        return modifyCraftingPower.get().getNewResult(InventoryUtil.createStackReference(newResultStack)).get();
 
     }
 

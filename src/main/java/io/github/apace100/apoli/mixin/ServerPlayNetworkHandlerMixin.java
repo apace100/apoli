@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.power.ActionOnItemUsePower;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
@@ -32,14 +33,14 @@ public class ServerPlayNetworkHandlerMixin {
     @Inject(method = "onUpdateSelectedSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/c2s/play/UpdateSelectedSlotC2SPacket;getSelectedSlot()I", ordinal = 0))
     private void callActionOnUseStopBySwitching(UpdateSelectedSlotC2SPacket packet, CallbackInfo ci) {
         if(player.isUsingItem()) {
-            ActionOnItemUsePower.executeActions(player, player.getActiveItem(), player.getActiveItem(), ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
+            ActionOnItemUsePower.executeActions(player, StackReference.of(player.getInventory(), this.player.getInventory().selectedSlot), player.getActiveItem(), ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
         }
     }
 
     @Inject(method = "onPlayerAction", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;clearActiveItem()V"))
     private void callActionOnUseStopBySwappingHands(PlayerActionC2SPacket packet, CallbackInfo ci) {
         if(player.isUsingItem()) {
-            ActionOnItemUsePower.executeActions(player, player.getActiveItem(), player.getActiveItem(), ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
+            ActionOnItemUsePower.executeActions(player, StackReference.of(player.getInventory(), this.player.getInventory().selectedSlot), player.getActiveItem(), ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
         }
     }
 }

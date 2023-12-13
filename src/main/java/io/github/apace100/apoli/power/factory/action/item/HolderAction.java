@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
@@ -35,9 +36,9 @@ public class HolderAction {
 
     }
 
-    public static ActionFactory<Pair<World, ItemStack>> getFactory() {
+    public static ActionFactory<Pair<World, StackReference>> getFactory() {
         IdentifierAlias.addPathAlias("holder", "holder_action");
-        return new ActionFactory<>(
+        return ItemActionFactory.createItemStackBased(
             Apoli.identifier("holder_action"),
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
