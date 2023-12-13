@@ -76,9 +76,9 @@ public class ScreenHandlerMixin {
                 });
                 return Optional.of(reference.get());
             }
-        } else if (slot instanceof CraftingResultSlot) {
+        } else if (slot instanceof CraftingResultSlot craftingResultSlot) {
 
-            if (player.getWorld().isClient || !(slot.inventory instanceof CraftingInventory craftingInventory)) {
+            if (!(((CraftingResultSlotAccessor)craftingResultSlot).getInput() instanceof CraftingInventory craftingInventory)) {
                 return value;
             }
 

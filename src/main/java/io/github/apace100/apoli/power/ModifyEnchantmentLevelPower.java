@@ -6,7 +6,6 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -15,6 +14,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -33,6 +33,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
     private static final ConcurrentHashMap<Entity, ConcurrentHashMap<ItemStack, NbtList>> ENTITY_ITEM_ENCHANTS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Entity, ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Entity, ItemStack> MODIFIED_EMPTY_STACKS = new ConcurrentHashMap<>();
 
     private final Enchantment enchantment;
     private final Predicate<Pair<World, ItemStack>> itemCondition;
@@ -63,6 +64,11 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
         cache.compute(this, (p, _val) -> new Pair<>(0, false));
 
+
+        ItemStack newStack = new ItemStack((Void)null);
+        ((EntityLinkedItemStack)newStack).apoli$setEntity(entity);
+        MODIFIED_EMPTY_STACKS.put(entity, newStack);
+
     }
 
     @Override
@@ -74,40 +80,28 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
         if (PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class).isEmpty()) {
             ENTITY_ITEM_ENCHANTS.remove(entity);
-            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
-            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand"));
-            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.head"));
-            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.chest"));
-            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.legs"));
-            this.setToGlobalEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.feet"));
         }
 
+        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+            StackReference stackReference = entity.getStackReference(slot);
+            if (stackReference.get() == ItemStack.EMPTY && isWorkableEmptyStack(entity, stackReference)) {
+                stackReference.set(ItemStack.EMPTY);
+            }
+        }
     }
 
     @Override
     public void tick() {
-        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
-        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand"));
-        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.head"));
-        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.chest"));
-        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.legs"));
-        this.setToWorkableEmpty(ItemSlotArgumentTypeAccessor.getSlotMappings().get("armor.feet"));
-    }
-
-    public static boolean isWorkableEmptyStack(Entity entity, int slotMapping) {
-        return entity.getStackReference(slotMapping).get().isEmpty() && entity.getStackReference(slotMapping).get() != ItemStack.EMPTY;
-    }
-
-    private void setToWorkableEmpty(int slotMapping) {
-        if (entity.getStackReference(slotMapping).get() == ItemStack.EMPTY && itemCondition.test(new Pair<>(entity.getWorld(), entity.getStackReference(slotMapping).get()))) {
-            InventoryUtil.setToWorkableEmpty(entity, null, slotMapping);
+        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+            StackReference stackReference = entity.getStackReference(slot);
+            if (stackReference.get() == ItemStack.EMPTY && itemCondition.test(new Pair<>(entity.getWorld(), stackReference.get()))) {
+                stackReference.set(MODIFIED_EMPTY_STACKS.get(entity));
+            }
         }
     }
 
-    private void setToGlobalEmpty(int slotMapping) {
-        if (entity.getStackReference(slotMapping).get().isEmpty() && isWorkableEmptyStack(entity, slotMapping)) {
-            InventoryUtil.setToGlobalEmpty(entity, null, slotMapping);
-        }
+    public static boolean isWorkableEmptyStack(Entity entity, StackReference stackReference) {
+        return PowerHolderComponent.hasPower(entity, ModifyEnchantmentLevelPower.class) && stackReference.get().isEmpty() && stackReference.get() != MODIFIED_EMPTY_STACKS.get(entity);
     }
 
     public static boolean isInEnchantmentMap(LivingEntity entity) {

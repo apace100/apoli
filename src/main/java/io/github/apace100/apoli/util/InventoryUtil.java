@@ -306,34 +306,6 @@ public class InventoryUtil {
 
     }
 
-    public static StackReference setToWorkableEmpty(Entity entity, @Nullable ItemStack itemStack, int slot) {
-
-        StackReference reference = itemStack != null ? getStackReferenceFromStack(entity, itemStack) : entity.getStackReference(slot);
-
-        if (reference.get() == ItemStack.EMPTY) {
-            ItemStack newStack = new ItemStack((Void)null);
-            ((EntityLinkedItemStack)newStack).apoli$setEntity(entity);
-            reference.set(newStack);
-        }
-
-        return reference;
-
-    }
-
-    public static void setToGlobalEmpty(Entity entity, @Nullable ItemStack itemStack, int slot) {
-
-        StackReference reference = itemStack != null ? getStackReferenceFromStack(entity, itemStack) : entity.getStackReference(slot);
-
-        if (ItemStack.areItemsEqual(reference.get(), ItemStack.EMPTY) && canSetToGlobalEmpty(entity, reference.get())) {
-            reference.set(ItemStack.EMPTY);
-        }
-
-    }
-
-    private static boolean canSetToGlobalEmpty(Entity entity, ItemStack stack) {
-        return PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class).stream().noneMatch(p -> p.checkItemCondition(stack));
-    }
-
     public static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack) {
         for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
             StackReference stackReference = entity.getStackReference(slot);

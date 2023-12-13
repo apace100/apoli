@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action.item;
 
 import com.google.gson.JsonObject;
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -42,7 +43,7 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
             if (ItemActionFactory.this.itemEffect != null) {
                 ItemActionFactory.this.itemEffect.accept(this.dataInstance, new Pair<>(worldItemStackPair.getLeft(), stack));
             }
-            if (worldItemStackPair.getRight().get().isEmpty()) {
+            if (worldItemStackPair.getRight().get().isEmpty() && (((EntityLinkedItemStack)worldItemStackPair.getRight().get())).apoli$getEntity() != null && ModifyEnchantmentLevelPower.isWorkableEmptyStack((((EntityLinkedItemStack)worldItemStackPair.getRight().get())).apoli$getEntity(), worldItemStackPair.getRight())) {
                 worldItemStackPair.getRight().set(ItemStack.EMPTY);
             }
         }
