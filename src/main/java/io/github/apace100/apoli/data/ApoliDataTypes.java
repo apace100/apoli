@@ -35,12 +35,14 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
+import net.minecraft.text.Text;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
@@ -418,6 +420,27 @@ public class ApoliDataTypes {
             return jsonObject;
 
         }
+    );
+
+    public static final SerializableDataType<GameMode> GAME_MODE = SerializableDataType.enumValue(GameMode.class);
+
+    //  This is for keeping backwards compatibility to fields that used to accept strings as translation keys
+    public static final SerializableDataType<Text> DEFAULT_TRANSLATABLE_TEXT = new SerializableDataType<>(
+        Text.class,
+        PacketByteBuf::writeText,
+        PacketByteBuf::readText,
+        jsonElement -> {
+
+            //  If the JSON is a primitive, use it as a translation key
+            if (jsonElement instanceof JsonPrimitive jsonPrimitive) {
+                return Text.translatable(jsonPrimitive.getAsString());
+            }
+
+            //  Otherwise, serialize it as a text as usual
+            return Text.Serializer.fromJson(jsonElement);
+
+        },
+        Text.Serializer::toJsonTree
     );
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {

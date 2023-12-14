@@ -85,6 +85,8 @@
         "LivingEntityRendererMixin",
         "MinecraftClientMixin",
         "PlayerEntityRendererMixin",
+        "SpriteAtlasTextureAccessor",
+        "TextureManagerAccessor",
         "WorldRendererMixin"
     ],
     "injectors": {

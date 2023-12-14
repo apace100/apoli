@@ -442,9 +442,13 @@ public class EntityConditions {
         register(InThunderstormCondition.getFactory());
         register(AdvancementCondition.getFactory());
         register(SetSizeCondition.getFactory());
+        register(UsingEffectiveToolCondition.getFactory());
+        register(GameModeCondition.getFactory());
+        register(GlowingCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
         Registry.register(ApoliRegistries.ENTITY_CONDITION, conditionFactory.getSerializerId(), conditionFactory);
     }
+
 }
