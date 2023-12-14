@@ -252,10 +252,6 @@ public class InventoryUtil {
     }
 
     public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
-        forEachStack(entity, itemStackConsumer, null);
-    }
-
-    public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer, @Nullable Consumer<ItemStack> emptyStackConsumer) {
 
         int slotToSkip = getDuplicatedSlotIndex(entity);
         for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
@@ -273,11 +269,6 @@ public class InventoryUtil {
             ItemStack stack = stackReference.get();
             if (!stack.isEmpty()) {
                 itemStackConsumer.accept(stack);
-                continue;
-            }
-
-            if (emptyStackConsumer != null && stack != ItemStack.EMPTY) {
-                emptyStackConsumer.accept(stack);
             }
 
         }
@@ -294,11 +285,6 @@ public class InventoryUtil {
                 ItemStack stack = inventoryPower.getStack(index);
                 if (!stack.isEmpty()) {
                     itemStackConsumer.accept(stack);
-                    continue;
-                }
-
-                if (emptyStackConsumer != null && stack != ItemStack.EMPTY) {
-                    emptyStackConsumer.accept(stack);
                 }
 
             }
