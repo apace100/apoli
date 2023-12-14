@@ -96,7 +96,7 @@ public class TextureUtil {
     public static DataResult<Identifier> tryLoadingSprite(Identifier spriteId, Identifier atlasId) {
 
         TextureManagerAccessor textureManagerAccessor = (TextureManagerAccessor) MinecraftClient.getInstance().getTextureManager();
-        DataResult<Identifier> atlasResult = tryLoadingTexture(atlasId, _id -> "", _id -> "");
+        DataResult<Identifier> atlasResult = tryLoadingTexture(atlasId, _id -> "Texture \"" + _id + "\" does not exist!", _id -> "\n");
 
         if (atlasResult.result().isEmpty()) {
             return atlasResult.mapError(err -> "Failed to load atlas \"%s\": %s".formatted(atlasId, err));
