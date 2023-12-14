@@ -114,7 +114,7 @@ public class EntitySetPower extends Power {
         entityUuids.remove(uuid);
         entities.remove(uuid);
 
-        if (actionOnRemove != null) {
+        if (actionOnRemove != null && entity != null) {
             actionOnRemove.accept(new Pair<>(this.entity, entity));
         }
 
@@ -163,6 +163,10 @@ public class EntitySetPower extends Power {
     @Nullable
     public Entity getEntity(UUID uuid) {
 
+        if (!entityUuids.contains(uuid)) {
+            return null;
+        }
+
         Entity entity = null;
         MinecraftServer server = this.entity.getServer();
 
@@ -174,11 +178,17 @@ public class EntitySetPower extends Power {
             entity = MiscUtil.getEntityByUuid(uuid, server);
         }
 
-        if (entity != null) {
-            entities.put(uuid, entity);
+        if (entity == null || entity.isRemoved()) {
+
+            if (tempEntities.remove(uuid) != null | entities.remove(uuid) != null | entityUuids.remove(uuid)) {
+                PowerHolderComponent.syncPower(this.entity, this.type);
+            }
+
+            return null;
+
         }
 
-        return entity == null || entity.isRemoved() ? null : entity;
+        return entity;
 
     }
 
