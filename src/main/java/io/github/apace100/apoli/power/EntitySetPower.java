@@ -25,7 +25,7 @@ public class EntitySetPower extends Power {
     private final Set<UUID> entityUuids = new HashSet<>();
     private final Map<UUID, Entity> entities = new HashMap<>();
 
-    private final Map<Entity, Integer> tempEntities = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> tempEntities = new ConcurrentHashMap<>();
 
     public EntitySetPower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove) {
         super(type, entity);
@@ -41,12 +41,12 @@ public class EntitySetPower extends Power {
             return;
         }
 
-        Iterator<Map.Entry<Entity, Integer>> entryIterator = tempEntities.entrySet().iterator();
+        Iterator<Map.Entry<UUID, Integer>> entryIterator = tempEntities.entrySet().iterator();
         boolean shouldSync = false;
 
         while (entryIterator.hasNext()) {
 
-            Map.Entry<Entity, Integer> entry = entryIterator.next();
+            Map.Entry<UUID, Integer> entry = entryIterator.next();
             entry.setValue(entry.getValue() - 1);
 
             if (entry.getValue() <= 0 && this.remove(entry.getKey(), false)) {
@@ -72,7 +72,7 @@ public class EntitySetPower extends Power {
         }
 
         if (time != null) {
-            tempEntities.compute(entity, (_entity, _time) -> time);
+            tempEntities.compute(entity.getUuid(), (prevUuid, prevTime) -> time);
         }
 
         UUID uuid = entity.getUuid();
@@ -109,10 +109,8 @@ public class EntitySetPower extends Power {
         }
 
         Entity entity = getEntity(uuid);
-        if (entity != null) {
-            tempEntities.remove(entity);
-        }
 
+        tempEntities.remove(uuid);
         entityUuids.remove(uuid);
         entities.remove(uuid);
 
