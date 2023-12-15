@@ -1,10 +1,8 @@
 package io.github.apace100.apoli.util;
 
-import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.InventoryPower;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.ArgumentWrapper;
@@ -19,7 +17,11 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -293,13 +295,28 @@ public class InventoryUtil {
     }
 
     public static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack) {
+        return getStackReferenceFromStack(entity, stack, (provStack, refStack) -> provStack == refStack);
+    }
+
+    public static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack, BiPredicate<ItemStack, ItemStack> equalityPredicate) {
+
+        int slotToSkip = getDuplicatedSlotIndex(entity);
         for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+
+            if (slot == slotToSkip) {
+                slotToSkip = Integer.MIN_VALUE;
+                continue;
+            }
+
             StackReference stackReference = entity.getStackReference(slot);
-            if (stack == stackReference.get()) {
+            if (stackReference != StackReference.EMPTY && equalityPredicate.test(stack, stackReference.get())) {
                 return stackReference;
             }
+
         }
+
         return StackReference.EMPTY;
+
     }
 
     private static void deduplicateSlots(Entity entity, Set<Integer> slots) {
