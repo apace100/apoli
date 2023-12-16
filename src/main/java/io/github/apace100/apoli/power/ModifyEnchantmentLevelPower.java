@@ -66,10 +66,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
             .computeIfAbsent(entity.getUuid(), uuid -> new ConcurrentHashMap<>())
             .compute(this, (power, cache) -> new Pair<>(0, false));
 
-        ItemStack newStack = new ItemStack((Void) null);
-        ((EntityLinkedItemStack) newStack).apoli$setEntity(entity);
-
-        MODIFIED_EMPTY_STACKS.put(entity.getUuid(), newStack);
+        getOrCreateWorkableEmptyStack(entity);
 
     }
 
@@ -111,11 +108,29 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
             ItemStack stack = stackReference.get();
             if (stack.isEmpty() && !isWorkableEmptyStack(entity, stackReference) && checkItemCondition(stack)) {
-                stackReference.set(MODIFIED_EMPTY_STACKS.get(entity.getUuid()));
+                stackReference.set(getOrCreateWorkableEmptyStack(entity));
             }
 
         }
 
+    }
+
+    private static ItemStack getOrCreateWorkableEmptyStack(Entity entity) {
+
+        UUID uuid = entity.getUuid();
+        if (MODIFIED_EMPTY_STACKS.containsKey(uuid)) {
+            return MODIFIED_EMPTY_STACKS.get(uuid);
+        }
+
+        ItemStack workableEmptyStack = new ItemStack((Void) null);
+        ((EntityLinkedItemStack) workableEmptyStack).apoli$setEntity(entity);
+
+        return MODIFIED_EMPTY_STACKS.compute(uuid, (prevUuid, prevStack) -> workableEmptyStack);
+
+    }
+
+    public static void integrateCallback(Entity entity, World world) {
+        MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
     }
 
     public static boolean isWorkableEmptyStack(Entity entity, StackReference stackReference) {
