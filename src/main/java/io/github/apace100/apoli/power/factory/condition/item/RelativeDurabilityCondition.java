@@ -15,10 +15,10 @@ public class RelativeDurabilityCondition {
     public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
         Comparison comparison = data.get("comparison");
-        int compareTo = data.get("compare_to");
+        float compareTo = data.get("compare_to");
 
         ItemStack stack = worldAndStack.getRight();
-        float relativeDurability = (float) (stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
+        float relativeDurability = (float) Math.abs(stack.getMaxDamage() - stack.getDamage()) / stack.getMaxDamage();
 
         return comparison.compare(relativeDurability, compareTo);
 
