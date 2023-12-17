@@ -6,6 +6,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.*;
@@ -21,21 +22,28 @@ public class EntitySetPower extends Power {
 
     private final Consumer<Pair<Entity, Entity>> actionOnAdd;
     private final Consumer<Pair<Entity, Entity>> actionOnRemove;
+    private final int tickRate;
 
     private final Set<UUID> entityUuids = new HashSet<>();
     private final Map<UUID, Entity> entities = new HashMap<>();
 
     private final Map<UUID, Integer> tempEntities = new ConcurrentHashMap<>();
 
-    public EntitySetPower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove) {
+    public EntitySetPower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove, int tickRate) {
         super(type, entity);
         this.actionOnAdd = actionOnAdd;
         this.actionOnRemove = actionOnRemove;
+        this.tickRate = tickRate;
         this.setTicking(true);
     }
 
     @Override
     public void tick() {
+        tickTempEntities();
+        validateEntities();
+    }
+
+    private void tickTempEntities() {
 
         if (tempEntities.isEmpty()) {
             return;
@@ -49,9 +57,37 @@ public class EntitySetPower extends Power {
             Map.Entry<UUID, Integer> entry = entryIterator.next();
             entry.setValue(entry.getValue() - 1);
 
-            if (entry.getValue() <= 0 && this.remove(entry.getKey(), false)) {
+            if (entry.getValue() <= 0 && this.remove(entry.getKey(), true, true)) {
                 shouldSync = true;
             }
+
+        }
+
+        if (shouldSync) {
+            PowerHolderComponent.syncPower(this.entity, this.type);
+        }
+
+    }
+
+    private void validateEntities() {
+
+        MinecraftServer server = entity.getServer();
+        if (server == null || entity.age % tickRate != 0) {
+            return;
+        }
+
+        Iterator<UUID> iterator = entityUuids.iterator();
+        boolean shouldSync = false;
+
+        while (iterator.hasNext()) {
+
+            UUID uuid = iterator.next();
+            if (MiscUtil.getEntityByUuid(uuid, server) != null) {
+                continue;
+            }
+
+            this.remove(uuid, false, false);
+            shouldSync = true;
 
         }
 
@@ -95,27 +131,21 @@ public class EntitySetPower extends Power {
     public boolean remove(Entity entity, boolean shouldSync) {
 
         if (entity != null && !entity.getWorld().isClient) {
-            return remove(entity.getUuid(), shouldSync);
+            return remove(entity.getUuid(), true, shouldSync);
         }
 
         return false;
 
     }
 
-    private boolean remove(UUID uuid, boolean shouldSync) {
+    private boolean remove(UUID uuid, boolean executeActions, boolean shouldSync) {
 
-        if (!entityUuids.contains(uuid)) {
+        if (!entityUuids.remove(uuid) | entities.remove(uuid) == null | tempEntities.remove(uuid) == null) {
             return false;
         }
 
-        Entity entity = getEntity(uuid);
-
-        tempEntities.remove(uuid);
-        entityUuids.remove(uuid);
-        entities.remove(uuid);
-
-        if (actionOnRemove != null && entity != null) {
-            actionOnRemove.accept(new Pair<>(this.entity, entity));
+        if (executeActions && actionOnRemove != null) {
+            actionOnRemove.accept(new Pair<>(entity, getEntity(uuid)));
         }
 
         if (shouldSync) {
@@ -179,13 +209,7 @@ public class EntitySetPower extends Power {
         }
 
         if (entity == null || entity.isRemoved()) {
-
-            if (tempEntities.remove(uuid) != null | entities.remove(uuid) != null | entityUuids.remove(uuid)) {
-                PowerHolderComponent.syncPower(this.entity, this.type);
-            }
-
-            return null;
-
+            this.remove(uuid, false, true);
         }
 
         return entity;
@@ -231,13 +255,16 @@ public class EntitySetPower extends Power {
             Apoli.identifier("entity_set"),
             new SerializableData()
                 .add("action_on_add", ApoliDataTypes.BIENTITY_ACTION, null)
-                .add("action_on_remove", ApoliDataTypes.BIENTITY_ACTION, null),
+                .add("action_on_remove", ApoliDataTypes.BIENTITY_ACTION, null)
+                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 100),
             data -> (powerType, livingEntity) -> new EntitySetPower(
                 powerType,
                 livingEntity,
                 data.get("action_on_add"),
-                data.get("action_on_remove")
+                data.get("action_on_remove"),
+                data.get("tick_rate")
             )
         );
     }
+
 }
