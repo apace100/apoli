@@ -17,7 +17,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -405,19 +404,14 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return in;
     }
 
-    @ModifyReturnValue(method = "getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", at = @At("RETURN"))
-    private double apoli$modifyAttributeValue(double original, EntityAttribute attribute) {
-        return PowerHolderComponent.modify(this, ModifyAttributePower.class, (float) original, p -> p.getAttribute() == attribute);
-    }
+    @Inject(method = "getAttributes", at = @At("RETURN"))
+    private void apoli$setAttributeContainerOwner(CallbackInfoReturnable<AttributeContainer> cir) {
 
-    @Inject(method = "getAttributeInstance", at = @At("RETURN"))
-    private void apoli$setEntityToAttributeInstance(EntityAttribute attribute, CallbackInfoReturnable<EntityAttributeInstance> cir) {
-        EntityAttributeInstance instance = cir.getReturnValue();
-        if (instance != null) {
-            ((EntityAttributeInstanceAccess) instance).apoli$setEntity(this);
+        if (cir.getReturnValue() instanceof OwnableAttributeContainer ownableAttributeContainer) {
+            ownableAttributeContainer.apoli$setOwner(this);
         }
-    }
 
+    }
 
     @ModifyVariable(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isOnGround()Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
