@@ -1,10 +1,9 @@
 package io.github.apace100.apoli.power.factory.action;
 
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.item.HolderAction;
+import io.github.apace100.apoli.power.factory.action.item.MergeNbtAction;
 import io.github.apace100.apoli.power.factory.action.item.ModifyAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -16,8 +15,6 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
@@ -79,17 +76,7 @@ public class ItemActions {
                     }
                 }
             }));
-        register(new ActionFactory<>(Apoli.identifier("merge_nbt"), new SerializableData()
-            .add("nbt", SerializableDataTypes.STRING),
-            (data, worldAndStack) -> {
-                String nbtString = data.get("nbt");
-                try {
-                    NbtCompound nbt = new StringNbtReader(new StringReader(nbtString)).parseCompound();
-                    worldAndStack.getRight().getOrCreateNbt().copyFrom(nbt);
-                } catch (CommandSyntaxException e) {
-                    Apoli.LOGGER.error("Failed `merge_nbt` item action due to malformed nbt string: \"" + nbtString + "\"");
-                }
-            }));
+        register(MergeNbtAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("remove_enchantment"), new SerializableData()
             .add("enchantment", SerializableDataTypes.ENCHANTMENT, null)
             .add("enchantments", SerializableDataType.list(SerializableDataTypes.ENCHANTMENT), null)
