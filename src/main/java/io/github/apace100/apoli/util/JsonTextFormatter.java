@@ -202,6 +202,16 @@ public class JsonTextFormatter {
                     .append(Text.literal("D").formatted(TYPE_SUFFIX_COLOR));
             }
 
+            else if (number instanceof Byte b) {
+                numberText = Text.literal(String.valueOf(b)).formatted(NUMBER_COLOR)
+                    .append(Text.literal("B")).formatted(TYPE_SUFFIX_COLOR);
+            }
+
+            else if (number instanceof Short s) {
+                numberText = Text.literal(String.valueOf(s)).formatted(NUMBER_COLOR)
+                    .append(Text.literal("S")).formatted(TYPE_SUFFIX_COLOR);
+            }
+
             else {
                 return false;
             }
