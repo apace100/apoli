@@ -21,10 +21,10 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
         super(identifier, data, effect);
     }
 
-    public static ItemActionFactory createItemStackBased(Identifier identifier, SerializableData data, BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> itemEffect) {
+    public static ItemActionFactory createItemStackBased(Identifier identifier, SerializableData data, BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> legacyEffect) {
 
         ItemActionFactory actionFactory = new ItemActionFactory(identifier, data, null);
-        actionFactory.legacyEffect = itemEffect;
+        actionFactory.legacyEffect = legacyEffect;
 
         return actionFactory;
 
@@ -43,8 +43,20 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
                 return;
             }
 
-            ItemStack stack = worldAndStackReference.getRight().get() == ItemStack.EMPTY ? new ItemStack((Void) null) : worldAndStackReference.getRight().get();
-            boolean workableEmptyStack = worldAndStackReference.getRight().set(stack);
+            ItemStack stack;
+            boolean workableEmptyStack;
+
+            if (worldAndStackReference.getRight().get() == ItemStack.EMPTY) {
+
+                stack = new ItemStack((Void) null);
+                workableEmptyStack = true;
+
+                worldAndStackReference.getRight().set(stack);
+
+            } else {
+                stack = worldAndStackReference.getRight().get();
+                workableEmptyStack = false;
+            }
 
             if (ItemActionFactory.this.effect != null) {
                 ItemActionFactory.this.effect.accept(this.dataInstance, worldAndStackReference);
