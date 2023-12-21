@@ -155,7 +155,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, Potential
         }
 
         ItemStack thisAsStack = (ItemStack) (Object) this;
-        StackReference stackReference = InventoryUtil.createStackReference(thisAsStack);
+        StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
 
         ActionOnItemUsePower.TriggerType triggerType = this.getMaxUseTime() == 0
             ? ActionOnItemUsePower.TriggerType.INSTANT : ActionOnItemUsePower.TriggerType.START;
