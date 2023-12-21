@@ -29,6 +29,7 @@ import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -517,6 +518,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Shadow public abstract boolean damage(DamageSource source, float amount);
 
+    @Shadow public float bodyYaw;
+
+    @Shadow public abstract EntityDimensions getDimensions(EntityPose pose);
+
+    @Shadow public abstract float getScaleFactor();
+
     @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
@@ -561,4 +568,27 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     private void updateItemStackHolder(CallbackInfo ci) {
         InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this), stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this));
     }
+
+    @ModifyReturnValue(method = "getPassengerRidingPos", at = @At("RETURN"))
+    private Vec3d apoli$modifyPassengerPosition(Vec3d original, Entity passenger) {
+
+        List<Vec3d> offsetPositions = PowerHolderComponent.getPowers(this, ModifyPassengerPositionPower.class)
+            .stream()
+            .filter(p -> p.doesApply(passenger))
+            .map(ModifyPassengerPositionPower::getPositionOffset)
+            .toList();
+
+        if (offsetPositions.isEmpty()) {
+            return original;
+        }
+
+        Vec3d ridingPos = new Vec3d(this.getPassengerAttachmentPos(passenger, this.getDimensions(this.getPose()), this.getScaleFactor()));
+        return offsetPositions
+            .stream()
+            .reduce(ridingPos, Vec3d::add)
+            .rotateY(-this.bodyYaw * (float) (Math.PI / 180.0))
+            .add(this.getPos());
+
+    }
+
 }
