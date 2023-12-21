@@ -22,6 +22,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -115,7 +116,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
     }
 
-    private static ItemStack getOrCreateWorkableEmptyStack(Entity entity) {
+    public static ItemStack getOrCreateWorkableEmptyStack(Entity entity) {
 
         UUID uuid = entity.getUuid();
         if (MODIFIED_EMPTY_STACKS.containsKey(uuid)) {
@@ -133,7 +134,12 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
     }
 
-    public static boolean isWorkableEmptyStack(Entity entity, StackReference stackReference) {
+    public static boolean isWorkableEmptyStack(StackReference stackReference) {
+        Entity stackHolder = ((EntityLinkedItemStack) stackReference.get()).apoli$getEntity();
+        return stackHolder != null && isWorkableEmptyStack(stackHolder, stackReference);
+    }
+
+    public static boolean isWorkableEmptyStack(@NotNull Entity entity, StackReference stackReference) {
         return stackReference.get().isEmpty()
             && MODIFIED_EMPTY_STACKS.containsKey(entity.getUuid())
             && stackReference.get() == MODIFIED_EMPTY_STACKS.get(entity.getUuid());

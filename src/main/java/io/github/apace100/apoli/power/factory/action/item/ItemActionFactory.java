@@ -1,8 +1,6 @@
 package io.github.apace100.apoli.power.factory.action.item;
 
 import com.google.gson.JsonObject;
-import io.github.apace100.apoli.access.EntityLinkedItemStack;
-import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
@@ -16,36 +14,50 @@ import net.minecraft.world.World;
 import java.util.function.BiConsumer;
 
 public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>> {
-    protected BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> itemEffect;
+
+    protected BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> legacyEffect;
 
     public ItemActionFactory(Identifier identifier, SerializableData data, BiConsumer<SerializableData.Instance, Pair<World, StackReference>> effect) {
         super(identifier, data, effect);
     }
 
     public static ItemActionFactory createItemStackBased(Identifier identifier, SerializableData data, BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> itemEffect) {
+
         ItemActionFactory actionFactory = new ItemActionFactory(identifier, data, null);
-        actionFactory.itemEffect = itemEffect;
+        actionFactory.legacyEffect = itemEffect;
+
         return actionFactory;
+
     }
 
     public class Instance extends ActionFactory<Pair<World, StackReference>>.Instance {
+
         protected Instance(SerializableData.Instance data) {
             super(data);
         }
 
         @Override
-        public void accept(Pair<World, StackReference> worldItemStackPair) {
-            ItemStack stack = worldItemStackPair.getRight().get() == ItemStack.EMPTY ? new ItemStack((Void)null) : worldItemStackPair.getRight().get();
-            worldItemStackPair.getRight().set(stack);
+        public void accept(Pair<World, StackReference> worldAndStackReference) {
+
+            if (worldAndStackReference.getRight() == StackReference.EMPTY) {
+                return;
+            }
+
+            ItemStack stack = worldAndStackReference.getRight().get() == ItemStack.EMPTY ? new ItemStack((Void) null) : worldAndStackReference.getRight().get();
+            boolean workableEmptyStack = worldAndStackReference.getRight().set(stack);
+
             if (ItemActionFactory.this.effect != null) {
-                ItemActionFactory.this.effect.accept(this.dataInstance, worldItemStackPair);
+                ItemActionFactory.this.effect.accept(this.dataInstance, worldAndStackReference);
             }
-            if (ItemActionFactory.this.itemEffect != null) {
-                ItemActionFactory.this.itemEffect.accept(this.dataInstance, new Pair<>(worldItemStackPair.getLeft(), stack));
+
+            if (ItemActionFactory.this.legacyEffect != null) {
+                ItemActionFactory.this.legacyEffect.accept(this.dataInstance, new Pair<>(worldAndStackReference.getLeft(), stack));
             }
-            if (worldItemStackPair.getRight().get().isEmpty() && (((EntityLinkedItemStack)worldItemStackPair.getRight().get())).apoli$getEntity() != null && ModifyEnchantmentLevelPower.isWorkableEmptyStack((((EntityLinkedItemStack)worldItemStackPair.getRight().get())).apoli$getEntity(), worldItemStackPair.getRight())) {
-                worldItemStackPair.getRight().set(ItemStack.EMPTY);
+
+            if (worldAndStackReference.getRight().get().isEmpty() && (workableEmptyStack || ModifyEnchantmentLevelPower.isWorkableEmptyStack(worldAndStackReference.getRight()))) {
+                worldAndStackReference.getRight().set(ItemStack.EMPTY);
             }
+
         }
 
     }

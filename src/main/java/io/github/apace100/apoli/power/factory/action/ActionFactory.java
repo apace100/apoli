@@ -2,15 +2,10 @@ package io.github.apace100.apoli.power.factory.action;
 
 import com.google.gson.JsonObject;
 import io.github.apace100.apoli.power.factory.Factory;
-import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
