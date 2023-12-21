@@ -11,10 +11,11 @@ import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.*;
+import net.minecraft.entity.AreaEffectCloudEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
@@ -228,54 +229,8 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("set_fall_distance"), new SerializableData()
             .add("fall_distance", SerializableDataTypes.FLOAT),
             (data, entity) -> entity.fallDistance = data.getFloat("fall_distance")));
-        register(new ActionFactory<>(Apoli.identifier("give"), new SerializableData()
-            .add("stack", SerializableDataTypes.ITEM_STACK)
-            .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
-            .add("preferred_slot", SerializableDataTypes.EQUIPMENT_SLOT, null),
-            (data, entity) -> {
-                if(!entity.getWorld().isClient()) {
-                    ItemStack stack = data.get("stack");
-                    if(stack.isEmpty()) {
-                        return;
-                    }
-                    stack = stack.copy();
-                    if(data.isPresent("item_action")) {
-                        ActionFactory<Pair<World, ItemStack>>.Instance action = data.get("item_action");
-                        action.accept(new Pair<>(entity.getWorld(), stack));
-                    }
-                    if(data.isPresent("preferred_slot") && entity instanceof LivingEntity living) {
-                        EquipmentSlot slot = data.get("preferred_slot");
-                        ItemStack stackInSlot = living.getEquippedStack(slot);
-                        if(stackInSlot.isEmpty()) {
-                            living.equipStack(slot, stack);
-                            return;
-                        } else
-                        if(ItemStack.canCombine(stackInSlot, stack) && stackInSlot.getCount() < stackInSlot.getMaxCount()) {
-                            int fit = Math.min(stackInSlot.getMaxCount() - stackInSlot.getCount(), stack.getCount());
-                            stackInSlot.increment(fit);
-                            stack.decrement(fit);
-                            if(stack.isEmpty()) {
-                                return;
-                            }
-                        }
-                    }
-                    if(entity instanceof PlayerEntity) {
-                        ((PlayerEntity)entity).getInventory().offerOrDrop(stack);
-                    } else {
-                        entity.getWorld().spawnEntity(new ItemEntity(entity.getWorld(), entity.getX(), entity.getY(), entity.getZ(), stack));
-                    }
-                }
-            }));
-        register(new ActionFactory<>(Apoli.identifier("equipped_item_action"), new SerializableData()
-            .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
-            .add("action", ApoliDataTypes.ITEM_ACTION),
-            (data, entity) -> {
-                if(entity instanceof LivingEntity) {
-                    ItemStack stack = ((LivingEntity)entity).getEquippedStack(data.get("equipment_slot"));
-                    ActionFactory<Pair<World, ItemStack>>.Instance action = data.get("action");
-                    action.accept(new Pair<>(entity.getWorld(), stack));
-                }
-            }));
+        register(GiveAction.getFactory());
+        register(EquippedItemAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("trigger_cooldown"), new SerializableData()
             .add("power", ApoliDataTypes.POWER_TYPE),
             (data, entity) -> {
