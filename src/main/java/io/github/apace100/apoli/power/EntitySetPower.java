@@ -57,7 +57,7 @@ public class EntitySetPower extends Power {
             Map.Entry<UUID, Integer> entry = entryIterator.next();
             entry.setValue(entry.getValue() - 1);
 
-            if (entry.getValue() <= 0 && this.remove(entry.getKey(), true, true)) {
+            if (entry.getValue() <= 0 && this.remove(entry.getKey(), true, false)) {
                 shouldSync = true;
             }
 
