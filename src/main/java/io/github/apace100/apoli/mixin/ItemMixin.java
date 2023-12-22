@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ItemOnItemPower;
 import io.github.apace100.apoli.power.ModifyFoodPower;
-import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.Item;
@@ -40,7 +39,7 @@ public abstract class ItemMixin {
     @Inject(method = "onClicked", at = @At("RETURN"), cancellable = true)
     private void apoli$itemOnItem(ItemStack stack, ItemStack otherStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
 
-        if(cir.getReturnValue()) {
+        if (cir.getReturnValue()) {
             return;
         }
 
@@ -50,8 +49,8 @@ public abstract class ItemMixin {
             .filter(p -> p.doesApply(otherStack, stack, clickType))
             .toList();
 
-        if(!itemOnItemPowers.isEmpty()) {
-            itemOnItemPowers.forEach(p -> p.execute(InventoryUtil.getStackReferenceFromStack(player, otherStack), InventoryUtil.getStackReferenceFromStack(player, stack), slot));
+        if (!itemOnItemPowers.isEmpty()) {
+            itemOnItemPowers.forEach(p -> p.execute(cursorStackReference, StackReference.of(slot.inventory, slot.getIndex()), slot));
             cir.setReturnValue(true);
         }
 
