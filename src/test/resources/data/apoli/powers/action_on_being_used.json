@@ -1,0 +1,18 @@
+{
+  "type": "apoli:action_on_being_used",
+  "held_item_action": {
+    "type": "apoli:remove_enchantment",
+    "enchantment": "minecraft:protection"
+  },
+  "result_item_action": {
+    "type": "apoli:remove_enchantment",
+    "enchantment": "minecraft:thorns"
+  },
+  "bientity_condition": {
+    "type": "apoli:target_condition",
+    "condition": {
+      "type": "apoli:entity_type",
+      "entity_type": "minecraft:cow"
+    }
+  }
+}

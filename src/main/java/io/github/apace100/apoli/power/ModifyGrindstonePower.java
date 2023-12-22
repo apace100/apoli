@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -10,6 +11,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -29,8 +31,8 @@ public class ModifyGrindstonePower extends Power {
     private final Predicate<CachedBlockPosition> blockCondition;
 
     private final ItemStack newResultStack;
-    private final Consumer<Pair<World, ItemStack>> resultItemAction;
-    private final Consumer<Pair<World, ItemStack>> lateItemAction;
+    private final Consumer<Pair<World, StackReference>> resultItemAction;
+    private final Consumer<Pair<World, StackReference>> lateItemAction;
     private final Consumer<Entity> entityAction;
     private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
 
@@ -38,7 +40,7 @@ public class ModifyGrindstonePower extends Power {
 
     private final Modifier experienceModifier;
 
-    public ModifyGrindstonePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> topItemCondition, Predicate<Pair<World, ItemStack>> bottomItemCondition, Predicate<Pair<World, ItemStack>> outputItemCondition, Predicate<CachedBlockPosition> blockCondition, ItemStack newResultStack, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Pair<World, ItemStack>> lateItemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, ResultType resultType, Modifier experienceModifier) {
+    public ModifyGrindstonePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> topItemCondition, Predicate<Pair<World, ItemStack>> bottomItemCondition, Predicate<Pair<World, ItemStack>> outputItemCondition, Predicate<CachedBlockPosition> blockCondition, ItemStack newResultStack, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> lateItemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, ResultType resultType, Modifier experienceModifier) {
         super(type, entity);
         this.topItemCondition = topItemCondition;
         this.bottomItemCondition = bottomItemCondition;
@@ -61,7 +63,7 @@ public class ModifyGrindstonePower extends Power {
         return bottomItemCondition == null || bottomItemCondition.test(new Pair<>(entity.getWorld(), inputBottom));
     }
 
-    public void applyAfterGrindingItemAction(ItemStack output) {
+    public void applyAfterGrindingItemAction(StackReference output) {
         if(lateItemAction == null) {
             return;
         }
@@ -88,17 +90,15 @@ public class ModifyGrindstonePower extends Power {
         return experienceModifier;
     }
 
-    public ItemStack getOutput(ItemStack inputTop, ItemStack inputBottom, ItemStack currentOutput) {
-        ItemStack output = currentOutput.copy();
+    public void setOutput(ItemStack inputTop, ItemStack inputBottom, StackReference currentOutput) {
         switch (resultType) {
-            case SPECIFIED -> output = newResultStack.copy();
-            case FROM_BOTTOM -> output = inputBottom.copy();
-            case FROM_TOP -> output = inputTop.copy();
+            case SPECIFIED -> currentOutput.set(newResultStack.copy());
+            case FROM_BOTTOM -> currentOutput.set(inputBottom.copy());
+            case FROM_TOP -> currentOutput.set(inputTop.copy());
         }
         if(resultItemAction != null) {
-            resultItemAction.accept(new Pair<>(entity.getWorld(), output));
+            resultItemAction.accept(new Pair<>(entity.getWorld(), currentOutput));
         }
-        return output;
     }
 
     public void executeActions(Optional<BlockPos> pos) {

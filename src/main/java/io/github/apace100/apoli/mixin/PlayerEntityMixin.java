@@ -4,12 +4,14 @@ import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.s2c.DismountPlayerS2CPacket;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.command.CommandOutput;
@@ -69,7 +71,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private ItemStack apoli$modifyEatenItemStack(ItemStack original) {
 
-        ItemStack newStack = original;
+        StackReference newStack = InventoryUtil.createStackReference(original);
         ModifiableFoodEntity modifiableFoodEntity = (ModifiableFoodEntity) this;
 
         List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
@@ -78,13 +80,13 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             .toList();
 
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
-            newStack = modifyFoodPower.getConsumedItemStack(newStack);
+            modifyFoodPower.setConsumedItemStackReference(newStack);
         }
 
         modifiableFoodEntity.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         modifiableFoodEntity.apoli$setOriginalFoodStack(original);
 
-        return newStack;
+        return newStack.get();
 
     }
 

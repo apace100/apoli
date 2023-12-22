@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -11,6 +12,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
@@ -27,8 +29,8 @@ import java.util.function.Predicate;
 public class EdibleItemPower extends Power implements Prioritized<EdibleItemPower> {
 
     private final Consumer<Entity> entityAction;
-    private final Consumer<Pair<World, ItemStack>> resultItemAction;
-    private final Consumer<Pair<World, ItemStack>> consumedItemAction;
+    private final Consumer<Pair<World, StackReference>> resultItemAction;
+    private final Consumer<Pair<World, StackReference>> consumedItemAction;
 
     private final Predicate<Pair<World, ItemStack>> itemCondition;
 
@@ -40,7 +42,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     private final int priority;
 
-    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, ItemStack>> consumedItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, Modifier consumingTimeModifier, List<Modifier> consumingTimeModifiers, int priority) {
+    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> consumedItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, Modifier consumingTimeModifier, List<Modifier> consumingTimeModifiers, int priority) {
         super(powerType, livingEntity);
 
         this.entityAction = entityAction;
@@ -80,14 +82,14 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
         }
     }
 
-    public ItemStack executeItemActions(ItemStack consumedStack) {
+    public StackReference executeItemActions(StackReference consumedStack) {
 
         if (consumedItemAction != null) {
             consumedItemAction.accept(new Pair<>(entity.getWorld(), consumedStack));
         }
 
-        ItemStack resultStack = this.resultStack != null ? this.resultStack.copy() : null;
-        if (resultStack != null && resultItemAction != null) {
+        StackReference resultStack = this.resultStack != null ? InventoryUtil.createStackReference(this.resultStack.copy()) : StackReference.EMPTY;
+        if (resultStack != StackReference.EMPTY && resultItemAction != null) {
             resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
         }
 

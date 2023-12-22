@@ -7,6 +7,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -27,14 +28,14 @@ public class ModifyCraftingPower extends ValueModifyingPower implements Prioriti
     private final Predicate<Pair<World, ItemStack>> itemCondition;
 
     private final ItemStack newStack;
-    private final Consumer<Pair<World, ItemStack>> itemAction;
-    private final Consumer<Pair<World, ItemStack>> itemActionAfterCrafting;
+    private final Consumer<Pair<World, StackReference>> itemAction;
+    private final Consumer<Pair<World, StackReference>> itemActionAfterCrafting;
     private final Consumer<Entity> entityAction;
     private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
 
     private final int priority;
 
-    public ModifyCraftingPower(PowerType<?> type, LivingEntity entity, Identifier recipeIdentifier, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> itemAction, Consumer<Pair<World, ItemStack>> itemActionAfterCrafting, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
+    public ModifyCraftingPower(PowerType<?> type, LivingEntity entity, Identifier recipeIdentifier, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack newStack, Consumer<Pair<World, StackReference>> itemAction, Consumer<Pair<World, StackReference>> itemActionAfterCrafting, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
         super(type, entity);
         this.recipeIdentifier = recipeIdentifier;
         this.itemCondition = itemCondition;
@@ -56,20 +57,22 @@ public class ModifyCraftingPower extends ValueModifyingPower implements Prioriti
             && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), originalResultStack)));
     }
 
-    public void applyAfterCraftingItemAction(ItemStack output) {
+    public void applyAfterCraftingItemAction(StackReference output) {
         if (itemActionAfterCrafting != null) {
             itemActionAfterCrafting.accept(new Pair<>(entity.getWorld(), output));
         }
     }
 
-    public ItemStack getNewResult(ItemStack originalResultStack) {
+    public StackReference getNewResult(StackReference resultStack) {
 
-        ItemStack newResultStack = newStack != null ? newStack.copy() : originalResultStack;
+        if (newStack != null) {
+            resultStack.set(newStack.copy());
+        }
         if (itemAction != null) {
-            itemAction.accept(new Pair<>(entity.getWorld(), newResultStack));
+            itemAction.accept(new Pair<>(entity.getWorld(), resultStack));
         }
 
-        return newResultStack;
+        return resultStack;
 
     }
 

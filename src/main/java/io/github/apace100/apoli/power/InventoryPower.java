@@ -9,10 +9,13 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.passive.AbstractDonkeyEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.screen.*;
@@ -144,6 +147,20 @@ public class InventoryPower extends Power implements Active, Inventory {
         for(int i = 0; i < containerSize; i++) {
             setStack(i, ItemStack.EMPTY);
         }
+    }
+    public StackReference getStackReference(int slot) {
+        return new StackReference() {
+            @Override
+            public ItemStack get() {
+                return container.get(slot);
+            }
+
+            @Override
+            public boolean set(ItemStack stack) {
+                container.set(slot, stack);
+                return true;
+            }
+        };
     }
 
     public DefaultedList<ItemStack> getContainer() {

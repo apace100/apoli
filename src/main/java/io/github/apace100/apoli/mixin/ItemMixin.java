@@ -39,7 +39,7 @@ public abstract class ItemMixin {
     @Inject(method = "onClicked", at = @At("RETURN"), cancellable = true)
     private void apoli$itemOnItem(ItemStack stack, ItemStack otherStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
 
-        if(cir.getReturnValue()) {
+        if (cir.getReturnValue()) {
             return;
         }
 
@@ -49,8 +49,8 @@ public abstract class ItemMixin {
             .filter(p -> p.doesApply(otherStack, stack, clickType))
             .toList();
 
-        if(!itemOnItemPowers.isEmpty()) {
-            itemOnItemPowers.forEach(p -> p.execute(otherStack, stack, slot));
+        if (!itemOnItemPowers.isEmpty()) {
+            itemOnItemPowers.forEach(p -> p.execute(cursorStackReference, StackReference.of(slot.inventory, slot.getIndex()), slot));
             cir.setReturnValue(true);
         }
 
