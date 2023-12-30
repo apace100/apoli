@@ -444,6 +444,19 @@ public class ApoliDataTypes {
         Text.Serializer::toJsonTree
     );
 
+    public static final SerializableDataType<Integer> NON_NEGATIVE_INT = SerializableDataType.boundNumber(
+        SerializableDataTypes.INT, 0, Integer.MAX_VALUE,
+        value -> (min, max) -> {
+
+            if (value < min) {
+                throw new IllegalArgumentException("Expected value to be equal or greater than " + min + "! (current value: " + value + ")");
+            }
+
+            return value;
+
+        }
+    );
+
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return new SerializableDataType<>(
             ClassUtil.castClass(ConditionFactory.Instance.class),
