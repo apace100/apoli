@@ -30,6 +30,7 @@ public class EntitySetPower extends Power {
     private final Set<UUID> tempUuids = new HashSet<>();
     private final Map<UUID, Integer> tempEntities = new ConcurrentHashMap<>();
 
+    private Integer startTicks = null;
     private boolean removedTemps = false;
 
     public EntitySetPower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove, int tickRate) {
@@ -54,7 +55,11 @@ public class EntitySetPower extends Power {
             PowerHolderComponent.syncPower(this.entity, this.type);
         }
 
-        else {
+        else if (startTicks == null) {
+            startTicks = entity.age % tickRate;
+        }
+
+        else if (entity.age % tickRate == startTicks) {
             tickTempEntities();
         }
 
@@ -62,7 +67,7 @@ public class EntitySetPower extends Power {
 
     private void tickTempEntities() {
 
-        if (tempEntities.isEmpty() || entity.age % tickRate != 0) {
+        if (tempEntities.isEmpty()) {
             return;
         }
 
@@ -302,7 +307,7 @@ public class EntitySetPower extends Power {
             new SerializableData()
                 .add("action_on_add", ApoliDataTypes.BIENTITY_ACTION, null)
                 .add("action_on_remove", ApoliDataTypes.BIENTITY_ACTION, null)
-                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 100),
+                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 1),
             data -> (powerType, livingEntity) -> new EntitySetPower(
                 powerType,
                 livingEntity,
