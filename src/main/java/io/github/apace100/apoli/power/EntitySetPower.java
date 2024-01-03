@@ -165,7 +165,7 @@ public class EntitySetPower extends Power {
     private boolean remove(UUID uuid, boolean executeActions, boolean shouldSync) {
 
         Entity entity = getEntity(uuid, false);
-        if (!entityUuids.remove(uuid) | entities.remove(uuid) == null | tempEntities.remove(uuid) == null) {
+        if (!entityUuids.remove(uuid) | entities.remove(uuid) == null | !tempUuids.remove(uuid) | tempEntities.remove(uuid) == null) {
             return false;
         }
 
