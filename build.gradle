@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.4-SNAPSHOT'
+	id 'fabric-loom' version '1.5-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -84,7 +84,6 @@ loom {
 dependencies {
 
 	implementation 'com.demonwav.mcdev:annotations:1.0'
-	implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.2"))
 
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
