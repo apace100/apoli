@@ -319,7 +319,7 @@ public class EntitySetPower extends Power {
                 data.get("action_on_remove"),
                 data.get("tick_rate")
             )
-        );
+        ).allowCondition();
     }
 
 }
