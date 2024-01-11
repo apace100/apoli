@@ -15,11 +15,15 @@ public class AddToSetAction {
 
     public static void action(SerializableData.Instance data, Pair<Entity, Entity> actorAndTarget) {
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(actorAndTarget.getLeft()).orElse(null);
+        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(actorAndTarget.getLeft());
         PowerType<?> powerType = data.get("set");
 
-        if (component != null && powerType != null && component.getPower(powerType) instanceof EntitySetPower entitySetPower) {
-            entitySetPower.add(actorAndTarget.getRight(), data.get("time_limit"));
+        if (component == null || powerType == null || !(component.getPower(powerType) instanceof EntitySetPower entitySetPower)) {
+            return;
+        }
+
+        if (!entitySetPower.validateEntities() | entitySetPower.add(actorAndTarget.getRight(), data.get("time_limit"))) {
+            PowerHolderComponent.syncPower(actorAndTarget.getLeft(), powerType);
         }
 
     }
@@ -29,7 +33,7 @@ public class AddToSetAction {
             Apoli.identifier("add_to_set"),
             new SerializableData()
                 .add("set", ApoliDataTypes.POWER_TYPE)
-                .add("time_limit", SerializableDataTypes.INT, null),
+                .add("time_limit", SerializableDataTypes.POSITIVE_INT, null),
             AddToSetAction::action
         );
     }

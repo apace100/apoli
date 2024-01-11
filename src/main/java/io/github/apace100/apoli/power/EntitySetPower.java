@@ -31,6 +31,8 @@ public class EntitySetPower extends Power {
     private final Map<UUID, Integer> tempEntities = new ConcurrentHashMap<>();
 
     private Integer startTicks = null;
+
+    private boolean wasActive = false;
     private boolean removedTemps = false;
 
     public EntitySetPower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove, int tickRate) {
@@ -51,21 +53,35 @@ public class EntitySetPower extends Power {
     public void tick() {
 
         if (removedTemps) {
-            removedTemps = false;
+
+            this.removedTemps = false;
             PowerHolderComponent.syncPower(this.entity, this.type);
+
+            return;
+
         }
 
-        else if (startTicks == null) {
-            startTicks = entity.age % tickRate;
-        }
+        if (this.isActive()) {
 
-        else if (entity.age % tickRate == startTicks) {
-            tickTempEntities();
+            if (startTicks == null) {
+                this.startTicks = entity.age % tickRate;
+                return;
+            }
+
+            if (entity.age % tickRate == startTicks) {
+                this.tickTempEntities();
+            }
+
+            this.wasActive = true;
+
+        } else if (wasActive) {
+            this.startTicks = null;
+            this.wasActive = false;
         }
 
     }
 
-    private void tickTempEntities() {
+    protected void tickTempEntities() {
 
         if (tempEntities.isEmpty()) {
             return;
@@ -79,7 +95,7 @@ public class EntitySetPower extends Power {
             Map.Entry<UUID, Integer> entry = entryIterator.next();
             entry.setValue(entry.getValue() - 1);
 
-            if (entry.getValue() <= 0 && this.remove(entry.getKey(), true, false)) {
+            if (entry.getValue() <= 0 && this.remove(entry.getKey(), true)) {
                 shouldSync = true;
             }
 
@@ -91,7 +107,7 @@ public class EntitySetPower extends Power {
 
     }
 
-    private boolean validateEntities() {
+    public boolean validateEntities() {
 
         MinecraftServer server = entity.getServer();
         boolean valid = true;
@@ -106,7 +122,7 @@ public class EntitySetPower extends Power {
                 continue;
             }
 
-            this.remove(uuid, false, false);
+            this.remove(uuid, false);
             valid = false;
 
         }
@@ -121,21 +137,21 @@ public class EntitySetPower extends Power {
 
     public boolean add(Entity entity, @Nullable Integer time) {
 
-        if (entity == null || entity.isRemoved() || entity.getWorld().isClient || (time != null && time <= 0)) {
+        if (entity == null || entity.isRemoved() || entity.getWorld().isClient) {
             return false;
         }
 
         UUID uuid = entity.getUuid();
+        boolean addedToSet = false;
 
-        boolean alreadyAdded = entityUuids.contains(uuid);
-        boolean validStoredEntities = validateEntities();
+        if (time != null) {
+            addedToSet |= tempUuids.add(uuid);
+            tempEntities.compute(uuid, (prevUuid, prevTime) -> time);
+        }
 
-        tempUuids.add(uuid);
-        tempEntities.compute(uuid, (prevUuid, prevTime) -> time == null ? prevTime : time);
+        if (!entityUuids.contains(uuid)) {
 
-        if (!alreadyAdded) {
-
-            entityUuids.add(uuid);
+            addedToSet |= entityUuids.add(uuid);
             entities.put(uuid, entity);
 
             if (actionOnAdd != null) {
@@ -144,40 +160,27 @@ public class EntitySetPower extends Power {
 
         }
 
-        if (!alreadyAdded || !validStoredEntities) {
-            PowerHolderComponent.syncPower(this.entity, this.type);
-        }
-
-        return alreadyAdded;
+        return addedToSet;
 
     }
 
-    public boolean remove(Entity entity, boolean shouldSync) {
+    public boolean remove(@Nullable Entity entity) {
 
         if (entity != null && !entity.getWorld().isClient) {
-            return remove(entity.getUuid(), true, shouldSync);
+            return remove(entity.getUuid(), true);
         }
 
         return false;
 
     }
 
-    private boolean remove(UUID uuid, boolean executeActions, boolean shouldSync) {
-
-        Entity entity = getEntity(uuid, false);
-        if (!entityUuids.remove(uuid) | entities.remove(uuid) == null | !tempUuids.remove(uuid) | tempEntities.remove(uuid) == null) {
-            return false;
-        }
+    protected boolean remove(UUID uuid, boolean executeActions) {
 
         if (executeActions && actionOnRemove != null) {
-            actionOnRemove.accept(new Pair<>(this.entity, entity));
+            actionOnRemove.accept(new Pair<>(this.entity, this.getEntity(uuid, false)));
         }
 
-        if (shouldSync) {
-            PowerHolderComponent.syncPower(this.entity, this.type);
-        }
-
-        return true;
+        return entityUuids.remove(uuid) | entities.remove(uuid) != null | tempUuids.remove(uuid) | tempEntities.remove(uuid) != null;
 
     }
 
@@ -199,14 +202,14 @@ public class EntitySetPower extends Power {
 
         }
 
-        int prevSetSize = entityUuids.size() + tempUuids.size();
+        boolean wasNotEmpty = !entityUuids.isEmpty() || !tempUuids.isEmpty();
 
         tempUuids.clear();
         tempEntities.clear();
         entityUuids.clear();
         entities.clear();
 
-        if (prevSetSize > 0) {
+        if (wasNotEmpty) {
             PowerHolderComponent.syncPower(this.entity, this.type);
         }
 
@@ -239,8 +242,9 @@ public class EntitySetPower extends Power {
             entity = MiscUtil.getEntityByUuid(uuid, server);
         }
 
-        if (callRemove && (entity == null || entity.isRemoved())) {
-            this.remove(uuid, false, true);
+        if (callRemove && (server != null && (entity == null || entity.isRemoved()))) {
+            this.remove(uuid, false);
+            PowerHolderComponent.syncPower(this.entity, this.type);
         }
 
         return entity;
