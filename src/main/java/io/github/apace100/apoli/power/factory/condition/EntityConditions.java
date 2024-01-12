@@ -31,11 +31,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandOutput;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -217,29 +212,7 @@ public class EntityConditions {
             .add("entity_type", SerializableDataTypes.ENTITY_TYPE),
             (data, entity) -> entity.getType() == data.get("entity_type")));
         register(ScoreboardCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("command"), new SerializableData()
-            .add("command", SerializableDataTypes.STRING)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT),
-            (data, entity) -> {
-                MinecraftServer server = entity.getWorld().getServer();
-                if(server != null) {
-                    boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
-                    ServerCommandSource source = new ServerCommandSource(
-                        Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
-                        entity.getPos(),
-                        entity.getRotationClient(),
-                        entity.getWorld() instanceof ServerWorld ? (ServerWorld)entity.getWorld() : null,
-                        Apoli.config.executeCommand.permissionLevel,
-                        entity.getName().getString(),
-                        entity.getDisplayName(),
-                        server,
-                        entity);
-                    int output = server.getCommandManager().executeWithPrefix(source, data.getString("command"));
-                    return ((Comparison)data.get("comparison")).compare(output, data.getInt("compare_to"));
-                }
-                return false;
-            }));
+        register(CommandCondition.getFactory());
         register(PredicateCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("fall_distance"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)

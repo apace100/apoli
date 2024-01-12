@@ -34,7 +34,7 @@ public class SelectorAction {
             entity.getRotationClient(),
             (ServerWorld) entity.getWorld(),
             2,
-            entity.getEntityName(),
+            entity.getNameForScoreboard(),
             entity.getName(),
             server,
             entity

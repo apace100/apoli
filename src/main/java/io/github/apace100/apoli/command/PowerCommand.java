@@ -119,9 +119,9 @@ public class PowerCommand {
 		if (processedTargetsSize == 0) {
 
 			if (targetsSize == 1) {
-				source.sendError(Text.translatable("commands.apoli.grant.fail.single", targetName, powerTypeName, powerSource));
+				source.sendError(Text.translatable("commands.apoli.grant.fail.single", targetName, powerTypeName, powerSource.toString()));
 			} else {
-				source.sendError(Text.translatable("commands.apoli.grant.fail.multiple", targetsSize, powerTypeName, powerSource));
+				source.sendError(Text.translatable("commands.apoli.grant.fail.multiple", targetsSize, powerTypeName, powerSource.toString()));
 			}
 
 			return processedTargetsSize;
@@ -131,9 +131,9 @@ public class PowerCommand {
 		Text processedTargetName = processedTargets.get(0).getName();
 		if (isSourceSpecified) {
 			if (processedTargetsSize == 1) {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.single", processedTargetName, powerTypeName, powerSource), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.single", processedTargetName, powerTypeName, powerSource.toString()), true);
 			} else {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.multiple", processedTargetsSize, powerTypeName, powerSource), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.multiple", processedTargetsSize, powerTypeName, powerSource.toString()), true);
 			}
 		} else {
 			if (processedTargetsSize == 1) {
@@ -180,9 +180,9 @@ public class PowerCommand {
 		if (processedTargetsSize == 0) {
 
 			if (targetsSize == 1) {
-				source.sendError(Text.translatable("commands.apoli.revoke.fail.single", targetName, powerTypeName, powerSource));
+				source.sendError(Text.translatable("commands.apoli.revoke.fail.single", targetName, powerTypeName, powerSource.toString()));
 			} else {
-				source.sendError(Text.translatable("commands.apoli.revoke.fail.multiple", powerTypeName, powerSource));
+				source.sendError(Text.translatable("commands.apoli.revoke.fail.multiple", powerTypeName, powerSource.toString()));
 			}
 
 			return processedTargetsSize;
@@ -192,9 +192,9 @@ public class PowerCommand {
 		Text processedTargetName = processedTargets.get(0).getName();
 		if (isSourceSpecified) {
 			if (processedTargetsSize == 1) {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.single", processedTargetName, powerTypeName, powerSource), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.single", processedTargetName, powerTypeName, powerSource.toString()), true);
 			} else {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.multiple", processedTargetsSize, powerTypeName, powerSource), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.multiple", processedTargetsSize, powerTypeName, powerSource.toString()), true);
 			}
 		} else {
 			if (processedTargetsSize == 1) {
@@ -241,9 +241,9 @@ public class PowerCommand {
 
 		if (processedTargetsSize == 0) {
 			if (targetsSize == 1) {
-				source.sendError(Text.translatable("commands.apoli.revoke_all.fail.single", targetName, powerSource));
+				source.sendError(Text.translatable("commands.apoli.revoke_all.fail.single", targetName, powerSource.toString()));
 			} else {
-				source.sendError(Text.translatable("commands.apoli.revoke_all.fail.multiple", powerSource));
+				source.sendError(Text.stringifiedTranslatable("commands.apoli.revoke_all.fail.multiple", powerSource));
 			}
 		} else {
 
@@ -251,9 +251,9 @@ public class PowerCommand {
 			int finalRevokedPowers = revokedPowers;
 
 			if (processedTargetsSize == 1) {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_all.success.single", processedTargetName, finalRevokedPowers, powerSource), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_all.success.single", processedTargetName, finalRevokedPowers, powerSource.toString()), true);
 			} else {
-				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_all.success.multiple", processedTargetsSize, finalRevokedPowers, powerSource), true);
+				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_all.success.multiple", processedTargetsSize, finalRevokedPowers, powerSource.toString()), true);
 			}
 
 		}
@@ -362,7 +362,7 @@ public class PowerCommand {
 			source.sendError(Text.translatable("commands.apoli.sources.fail", target.getName(), powerType.getName()));
 		} else {
 			int finalPowers = powers;
-			source.sendFeedback(() -> Text.translatable("commands.apoli.sources.pass", target.getName(), finalPowers, powerType.getName(), powerSources), true);
+			source.sendFeedback(() -> Text.translatable("commands.apoli.sources.pass", target.getName(), finalPowers, powerType.getName(), powerSources.toString()), true);
 		}
 
 		return powers;

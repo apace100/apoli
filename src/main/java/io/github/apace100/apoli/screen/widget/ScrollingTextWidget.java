@@ -26,7 +26,7 @@ public class ScrollingTextWidget extends AbstractTextWidget {
     }
 
     @Override
-    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
 
         int left = this.getX() + 2;
         int right = this.getX() + this.getWidth() - 2;
@@ -35,6 +35,11 @@ public class ScrollingTextWidget extends AbstractTextWidget {
 
         drawScrollingText(context, getTextRenderer(), this.getMessage(), textAlignment, left, top, right, bottom, getTextColor(), hasShadow);
 
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return false;
     }
 
     protected static void drawScrollingText(DrawContext context, TextRenderer textRenderer, Text text, TextAlignment textAlignment, int left, int top, int right, int bottom, int color, boolean hasShadow) {

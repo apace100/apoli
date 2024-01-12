@@ -51,7 +51,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
 
     private final GameEventListener.TriggerOrder triggerOrder;
     private final ListenerData vibrationListenerData;
-    private final Callback vibrationCallback;
+    private final io.github.apace100.apoli.power.GameEventListenerPower.Callback vibrationCallback;
 
     private final boolean listenToEntityEvents;
     private final boolean listenToBlockEvents;
@@ -79,7 +79,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         this.triggerOrder = triggerOrder;
 
         this.vibrationListenerData = new ListenerData();
-        this.vibrationCallback = new Callback();
+        this.vibrationCallback = new io.github.apace100.apoli.power.GameEventListenerPower.Callback();
 
         this.acceptedGameEventTag = acceptedGameEventTag;
         this.showParticle = showParticle;
@@ -122,7 +122,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
     }
 
     @Override
-    public Callback getVibrationCallback() {
+    public io.github.apace100.apoli.power.GameEventListenerPower.Callback getVibrationCallback() {
         return vibrationCallback;
     }
 

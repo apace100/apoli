@@ -2,7 +2,10 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
@@ -18,6 +21,7 @@ import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.mixin.EntityAttributeModifierAccessor;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import io.github.apace100.calio.util.DynamicIdentifier;
 import io.github.ladysnake.pal.Pal;
@@ -153,7 +157,7 @@ public class ApoliDataTypes {
             dataInst.set("attribute", inst.getAttribute());
             dataInst.set("operation", inst.getModifier().getOperation());
             dataInst.set("value", inst.getModifier().getValue());
-            dataInst.set("name", inst.getModifier().getName());
+            dataInst.set("name", ((EntityAttributeModifierAccessor) inst.getModifier()).getName());
             return dataInst;
         });
 
@@ -439,10 +443,10 @@ public class ApoliDataTypes {
             }
 
             //  Otherwise, serialize it as a text as usual
-            return Text.Serializer.fromJson(jsonElement);
+            return Text.Serialization.fromJsonTree(jsonElement);
 
         },
-        Text.Serializer::toJsonTree
+        Text.Serialization::toJsonTree
     );
 
     public static final SerializableDataType<Integer> NON_NEGATIVE_INT = SerializableDataType.boundNumber(
