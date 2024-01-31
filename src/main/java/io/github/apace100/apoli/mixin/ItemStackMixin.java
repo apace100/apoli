@@ -21,7 +21,9 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsageContext;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
@@ -326,6 +328,21 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, Potential
 
         user.setCurrentHand(hand);
         return TypedActionResult.consume(stackInHand);
+
+    }
+
+    @WrapOperation(method = "useOnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;useOnBlock(Lnet/minecraft/item/ItemUsageContext;)Lnet/minecraft/util/ActionResult;"))
+    private ActionResult apoli$consumeUsableOnBlockCustomFood(Item instance, ItemUsageContext context, Operation<ActionResult> original) {
+
+        PlayerEntity user = context.getPlayer();
+        EdibleItemPower edibleItemPower = this.apoli$getEdiblePower().orElse(null);
+
+        if (user == null || edibleItemPower == null || !user.canConsume(edibleItemPower.getFoodComponent().isAlwaysEdible())) {
+            return original.call(instance, context);
+        }
+
+        user.setCurrentHand(context.getHand());
+        return ActionResult.CONSUME_PARTIAL;
 
     }
 
