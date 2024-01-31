@@ -19,6 +19,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.ArgumentWrapper;
+import io.github.apace100.calio.util.DynamicIdentifier;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -404,7 +405,7 @@ public class ApoliDataTypes {
                 }
 
                 Pattern pattern = Pattern.compile(key);
-                Identifier id = new Identifier(jsonPrimitive.getAsString());
+                Identifier id = DynamicIdentifier.of(jsonPrimitive);
 
                 regexMap.put(pattern, id);
 
