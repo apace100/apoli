@@ -51,24 +51,14 @@ public class EntityConditions {
     public static void register() {
         MetaConditions.register(ApoliDataTypes.ENTITY_CONDITION, EntityConditions::register);
         register(BlockCollisionCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("brightness"), new SerializableData()
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.FLOAT),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.getBrightnessAtEyes(), data.getFloat("compare_to"))));
+        register(BrightnessCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("daytime"), new SerializableData(), (data, entity) -> entity.getWorld().getTimeOfDay() % 24000L < 13000L));
         register(new ConditionFactory<>(Apoli.identifier("time_of_day"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.INT), (data, entity) ->
             ((Comparison)data.get("comparison")).compare(entity.getWorld().getTimeOfDay() % 24000L, data.getInt("compare_to"))));
         register(new ConditionFactory<>(Apoli.identifier("fall_flying"), new SerializableData(), (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()));
-        register(new ConditionFactory<>(Apoli.identifier("exposed_to_sun"), new SerializableData(), (data, entity) -> {
-            if (entity.getWorld().isDay() && !((EntityAccessor) entity).callIsBeingRainedOn()) {
-                float f = entity.getBrightnessAtEyes();
-                BlockPos blockPos = entity.getVehicle() instanceof BoatEntity ? (BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ())).up() : BlockPos.ofFloored(entity.getX(), (double) Math.round(entity.getY()), entity.getZ());
-                return f > 0.5F && entity.getWorld().isSkyVisible(blockPos);
-            }
-            return false;
-        }));
+        register(ExposedToSunCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("in_rain"), new SerializableData(), (data, entity) -> ((EntityAccessor) entity).callIsBeingRainedOn()));
         register(new ConditionFactory<>(Apoli.identifier("invisible"), new SerializableData(), (data, entity) -> entity.isInvisible()));
         register(new ConditionFactory<>(Apoli.identifier("on_fire"), new SerializableData(), (data, entity) -> entity.isOnFire()));
