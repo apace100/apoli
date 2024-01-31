@@ -60,14 +60,19 @@ public class ReplaceLootTablePower extends Power {
     }
 
     public boolean doesApply(LootContext context) {
-        ItemStack toolStack = context.hasParameter(LootContextParameters.TOOL) ? context.requireParameter(LootContextParameters.TOOL) : ItemStack.EMPTY;
-        return doesApply(context.get(LootContextParameters.THIS_ENTITY), toolStack, SavedBlockPosition.fromLootContext(context));
+
+        Entity contextEntity = context.get(LootContextParameters.THIS_ENTITY);
+        ItemStack toolStack = context.hasParameter(LootContextParameters.TOOL) ? context.get(LootContextParameters.TOOL) : ItemStack.EMPTY;
+        SavedBlockPosition savedBlockPosition = SavedBlockPosition.fromLootContext(context);
+
+        return doesApply(contextEntity, toolStack, savedBlockPosition);
+
     }
 
-    public boolean doesApply(Entity thisEntity, ItemStack toolStack, SavedBlockPosition cachedBlock) {
-        return (biEntityCondition != null && biEntityCondition.test(new Pair<>(entity, thisEntity)))
-            || (itemCondition != null && (itemCondition.test(new Pair<>(entity.getWorld(), toolStack))))
-            || (blockCondition != null && (blockCondition.test(cachedBlock)));
+    public boolean doesApply(Entity contextEntity, ItemStack toolStack, SavedBlockPosition cachedBlock) {
+        return (biEntityCondition == null || biEntityCondition.test(new Pair<>(entity, contextEntity)))
+            && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), toolStack)))
+            && (blockCondition == null || blockCondition.test(cachedBlock));
     }
 
     @Nullable
