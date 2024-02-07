@@ -11,6 +11,7 @@ import io.github.apace100.apoli.access.PotentiallyEdibleItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import io.github.apace100.apoli.power.EdibleItemPower;
+import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.PreventItemUsePower;
 import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.Entity;
@@ -36,9 +37,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Optional;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin implements EntityLinkedItemStack, PotentiallyEdibleItemStack {
@@ -97,11 +98,24 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, Potential
 
     }
 
-    @Inject(method = "copy", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setBobbingAnimationTime(I)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void copyNewParams(CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack) {
-        if (this.apoli$holdingEntity != null) {
-            ((EntityLinkedItemStack)itemStack).apoli$setEntity(apoli$holdingEntity);
+    @ModifyReturnValue(method = "copy", at = @At("RETURN"))
+    private ItemStack apoli$passHolderOnCopy(ItemStack original) {
+
+        Entity holder = this.apoli$getEntity();
+        if (holder != null) {
+
+            if (original.isEmpty()) {
+                original = ModifyEnchantmentLevelPower.getOrCreateWorkableEmptyStack(holder);
+            }
+
+            else {
+                ((EntityLinkedItemStack) original).apoli$setEntity(holder);
+            }
+
         }
+
+        return original;
+
     }
 
     @Inject(method = "finishUsing", at = @At("HEAD"))

@@ -67,8 +67,6 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
             .computeIfAbsent(entity.getUuid(), uuid -> new ConcurrentHashMap<>())
             .compute(this, (power, cache) -> new Pair<>(0, false));
 
-        getOrCreateWorkableEmptyStack(entity);
-
     }
 
     @Override
@@ -117,6 +115,10 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     }
 
     public static ItemStack getOrCreateWorkableEmptyStack(Entity entity) {
+
+        if (!isInEnchantmentMap(entity)) {
+            return ItemStack.EMPTY;
+        }
 
         UUID uuid = entity.getUuid();
         if (MODIFIED_EMPTY_STACKS.containsKey(uuid)) {
