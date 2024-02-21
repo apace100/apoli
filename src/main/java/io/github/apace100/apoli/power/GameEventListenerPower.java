@@ -8,11 +8,15 @@ import io.github.apace100.apoli.util.HudRender;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.advancement.criterion.Criteria;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.GameEventTags;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -197,14 +201,69 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
 
         @Override
         public boolean canAccept(GameEvent gameEvent, GameEvent.Emitter emitter) {
-            return canUse()
-                && Vibrations.Callback.super.canAccept(gameEvent, emitter)
-                && (acceptedGameEvents.isEmpty() || acceptedGameEvents.contains(gameEvent));
+
+            if (!GameEventListenerPower.this.canUse() || !this.isAccepted(gameEvent)) {
+                return false;
+            }
+
+            emittedByEntity: {
+
+                Entity sourceEntity = emitter.sourceEntity();
+                if (sourceEntity == null) {
+                    break emittedByEntity;
+                }
+
+                if (sourceEntity.isSpectator() || sourceEntity.occludeVibrationSignals()) {
+                    return false;
+                }
+
+                //  TODO: Add a bi-entity condition field to determine whether the source entity should avoid vibrations
+                //        and a tag field for overriding the game event tag that determines whether a game event can be avoided
+                if (sourceEntity.bypassesSteppingEffects() && gameEvent.isIn(GameEventTags.IGNORE_VIBRATIONS_SNEAKING)) {
+
+                    if (this.triggersAvoidCriterion() && sourceEntity instanceof ServerPlayerEntity sourcePlayer) {
+                        Criteria.AVOID_VIBRATION.trigger(sourcePlayer);
+                    }
+
+                    return false;
+
+                }
+
+            }
+
+            emittedByBlockState: {
+
+                BlockState affectedState = emitter.affectedState();
+                if (affectedState == null) {
+                    break emittedByBlockState;
+                }
+
+                //  TODO: Add a block condition field for determining if the affected block state is considered to dampen vibrations
+                return !affectedState.isIn(BlockTags.DAMPENS_VIBRATIONS);
+
+            }
+
+            return true;
+
+        }
+
+        @Override
+        public boolean triggersAvoidCriterion() {
+            //  TODO: Add a boolean field for determining if the callback for this power
+            //        should trigger the criterion for avoiding vibrations
+            return true;
         }
 
         @Override
         public TagKey<GameEvent> getTag() {
-            return acceptedGameEventTag;
+            return acceptedGameEventTag != null
+                ? acceptedGameEventTag
+                : Vibrations.Callback.super.getTag();
+        }
+
+        public boolean isAccepted(GameEvent gameEvent) {
+            return (acceptedGameEventTag == null || gameEvent.isIn(acceptedGameEventTag))
+                 | (acceptedGameEvents.isEmpty() || acceptedGameEvents.contains(gameEvent));
         }
 
     }
@@ -222,7 +281,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
                 .add("range", SerializableDataTypes.INT, 16)
                 .add("event", SerializableDataTypes.GAME_EVENT, null)
                 .add("events", SerializableDataTypes.GAME_EVENTS, null)
-                .add("tag", SerializableDataTypes.GAME_EVENT_TAG, GameEventTags.VIBRATIONS)
+                .add("tag", SerializableDataTypes.GAME_EVENT_TAG, null)
                 .addFunctionedDefault("event_tag", SerializableDataTypes.GAME_EVENT_TAG, data -> data.get("tag"))
                 .add("show_particle", SerializableDataTypes.BOOLEAN, true)
                 .add("entity", SerializableDataTypes.BOOLEAN, true)
