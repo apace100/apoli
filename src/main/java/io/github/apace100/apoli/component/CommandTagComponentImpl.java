@@ -12,55 +12,64 @@ import java.util.Set;
 
 public class CommandTagComponentImpl implements CommandTagComponent {
 
-    private final Set<String> commandTags;
-    private final Entity provider;
+    private final Set<String> syncedCommandTags;
+    private final Entity entity;
 
-    public CommandTagComponentImpl(Entity provider) {
-        this.commandTags = new HashSet<>();
-        this.provider = provider;
+    private boolean dirty;
+
+    public CommandTagComponentImpl(Entity entity) {
+        this.syncedCommandTags = new HashSet<>();
+        this.entity = entity;
     }
 
     @Override
-    public Set<String> getTags() {
-        return commandTags;
+    public Set<String> getCommandTags() {
+        return syncedCommandTags;
     }
 
     @Override
-    public void setTags(Set<String> commandTags) {
-        this.commandTags.clear();
-        this.commandTags.addAll(commandTags);
-    }
+    public void setCommandTags(Set<String> commandTags) {
 
-    @Override
-    public boolean addTag(String commandTag) {
-        return this.commandTags.add(commandTag);
-    }
-
-    @Override
-    public boolean removeTag(String commandTag) {
-        return this.commandTags.remove(commandTag);
-    }
-
-    @Override
-    public void loadServerside() {
-
-        Set<String> originalCommandTags = ((EntityAccessor) provider).getOriginalCommandTags();
-
-        if (!commandTags.equals(originalCommandTags)) {
-            this.setTags(originalCommandTags);
-            CommandTagComponent.KEY.sync(provider);
+        if (this.syncedCommandTags.equals(commandTags)) {
+            return;
         }
 
+        this.syncedCommandTags.clear();
+        this.syncedCommandTags.addAll(commandTags);
+
+        this.dirty = true;
+
+    }
+
+    @Override
+    public boolean addCommandTag(String commandTag, boolean originallyAdded) {
+        return originallyAdded
+            && this.syncedCommandTags.add(commandTag)
+            && (this.dirty = true);
+    }
+
+    @Override
+    public boolean removeCommandTag(String commandTag) {
+        return this.syncedCommandTags.remove(commandTag)
+            && (this.dirty = true);
+    }
+
+    @Override
+    public void sync(boolean force) {
+        if (force || dirty) {
+            this.dirty = false;
+            CommandTagComponent.KEY.sync(entity);
+        }
     }
 
     @Override
     public void readFromNbt(NbtCompound tag) {
 
         NbtList commandTagsNbt = tag.getList("Tags", NbtElement.STRING_TYPE);
-        this.commandTags.clear();
+        this.syncedCommandTags.clear();
 
-        for (int i = 0; i < commandTagsNbt.size(); ++i) {
-            this.commandTags.add(commandTagsNbt.getString(i));
+        for (int i = 0; i < commandTagsNbt.size(); i++) {
+            this.syncedCommandTags.add(commandTagsNbt.getString(i));
         }
 
     }
@@ -69,7 +78,8 @@ public class CommandTagComponentImpl implements CommandTagComponent {
     public void writeToNbt(NbtCompound tag) {
 
         NbtList commandTagsNbt = new NbtList();
-        this.commandTags.stream()
+        ((EntityAccessor) entity).getOriginalCommandTags()
+            .stream()
             .map(NbtString::of)
             .forEach(commandTagsNbt::add);
 

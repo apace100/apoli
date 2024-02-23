@@ -86,8 +86,6 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Shadow public abstract World getWorld();
 
-    @Shadow public abstract Set<String> getCommandTags();
-
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
         if(PowerHolderComponent.hasPower((Entity)(Object)this, IgnoreWaterPower.class)) {
@@ -320,47 +318,27 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     }
 
-    @Unique
-    private boolean apoli$shouldSyncCommandTags = false;
-
     @Inject(method = "addCommandTag", at = @At("TAIL"))
-    private void apoli$addCommandTagToComponent(String tag, CallbackInfoReturnable<Boolean> cir) {
-
-        boolean result = CommandTagComponent.KEY.get(this).addTag(tag);
-
-        if (result) {
-            apoli$shouldSyncCommandTags = true;
-        }
-
+    private void apoli$onAddingCommandTag(String tag, CallbackInfoReturnable<Boolean> cir) {
+        CommandTagComponent.KEY.get(this).addCommandTag(tag, cir.getReturnValue());
     }
 
     @Inject(method = "removeScoreboardTag", at = @At("TAIL"))
-    private void apoli$removeCommandTagFromComponent(String tag, CallbackInfoReturnable<Boolean> cir) {
-
-        boolean result = CommandTagComponent.KEY.get(this).removeTag(tag);
-
-        if (result) {
-            apoli$shouldSyncCommandTags = true;
-        }
-
+    private void apoli$onRemovingCommandTag(String tag, CallbackInfoReturnable<Boolean> cir) {
+        CommandTagComponent.KEY.get(this).removeCommandTag(tag);
     }
 
-    @ModifyReturnValue(method = "getCommandTags", at = @At("RETURN"))
-    private Set<String> apoli$overrideCommandTags(Set<String> original) {
-        return CommandTagComponent.KEY.get(this).getTags();
+    @Inject(method = "getCommandTags", at = @At("RETURN"))
+    private void apoli$onQueryingCommandTags(CallbackInfoReturnable<Set<String>> cir) {
+        CommandTagComponent.KEY.get(this).setCommandTags(cir.getReturnValue());
     }
 
     @Inject(method = "baseTick", at = @At("TAIL"))
     private void apoli$syncCommandTags(CallbackInfo ci) {
 
-        if (!apoli$shouldSyncCommandTags || this.getWorld().isClient) {
-            return;
+        if (!this.world.isClient) {
+            CommandTagComponent.KEY.get(this).sync(false);
         }
-
-        CommandTagComponent.KEY.get(this).setTags(((EntityAccessor) this).getOriginalCommandTags());
-        CommandTagComponent.KEY.sync(this);
-
-        apoli$shouldSyncCommandTags = false;
 
     }
 

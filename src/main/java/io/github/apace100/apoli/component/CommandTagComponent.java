@@ -2,26 +2,26 @@ package io.github.apace100.apoli.component;
 
 import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistry;
-import dev.onyxstudios.cca.api.v3.component.load.ServerLoadAwareComponent;
 import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import io.github.apace100.apoli.Apoli;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Set;
 
-public interface CommandTagComponent extends AutoSyncedComponent, ServerLoadAwareComponent {
+@SuppressWarnings("UnusedReturnValue")
+public interface CommandTagComponent extends AutoSyncedComponent {
 
     ComponentKey<CommandTagComponent> KEY = ComponentRegistry.getOrCreate(Apoli.identifier("command_tags"), CommandTagComponent.class);
 
-    Set<String> getTags();
+    Set<String> getCommandTags();
+    @ApiStatus.Internal
+    void setCommandTags(Set<String> commandTags);
 
     @ApiStatus.Internal
-    void setTags(Set<String> commandTags);
-
+    boolean addCommandTag(String commandTag, boolean originallyAdded);
     @ApiStatus.Internal
-    boolean addTag(String commandTag);
+    boolean removeCommandTag(String commandTag);
 
-    @ApiStatus.Internal
-    boolean removeTag(String commandTag);
+    void sync(boolean force);
 
 }
