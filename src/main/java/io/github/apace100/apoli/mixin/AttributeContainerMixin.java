@@ -39,6 +39,15 @@ public abstract class AttributeContainerMixin implements OwnableAttributeContain
         this.apoli$owner = owner;
     }
 
+    @Inject(method = "getCustomInstance(Lnet/minecraft/entity/attribute/EntityAttribute;)Lnet/minecraft/entity/attribute/EntityAttributeInstance;", at = @At("RETURN"))
+    private void apoli$setCustomAttributeInstanceOwner(EntityAttribute attribute, CallbackInfoReturnable<EntityAttributeInstance> cir) {
+
+        if (cir.getReturnValue() instanceof OwnableAttributeInstance ownableAttributeInstance) {
+            ownableAttributeInstance.apoli$setOwner(this.apoli$getOwner());
+        }
+
+    }
+
     @Inject(method = "getValue", at = @At("RETURN"))
     private void apoli$setAttributeInstanceOwner(EntityAttribute attribute, CallbackInfoReturnable<Double> cir, @Local EntityAttributeInstance attributeInstance) {
 
