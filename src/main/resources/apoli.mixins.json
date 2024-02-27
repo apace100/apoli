@@ -69,6 +69,7 @@
         "WeightedListEntryAccessor"
     ],
     "client": [
+        "AbstractClientPlayerEntityMixin",
         "BackgroundRendererMixin",
         "CapeFeatureRendererMixin",
         "ChunkRendererRegionMixin",
