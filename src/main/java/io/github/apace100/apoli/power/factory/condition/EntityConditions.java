@@ -439,10 +439,6 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("crawling"), new SerializableData(),
             (data, entity) -> entity.isCrawling()
         ));
-        register(new ConditionFactory<>(Apoli.identifier("contains_tag"), new SerializableData()
-            .add("tag", SerializableDataTypes.STRING),
-            (data, entity) -> entity.getCommandTags().contains(data.getString("tag"))
-        ));
         register(new ConditionFactory<>(Apoli.identifier("ridable_in_water"), new SerializableData(),
             (data, entity) -> !entity.shouldDismountUnderwater()));
         register(RaycastCondition.getFactory());

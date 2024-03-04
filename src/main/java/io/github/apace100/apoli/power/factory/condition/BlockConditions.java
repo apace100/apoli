@@ -173,8 +173,10 @@ public class BlockConditions {
                 BlockState state = block.getBlockState();
                 return ((Comparison)data.get("comparison")).compare(state.getBlock().getHardness(), data.getFloat("compare_to"));
             }));
-        register(new ConditionFactory<>(Apoli.identifier("powered"), new SerializableData(),
-            (data, block) -> block.getBlockEntity().getWorld().getReceivedRedstonePower(block.getBlockPos()) > 0));
+        register(new ConditionFactory<>(Apoli.identifier("powered"), new SerializableData()
+            .add("comparison", ApoliDataTypes.COMPARISON)
+            .add("compare_to", SerializableDataTypes.FLOAT),,
+            (data, block) -> ((Comparison)data.get("comparison")).compare(block.getBlockEntity().getWorld().getReceivedRedstonePower(block.getBlockPos()), data.getFloat("compare_to"))));
         register(MaterialCondition.getFactory());
         register(CommandCondition.getFactory());
     }

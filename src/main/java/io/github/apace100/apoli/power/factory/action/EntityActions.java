@@ -355,40 +355,6 @@ public class EntityActions {
                     }
                 }
             }));
-        register(new ActionFactory<>(Apoli.identifier("add_tag"), new SerializableData()
-            .add("tag", SerializableDataTypes.STRING)
-            .add("tags", SerializableDataTypes.STRINGS),
-            (data, entity) -> {
-                List<String> tags = new ArrayList<>();
-                if(data.isPresent("tags")){
-                    tags.addAll(data.get("tags"));
-                }
-                if(data.isPresent("tag")){
-                    tags.add(data.get("tag"));
-                }
-                for(String tag : tags){
-                    entity.addCommandTag(tag);
-                }
-            }
-        ));
-        register(new ActionFactory<>(Apoli.identifier("add_tag"), new SerializableData()
-            .add("tag", SerializableDataTypes.STRING)
-            .add("tags", SerializableDataTypes.STRINGS),
-            (data, entity) -> {
-                List<String> tags = new ArrayList<>();
-                if(data.isPresent("tags")){
-                    tags.addAll(data.get("tags"));
-                }
-                if(data.isPresent("tag")){
-                    tags.add(data.get("tag"));
-                }
-                for(String tag : tags){
-                    if(entity.getCommandTags().contains(tag)){
-                        entity.getCommandTags().remove(tag);
-                    }
-                }
-            }
-        ));
         register(AreaOfEffectAction.getFactory());
         register(CraftingTableAction.getFactory());
         register(EnderChestAction.getFactory());
