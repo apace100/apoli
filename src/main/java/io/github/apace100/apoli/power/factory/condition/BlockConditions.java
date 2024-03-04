@@ -4,7 +4,8 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.block.CommandCondition;
 import io.github.apace100.apoli.power.factory.condition.block.MaterialCondition;
-import io.github.apace100.apoli.power.factory.condition.block.PoweredCondition;
+import io.github.apace100.apoli.power.factory.condition.block.RedstoneInputCondition;
+import io.github.apace100.apoli.power.factory.condition.block.RedstoneOutputCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
@@ -174,9 +175,10 @@ public class BlockConditions {
                 BlockState state = block.getBlockState();
                 return ((Comparison)data.get("comparison")).compare(state.getBlock().getHardness(), data.getFloat("compare_to"));
             }));
-        register(PoweredCondition.getFactory());
         register(MaterialCondition.getFactory());
         register(CommandCondition.getFactory());
+        register(RedstoneInputCondition.getFactory());
+        register(RedstoneOutputCondition.getFactory());
     }
 
     private static void register(ConditionFactory<CachedBlockPosition> conditionFactory) {
