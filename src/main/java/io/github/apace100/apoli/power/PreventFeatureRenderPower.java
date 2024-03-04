@@ -2,8 +2,7 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.calio.ClassUtil;
-import io.github.apace100.calio.data.ClassDataRegistry;
+import io.github.apace100.apoli.registry.ApoliClassDataClient;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.fabricmc.api.EnvType;
@@ -28,17 +27,13 @@ public class PreventFeatureRenderPower extends Power {
     }
 
     @Environment(EnvType.CLIENT)
-    public boolean doesApply(Class<? extends FeatureRenderer<?, ?>> cls) {
-        Optional<ClassDataRegistry> optionalCdr = ClassDataRegistry.get(ClassUtil.castClass(FeatureRenderer.class));
-        if(optionalCdr.isPresent()) {
-            ClassDataRegistry<? extends FeatureRenderer<?, ?>> cdr = optionalCdr.get();
-            return classStrings.stream()
-                .map(cdr::mapStringToClass)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .anyMatch(c -> c.isAssignableFrom(cls));
-        }
-        return false;
+    public <T extends FeatureRenderer<?, ?>> boolean doesApply(T featureRenderer) {
+        return classStrings.isEmpty() || classStrings
+            .stream()
+            .map(ApoliClassDataClient.FEATURE_RENDERERS::mapStringToClass)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .anyMatch(cls -> cls.isAssignableFrom(featureRenderer.getClass()));
     }
 
     public static PowerFactory createFactory() {

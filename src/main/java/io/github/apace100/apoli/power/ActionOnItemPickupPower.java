@@ -1,12 +1,16 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.ItemEntityAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
@@ -48,6 +52,24 @@ public class ActionOnItemPickupPower extends Power implements Prioritized<Action
     public void executeActions(ItemStack stack, Entity thrower) {
         if (itemAction != null) itemAction.accept(new Pair<>(entity.getWorld(), InventoryUtil.getStackReferenceFromStack(entity, stack)));
         if (biEntityAction != null) biEntityAction.accept(new Pair<>(thrower, entity));
+    }
+
+    public static void executeActions(ItemEntity itemEntity, Entity entity) {
+
+        if (!PowerHolderComponent.KEY.isProvidedBy(entity)) {
+            return;
+        }
+
+        ItemStack stack = itemEntity.getStack();
+        Entity throwerEntity = MiscUtil.getEntityByUuid(((ItemEntityAccessor) itemEntity).getThrower(), entity.getServer());
+
+        CallInstance<ActionOnItemPickupPower> aoippci = new CallInstance<>();
+        aoippci.add(entity, ActionOnItemPickupPower.class, p -> p.doesApply(stack, throwerEntity));
+
+        for (int i = aoippci.getMaxPriority(); i >= aoippci.getMinPriority(); i--) {
+            aoippci.forEach(i, p -> p.executeActions(stack, throwerEntity));
+        }
+
     }
 
     public static PowerFactory createFactory() {

@@ -1,9 +1,12 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.ItemEntityAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -60,6 +63,34 @@ public class PreventItemPickupPower extends Power implements Prioritized<Prevent
         if (biEntityActionItem != null) {
             biEntityActionItem.accept(new Pair<>(entity, itemEntity));
         }
+    }
+
+    public static boolean doesPrevent(ItemEntity itemEntity, Entity entity) {
+
+        if (!PowerHolderComponent.KEY.isProvidedBy(entity)) {
+            return false;
+        }
+
+        ItemStack stack = itemEntity.getStack();
+        Entity throwerEntity = MiscUtil.getEntityByUuid(((ItemEntityAccessor) itemEntity).getThrower(), entity.getServer());
+
+        CallInstance<PreventItemPickupPower> pippci = new CallInstance<>();
+        pippci.add(entity, PreventItemPickupPower.class, p -> p.doesPrevent(stack, throwerEntity));
+
+        boolean prevented = false;
+        for (int i = pippci.getMaxPriority(); i >= pippci.getMinPriority(); i--) {
+
+            if (!pippci.hasPowers(i)) {
+                continue;
+            }
+
+            pippci.forEach(i, p -> p.executeActions(itemEntity, throwerEntity));
+            prevented = true;
+
+        }
+
+        return prevented;
+
     }
 
     public static PowerFactory createFactory() {

@@ -3,10 +3,13 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -16,20 +19,20 @@ public interface Prioritized<T extends Power & Prioritized<T>> {
 
     class CallInstance<T extends Power & Prioritized<T>> {
 
-        private final HashMap<Integer, List<T>> buckets = new HashMap<>();
+        private final Map<Integer, List<T>> buckets = new HashMap<>();
+
         private int minPriority = Integer.MAX_VALUE;
         private int maxPriority = Integer.MIN_VALUE;
 
         public <U extends T> void add(LivingEntity entity, Class<U> cls) {
-            add(entity, cls, null);
+            add(entity, cls, u -> true);
         }
 
-        public <U extends T> void add(Entity entity, Class<U> cls, Predicate<U> filter) {
-            Stream<U> stream = PowerHolderComponent.getPowers(entity, cls).stream();
-            if(filter != null) {
-                stream = stream.filter(filter);
-            }
-            stream.forEach(this::add);
+        public <U extends T> void add(Entity entity, Class<U> cls, @NotNull Predicate<U> filter) {
+            PowerHolderComponent.getPowers(entity, cls)
+                .stream()
+                .filter(filter)
+                .forEach(this::add);
         }
 
         public int getMinPriority() {
@@ -45,27 +48,29 @@ public interface Prioritized<T extends Power & Prioritized<T>> {
         }
 
         public List<T> getPowers(int priority) {
-            if(buckets.containsKey(priority)) {
-                return buckets.get(priority);
-            }
-            return new LinkedList<>();
+            return buckets.getOrDefault(priority, new LinkedList<>());
+        }
+
+        public void forEach(int priority, Consumer<T> action) {
+            this.getPowers(priority).forEach(action);
         }
 
         public void add(T t) {
+
             int priority = t.getPriority();
-            if(buckets.containsKey(priority)) {
-                buckets.get(priority).add(t);
-            } else {
-                List<T> list = new LinkedList<>();
-                list.add(t);
-                buckets.put(priority, list);
+            buckets.computeIfAbsent(priority, i -> new LinkedList<>())
+                .add(t);
+
+            if (priority < minPriority) {
+                this.minPriority = priority;
             }
-            if(priority < minPriority) {
-                minPriority = priority;
+
+            if (priority > maxPriority) {
+                this.maxPriority = priority;
             }
-            if(priority > maxPriority) {
-                maxPriority = priority;
-            }
+
         }
+
     }
+
 }
