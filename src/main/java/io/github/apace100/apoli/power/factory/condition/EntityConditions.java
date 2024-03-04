@@ -21,7 +21,6 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
@@ -426,21 +425,6 @@ public class EntityConditions {
                 }
                 return false;
             }));
-        register(new ConditionFactory<>(Apoli.identifier("has_ai"), new SerializableData(),
-            (data, entity) -> (entity instanceof MobEntity) ? !((MobEntity) entity).isAiDisabled() : false));
-        register(new ConditionFactory<>(Apoli.identifier("disables_shield"), new SerializableData(),
-            (data, entity) -> (entity instanceof MobEntity) ? !((MobEntity) entity).disablesShield() : false));
-        register(new ConditionFactory<>(Apoli.identifier("riptiding"), new SerializableData(),
-            (data, entity) -> (entity instanceof LivingEntity) ? ((LivingEntity) entity).isUsingRiptide() : false));
-        register(new ConditionFactory<>(Apoli.identifier("age"), new SerializableData()
-            .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN_OR_EQUAL)
-            .add("compare_to", SerializableDataTypes.INT, 1),
-            (data, entity) -> ((Comparison)data.get("comparison")).compare(entity.age, data.getInt("compare_to"))));
-        register(new ConditionFactory<>(Apoli.identifier("crawling"), new SerializableData(),
-            (data, entity) -> entity.isCrawling()
-        ));
-        register(new ConditionFactory<>(Apoli.identifier("ridable_in_water"), new SerializableData(),
-            (data, entity) -> !entity.shouldDismountUnderwater()));
         register(RaycastCondition.getFactory());
         register(ElytraFlightPossibleCondition.getFactory());
         register(InventoryCondition.getFactory());
@@ -451,6 +435,12 @@ public class EntityConditions {
         register(UsingEffectiveToolCondition.getFactory());
         register(GameModeCondition.getFactory());
         register(GlowingCondition.getFactory());
+        register(HasAiCondition.getFactory());
+        register(DisablesShieldCondition.getFactory());
+        register(RiptidingCondition.getFactory());
+        register(AgeCondition.getFactory());
+        register(CrawlingCondition.getFactory());
+        register(RidableInWaterCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
