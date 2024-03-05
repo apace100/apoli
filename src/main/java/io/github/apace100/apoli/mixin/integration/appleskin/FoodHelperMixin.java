@@ -32,7 +32,7 @@ public class FoodHelperMixin {
         if (PowerHolderComponent.getPowers(player, PreventItemUsePower.class).stream().anyMatch(p -> p.doesPrevent(stack))) {
             return false;
         }
-        if (PowerHolderComponent.getPowers(((EntityLinkedItemStack)stack).apoli$getEntity(), EdibleItemPower.class).stream().anyMatch(p -> p.doesApply(stack))) {
+        if (PowerHolderComponent.getPowers(player, EdibleItemPower.class).stream().anyMatch(p -> p.doesApply(stack))) {
             return true;
         }
         return original;
