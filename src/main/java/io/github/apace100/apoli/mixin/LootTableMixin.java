@@ -50,7 +50,7 @@ public class LootTableMixin implements IdentifiedLootTable {
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At("HEAD"), cancellable = true)
     private void modifyLootTable(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
 
-        if (((ReplacingLootContext) context).apoli$isReplaced((LootTable) (Object) this)) {
+        if (((ReplacingLootContext) context).apoli$isReplaced((LootTable) (Object) this) || apoli$id == null) {
             return;
         }
 
@@ -59,31 +59,31 @@ public class LootTableMixin implements IdentifiedLootTable {
         }
 
         LootContextType lootContextType = ((ReplacingLootContext) context).apoli$getType();
-        Entity entity = context.get(LootContextParameters.THIS_ENTITY);
+        Entity powerHolder = context.get(LootContextParameters.THIS_ENTITY);
 
         if (lootContextType == LootContextTypes.FISHING) {
-            if (entity instanceof FishingBobberEntity fishingBobberEntity) {
-                entity = fishingBobberEntity.getOwner();
+            if (powerHolder instanceof FishingBobberEntity fishingBobberEntity) {
+                powerHolder = fishingBobberEntity.getOwner();
             }
         } else if (lootContextType == LootContextTypes.ENTITY) {
             if (context.hasParameter(LootContextParameters.KILLER_ENTITY)) {
-                entity = context.get(LootContextParameters.KILLER_ENTITY);
+                powerHolder = context.get(LootContextParameters.KILLER_ENTITY);
             }
         } else if (lootContextType == LootContextTypes.BARTER) {
-            if (entity instanceof PiglinEntity piglinEntity) {
+            if (powerHolder instanceof PiglinEntity piglinEntity) {
 
                 Optional<PlayerEntity> playerEntity = piglinEntity.getBrain().getOptionalMemory(MemoryModuleType.NEAREST_VISIBLE_PLAYER);
 
                 if (playerEntity != null && playerEntity.isPresent()) {
-                    entity = playerEntity.get();
+                    powerHolder = playerEntity.get();
                 }
 
             }
         }
 
-        List<ReplaceLootTablePower> replaceLootTablePowers = PowerHolderComponent.getPowers(entity, ReplaceLootTablePower.class)
+        List<ReplaceLootTablePower> replaceLootTablePowers = PowerHolderComponent.getPowers(powerHolder, ReplaceLootTablePower.class)
             .stream()
-            .filter(p -> apoli$id != null && (p.hasReplacement(apoli$id) && p.doesApply(context)))
+            .filter(p -> p.hasReplacement(apoli$id) & p.doesApply(context))
             .sorted(Comparator.comparing(ReplaceLootTablePower::getPriority))
             .toList();
 

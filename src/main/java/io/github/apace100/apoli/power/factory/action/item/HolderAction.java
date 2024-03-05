@@ -4,8 +4,10 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
@@ -18,9 +20,7 @@ public class HolderAction {
 
     public static void action(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
-        if(worldAndStack.getRight().isEmpty()) {
-            return;
-        }
+
 
         Entity holder = ((EntityLinkedItemStack) worldAndStack.getRight()).apoli$getEntity();
         if(holder == null) {
@@ -36,8 +36,10 @@ public class HolderAction {
 
     }
 
-    public static ActionFactory<Pair<World, ItemStack>> getFactory() {
-        return new ActionFactory<>(Apoli.identifier("holder_action"),
+    public static ActionFactory<Pair<World, StackReference>> getFactory() {
+        IdentifierAlias.addPathAlias("holder", "holder_action");
+        return ItemActionFactory.createItemStackBased(
+            Apoli.identifier("holder_action"),
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("action", ApoliDataTypes.ENTITY_ACTION, null),

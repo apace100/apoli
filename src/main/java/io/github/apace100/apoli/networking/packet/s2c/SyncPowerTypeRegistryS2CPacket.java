@@ -11,10 +11,8 @@ import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> powers) implements FabricPacket {
 
@@ -76,16 +74,16 @@ public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> power
     @Override
     public void write(PacketByteBuf buffer) {
 
-        buffer.writeVarInt(powers.size());
-        powers.forEach((id, powerType) -> {
+        Map<Identifier, PowerType<?>> filteredPowers = powers.entrySet()
+            .stream()
+            .filter(entry -> entry.getValue().getFactory() != null)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o, o2) -> o2, LinkedHashMap::new));
 
-            PowerFactory<?>.Instance powerFactory = powerType.getFactory();
-            if (powerFactory == null) {
-                return;
-            }
+        buffer.writeVarInt(filteredPowers.size());
+        filteredPowers.forEach((id, powerType) -> {
 
             buffer.writeIdentifier(id);
-            powerFactory.write(buffer);
+            powerType.getFactory().write(buffer);
 
             if (!(powerType instanceof MultiplePowerType<?> multiplePowerType)) {
                 buffer.writeBoolean(false);

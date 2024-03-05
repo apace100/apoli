@@ -19,6 +19,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.ArgumentWrapper;
+import io.github.apace100.calio.util.DynamicIdentifier;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -29,18 +30,21 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
+import net.minecraft.text.Text;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
@@ -116,10 +120,10 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<ActionFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS =
         SerializableDataType.list(BLOCK_ACTION);
 
-    public static final SerializableDataType<ActionFactory<Pair<World, ItemStack>>.Instance> ITEM_ACTION =
+    public static final SerializableDataType<ActionFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION =
         action(ApoliRegistries.ITEM_ACTION, "Item action");
 
-    public static final SerializableDataType<List<ActionFactory<Pair<World, ItemStack>>.Instance>> ITEM_ACTIONS =
+    public static final SerializableDataType<List<ActionFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS =
         SerializableDataType.list(ITEM_ACTION);
 
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
@@ -401,7 +405,7 @@ public class ApoliDataTypes {
                 }
 
                 Pattern pattern = Pattern.compile(key);
-                Identifier id = new Identifier(jsonPrimitive.getAsString());
+                Identifier id = DynamicIdentifier.of(jsonPrimitive);
 
                 regexMap.put(pattern, id);
 
@@ -416,6 +420,40 @@ public class ApoliDataTypes {
             regexMap.forEach((regex, id) -> jsonObject.addProperty(regex.pattern(), id.toString()));
 
             return jsonObject;
+
+        }
+    );
+
+    public static final SerializableDataType<GameMode> GAME_MODE = SerializableDataType.enumValue(GameMode.class);
+
+    //  This is for keeping backwards compatibility to fields that used to accept strings as translation keys
+    public static final SerializableDataType<Text> DEFAULT_TRANSLATABLE_TEXT = new SerializableDataType<>(
+        Text.class,
+        PacketByteBuf::writeText,
+        PacketByteBuf::readText,
+        jsonElement -> {
+
+            //  If the JSON is a primitive, use it as a translation key
+            if (jsonElement instanceof JsonPrimitive jsonPrimitive) {
+                return Text.translatable(jsonPrimitive.getAsString());
+            }
+
+            //  Otherwise, serialize it as a text as usual
+            return Text.Serializer.fromJson(jsonElement);
+
+        },
+        Text.Serializer::toJsonTree
+    );
+
+    public static final SerializableDataType<Integer> NON_NEGATIVE_INT = SerializableDataType.boundNumber(
+        SerializableDataTypes.INT, 0, Integer.MAX_VALUE,
+        value -> (min, max) -> {
+
+            if (value < min) {
+                throw new IllegalArgumentException("Expected value to be equal or greater than " + min + "! (current value: " + value + ")");
+            }
+
+            return value;
 
         }
     );

@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.IdentifiedLootTable;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.SavedBlockPosition;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -15,8 +16,6 @@ import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,28 +59,20 @@ public class ReplaceLootTablePower extends Power {
 
     }
 
-    public boolean doesApply(LootContext lootContext) {
+    public boolean doesApply(LootContext context) {
 
-        if (biEntityCondition != null && !biEntityCondition.test(new Pair<>(entity, lootContext.get(LootContextParameters.THIS_ENTITY)))) {
-            return false;
-        }
+        Entity contextEntity = context.get(LootContextParameters.THIS_ENTITY);
+        ItemStack toolStack = context.hasParameter(LootContextParameters.TOOL) ? context.get(LootContextParameters.TOOL) : ItemStack.EMPTY;
+        SavedBlockPosition savedBlockPosition = SavedBlockPosition.fromLootContext(context);
 
-        if (itemCondition != null && (lootContext.hasParameter(LootContextParameters.TOOL) && !itemCondition.test(new Pair<>(entity.getWorld(), lootContext.get(LootContextParameters.TOOL))))) {
-            return false;
-        }
+        return doesApply(contextEntity, toolStack, savedBlockPosition);
 
-        Vec3d originPos = lootContext.get(LootContextParameters.ORIGIN);
-        if (blockCondition != null && originPos != null) {
+    }
 
-            BlockPos blockPos = BlockPos.ofFloored(originPos);
-            CachedBlockPosition cachedBlockPosition = new CachedBlockPosition(lootContext.getWorld(), blockPos, true);
-
-            return blockCondition.test(cachedBlockPosition);
-
-        }
-
-        return true;
-
+    public boolean doesApply(Entity contextEntity, ItemStack toolStack, SavedBlockPosition cachedBlock) {
+        return (biEntityCondition == null || biEntityCondition.test(new Pair<>(entity, contextEntity)))
+            && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), toolStack)))
+            && (blockCondition == null || blockCondition.test(cachedBlock));
     }
 
     @Nullable

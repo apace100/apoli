@@ -2,18 +2,17 @@ package io.github.apace100.apoli.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.util.JsonTextFormatter;
+import joptsimple.internal.Strings;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.visitor.NbtTextFormatter;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Style;
@@ -82,7 +81,9 @@ public class PowerCommand {
 				)
 				.then(literal("dump")
 					.then(argument("power", PowerTypeArgumentType.power())
-						.executes(PowerCommand::dumpPowerJson))
+						.executes(context -> dumpPowerJson(context, false))
+						.then(argument("indent", IntegerArgumentType.integer(0))
+							.executes(context -> dumpPowerJson(context, true))))
 				)
 		);
 	}
@@ -488,13 +489,13 @@ public class PowerCommand {
 
 	}
 
-	private static int dumpPowerJson(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+	private static int dumpPowerJson(CommandContext<ServerCommandSource> context, boolean indentSpecified) throws CommandSyntaxException {
 
 		ServerCommandSource source = context.getSource();
 		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
 
-		NbtElement powerJsonNbt = JsonOps.INSTANCE.convertTo(NbtOps.INSTANCE, powerType.toJson());
-		source.sendFeedback(() -> new NbtTextFormatter("  ", 0).apply(powerJsonNbt), false);
+		String indent = Strings.repeat(' ', indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4);
+		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(powerType.toJson()), false);
 
 		return 1;
 

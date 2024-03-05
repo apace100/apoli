@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
@@ -13,6 +14,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -20,17 +22,20 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
-    private static final ConcurrentHashMap<Entity, ConcurrentHashMap<ItemStack, NbtList>> ENTITY_ITEM_ENCHANTS = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Entity, ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, ConcurrentHashMap<ItemStack, NbtList>> ENTITY_ITEM_ENCHANTS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, ItemStack> MODIFIED_EMPTY_STACKS = new ConcurrentHashMap<>();
 
     private final Enchantment enchantment;
     private final Predicate<Pair<World, ItemStack>> itemCondition;
@@ -49,33 +54,101 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
             modifiers.forEach(this::addModifier);
         }
 
+        this.setTicking();
+
     }
 
     @Override
     public void onAdded(boolean onSync) {
 
-        ENTITY_ITEM_ENCHANTS.computeIfAbsent(entity, (_entity) -> new ConcurrentHashMap<>());
-        ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> cache = POWER_MODIFIER_CACHE.computeIfAbsent(entity, (_entity) -> new ConcurrentHashMap<>());
-
-        cache.compute(this, (p, _val) -> new Pair<>(0, false));
+        ENTITY_ITEM_ENCHANTS
+            .computeIfAbsent(entity.getUuid(), uuid -> new ConcurrentHashMap<>());
+        POWER_MODIFIER_CACHE
+            .computeIfAbsent(entity.getUuid(), uuid -> new ConcurrentHashMap<>())
+            .compute(this, (power, cache) -> new Pair<>(0, false));
 
     }
 
     @Override
     public void onRemoved(boolean onSync) {
 
-        if (POWER_MODIFIER_CACHE.containsKey(entity)) {
-            POWER_MODIFIER_CACHE.get(entity).remove(this);
+        if (POWER_MODIFIER_CACHE.containsKey(entity.getUuid())) {
+            POWER_MODIFIER_CACHE.get(entity.getUuid()).remove(this);
         }
 
-        if (PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class).isEmpty()) {
-            ENTITY_ITEM_ENCHANTS.remove(entity);
+        if (PowerHolderComponent.KEY.get(entity).getPowers(ModifyEnchantmentLevelPower.class, true).isEmpty()) {
+            POWER_MODIFIER_CACHE.remove(entity.getUuid());
+            ENTITY_ITEM_ENCHANTS.remove(entity.getUuid());
+        }
+
+        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+
+            StackReference stackReference = entity.getStackReference(slot);
+
+            if (stackReference != StackReference.EMPTY && isWorkableEmptyStack(entity, stackReference)) {
+                stackReference.set(ItemStack.EMPTY);
+            }
+
+        }
+
+        MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
+
+    }
+
+    @Override
+    public void tick() {
+
+        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+
+            StackReference stackReference = entity.getStackReference(slot);
+            if (stackReference == StackReference.EMPTY) {
+                continue;
+            }
+
+            ItemStack stack = stackReference.get();
+            if (stack.isEmpty() && !isWorkableEmptyStack(entity, stackReference) && checkItemCondition(stack)) {
+                stackReference.set(getOrCreateWorkableEmptyStack(entity));
+            }
+
         }
 
     }
 
+    public static ItemStack getOrCreateWorkableEmptyStack(Entity entity) {
+
+        if (!isInEnchantmentMap(entity)) {
+            return ItemStack.EMPTY;
+        }
+
+        UUID uuid = entity.getUuid();
+        if (MODIFIED_EMPTY_STACKS.containsKey(uuid)) {
+            return MODIFIED_EMPTY_STACKS.get(uuid);
+        }
+
+        ItemStack workableEmptyStack = new ItemStack((Void) null);
+        ((EntityLinkedItemStack) workableEmptyStack).apoli$setEntity(entity);
+
+        return MODIFIED_EMPTY_STACKS.compute(uuid, (prevUuid, prevStack) -> workableEmptyStack);
+
+    }
+
+    public static void integrateCallback(Entity entity, World world) {
+        MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
+    }
+
+    public static boolean isWorkableEmptyStack(StackReference stackReference) {
+        Entity stackHolder = ((EntityLinkedItemStack) stackReference.get()).apoli$getEntity();
+        return stackHolder != null && isWorkableEmptyStack(stackHolder, stackReference);
+    }
+
+    public static boolean isWorkableEmptyStack(@NotNull Entity entity, StackReference stackReference) {
+        return stackReference.get().isEmpty()
+            && MODIFIED_EMPTY_STACKS.containsKey(entity.getUuid())
+            && stackReference.get() == MODIFIED_EMPTY_STACKS.get(entity.getUuid());
+    }
+
     public static boolean isInEnchantmentMap(LivingEntity entity) {
-        return ENTITY_ITEM_ENCHANTS.containsKey(entity);
+        return ENTITY_ITEM_ENCHANTS.containsKey(entity.getUuid());
     }
 
     public static boolean isInEnchantmentMap(Entity entity) {
@@ -155,11 +228,11 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     public static NbtList getEnchantments(ItemStack stack, NbtList originalTag) {
 
         Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity();
-        if (!(stackHolder instanceof LivingEntity livingStackHolder) || !ENTITY_ITEM_ENCHANTS.containsKey(stackHolder)) {
+        if (!(stackHolder instanceof LivingEntity livingStackHolder) || !ENTITY_ITEM_ENCHANTS.containsKey(stackHolder.getUuid())) {
             return originalTag;
         }
 
-        ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(stackHolder);
+        ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(stackHolder.getUuid());
         if (shouldReapplyEnchantments(livingStackHolder, stack)) {
             itemEnchants.computeIfAbsent(stack, _stack -> originalTag);
             return itemEnchants.compute(stack, (_stack, nbtElements) -> generateEnchantments(originalTag, stack));
@@ -190,11 +263,11 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     public static Map<Enchantment, Integer> get(ItemStack stack, boolean useModifications) {
 
         Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity();
-        if (!useModifications || !(stackHolder instanceof LivingEntity livingStackHolder) || !ENTITY_ITEM_ENCHANTS.containsKey(livingStackHolder)) {
+        if (!useModifications || !(stackHolder instanceof LivingEntity livingStackHolder) || !ENTITY_ITEM_ENCHANTS.containsKey(livingStackHolder.getUuid())) {
             return EnchantmentHelper.get(stack);
         }
 
-        ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(livingStackHolder);
+        ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(livingStackHolder.getUuid());
         return EnchantmentHelper.fromNbt(itemEnchants.computeIfAbsent(stack, ItemStack::getEnchantments));
 
     }
@@ -220,11 +293,11 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         }
 
         Entity nullSafeEntity = livingEntity == null ? ((EntityLinkedItemStack) stack).apoli$getEntity() : livingEntity;
-        if (!(nullSafeEntity instanceof LivingEntity livingNullSafeEntity) || !ENTITY_ITEM_ENCHANTS.containsKey(livingNullSafeEntity)) {
+        if (!(nullSafeEntity instanceof LivingEntity livingNullSafeEntity) || !ENTITY_ITEM_ENCHANTS.containsKey(livingNullSafeEntity.getUuid())) {
             return EnchantmentHelper.getLevel(enchantment, stack);
         }
 
-        ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(livingNullSafeEntity);
+        ConcurrentHashMap<ItemStack, NbtList> itemEnchants = ENTITY_ITEM_ENCHANTS.get(livingNullSafeEntity.getUuid());
         NbtList newEnchantmentsNbt = itemEnchants.computeIfAbsent(stack, ItemStack::getEnchantments);
 
         return enchantmentIndex.map(index -> {
@@ -238,6 +311,8 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
     private static boolean updateIfDifferent(ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> map, ModifyEnchantmentLevelPower power, int modifierValue, boolean conditionValue) {
 
+
+
         map.computeIfAbsent(power, (p) -> new Pair<>(0, false));
         boolean value = false;
 
@@ -249,6 +324,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         if (map.get(power).getRight() != conditionValue) {
             map.get(power).setRight(conditionValue);
             value = true;
+
         }
 
         return value;
@@ -258,9 +334,9 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     private static boolean shouldReapplyEnchantments(LivingEntity living, ItemStack self) {
 
         List<ModifyEnchantmentLevelPower> powers = PowerHolderComponent.KEY.get(living).getPowers(ModifyEnchantmentLevelPower.class, true);
-        ConcurrentHashMap<ItemStack, NbtList> enchants = ENTITY_ITEM_ENCHANTS.get(living);
+        ConcurrentHashMap<ItemStack, NbtList> enchants = ENTITY_ITEM_ENCHANTS.get(living.getUuid());
 
-        ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> cache = POWER_MODIFIER_CACHE.computeIfAbsent(living, (_entity) -> new ConcurrentHashMap<>());
+        ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> cache = POWER_MODIFIER_CACHE.computeIfAbsent(living.getUuid(), uuid -> new ConcurrentHashMap<>());
         return !enchants.containsKey(self) || powers.stream().anyMatch(power -> updateIfDifferent(cache, power, (int) ModifierUtil.applyModifiers(living, power.getModifiers(), 0), power.isActive() && power.checkItemCondition(self)));
 
     }

@@ -8,6 +8,7 @@ import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
+import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerFactories;
@@ -106,14 +107,13 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		ItemActions.register();
 		BlockActions.register();
 		BiEntityActions.register();
+		PowerIntegration.register();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
 		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));
 		ResourceConditions.register(ApoliResourceConditions.ALL_NAMESPACES_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, true));
 
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);
-
-		IdentifierAlias.addPathAlias("holder", "holder_action");
 
 		LOGGER.info("Apoli " + VERSION + " has initialized. Ready to power up your game!");
 	}

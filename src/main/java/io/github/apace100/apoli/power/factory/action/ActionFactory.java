@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 public class ActionFactory<T> implements Factory {
 
     private final Identifier identifier;
-    private final BiConsumer<SerializableData.Instance, T> effect;
+    protected final BiConsumer<SerializableData.Instance, T> effect;
 
     protected final SerializableData data;
 
@@ -26,8 +26,8 @@ public class ActionFactory<T> implements Factory {
 
     public class Instance implements Consumer<T> {
 
-        private final SerializableData.Instance dataInstance;
-        private Instance(SerializableData.Instance data) {
+        protected final SerializableData.Instance dataInstance;
+        protected Instance(SerializableData.Instance data) {
             this.dataInstance = data;
         }
 

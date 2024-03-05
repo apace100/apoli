@@ -17,12 +17,12 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -264,7 +264,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 0))
     private boolean apoli$preventHitIfDamageIsZero(boolean original, DamageSource source, float amount) {
-        return original || apoli$hasModifiedDamage && amount <= 0F;
+        //  TODO: Maybe use DecimalFormat to compare the damage amount? Though it's probably unnecessary since we don't need the decimals
+        return original || apoli$hasModifiedDamage && (int) amount <= 0;
     }
 
     @Inject(method = "damage", at = @At("RETURN"))
@@ -405,19 +406,14 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return in;
     }
 
-    @ModifyReturnValue(method = "getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", at = @At("RETURN"))
-    private double apoli$modifyAttributeValue(double original, EntityAttribute attribute) {
-        return PowerHolderComponent.modify(this, ModifyAttributePower.class, (float) original, p -> p.getAttribute() == attribute);
-    }
+    @Inject(method = "getAttributes", at = @At("RETURN"))
+    private void apoli$setAttributeContainerOwner(CallbackInfoReturnable<AttributeContainer> cir) {
 
-    @Inject(method = "getAttributeInstance", at = @At("RETURN"))
-    private void apoli$setEntityToAttributeInstance(EntityAttribute attribute, CallbackInfoReturnable<EntityAttributeInstance> cir) {
-        EntityAttributeInstance instance = cir.getReturnValue();
-        if (instance != null) {
-            ((EntityAttributeInstanceAccess) instance).apoli$setEntity(this);
+        if (cir.getReturnValue() instanceof OwnableAttributeContainer ownableAttributeContainer) {
+            ownableAttributeContainer.apoli$setOwner(this);
         }
-    }
 
+    }
 
     @ModifyVariable(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isOnGround()Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
@@ -450,20 +446,20 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             return original;
         }
 
-        ItemStack newStack = original;
+        StackReference newStack = InventoryUtil.createStackReference(original);
         List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
             .stream()
             .filter(mfp -> mfp.doesApply(original))
             .toList();
 
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
-            newStack = modifyFoodPower.getConsumedItemStack(newStack);
+            modifyFoodPower.setConsumedItemStackReference(newStack);
         }
 
         this.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         this.apoli$setOriginalFoodStack(original);
 
-        return newStack;
+        return newStack.get();
 
     }
 
@@ -523,6 +519,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Shadow public abstract boolean damage(DamageSource source, float amount);
 
+    @Shadow protected abstract void onStatusEffectRemoved(StatusEffectInstance effect);
+
     @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
@@ -565,6 +563,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "baseTick", at = @At("TAIL"))
     private void updateItemStackHolder(CallbackInfo ci) {
-        InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this), stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this));
+        InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this));
     }
 }

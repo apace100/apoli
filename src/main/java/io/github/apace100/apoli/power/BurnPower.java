@@ -36,7 +36,7 @@ public class BurnPower extends Power {
                 data.getInt("interval"),
                 data.getInt("burn_duration")
             )
-        );
+        ).allowCondition();
     }
 
 }

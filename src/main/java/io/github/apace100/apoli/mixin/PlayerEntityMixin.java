@@ -1,15 +1,22 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.s2c.DismountPlayerS2CPacket;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.command.CommandOutput;
@@ -24,16 +31,16 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-@Mixin(PlayerEntity.class)
+@Mixin(value = PlayerEntity.class, priority = 999)
 public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput {
 
     @Shadow
@@ -46,16 +53,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     public abstract ItemStack getEquippedStack(EquipmentSlot slot);
 
     @Shadow
-    protected boolean isSubmergedInWater;
-
-    @Shadow
     @Final
-    public PlayerInventory inventory;
-
-    @Shadow
-    public abstract ItemEntity dropItem(ItemStack stack, boolean retainOwnership);
-
-    @Shadow public abstract ActionResult interact(Entity entity, Hand hand);
+    private PlayerInventory inventory;
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -69,7 +68,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private ItemStack apoli$modifyEatenItemStack(ItemStack original) {
 
-        ItemStack newStack = original;
+        StackReference newStack = InventoryUtil.createStackReference(original);
         ModifiableFoodEntity modifiableFoodEntity = (ModifiableFoodEntity) this;
 
         List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
@@ -78,75 +77,14 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             .toList();
 
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
-            newStack = modifyFoodPower.getConsumedItemStack(newStack);
+            modifyFoodPower.setConsumedItemStackReference(newStack);
         }
 
         modifiableFoodEntity.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         modifiableFoodEntity.apoli$setOriginalFoodStack(original);
 
-        return newStack;
+        return newStack.get();
 
-    }
-
-    @Unique
-    private ActionResult apoli$CachedPriorityZeroResult;
-
-    @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
-    private void preventEntityInteraction(Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if(this.isSpectator()) {
-            return;
-        }
-        ItemStack stack = this.getStackInHand(hand);
-        for(PreventEntityUsePower peup : PowerHolderComponent.getPowers(this, PreventEntityUsePower.class)) {
-            if(peup.doesApply(entity, hand, stack)) {
-                cir.setReturnValue(peup.executeAction(entity, hand));
-                cir.cancel();
-                return;
-            }
-        }
-        for(PreventBeingUsedPower pbup : PowerHolderComponent.getPowers(entity, PreventBeingUsedPower.class)) {
-            if(pbup.doesApply((PlayerEntity) (Object) this, hand, stack)) {
-                cir.setReturnValue(pbup.executeAction((PlayerEntity) (Object) this, hand));
-                cir.cancel();
-                return;
-            }
-        }
-        apoli$CachedPriorityZeroResult = ActionResult.PASS;
-        ActiveInteractionPower.CallInstance<ActiveInteractionPower> callInstance = new ActiveInteractionPower.CallInstance<>();
-        callInstance.add(this, ActionOnEntityUsePower.class, p -> p.shouldExecute(entity, hand, stack) && p.getPriority() >= 0);
-        callInstance.add(entity, ActionOnBeingUsedPower.class, p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() >= 0);
-        for(int i = callInstance.getMaxPriority(); i >= 0; i--) {
-            if(!callInstance.hasPowers(i)) {
-                continue;
-            }
-            List<ActiveInteractionPower> powers = callInstance.getPowers(i);
-            ActionResult result = ActionResult.PASS;
-            for(ActiveInteractionPower ip : powers) {
-                ActionResult ar = ActionResult.PASS;
-                if(ip instanceof ActionOnEntityUsePower aoeup) {
-                    ar = aoeup.executeAction(entity, hand);
-                } else if(ip instanceof ActionOnBeingUsedPower aobup) {
-                    ar = aobup.executeAction((PlayerEntity) (Object) this, hand);
-                }
-                if(ar.isAccepted() && !result.isAccepted()) {
-                    result = ar;
-                } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
-                    result = ar;
-                }
-            }
-            if(i == 0) {
-                apoli$CachedPriorityZeroResult = result;
-            } else {
-                apoli$CachedPriorityZeroResult = ActionResult.PASS;
-                if(result != ActionResult.PASS) {
-                    if(result.shouldSwingHand()) {
-                        this.swingHand(hand);
-                    }
-                    cir.setReturnValue(result);
-                    break;
-                }
-            }
-        }
     }
 
     @Inject(method = "damage", at = @At(value = "RETURN", ordinal = 3), cancellable = true)
@@ -162,52 +100,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         hasModifyingPower |= PowerHolderComponent.hasPower(this, ModifyDamageTakenPower.class, mdtp -> mdtp.doesApply(source, amount));
         if (hasModifyingPower) cir.setReturnValue(super.damage(source, amount));
 
-    }
-
-    @Inject(method = "interact", at = @At("RETURN"), cancellable = true)
-    private void entityInteractionAfter(Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        ActionResult original = cir.getReturnValue();
-        ActionResult custom = ActionResult.PASS;
-        if(apoli$CachedPriorityZeroResult != ActionResult.PASS) {
-            custom = apoli$CachedPriorityZeroResult;
-        } else if(cir.getReturnValue() == ActionResult.PASS) {
-            ItemStack stack = this.getStackInHand(hand);
-            ActiveInteractionPower.CallInstance<ActiveInteractionPower> callInstance = new ActiveInteractionPower.CallInstance<>();
-            callInstance.add(this, ActionOnEntityUsePower.class, p -> p.shouldExecute(entity, hand, stack) && p.getPriority() < 0);
-            callInstance.add(entity, ActionOnBeingUsedPower.class, p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stack) && p.getPriority() < 0);
-            for(int i = -1; i >= callInstance.getMinPriority(); i--) {
-                if(!callInstance.hasPowers(i)) {
-                    continue;
-                }
-                List<ActiveInteractionPower> powers = callInstance.getPowers(i);
-                ActionResult result = ActionResult.PASS;
-                for(ActiveInteractionPower ip : powers) {
-                    ActionResult ar = ActionResult.PASS;
-                    if(ip instanceof ActionOnEntityUsePower aoeup) {
-                        ar = aoeup.executeAction(entity, hand);
-                    } else if(ip instanceof ActionOnBeingUsedPower aobup) {
-                        ar = aobup.executeAction((PlayerEntity) (Object) this, hand);
-                    }
-                    if(ar.isAccepted() && !result.isAccepted()) {
-                        result = ar;
-                    } else if(ar.shouldSwingHand() && !result.shouldSwingHand()) {
-                        result = ar;
-                    }
-                }
-                if(result != ActionResult.PASS) {
-                    custom = result;
-                    break;
-                }
-            }
-        }
-        if(custom.shouldSwingHand()) {
-            this.swingHand(hand);
-        }
-        if(original.isAccepted() && !custom.isAccepted()) {
-        } else if(original.shouldSwingHand() && !custom.shouldSwingHand()) {
-        } else {
-            cir.setReturnValue(custom);
-        }
     }
 
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
@@ -282,4 +174,150 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             info.setReturnValue(false);
         }
     }
+
+    @WrapOperation(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;interact(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
+    private ActionResult apoli$beforeEntityUse(Entity instance, PlayerEntity player, Hand hand, Operation<ActionResult> original, @Share("cachedPriorityZeroResult") LocalRef<ActionResult> cachedPriorityZeroResultRef) {
+
+        ItemStack stackInHand = player.getStackInHand(hand);
+        for (PreventEntityUsePower peup : PowerHolderComponent.getPowers(this, PreventEntityUsePower.class)) {
+
+            if (peup.doesApply(instance, hand, stackInHand)) {
+                return peup.executeAction(instance, hand);
+            }
+
+        }
+
+        for (PreventBeingUsedPower pbup : PowerHolderComponent.getPowers(instance, PreventBeingUsedPower.class)) {
+
+            if (pbup.doesApply(player, hand, stackInHand)) {
+                return pbup.executeAction(player, hand);
+            }
+
+        }
+
+        cachedPriorityZeroResultRef.set(ActionResult.PASS);
+        Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
+
+        aipci.add(player, ActionOnEntityUsePower.class, p -> p.shouldExecute(instance, hand, stackInHand) && p.getPriority() >= 0);
+        aipci.add(instance, ActionOnBeingUsedPower.class, p -> p.shouldExecute(player, hand, stackInHand) && p.getPriority() >= 0);
+
+        for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
+
+            if (!aipci.hasPowers(i)) {
+                continue;
+            }
+
+            List<ActiveInteractionPower> aips = aipci.getPowers(i);
+            ActionResult previousResult = ActionResult.PASS;
+
+            for (ActiveInteractionPower aip : aips) {
+
+                ActionResult currentResult = ActionResult.PASS;
+                if (aip instanceof ActionOnEntityUsePower aoeup) {
+                    currentResult = aoeup.executeAction(instance, hand);
+                }
+
+                else if (aip instanceof ActionOnBeingUsedPower aobup) {
+                    currentResult = aobup.executeAction(player, hand);
+                }
+
+                if (currentResult.isAccepted() && !previousResult.isAccepted()) {
+                    previousResult = currentResult;
+                }
+
+                else if (currentResult.shouldSwingHand() && !previousResult.shouldSwingHand()) {
+                    previousResult = currentResult;
+                }
+
+            }
+
+            if (i == 0) {
+                cachedPriorityZeroResultRef.set(previousResult);
+                continue;
+            }
+
+            cachedPriorityZeroResultRef.set(ActionResult.PASS);
+            if (previousResult == ActionResult.PASS) {
+                continue;
+            }
+
+            if (previousResult.shouldSwingHand()) {
+                this.swingHand(hand);
+            }
+
+            return previousResult;
+
+        }
+
+        return original.call(instance, player, hand);
+
+    }
+
+    @ModifyReturnValue(method = "interact", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getStackInHand(Lnet/minecraft/util/Hand;)Lnet/minecraft/item/ItemStack;", ordinal = 0)))
+    private ActionResult apoli$afterEntityUse(ActionResult original, Entity entity, Hand hand, @Share("cachedPriorityZeroResult") LocalRef<ActionResult> cachedPriorityZeroResultRef) {
+
+        ActionResult cachedPriorityZeroResult = cachedPriorityZeroResultRef.get();
+        ActionResult newResult = ActionResult.PASS;
+
+        if (cachedPriorityZeroResult != ActionResult.PASS) {
+            newResult = cachedPriorityZeroResult;
+        }
+
+        else if (original == ActionResult.PASS) {
+
+            ItemStack stackInHand = this.getStackInHand(hand);
+            Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
+
+            aipci.add(this, ActionOnEntityUsePower.class, p -> p.shouldExecute(entity, hand, stackInHand) && p.getPriority() < 0);
+            aipci.add(entity, ActionOnBeingUsedPower.class, p -> p.shouldExecute((PlayerEntity) (Object) this, hand, stackInHand) && p.getPriority() < 0);
+
+            for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
+
+                if (!aipci.hasPowers(i)) {
+                    continue;
+                }
+
+                List<ActiveInteractionPower> aips = aipci.getPowers(i);
+                ActionResult previousResult = ActionResult.PASS;
+
+                for (ActiveInteractionPower aip : aips) {
+
+                    ActionResult currentResult = ActionResult.PASS;
+                    if (aip instanceof ActionOnEntityUsePower aoeup) {
+                        currentResult = aoeup.executeAction(entity, hand);
+                    }
+
+                    else if (aip instanceof ActionOnBeingUsedPower aobup) {
+                        currentResult = aobup.executeAction((PlayerEntity) (Object) this, hand);
+                    }
+
+                    if (currentResult.isAccepted() && !previousResult.isAccepted()) {
+                        previousResult = currentResult;
+                    }
+
+                    else if (currentResult.shouldSwingHand() && !previousResult.shouldSwingHand()) {
+                        previousResult = currentResult;
+                    }
+
+                }
+
+                if (previousResult != ActionResult.PASS) {
+                    newResult = previousResult;
+                    break;
+                }
+
+            }
+
+        }
+
+        if (newResult.shouldSwingHand()) {
+            this.swingHand(hand);
+        }
+
+        return (original.isAccepted() && !newResult.isAccepted()) || (original.shouldSwingHand() && !newResult.shouldSwingHand())
+            ? original
+            : newResult;
+
+    }
+
 }

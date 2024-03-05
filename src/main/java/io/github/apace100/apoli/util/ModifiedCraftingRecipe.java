@@ -85,7 +85,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
             return resultStack;
         }
 
-        newResultStack = modifyCraftingPower.get().getNewResult(resultStack);
+        newResultStack = modifyCraftingPower.get().getNewResult(InventoryUtil.createStackReference(resultStack)).get();
         ((PowerCraftingInventory) craftingInventory).apoli$setPower(modifyCraftingPower.get());
 
         return newResultStack;
