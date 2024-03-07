@@ -23,6 +23,7 @@ import io.github.apace100.calio.util.DynamicIdentifier;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.command.EntitySelector;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.ItemSlotArgumentType;
@@ -333,6 +334,8 @@ public class ApoliDataTypes {
     public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
 
     public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class);
+
+    public static final SerializableDataType<PistonBehavior> PISTON_BEHAVIOR = SerializableDataType.enumValue(PistonBehavior.class);
 
     public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
 

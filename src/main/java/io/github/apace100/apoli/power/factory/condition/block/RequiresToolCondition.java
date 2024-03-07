@@ -6,23 +6,18 @@ import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
-import io.github.apace100.apoli.util.Comparison;
 
-public class RedstoneInputCondition {
+public class RequiresToolCondition {
     public static boolean condition(SerializableData.Instance data, CachedBlockPosition block) {
-        Comparison comparison = data.get("comparison");
-        int compareTo = data.getInt("compare_to");
-
-        int receivedRedstonePower = block.getWorld().getReceivedRedstonePower(block.getBlockPos());
-        return comparison.compare(receivedRedstonePower, compareTo);
+        return block.getBlockState().isToolRequired();
     }
 
     public static ConditionFactory<CachedBlockPosition> getFactory() {
-        return new ConditionFactory<>(Apoli.identifier("redstone_input"),
+        return new ConditionFactory<>(Apoli.identifier("requires_tool"),
             new SerializableData()
                 .add("comparison", ApoliDataTypes.COMPARISON)
-                .add("compare_to", SerializableDataTypes.INT),
-            RedstoneInputCondition::condition
+                .add("compare_to", SerializableDataTypes.FLOAT),
+            RequiresToolCondition::condition
         );
     }
 }

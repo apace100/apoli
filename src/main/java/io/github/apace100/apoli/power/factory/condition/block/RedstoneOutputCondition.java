@@ -7,24 +7,36 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.WorldView;
 
 public class RedstoneOutputCondition {
     public static boolean condition(SerializableData.Instance data, CachedBlockPosition block) {
-        boolean passed = false;
-        for(Direction direction : Direction.values()) {
-            if(((Comparison)data.get("comparison")).compare(block.getBlockEntity().getWorld().getEmittedRedstonePower(block.getBlockPos(), direction), data.getFloat("compare_to"))){
-                passed = true;
+        BlockPos blockPos = block.getBlockPos();
+        WorldView world = block.getWorld();
+
+        Comparison comparison = data.get("comparison");
+        int compareTo = data.getInt("compare_to");
+
+        for (Direction direction : Direction.values()) {
+
+            int emittedRedstonePower = world.getEmittedRedstonePower(blockPos, direction);
+            
+            if (comparison.compare(emittedRedstonePower, compareTo)) {
+                return true;
             }
+
         }
-        return passed;
+        
+        return false;
     }
 
     public static ConditionFactory<CachedBlockPosition> getFactory() {
         return new ConditionFactory<>(Apoli.identifier("redstone_output"),
             new SerializableData()
                 .add("comparison", ApoliDataTypes.COMPARISON)
-                .add("compare_to", SerializableDataTypes.FLOAT),
+                .add("compare_to", SerializableDataTypes.INT),
             RedstoneOutputCondition::condition
         );
     }

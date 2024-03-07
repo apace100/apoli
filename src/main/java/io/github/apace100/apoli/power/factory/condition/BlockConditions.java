@@ -4,8 +4,10 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.block.CommandCondition;
 import io.github.apace100.apoli.power.factory.condition.block.MaterialCondition;
+import io.github.apace100.apoli.power.factory.condition.block.PistonBehaviorCondition;
 import io.github.apace100.apoli.power.factory.condition.block.RedstoneInputCondition;
 import io.github.apace100.apoli.power.factory.condition.block.RedstoneOutputCondition;
+import io.github.apace100.apoli.power.factory.condition.block.RequiresToolCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
@@ -179,6 +181,9 @@ public class BlockConditions {
         register(CommandCondition.getFactory());
         register(RedstoneInputCondition.getFactory());
         register(RedstoneOutputCondition.getFactory());
+        register(RequiresToolCondition.getFactory());
+        register(PistonBehaviorCondition.getFactory());
+        // piston behavior -- 
     }
 
     private static void register(ConditionFactory<CachedBlockPosition> conditionFactory) {
