@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.block.CommandCondition;
+import io.github.apace100.apoli.power.factory.condition.block.LightLevelCondition;
 import io.github.apace100.apoli.power.factory.condition.block.MaterialCondition;
 import io.github.apace100.apoli.power.factory.condition.block.PistonBehaviorCondition;
 import io.github.apace100.apoli.power.factory.condition.block.RedstoneInputCondition;
@@ -11,7 +12,6 @@ import io.github.apace100.apoli.power.factory.condition.block.RequiresToolCondit
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -25,7 +25,6 @@ import net.minecraft.registry.tag.TagKey;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.LightType;
 
 import java.util.Collection;
 
@@ -101,20 +100,7 @@ public class BlockConditions {
             (data, block) -> block.getBlockState().getBlock() instanceof FluidFillable));
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sky"), new SerializableData(),
             (data, block) -> block.getWorld().isSkyVisible(block.getBlockPos())));
-        register(new ConditionFactory<>(Apoli.identifier("light_level"), new SerializableData()
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT)
-            .add("light_type", SerializableDataType.enumValue(LightType.class), null),
-            (data, block) -> {
-                int value;
-                if(data.isPresent("light_type")) {
-                    LightType lightType = (LightType)data.get("light_type");
-                    value = block.getWorld().getLightLevel(lightType, block.getBlockPos());
-                } else {
-                    value = block.getWorld().getLightLevel(block.getBlockPos());
-                }
-                return ((Comparison)data.get("comparison")).compare(value, data.getInt("compare_to"));
-            }));
+        register(LightLevelCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("block_state"), new SerializableData()
             .add("property", SerializableDataTypes.STRING)
             .add("comparison", ApoliDataTypes.COMPARISON, null)
