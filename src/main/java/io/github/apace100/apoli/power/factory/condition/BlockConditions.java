@@ -169,7 +169,6 @@ public class BlockConditions {
         register(RedstoneOutputCondition.getFactory());
         register(RequiresToolCondition.getFactory());
         register(PistonBehaviorCondition.getFactory());
-        // piston behavior -- 
     }
 
     private static void register(ConditionFactory<CachedBlockPosition> conditionFactory) {
