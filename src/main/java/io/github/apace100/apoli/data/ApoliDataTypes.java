@@ -39,10 +39,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.text.Text;
-import net.minecraft.util.ClickType;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
-import net.minecraft.util.Pair;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
@@ -336,6 +333,8 @@ public class ApoliDataTypes {
     public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class);
 
     public static final SerializableDataType<PistonBehavior> PISTON_BEHAVIOR = SerializableDataType.enumValue(PistonBehavior.class);
+
+    public static final SerializableDataType<Rarity> RARITY = SerializableDataType.enumValue(Rarity.class);
 
     public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
 
