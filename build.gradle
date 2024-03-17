@@ -124,6 +124,7 @@ dependencies {
 //	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 
 	modCompileOnly "maven.modrinth:ears:${project.ears_version}"
+	modLocalRuntime "maven.modrinth:ears:${project.ears_version}"
 }
 
 processResources {

@@ -66,8 +66,7 @@
     "StatusEffectInstanceMixin",
     "VibrationsListenerDataMixin",
     "VibrationsTickerMixin",
-    "WeightedListEntryAccessor",
-    "integration.ears.EarsLayerRendererMixin"
+    "WeightedListEntryAccessor"
   ],
   "client": [
     "BackgroundRendererMixin",
@@ -93,7 +92,8 @@
     "PlayerEntityRendererMixin",
     "SpriteAtlasTextureAccessor",
     "TextureManagerAccessor",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "integration.ears.EarsFeatureRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
