@@ -123,6 +123,7 @@ dependencies {
 //	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 //	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 
+	modCompileOnly "maven.modrinth:ears:${project.ears_version}"
 }
 
 processResources {
