@@ -16,8 +16,11 @@ import io.github.apace100.apoli.power.factory.action.BiEntityActions;
 import io.github.apace100.apoli.power.factory.action.BlockActions;
 import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.apoli.power.factory.action.ItemActions;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviors;
 import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliClassData;
+import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.resource.OrderedResourceListenerInitializer;
@@ -107,6 +110,9 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		ItemActions.register();
 		BlockActions.register();
 		BiEntityActions.register();
+		MobBehaviors.register();
+		ApoliActivities.register();
+		ApoliMemoryModuleTypes.register();
 		PowerIntegration.register();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());

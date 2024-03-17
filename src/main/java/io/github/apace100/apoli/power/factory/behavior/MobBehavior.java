@@ -14,6 +14,7 @@ import net.minecraft.entity.ai.brain.MemoryModuleState;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.*;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -135,6 +136,8 @@ public class MobBehavior {
                 ((Angerable) mob).stopAnger();
             }
             mob.setTarget(null);
+            mob.setAttacker(null);
+            ((MobEntityAccessor)this.mob).getTargetSelector().getRunningGoals().forEach(PrioritizedGoal::stop);
         }
     }
 

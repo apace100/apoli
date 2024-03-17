@@ -46,6 +46,13 @@ public class MobBehaviorFactory<T extends MobBehavior> implements Factory {
             data.write(buffer, dataInstance);
         }
 
+        public JsonObject toJson() {
+            JsonObject jsonObject = data.write(dataInstance);
+            jsonObject.addProperty("type", id.toString());
+
+            return jsonObject;
+        }
+
         @Override
         public T apply(MobEntity mob) {
             return factoryConstructor.apply(dataInstance, mob);

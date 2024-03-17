@@ -92,7 +92,7 @@ public class AttributeMobBehavior extends MobBehavior {
             if (mob.getAttributes().getCustomInstance(attribute) == null) return;
             if (modifiers.containsKey(attribute)) {
                 modifiers.get(attribute).forEach(modifier -> {
-                    mob.getAttributes().getCustomInstance(attribute).removeModifier(modifier);
+                    mob.getAttributes().getCustomInstance(attribute).removeModifier(modifier.getId());
                 });
             }
             if (mob.getAttributes().getCustomInstance(attribute).getModifiers().isEmpty()) {

@@ -15,6 +15,6 @@ public class MobBehaviors {
     }
 
     private static void register(MobBehaviorFactory<?> serializer) {
-        Registry.register(ApoliRegistries.BEHAVIOR_FACTORY, serializer.getSerializerId(), serializer);
+        Registry.register(ApoliRegistries.MOB_BEHAVIOR_FACTORY, serializer.getSerializerId(), serializer);
     }
 }
