@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.condition.entity;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.BlockCollisionSpliteratorAccess;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
@@ -9,6 +10,8 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.world.BlockCollisionSpliterator;
+import net.minecraft.world.World;
 
 import java.util.function.Predicate;
 
@@ -18,36 +21,28 @@ public class BlockCollisionCondition {
 
         Box entityBoundingBox = entity.getBoundingBox();
         Box offsetEntityBoundingBox = entityBoundingBox.offset(
-            data.getFloat("offset_x") * entityBoundingBox.getXLength(),
-            data.getFloat("offset_y") * entityBoundingBox.getYLength(),
-            data.getFloat("offset_z") * entityBoundingBox.getZLength()
+            data.getFloat("offset_x") * entityBoundingBox.getLengthX(),
+            data.getFloat("offset_y") * entityBoundingBox.getLengthY(),
+            data.getFloat("offset_z") * entityBoundingBox.getLengthZ()
         );
 
-        if (data.isPresent("block_condition")) {
+        Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
+        World world = entity.getWorld();
 
-            Predicate<CachedBlockPosition> blockCondition = data.get("block_condition");
-            BlockPos minBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.minX + 0.001, offsetEntityBoundingBox.minY + 0.001, offsetEntityBoundingBox.minZ + 0.001);
-            BlockPos maxBlockPos = BlockPos.ofFloored(offsetEntityBoundingBox.maxX - 0.001, offsetEntityBoundingBox.maxY - 0.001, offsetEntityBoundingBox.maxZ - 0.001);
-            BlockPos.Mutable mutableBlockPos = new BlockPos.Mutable();
-            int matchingBlocks = 0;
+        BlockCollisionSpliterator<BlockPos> spliterator = new BlockCollisionSpliterator<>(entity.getWorld(), entity, offsetEntityBoundingBox, false, (pos, shape) -> pos);
+        ((BlockCollisionSpliteratorAccess) spliterator).apoli$setGetOriginalShapes(true);
 
-            for (int x = minBlockPos.getX(); x <= maxBlockPos.getX(); x++) {
-                for (int y = minBlockPos.getY(); y <= maxBlockPos.getY(); y++) {
-                    for (int z = minBlockPos.getZ(); z <= maxBlockPos.getZ(); z++) {
-                        mutableBlockPos.set(x, y, z);
-                        if (blockCondition.test(new CachedBlockPosition(entity.getWorld(), mutableBlockPos, true))) matchingBlocks++;
-                    }
-                }
+        while (spliterator.hasNext()) {
+
+            BlockPos blockPos = spliterator.next();
+
+            if (blockCondition == null || blockCondition.test(new CachedBlockPosition(world, blockPos, true))) {
+                return true;
             }
-
-            return matchingBlocks > 0;
 
         }
 
-        else return entity.getWorld()
-            .getBlockCollisions(entity, offsetEntityBoundingBox)
-            .iterator()
-            .hasNext();
+        return false;
 
     }
 

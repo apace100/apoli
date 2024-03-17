@@ -13,7 +13,6 @@ public class BurnPower extends Power {
 
     public BurnPower(PowerType<?> type, LivingEntity entity, int refreshInterval, int burnDuration) {
         super(type, entity);
-        if(refreshInterval <= 0) refreshInterval = 1;
         this.refreshInterval = refreshInterval;
         this.burnDuration = burnDuration;
         this.setTicking();
@@ -26,13 +25,18 @@ public class BurnPower extends Power {
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("burn"),
+        return new PowerFactory<>(
+            Apoli.identifier("burn"),
             new SerializableData()
-                .add("interval", SerializableDataTypes.INT)
-                .add("burn_duration", SerializableDataTypes.INT),
-            data ->
-                (type, player) ->
-                    new BurnPower(type, player, data.getInt("interval"), data.getInt("burn_duration")))
-            .allowCondition();
+                .add("interval", SerializableDataTypes.POSITIVE_INT)
+                .add("burn_duration", SerializableDataTypes.POSITIVE_INT),
+            data -> (powerType, livingEntity) -> new BurnPower(
+                powerType,
+                livingEntity,
+                data.getInt("interval"),
+                data.getInt("burn_duration")
+            )
+        ).allowCondition();
     }
+
 }

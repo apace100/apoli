@@ -7,33 +7,29 @@ import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.factory.action.entity.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.*;
-import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.AreaEffectCloudEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.potion.PotionUtil;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import org.joml.Vector3f;
-import net.minecraft.registry.Registry;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.joml.Vector3f;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -53,14 +49,7 @@ public class EntityActions {
         register(NothingAction.getFactory());
         register(SideAction.getFactory(ApoliDataTypes.ENTITY_ACTION, entity -> !entity.getWorld().isClient));
 
-        register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
-            .add("amount", SerializableDataTypes.FLOAT)
-            .add("source", ApoliDataTypes.DAMAGE_SOURCE_DESCRIPTION, null)
-            .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, null),
-            (data, entity) -> {
-                DamageSource damageSource = MiscUtil.createDamageSource(entity.getDamageSources(), data.get("source"), data.get("damage_type"));
-                entity.damage(damageSource, data.getFloat("amount"));
-            }));
+        register(DamageAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("heal"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT),
             (data, entity) -> {
@@ -68,23 +57,7 @@ public class EntityActions {
                     ((LivingEntity)entity).heal(data.getFloat("amount"));
                 }
             }));
-        register(new ActionFactory<>(Apoli.identifier("play_sound"), new SerializableData()
-                .add("sound", SerializableDataTypes.SOUND_EVENT)
-                .add("volume", SerializableDataTypes.FLOAT, 1F)
-                .add("pitch", SerializableDataTypes.FLOAT, 1F),
-                (data, entity) -> {
-                    SoundCategory category;
-                    if(entity instanceof PlayerEntity) {
-                        category = SoundCategory.PLAYERS;
-                    } else
-                    if(entity instanceof HostileEntity) {
-                        category = SoundCategory.HOSTILE;
-                    } else {
-                        category = SoundCategory.NEUTRAL;
-                    }
-                    entity.getWorld().playSound(null, (entity).getX(), (entity).getY(), (entity).getZ(), data.get("sound"),
-                        category, data.getFloat("volume"), data.getFloat("pitch"));
-                }));
+        register(PlaySoundAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("exhaust"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT),
             (data, entity) -> {
@@ -256,54 +229,8 @@ public class EntityActions {
         register(new ActionFactory<>(Apoli.identifier("set_fall_distance"), new SerializableData()
             .add("fall_distance", SerializableDataTypes.FLOAT),
             (data, entity) -> entity.fallDistance = data.getFloat("fall_distance")));
-        register(new ActionFactory<>(Apoli.identifier("give"), new SerializableData()
-            .add("stack", SerializableDataTypes.ITEM_STACK)
-            .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
-            .add("preferred_slot", SerializableDataTypes.EQUIPMENT_SLOT, null),
-            (data, entity) -> {
-                if(!entity.getWorld().isClient()) {
-                    ItemStack stack = data.get("stack");
-                    if(stack.isEmpty()) {
-                        return;
-                    }
-                    stack = stack.copy();
-                    if(data.isPresent("item_action")) {
-                        ActionFactory<Pair<World, ItemStack>>.Instance action = data.get("item_action");
-                        action.accept(new Pair<>(entity.getWorld(), stack));
-                    }
-                    if(data.isPresent("preferred_slot") && entity instanceof LivingEntity living) {
-                        EquipmentSlot slot = data.get("preferred_slot");
-                        ItemStack stackInSlot = living.getEquippedStack(slot);
-                        if(stackInSlot.isEmpty()) {
-                            living.equipStack(slot, stack);
-                            return;
-                        } else
-                        if(ItemStack.canCombine(stackInSlot, stack) && stackInSlot.getCount() < stackInSlot.getMaxCount()) {
-                            int fit = Math.min(stackInSlot.getMaxCount() - stackInSlot.getCount(), stack.getCount());
-                            stackInSlot.increment(fit);
-                            stack.decrement(fit);
-                            if(stack.isEmpty()) {
-                                return;
-                            }
-                        }
-                    }
-                    if(entity instanceof PlayerEntity) {
-                        ((PlayerEntity)entity).getInventory().offerOrDrop(stack);
-                    } else {
-                        entity.getWorld().spawnEntity(new ItemEntity(entity.getWorld(), entity.getX(), entity.getY(), entity.getZ(), stack));
-                    }
-                }
-            }));
-        register(new ActionFactory<>(Apoli.identifier("equipped_item_action"), new SerializableData()
-            .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT)
-            .add("action", ApoliDataTypes.ITEM_ACTION),
-            (data, entity) -> {
-                if(entity instanceof LivingEntity) {
-                    ItemStack stack = ((LivingEntity)entity).getEquippedStack(data.get("equipment_slot"));
-                    ActionFactory<Pair<World, ItemStack>>.Instance action = data.get("action");
-                    action.accept(new Pair<>(entity.getWorld(), stack));
-                }
-            }));
+        register(GiveAction.getFactory());
+        register(EquippedItemAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("trigger_cooldown"), new SerializableData()
             .add("power", ApoliDataTypes.POWER_TYPE),
             (data, entity) -> {
@@ -361,6 +288,8 @@ public class EntityActions {
                 component.removePower(data.get("power"), data.getId("source"));
                 component.sync();
             })));
+        register(RevokeAllPowersAction.getFactory());
+        register(RemovePowerAction.getFactory());
         register(ExplodeAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("dismount"), new SerializableData(),
             (data, entity) -> entity.stopRiding()));
@@ -441,6 +370,8 @@ public class EntityActions {
         register(SelectorAction.getFactory());
         register(GrantAdvancementAction.getFactory());
         register(RevokeAdvancementAction.getFactory());
+        register(ActionOnSetAction.getFactory());
+        register(RandomTeleportAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {

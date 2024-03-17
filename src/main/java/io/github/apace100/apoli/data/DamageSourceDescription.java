@@ -95,7 +95,7 @@ public class DamageSourceDescription {
     }
 
     private void overwriteDamageSourceMessageKey(DamageSource source) {
-        ((NameMutableDamageSource)source).setName(name);
+        ((NameMutableDamageSource)source).apoli$setName(name);
     }
 
     private void findBestMatchingDamageType(DamageSources damageSources) {

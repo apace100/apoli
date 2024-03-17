@@ -1,10 +1,17 @@
 package io.github.apace100.apoli.mixin;
 
+import com.google.common.collect.ImmutableMap;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.serialization.MapCodec;
+import io.github.apace100.apoli.access.BlockStateCollisionShapeAccess;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PhasingPower;
 import io.github.apace100.apoli.power.PreventBlockSelectionPower;
 import net.minecraft.block.*;
 import net.minecraft.entity.Entity;
+import net.minecraft.state.State;
+import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
@@ -15,65 +22,59 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@SuppressWarnings("deprecation")
+import java.util.function.Predicate;
+
 @Mixin(AbstractBlock.AbstractBlockState.class)
-public abstract class AbstractBlockStateMixin {
+public abstract class AbstractBlockStateMixin extends State<Block, BlockState> implements BlockStateCollisionShapeAccess {
 
-    @Shadow
-    public abstract Block getBlock();
+    @Shadow public abstract Block getBlock();
 
-    @Shadow
-    protected abstract BlockState asBlockState();
+    @Shadow protected abstract BlockState asBlockState();
 
-    @Shadow
-    public abstract VoxelShape getOutlineShape(BlockView world, BlockPos pos);
-
-    @Inject(method = "getOutlineShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("HEAD"), cancellable = true)
-    private void preventBlockSelection(BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> cir) {
-        if(context instanceof EntityShapeContext) {
-            if(((EntityShapeContext)context).getEntity() != null) {
-                Entity entity = ((EntityShapeContext)context).getEntity();
-                if(PowerHolderComponent.getPowers(entity, PreventBlockSelectionPower.class).stream().anyMatch(p -> p.doesPrevent(entity.getWorld(), pos))) {
-                    cir.setReturnValue(VoxelShapes.empty());
-                }
-            }
-        }
+    protected AbstractBlockStateMixin(Block owner, ImmutableMap<Property<?>, Comparable<?>> entries, MapCodec<BlockState> codec) {
+        super(owner, entries, codec);
     }
 
-    @Inject(at = @At("RETURN"), method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", cancellable = true)
-    private void phaseThroughBlocks(BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> info) {
-        VoxelShape blockShape = info.getReturnValue();
-        if(!blockShape.isEmpty() && context instanceof EntityShapeContext) {
-            EntityShapeContext esc = (EntityShapeContext)context;
-            if(esc.getEntity() != null) {
-                Entity entity = esc.getEntity();
-                boolean isAbove = isAbove(entity, blockShape, pos, false);
-                for (PhasingPower phasingPower : PowerHolderComponent.getPowers(entity, PhasingPower.class)) {
-                    if(!isAbove || phasingPower.shouldPhaseDown(entity)) {
-                        if(phasingPower.doesApply(pos)) {
-                            info.setReturnValue(VoxelShapes.empty());
-                        }
-                    }
-                }
-            }
+    @ModifyReturnValue(method = "getOutlineShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("RETURN"))
+    private VoxelShape apoli$preventBlockSelection(VoxelShape original, BlockView blockView, BlockPos blockPos, ShapeContext shapeContext) {
+
+        Entity entity;
+        if (!(shapeContext instanceof EntityShapeContext esc) || (entity = esc.getEntity()) == null) {
+            return original;
         }
+
+        return PowerHolderComponent.hasPower(entity, PreventBlockSelectionPower.class, p -> p.doesPrevent(entity.getWorld(), blockPos)) ? VoxelShapes.empty() : original;
+
+    }
+
+    @ModifyReturnValue(method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("RETURN"))
+    private VoxelShape apoli$phaseThroughBlocks(VoxelShape original, BlockView blockView, BlockPos blockPos, ShapeContext shapeContext) {
+
+        Entity entity;
+        if (original.isEmpty() || !(shapeContext instanceof EntityShapeContext esc) || (entity = esc.getEntity()) == null) {
+            return original;
+        }
+
+        Predicate<PhasingPower> phasingApplies = p -> (!apoli$isAbove(entity, original, blockPos) || p.shouldPhaseDown(entity)) && p.doesApply(blockPos);
+        return PowerHolderComponent.hasPower(entity, PhasingPower.class, phasingApplies) ? VoxelShapes.empty() : original;
+
     }
 
     @Unique
-    private boolean isAbove(Entity entity, VoxelShape shape, BlockPos pos, boolean defaultValue) {
-        return entity.getY() > (double)pos.getY() + shape.getMax(Direction.Axis.Y) - (entity.isOnGround() ? 8.05/16.0 : 0.0015);
+    private boolean apoli$isAbove(Entity entity, VoxelShape shape, BlockPos pos) {
+        return entity.getY() > (double) pos.getY() + shape.getMax(Direction.Axis.Y) - (entity.isOnGround() ? 8.05 / 16.0 : 0.0015);
     }
 
-    @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
-    private void preventCollisionWhenPhasing(World world, BlockPos pos, Entity entity, CallbackInfo ci) {
-        for (PhasingPower phasingPower : PowerHolderComponent.getPowers(entity, PhasingPower.class)) {
-            if(phasingPower.doesApply(pos)) {
-                ci.cancel();
-            }
-        }
+    @WrapWithCondition(method = "onEntityCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onEntityCollision(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V"))
+    private boolean apoli$preventOnEntityCollisionCallWhenPhasing(Block instance, BlockState state, World world, BlockPos blockPos, Entity entity) {
+        return !PowerHolderComponent.hasPower(entity, PhasingPower.class, p -> p.doesApply(blockPos));
     }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public VoxelShape apoli$getOriginalCollisionShape(BlockView world, BlockPos pos, ShapeContext context) {
+        return this.getBlock().getCollisionShape(this.asBlockState(), world, pos, context);
+    }
+
 }

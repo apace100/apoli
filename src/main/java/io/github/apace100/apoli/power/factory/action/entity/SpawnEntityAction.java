@@ -10,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Pair;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -38,6 +39,7 @@ public class SpawnEntityAction {
 
         serverWorld.spawnNewEntityAndPassengers(entityToSpawn);
         data.<Consumer<Entity>>ifPresent("entity_action", entityAction -> entityAction.accept(entityToSpawn));
+        data.<Consumer<Pair<Entity, Entity>>>ifPresent("bientity_action", biEntityAction -> biEntityAction.accept(new Pair<>(entity, entityToSpawn)));
 
     }
 
@@ -47,7 +49,8 @@ public class SpawnEntityAction {
             new SerializableData()
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
                 .add("tag", SerializableDataTypes.NBT, null)
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
+                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
+                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null),
             SpawnEntityAction::action
         );
     }

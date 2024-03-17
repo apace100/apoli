@@ -7,76 +7,79 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GlobalPowerSetUtil {
 
-    public static Identifier POWER_SOURCE = Apoli.identifier("global");
+    public static final Identifier POWER_SOURCE = Apoli.identifier("global");
 
     public static List<GlobalPowerSet> getApplicableSets(EntityType<?> type) {
-        List<GlobalPowerSet> result = new LinkedList<>();
-        Iterator<GlobalPowerSet> sets = GlobalPowerSetLoader.ALL.iterator();
-        while(sets.hasNext()) {
-            GlobalPowerSet gps = sets.next();
-            if(gps.doesApply(type)) {
-                result.add(gps);
-            }
-        }
-        result.sort(GlobalPowerSet::compareTo);
-        return result;
+        return GlobalPowerSetLoader.ALL
+            .values()
+            .stream()
+            .filter(gps -> gps.doesApply(type))
+            .sorted(GlobalPowerSet::compareTo)
+            .collect(Collectors.toCollection(LinkedList::new));
     }
 
     public static Set<Identifier> getPowerTypeIds(List<GlobalPowerSet> powerSets) {
         return powerSets.stream()
-                .flatMap(gps -> gps.getPowerTypes().stream())
-                .map(PowerType::getIdentifier)
-                .collect(Collectors.toSet());
+            .flatMap(gps -> gps.getPowerTypes().stream())
+            .map(PowerType::getIdentifier)
+            .collect(Collectors.toSet());
     }
 
     public static void applyGlobalPowers(Entity entity) {
-        if(entity.getWorld().isClient) {
+
+        if (entity.getWorld().isClient) {
             return;
         }
-        Optional<PowerHolderComponent> optional = PowerHolderComponent.KEY.maybeGet(entity);
-        if(optional.isEmpty()) {
+
+        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
+        if (component == null) {
             return;
         }
-        PowerHolderComponent phc = optional.get();
-        List<GlobalPowerSet> sets = getApplicableSets(entity.getType());
-        Set<Identifier> ids = getPowerTypeIds(sets);
-        boolean change = removeExcessPowers(phc, ids);
-        for(GlobalPowerSet powerSet : sets) {
-            change |= addMissingPowers(phc, powerSet);
+
+        List<GlobalPowerSet> globalPowerSets = getApplicableSets(entity.getType());
+        Set<Identifier> powerTypeIds = getPowerTypeIds(globalPowerSets);
+
+        boolean changed = removeExcessPowers(component, powerTypeIds);
+        for (GlobalPowerSet globalPowerSet : globalPowerSets) {
+            changed |= addMissingPowers(component, globalPowerSet);
         }
-        if(change) {
-            phc.sync();
+
+        if (changed) {
+            component.sync();
         }
+
     }
 
     private static boolean removeExcessPowers(PowerHolderComponent phc, Set<Identifier> expected) {
-        List<PowerType<?>> powers = phc.getPowersFromSource(POWER_SOURCE);
-        List<PowerType<?>> toRemove = new LinkedList<>();
-        for(PowerType<?> pt : powers) {
-            Identifier id = pt.getIdentifier();
-            if(!expected.contains(id)) {
-                toRemove.add(pt);
-            }
-        }
-        for(PowerType<?> pt : toRemove) {
-            phc.removePower(pt, POWER_SOURCE);
-        }
-        return toRemove.size() > 0;
+
+        List<PowerType<?>> powersToRemove = phc.getPowersFromSource(POWER_SOURCE)
+            .stream()
+            .filter(p -> !expected.contains(p.getIdentifier()))
+            .toList();
+
+        powersToRemove.forEach(p -> phc.removePower(p, POWER_SOURCE));
+        return !powersToRemove.isEmpty();
+
     }
 
     private static boolean addMissingPowers(PowerHolderComponent phc, GlobalPowerSet powerSet) {
+
         boolean added = false;
-        for(PowerType<?> pt : powerSet.getPowerTypes()) {
-            if(!phc.hasPower(pt, POWER_SOURCE)) {
-                phc.addPower(pt, POWER_SOURCE);
+        for(PowerType<?> power : powerSet.getPowerTypes()) {
+            if(!phc.hasPower(power, POWER_SOURCE)) {
+                phc.addPower(power, POWER_SOURCE);
                 added = true;
             }
         }
+
         return added;
+
     }
 }

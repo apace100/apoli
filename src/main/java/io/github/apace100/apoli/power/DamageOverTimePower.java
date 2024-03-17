@@ -9,7 +9,6 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -139,7 +138,7 @@ public class DamageOverTimePower extends Power {
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("damage_over_time"),
             new SerializableData()
-                .add("interval", SerializableDataTypes.INT, 20)
+                .add("interval", SerializableDataTypes.POSITIVE_INT, 20)
                 .addFunctionedDefault("onset_delay", SerializableDataTypes.INT, data -> data.getInt("interval"))
                 .add("damage", SerializableDataTypes.FLOAT)
                 .addFunctionedDefault("damage_easy", SerializableDataTypes.FLOAT, data -> data.getFloat("damage"))
@@ -147,16 +146,18 @@ public class DamageOverTimePower extends Power {
                 .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, GENERIC_DAMAGE)
                 .add("protection_enchantment", SerializableDataTypes.ENCHANTMENT, null)
                 .add("protection_effectiveness", SerializableDataTypes.FLOAT, 1.0F),
-            data ->
-                (type, player) -> new DamageOverTimePower(type, player,
-                    data.getInt("onset_delay"),
-                    data.getInt("interval"),
-                    data.getFloat("damage_easy"),
-                    data.getFloat("damage"),
-                    data.get("damage_source"),
-                    data.get("damage_type"),
-                    data.get("protection_enchantment"),
-                    data.getFloat("protection_effectiveness")))
-            .allowCondition();
+            data -> (type, livingEntity) -> new DamageOverTimePower(
+                type,
+                livingEntity,
+                data.getInt("onset_delay"),
+                data.getInt("interval"),
+                data.getFloat("damage_easy"),
+                data.getFloat("damage"),
+                data.get("damage_source"),
+                data.get("damage_type"),
+                data.get("protection_enchantment"),
+                data.getFloat("protection_effectiveness")
+            )
+        ).allowCondition();
     }
 }

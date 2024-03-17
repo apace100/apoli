@@ -1,8 +1,10 @@
 package io.github.apace100.apoli.power;
 
-import net.minecraft.entity.Entity;
+import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -17,12 +19,12 @@ public class InteractionPower extends Power {
 
     private final EnumSet<Hand> hands;
     private final ActionResult actionResult;
-    private final Predicate<ItemStack> itemCondition;
-    protected final Consumer<Pair<World, ItemStack>> heldItemAction;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
+    protected final Consumer<Pair<World, StackReference>> heldItemAction;
     protected final ItemStack itemResult;
-    protected final Consumer<Pair<World, ItemStack>> resultItemAction;
+    protected final Consumer<Pair<World, StackReference>> resultItemAction;
 
-    public InteractionPower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<ItemStack> itemCondition, Consumer<Pair<World, ItemStack>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, ItemStack>> resultItemAction) {
+    public InteractionPower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Pair<World, StackReference>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, StackReference>> resultItemAction) {
         super(type, entity);
         this.hands = hands;
         this.actionResult = actionResult;
@@ -47,7 +49,7 @@ public class InteractionPower extends Power {
     }
 
     public boolean doesApplyToItem(ItemStack heldStack) {
-        return itemCondition == null || itemCondition.test(heldStack);
+        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), heldStack));
     }
 
     public ActionResult getActionResult() {
@@ -55,21 +57,24 @@ public class InteractionPower extends Power {
     }
 
     protected void performActorItemStuff(InteractionPower power, PlayerEntity actor, Hand hand) {
-        ItemStack heldStack = actor.getStackInHand(hand);
+        StackReference heldStack = actor.getStackReference(hand == Hand.OFF_HAND ? ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand") : ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
         if(power.heldItemAction != null) {
-            power.heldItemAction.accept(new Pair<>(actor.getWorld(), heldStack));
+            heldItemAction.accept(new Pair<>(actor.getWorld(), heldStack));
         }
-        ItemStack resultingStack = power.itemResult == null ? heldStack : power.itemResult.copy();
+        if (power.itemResult != null) {
+            heldStack.set(power.itemResult);
+        }
+        StackReference resultingStack = InventoryUtil.createStackReference(power.itemResult == null ? heldStack.get() : power.itemResult.copy());
         boolean modified = power.itemResult != null;
         if(power.resultItemAction != null) {
-            power.resultItemAction.accept(new Pair<>(actor.getWorld(), resultingStack));
+            resultItemAction.accept(new Pair<>(actor.getWorld(), heldStack));
             modified = true;
         }
         if(modified) {
-            if(heldStack.isEmpty()) {
-                actor.setStackInHand(hand, resultingStack);
+            if(heldStack.get().isEmpty()) {
+                actor.setStackInHand(hand, resultingStack.get());
             } else {
-                actor.getInventory().offerOrDrop(resultingStack);
+                actor.getInventory().offerOrDrop(resultingStack.get());
             }
         }
     }

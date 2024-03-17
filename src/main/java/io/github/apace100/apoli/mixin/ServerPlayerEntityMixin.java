@@ -8,8 +8,9 @@ import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import io.github.apace100.apoli.power.KeepInventoryPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
+import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.GameStateChangeS2CPacket;
 import net.minecraft.registry.RegistryKey;
@@ -31,6 +32,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -101,7 +103,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Inject(at = @At("HEAD"), method = "getSpawnPointDimension", cancellable = true)
     private void modifySpawnPointDimension(CallbackInfoReturnable<RegistryKey<World>> info) {
-        if (!this.origins_isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
+        if (!this.apoli$isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
             ModifyPlayerSpawnPower power = PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).get(0);
             info.setReturnValue(power.dimension);
         }
@@ -109,7 +111,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Inject(at = @At("HEAD"), method = "getSpawnPointPosition", cancellable = true)
     private void modifyPlayerSpawnPosition(CallbackInfoReturnable<BlockPos> info) {
-        if(!this.origins_isEndRespawning && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
+        if(!this.apoli$isEndRespawning && PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class).size() > 0) {
             if(spawnPointPosition == null) {
                 info.setReturnValue(findPlayerSpawn());
             } else if(hasObstructedSpawn()) {
@@ -122,7 +124,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Inject(at = @At("HEAD"), method = "isSpawnForced", cancellable = true)
     private void modifySpawnPointSet(CallbackInfoReturnable<Boolean> info) {
-        if(!this.origins_isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class)) {
+        if(!this.apoli$isEndRespawning && (spawnPointPosition == null || hasObstructedSpawn()) && PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class)) {
             info.setReturnValue(true);
         }
     }
@@ -160,29 +162,32 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
         apoli$stackBeforeDrop = this.getInventory().getMainHandStack().copy();
     }
 
-    @Inject(method = "dropSelectedItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/ScreenHandler;getSlotIndex(Lnet/minecraft/inventory/Inventory;I)Ljava/util/OptionalInt;"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void checkItemUsageStopping(boolean entireStack, CallbackInfoReturnable<Boolean> cir, PlayerInventory playerInventory, ItemStack itemStack) {
+    @ModifyArg(method = "dropSelectedItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;dropItem(Lnet/minecraft/item/ItemStack;ZZ)Lnet/minecraft/entity/ItemEntity;"))
+    private ItemStack checkItemUsageStopping(ItemStack itemStack) {
         if(this.isUsingItem() && !ItemStack.areItemsEqual(apoli$stackBeforeDrop, this.getInventory().getMainHandStack())) {
-            ActionOnItemUsePower.executeActions(this, itemStack, apoli$stackBeforeDrop,
+            StackReference reference = InventoryUtil.createStackReference(itemStack);
+            ActionOnItemUsePower.executeActions(this, reference, apoli$stackBeforeDrop,
                     ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
+            reference.get();
         }
+        return itemStack;
     }
 
     @Unique
-    private boolean origins_isEndRespawning;
+    private boolean apoli$isEndRespawning;
 
     @Override
-    public void setEndRespawning(boolean endSpawn) {
-        this.origins_isEndRespawning = endSpawn;
+    public void apoli$setEndRespawning(boolean endSpawn) {
+        this.apoli$isEndRespawning = endSpawn;
     }
 
     @Override
-    public boolean isEndRespawning() {
-        return this.origins_isEndRespawning;
+    public boolean apoli$isEndRespawning() {
+        return this.apoli$isEndRespawning;
     }
 
     @Override
-    public boolean hasRealRespawnPoint() {
+    public boolean apoli$hasRealRespawnPoint() {
         return spawnPointPosition != null && !hasObstructedSpawn();
     }
 }

@@ -15,8 +15,12 @@ public class OwnerCondition {
 		Entity actor = actorAndTarget.getLeft();
 		Entity target = actorAndTarget.getRight();
 
-		return (target instanceof Tameable tamable && actor == tamable.getOwner())
-			|| (target instanceof Ownable ownable && actor == ownable.getOwner());
+		if (actor == null || target == null) {
+			return false;
+		}
+
+		return (target instanceof Tameable tamable && actor.equals(tamable.getOwner()))
+			|| (target instanceof Ownable ownable && actor.equals(ownable.getOwner()));
 
 	}
 

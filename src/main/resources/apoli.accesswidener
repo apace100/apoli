@@ -1,10 +1,15 @@
 accessWidener   v1  named
 
 mutable field net/minecraft/item/ItemStack item Lnet/minecraft/item/Item;
+accessible method net/minecraft/item/ItemStack <init> (Ljava/lang/Void;)V
 extendable class net/minecraft/item/ItemStack
+accessible class net/minecraft/enchantment/EnchantmentHelper$Consumer
 accessible class net/minecraft/client/render/BackgroundRenderer$FogData
 accessible class net/minecraft/server/command/AdvancementCommand$Operation
 accessible class net/minecraft/server/command/AdvancementCommand$Selection
-accessible method net/minecraft/server/command/AdvancementCommand$Operation processEach (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;)Z
-accessible method net/minecraft/server/command/AdvancementCommand$Operation processEachCriterion (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/Advancement;Ljava/lang/String;)Z
-accessible class net/minecraft/entity/ai/brain/task/TaskTriggerer$TaskFunction
+accessible method net/minecraft/server/command/AdvancementCommand$Operation processEach (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/AdvancementEntry;)Z
+accessible method net/minecraft/server/command/AdvancementCommand$Operation processEachCriterion (Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/advancement/AdvancementEntry;Ljava/lang/String;)Z
+extendable class net/minecraft/world/event/Vibrations$ListenerData
+accessible field net/minecraft/server/command/AdvancementCommand$Selection before Z
+accessible field net/minecraft/server/command/AdvancementCommand$Selection after Z
+accessible class net/minecraft/client/gui/hud/InGameHud$HeartType

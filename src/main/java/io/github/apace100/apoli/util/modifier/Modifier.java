@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.util.modifier;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import io.github.apace100.calio.data.DataException;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -43,33 +43,52 @@ public class Modifier implements Comparable<Modifier> {
         }
     }
 
-    public static final SerializableDataType<Modifier> DATA_TYPE = new SerializableDataType<>(Modifier.class,
-        (packetByteBuf, modifier) -> {
-            IModifierOperation.DATA_TYPE.send(packetByteBuf, modifier.operation);
-            modifier.operation.getData().write(packetByteBuf, modifier.dataInstance);
+    public static final SerializableDataType<Modifier> DATA_TYPE = new SerializableDataType<>(
+        Modifier.class,
+        (buffer, modifier) -> {
+            IModifierOperation.DATA_TYPE.send(buffer, modifier.operation);
+            modifier.operation.getData().write(buffer, modifier.dataInstance);
         },
-        (packetByteBuf -> {
-            IModifierOperation operation = IModifierOperation.DATA_TYPE.receive(packetByteBuf);
-            SerializableData.Instance instance = operation.getData().read(packetByteBuf);
-            return new Modifier(operation, instance);
-        }),
-        (jsonElement -> {
-            if(!jsonElement.isJsonObject()) {
-                throw new JsonParseException("Modifiers need to be a JSON object.");
+        buffer -> {
+
+            IModifierOperation operation = IModifierOperation.DATA_TYPE.receive(buffer);
+            SerializableData.Instance data = operation.getData().read(buffer);
+
+            return new Modifier(operation, data);
+
+        },
+        jsonElement -> {
+
+            if (!(jsonElement instanceof JsonObject jsonObject)) {
+                throw new JsonSyntaxException("Expected modifier to be a JSON object.");
             }
-            JsonObject jo = jsonElement.getAsJsonObject();
-            if(!jo.has("operation")) {
-                throw new JsonParseException("Modifiers need to contain an \"operation\" field.");
+
+            if (!jsonObject.has("operation")) {
+                throw new JsonSyntaxException("Modifier requires an \"operation\" field.");
             }
-            IModifierOperation op;
+
             try {
-                op = IModifierOperation.DATA_TYPE.read(jo.get("operation"));
-            } catch(Exception e) {
+
+                IModifierOperation operation = IModifierOperation.DATA_TYPE.read(jsonObject.get("operation"));
+                SerializableData.Instance data = operation.getData().read(jsonObject);
+
+                return new Modifier(operation, data);
+
+            } catch (Exception e) {
                 throw new DataException(DataException.Phase.READING, "operation", e);
             }
-            SerializableData.Instance dataInstance = op.getData().read(jo);
-            return new Modifier(op, dataInstance);
-        }));
+
+        },
+        modifier -> {
+
+            JsonObject jsonObject = ModifierOperation.DATA.write(modifier.dataInstance);
+            jsonObject.add("operation", IModifierOperation.DATA_TYPE.write(modifier.operation));
+
+            return jsonObject;
+
+        }
+    );
 
     public static final SerializableDataType<List<Modifier>> LIST_TYPE = SerializableDataType.list(DATA_TYPE);
+
 }

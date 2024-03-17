@@ -3,15 +3,16 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.util.ClickType;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 
@@ -20,17 +21,18 @@ import java.util.function.Predicate;
 
 public class ItemOnItemPower extends Power {
 
-    private final Predicate<ItemStack> usingItemCondition;
-    private final Predicate<ItemStack> onItemCondition;
+    private final Predicate<Pair<World, ItemStack>> usingItemCondition;
+    private final Predicate<Pair<World, ItemStack>> onItemCondition;
 
     private final int resultFromOnStack;
     private final ItemStack newStack;
-    private final Consumer<Pair<World, ItemStack>> usingItemAction;
-    private final Consumer<Pair<World, ItemStack>> onItemAction;
-    private final Consumer<Pair<World, ItemStack>> resultItemAction;
+    private final ClickType clickType;
+    private final Consumer<Pair<World, StackReference>> usingItemAction;
+    private final Consumer<Pair<World, StackReference>> onItemAction;
+    private final Consumer<Pair<World, StackReference>> resultItemAction;
     private final Consumer<Entity> entityAction;
 
-    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<ItemStack> usingItemCondition, Predicate<ItemStack> onItemCondition, ItemStack newStack, Consumer<Pair<World, ItemStack>> usingItemAction, Consumer<Pair<World, ItemStack>> onItemAction, Consumer<Pair<World, ItemStack>> resultItemAction, Consumer<Entity> entityAction, int resultFromOnStack) {
+    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> usingItemCondition, Predicate<Pair<World, ItemStack>> onItemCondition, ItemStack newStack, Consumer<Pair<World, StackReference>> usingItemAction, Consumer<Pair<World, StackReference>> onItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Entity> entityAction, int resultFromOnStack, ClickType clickType) {
         super(type, entity);
         this.usingItemCondition = usingItemCondition;
         this.onItemCondition = onItemCondition;
@@ -40,58 +42,58 @@ public class ItemOnItemPower extends Power {
         this.resultItemAction = resultItemAction;
         this.entityAction = entityAction;
         this.resultFromOnStack = resultFromOnStack;
+        this.clickType = clickType;
     }
 
-    public boolean doesApply(ItemStack using, ItemStack on) {
-        if(usingItemCondition != null && !usingItemCondition.test(using)) {
-            return false;
-        }
-        if(onItemCondition != null && !onItemCondition.test(on)) {
-            return false;
-        }
-        return true;
+    public boolean doesApply(ItemStack usingStack, ItemStack onStack, ClickType clickType) {
+        return this.clickType == clickType
+            && (onItemCondition == null || onItemCondition.test(new Pair<>(entity.getWorld(), onStack)))
+            && (usingItemCondition == null || usingItemCondition.test(new Pair<>(entity.getWorld(), usingStack)));
     }
 
-    public ItemStack execute(ItemStack using, ItemStack on, Slot slot) {
-        ItemStack stack;
-        if(newStack != null) {
-            stack = newStack.copy();
-            if(resultItemAction != null) {
-                resultItemAction.accept(new Pair<>(entity.getWorld(), stack));
+    public void execute(StackReference usingStack, StackReference onStack, Slot slot) {
+
+        StackReference resultStack = InventoryUtil.createStackReference(newStack != null ? newStack.copy()
+                                                 : resultFromOnStack > 0 ? onStack.get().split(resultFromOnStack) : onStack.get());
+
+        if (resultItemAction != null) {
+            resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
+        }
+
+        if (usingItemAction != null) {
+            usingItemAction.accept(new Pair<>(entity.getWorld(), usingStack));
+        }
+
+        if (onItemAction != null) {
+            onItemAction.accept(new Pair<>(entity.getWorld(), onStack));
+        }
+
+        tryOffer:
+        if (newStack != null || resultItemAction != null) {
+
+            if (!(entity instanceof PlayerEntity playerEntity)) {
+                break tryOffer;
             }
-        } else {
-            if(resultFromOnStack > 0) {
-                stack = on.split(resultFromOnStack);
+
+            if (slot.hasStack()) {
+                playerEntity.getInventory().offerOrDrop(resultStack.get());
             } else {
-                stack = on;
+                slot.setStackNoCallbacks(resultStack.get());
             }
-            if(resultItemAction != null) {
-                resultItemAction.accept(new Pair<>(entity.getWorld(), stack));
-            }
+
         }
-        if(usingItemAction != null) {
-            usingItemAction.accept(new Pair<>(entity.getWorld(), using));
-        }
-        if(onItemAction != null) {
-            onItemAction.accept(new Pair<>(entity.getWorld(), on));
-        }
-        if(newStack != null || resultItemAction != null) {
-            PlayerEntity player = (PlayerEntity)entity;
-            if(slot.getStack().isEmpty()) {
-                slot.setStackNoCallbacks(stack);
-            } else {
-                player.getInventory().offerOrDrop(stack);
-            }
-        }
-        if(entityAction != null) {
+
+        if (entityAction != null) {
             entityAction.accept(entity);
         }
-        return stack;
+
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("item_on_item"),
+        return new PowerFactory<>(
+            Apoli.identifier("item_on_item"),
             new SerializableData()
+                .add("click_type", ApoliDataTypes.CLICK_TYPE, ClickType.RIGHT)
                 .add("using_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("on_item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("result_from_on_stack", SerializableDataTypes.INT, 0)
@@ -100,15 +102,19 @@ public class ItemOnItemPower extends Power {
                 .add("on_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            data ->
-                (type, player) -> new ItemOnItemPower(type, player,
-                    (ConditionFactory<ItemStack>.Instance)data.get("using_item_condition"),
-                    (ConditionFactory<ItemStack>.Instance)data.get("on_item_condition"),
-                    (ItemStack)data.get("result"), (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("using_item_action"),
-                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("on_item_action"),
-                    (ActionFactory<Pair<World, ItemStack>>.Instance)data.get("result_item_action"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action"),
-                    data.getInt("result_from_on_stack")))
-            .allowCondition();
+            data -> (powerType, livingEntity) -> new ItemOnItemPower(
+                powerType,
+                livingEntity,
+                data.get("using_item_condition"),
+                data.get("on_item_condition"),
+                data.get("result"),
+                data.get("using_item_action"),
+                data.get("on_item_action"),
+                data.get("result_item_action"),
+                data.get("entity_action"),
+                data.get("result_from_on_stack"),
+                data.get("click_type")
+            )
+        ).allowCondition();
     }
 }

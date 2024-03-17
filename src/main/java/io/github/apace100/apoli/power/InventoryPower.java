@@ -11,28 +11,32 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.screen.*;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Pair;
 import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.world.World;
 
 import java.util.function.Predicate;
 
+@SuppressWarnings("unused")
 public class InventoryPower extends Power implements Active, Inventory {
 
     private final DefaultedList<ItemStack> container;
     private final MutableText containerTitle;
     private final ScreenHandlerFactory containerScreen;
-    private final Predicate<ItemStack> dropOnDeathFilter;
+    private final Predicate<Pair<World, ItemStack>> dropOnDeathFilter;
 
     private final boolean shouldDropOnDeath;
     private final boolean recoverable;
     private final int containerSize;
 
-    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<ItemStack> dropOnDeathFilter, boolean recoverable) {
+    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<Pair<World, ItemStack>> dropOnDeathFilter, boolean recoverable) {
         super(type, entity);
         switch (containerType) {
             case DOUBLE_CHEST:
@@ -72,29 +76,44 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void onLost() {
-        if (recoverable) dropItemsOnLost();
+        if (recoverable) {
+            dropItemsOnLost();
+        }
     }
 
     @Override
     public void onUse() {
-        if(!isActive()) {
+
+        if (!isActive()) {
             return;
         }
-        if(!entity.getWorld().isClient && entity instanceof PlayerEntity playerEntity) {
+
+        if (entity instanceof PlayerEntity playerEntity) {
             playerEntity.openHandledScreen(new SimpleNamedScreenHandlerFactory(containerScreen, containerTitle));
         }
+
     }
 
     @Override
     public NbtCompound toTag() {
+
         NbtCompound tag = new NbtCompound();
         Inventories.writeNbt(tag, container);
+
         return tag;
+
     }
 
     @Override
     public void fromTag(NbtElement tag) {
-        Inventories.readNbt((NbtCompound)tag, container);
+
+        if (!(tag instanceof NbtCompound rootNbt)) {
+            return;
+        }
+
+        this.clear();
+        Inventories.readNbt(rootNbt, container);
+
     }
 
     @Override
@@ -114,14 +133,17 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public ItemStack removeStack(int slot, int amount) {
-        return container.get(slot).split(amount);
+        return Inventories.splitStack(container, slot, amount);
     }
 
     @Override
     public ItemStack removeStack(int slot) {
-        ItemStack stack = container.get(slot);
-        setStack(slot, ItemStack.EMPTY);
-        return stack;
+
+        ItemStack prevStack = this.getStack(slot);
+        this.setStack(slot, ItemStack.EMPTY);
+
+        return prevStack;
+
     }
 
     @Override
@@ -130,7 +152,9 @@ public class InventoryPower extends Power implements Active, Inventory {
     }
 
     @Override
-    public void markDirty() {}
+    public void markDirty() {
+
+    }
 
     @Override
     public boolean canPlayerUse(PlayerEntity player) {
@@ -139,9 +163,24 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void clear() {
-        for(int i = 0; i < containerSize; i++) {
-            setStack(i, ItemStack.EMPTY);
-        }
+        this.container.clear();
+    }
+
+    public StackReference getStackReference(int slot) {
+        return new StackReference() {
+
+            @Override
+            public ItemStack get() {
+                return InventoryPower.this.getStack(slot);
+            }
+
+            @Override
+            public boolean set(ItemStack stack) {
+                InventoryPower.this.setStack(slot, stack);
+                return true;
+            }
+
+        };
     }
 
     public DefaultedList<ItemStack> getContainer() {
@@ -161,29 +200,41 @@ public class InventoryPower extends Power implements Active, Inventory {
     }
 
     public boolean shouldDropOnDeath(ItemStack stack) {
-        return shouldDropOnDeath && dropOnDeathFilter.test(stack);
+        return shouldDropOnDeath && dropOnDeathFilter.test(new Pair<>(entity.getWorld(), stack));
     }
 
     public void dropItemsOnDeath() {
-        PlayerEntity playerEntity = (PlayerEntity) entity;
-        for (int i = 0; i < containerSize; ++i) {
-            ItemStack currentItemStack = getStack(i);
-            if (shouldDropOnDeath(currentItemStack)) {
-                if (!currentItemStack.isEmpty() && EnchantmentHelper.hasVanishingCurse(currentItemStack)) removeStack(i);
-                else {
-                    playerEntity.dropItem(currentItemStack, true, false);
-                    setStack(i, ItemStack.EMPTY);
-                }
-            }
+
+        if (!(entity instanceof PlayerEntity playerEntity)) {
+            return;
         }
+
+        for (int i = 0; i < containerSize; ++i) {
+
+            ItemStack currentStack = this.getStack(i).copy();
+            if (!this.shouldDropOnDeath(currentStack)) {
+                continue;
+            }
+
+            this.removeStack(i);
+            if (!EnchantmentHelper.hasVanishingCurse(currentStack)) {
+                playerEntity.dropItem(currentStack, true, false);
+            }
+
+        }
+
     }
 
     public void dropItemsOnLost() {
-        PlayerEntity playerEntity = (PlayerEntity) entity;
-        for (int i = 0; i < containerSize; ++i) {
-            ItemStack currentItemStack = getStack(i);
-            playerEntity.getInventory().offerOrDrop(currentItemStack);
+
+        if (!(entity instanceof PlayerEntity playerEntity)) {
+            return;
         }
+
+        for (int i = 0; i < containerSize; ++i) {
+            playerEntity.getInventory().offerOrDrop(this.getStack(i));
+        }
+
     }
 
     private Key key;

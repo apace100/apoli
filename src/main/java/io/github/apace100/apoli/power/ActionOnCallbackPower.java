@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -29,54 +28,68 @@ public class ActionOnCallbackPower extends Power {
 
     @Override
     public void onRespawn() {
-        if(entityActionRespawned != null) {
+
+        if (this.isActive() && entityActionRespawned != null) {
             entityActionRespawned.accept(entity);
         }
+
     }
 
     @Override
     public void onGained() {
-        if(entityActionGained != null) {
+
+        if (this.isActive() && entityActionGained != null) {
             entityActionGained.accept(entity);
         }
+
     }
 
     @Override
     public void onRemoved() {
-        if(entityActionRemoved != null) {
+
+        if (this.isActive() && entityActionRemoved != null) {
             entityActionRemoved.accept(entity);
         }
+
     }
 
     @Override
     public void onLost() {
-        if(entityActionLost != null) {
+
+        if (this.isActive() && entityActionLost != null) {
             entityActionLost.accept(entity);
         }
+
     }
 
     @Override
     public void onAdded() {
-        if(entityActionAdded != null) {
+
+        if (this.isActive() && entityActionAdded != null) {
             entityActionAdded.accept(entity);
         }
+
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("action_on_callback"),
+        return new PowerFactory<>(
+            Apoli.identifier("action_on_callback"),
             new SerializableData()
                 .add("entity_action_respawned", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("entity_action_removed", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("entity_action_gained", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("entity_action_lost", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("entity_action_added", ApoliDataTypes.ENTITY_ACTION, null),
-            data ->
-                (type, player) -> new ActionOnCallbackPower(type, player,
-                    (ActionFactory<Entity>.Instance)data.get("entity_action_respawned"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action_removed"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action_gained"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action_lost"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action_added")))
-            .allowCondition();
+            data -> (powerType, livingEntity) -> new ActionOnCallbackPower(
+                powerType,
+                livingEntity,
+                data.get("entity_action_respawned"),
+                data.get("entity_action_removed"),
+                data.get("entity_action_gained"),
+                data.get("entity_action_lost"),
+                data.get("entity_action_added")
+            )
+        ).allowCondition();
     }
+
 }

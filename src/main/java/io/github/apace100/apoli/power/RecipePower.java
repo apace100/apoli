@@ -7,29 +7,41 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeEntry;
 
-public class RecipePower extends Power {
+public class RecipePower extends Power implements Prioritized<RecipePower> {
 
-    private final Recipe<CraftingInventory> recipe;
+    private final RecipeEntry<Recipe<CraftingInventory>> recipe;
+    private final int priority;
 
-    public RecipePower(PowerType<?> type, LivingEntity entity, Recipe<CraftingInventory> recipe) {
+    public RecipePower(PowerType<?> type, LivingEntity entity, RecipeEntry<Recipe<CraftingInventory>> recipe, int priority) {
         super(type, entity);
         this.recipe = recipe;
+        this.priority = priority;
     }
 
-    public Recipe<CraftingInventory> getRecipe() {
+    @Override
+    public int getPriority() {
+        return priority;
+    }
+
+    public RecipeEntry<Recipe<CraftingInventory>> getRecipe() {
         return recipe;
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("recipe"),
+        return new PowerFactory<>(
+            Apoli.identifier("recipe"),
             new SerializableData()
-                .add("recipe", SerializableDataTypes.RECIPE),
-            data ->
-                (type, player) -> {
-                    Recipe<CraftingInventory> recipe = (Recipe<CraftingInventory>)data.get("recipe");
-                    return new RecipePower(type, player, recipe);
-                })
-            .allowCondition();
+                .add("recipe", SerializableDataTypes.RECIPE)
+                .add("priority", SerializableDataTypes.INT, 0),
+            data -> (powerType, livingEntity) -> new RecipePower(
+                powerType,
+                livingEntity,
+                data.get("recipe"),
+                data.get("priority")
+            )
+        ).allowCondition();
     }
+
 }

@@ -1,0 +1,5 @@
+{
+	"exhaustion": 0.0,
+	"message_id": "sync_damage_source",
+	"scaling": "when_caused_by_living_non_player"
+}

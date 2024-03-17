@@ -7,101 +7,58 @@ import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 
-import java.util.LinkedList;
 import java.util.List;
 
-public class ConditionedAttributePower extends Power {
+public class ConditionedAttributePower extends AttributePower {
 
-    private final List<AttributedEntityAttributeModifier> modifiers = new LinkedList<AttributedEntityAttributeModifier>();
     private final int tickRate;
-    private final boolean updateHealth;
 
     public ConditionedAttributePower(PowerType<?> type, LivingEntity entity, int tickRate, boolean updateHealth) {
-        super(type, entity);
-        this.setTicking(true);
+        super(type, entity, updateHealth);
         this.tickRate = tickRate;
-        this.updateHealth = updateHealth;
+        this.setTicking(true);
     }
 
     @Override
     public void tick() {
-        if(entity.age % tickRate == 0) {
-            if(this.isActive()) {
-                addMods();
-            } else {
-                removeMods();
-            }
+
+        if (entity.age % tickRate != 0) {
+            return;
         }
-    }
 
-    @Override
-    public void onRemoved() {
-        removeMods();
-    }
-
-    public ConditionedAttributePower addModifier(AttributedEntityAttributeModifier modifier) {
-        this.modifiers.add(modifier);
-        return this;
-    }
-
-    public void addMods() {
-        float previousMaxHealth = entity.getMaxHealth();
-        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
-        modifiers.forEach(mod -> {
-            if(entity.getAttributes().hasAttribute(mod.getAttribute())) {
-                EntityAttributeInstance instance = entity.getAttributeInstance(mod.getAttribute());
-                if(instance != null) {
-                    if(!instance.hasModifier(mod.getModifier())) {
-                        instance.addTemporaryModifier(mod.getModifier());
-                    }
-                }
-            }
-        });
-        float afterMaxHealth = entity.getMaxHealth();
-        if(updateHealth && afterMaxHealth != previousMaxHealth) {
-            entity.setHealth(afterMaxHealth * previousHealthPercent);
+        if (this.isActive()) {
+            this.applyTempMods();
+        } else {
+            this.removeTempMods();
         }
-    }
 
-    public void removeMods() {
-        float previousMaxHealth = entity.getMaxHealth();
-        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
-        modifiers.forEach(mod -> {
-            if (entity.getAttributes().hasAttribute(mod.getAttribute())) {
-                EntityAttributeInstance instance = entity.getAttributeInstance(mod.getAttribute());
-                if(instance != null) {
-                    if(instance.hasModifier(mod.getModifier())) {
-                        instance.removeModifier(mod.getModifier());
-                    }
-                }
-            }
-        });
-        float afterMaxHealth = entity.getMaxHealth();
-        if(updateHealth && afterMaxHealth != previousMaxHealth) {
-            entity.setHealth(afterMaxHealth * previousHealthPercent);
-        }
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("conditioned_attribute"),
+        return new PowerFactory<>(
+            Apoli.identifier("conditioned_attribute"),
             new SerializableData()
                 .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
                 .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
-                .add("tick_rate", SerializableDataTypes.INT, 20)
+                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 20)
                 .add("update_health", SerializableDataTypes.BOOLEAN, true),
-            data ->
-                (type, player) -> {
-                    ConditionedAttributePower ap = new ConditionedAttributePower(type, player, data.getInt("tick_rate"), data.getBoolean("update_health"));
-                    if(data.isPresent("modifier")) {
-                        ap.addModifier(data.get("modifier"));
-                    }
-                    if(data.isPresent("modifiers")) {
-                        List<AttributedEntityAttributeModifier> modifierList = data.get("modifiers");
-                        modifierList.forEach(ap::addModifier);
-                    }
-                    return ap;
-                }).allowCondition();
+            data -> (powerType, livingEntity) -> {
+
+                ConditionedAttributePower conditionedAttributePower = new ConditionedAttributePower(
+                    powerType,
+                    livingEntity,
+                    data.get("tick_rate"),
+                    data.get("update_health")
+                );
+
+                data.<AttributedEntityAttributeModifier>ifPresent("modifier", conditionedAttributePower::addModifier);
+                data.<List<AttributedEntityAttributeModifier>>ifPresent("modifiers", mods -> mods.forEach(conditionedAttributePower::addModifier));
+
+                return conditionedAttributePower;
+
+            }
+        ).allowCondition();
     }
+
 }

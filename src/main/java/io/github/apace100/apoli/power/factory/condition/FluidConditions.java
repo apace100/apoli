@@ -8,26 +8,10 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.registry.Registry;
 
-import java.util.List;
-
 public class FluidConditions {
 
-    @SuppressWarnings("unchecked")
     public static void register() {
-        register(new ConditionFactory<>(Apoli.identifier("constant"), new SerializableData()
-            .add("value", SerializableDataTypes.BOOLEAN),
-            (data, fluid) -> data.getBoolean("value")));
-        register(new ConditionFactory<>(Apoli.identifier("and"), new SerializableData()
-            .add("conditions", ApoliDataTypes.FLUID_CONDITIONS),
-            (data, fluid) -> ((List<ConditionFactory<FluidState>.Instance>)data.get("conditions")).stream().allMatch(
-                condition -> condition.test(fluid)
-            )));
-        register(new ConditionFactory<>(Apoli.identifier("or"), new SerializableData()
-            .add("conditions", ApoliDataTypes.FLUID_CONDITIONS),
-            (data, fluid) -> ((List<ConditionFactory<FluidState>.Instance>)data.get("conditions")).stream().anyMatch(
-                condition -> condition.test(fluid)
-            )));
-
+        MetaConditions.register(ApoliDataTypes.FLUID_CONDITION, FluidConditions::register);
         register(new ConditionFactory<>(Apoli.identifier("empty"), new SerializableData(),
             (data, fluid) -> fluid.isEmpty()));
         register(new ConditionFactory<>(Apoli.identifier("still"), new SerializableData(),

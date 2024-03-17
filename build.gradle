@@ -1,16 +1,36 @@
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.5-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
-
-archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
+base {
+	archivesName = project.archives_base_name
+}
+
 repositories {
+	mavenLocal()
+	mavenCentral()
+	exclusiveContent {
+
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+
+		filter {
+			includeGroup "maven.modrinth"
+		}
+
+	}
+	maven {
+		name = "QuiltMC"
+		url = "https://maven.quiltmc.org/repository/release"
+	}
 	maven {
 		name = 'Ladysnake Mods'
 		url = 'https://maven.ladysnake.org/releases'
@@ -26,12 +46,17 @@ repositories {
 		}
 	}
 	maven {
+		url "https://maven.jamieswhiteshirt.com/libs-release"
+		content {
+			includeGroup "com.jamieswhiteshirt"
+		}
+	}
+	maven {
 		url "https://maven.shedaniel.me/"
 	}
 	maven {
 		url "https://maven.terraformersmc.com/"
 	}
-	mavenLocal()
 }
 
 loom {
@@ -57,6 +82,7 @@ loom {
 }
 
 dependencies {
+
 	implementation 'com.demonwav.mcdev:annotations:1.0'
 
 	// To change the versions see the gradle.properties file
@@ -80,8 +106,10 @@ dependencies {
 	modApi "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 
-	modApi "com.github.apace100:calio:v${project.calio_version}"
-	include "com.github.apace100:calio:v${project.calio_version}"
+	modApi "com.github.apace100:calio:${project.calio_version}"
+	include "com.github.apace100:calio:${project.calio_version}"
+
+	modCompileOnlyApi "com.jamieswhiteshirt:reach-entity-attributes:${rea_version}"
 
 	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
@@ -90,10 +118,11 @@ dependencies {
 
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
-	modApi "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
-	include "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
-	// modImplementation "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
-	// include "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
+	modApi "maven.modrinth:additionalentityattributes:${project.aea_version}"
+	include "maven.modrinth:additionalentityattributes:${project.aea_version}"
+//	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
+//	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
+
 }
 
 processResources {
@@ -119,11 +148,14 @@ java {
 	// if it is present.
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${base.archivesName.get()}"}
 	}
 }
 
@@ -131,13 +163,7 @@ jar {
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
-			// add all the jars that should be included when publishing to maven
-			artifact(remapJar) {
-				builtBy remapJar
-			}
-			artifact(sourcesJar) {
-				builtBy remapSourcesJar
-			}
+			from components.java
 		}
 	}
 

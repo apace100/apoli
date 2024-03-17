@@ -22,13 +22,15 @@ public class ScoreboardCondition {
         }
 
         Scoreboard scoreboard = entity.getWorld().getScoreboard();
-        ScoreboardObjective scoreboardObjective = scoreboard.getObjective(data.getString("objective"));
-        if (scoreboard.playerHasObjective(name, scoreboardObjective)) {
+        ScoreboardObjective scoreboardObjective = scoreboard.getNullableObjective(data.getString("objective"));
+
+        if (scoreboardObjective != null && scoreboard.playerHasObjective(name, scoreboardObjective)) {
             int score = scoreboard.getPlayerScore(name, scoreboardObjective).getScore();
             return ((Comparison) data.get("comparison")).compare(score, data.getInt("compare_to"));
         }
 
         return false;
+
     }
 
     public static ConditionFactory<Entity> getFactory() {

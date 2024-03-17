@@ -6,14 +6,14 @@ import net.minecraft.util.Identifier;
  *  A utility class for adding aliases to namespaces. This is <b>deprecated</b>, use {@link IdentifierAlias} instead.
  */
 @Deprecated(forRemoval = true)
-public final class NamespaceAlias extends AliasSupplier {
+public final class NamespaceAlias {
 
     public static void addAlias(String fromNamespace, String toNamespace) {
-        aliasedNamespaces.put(fromNamespace, toNamespace);
+        IdentifierAlias.addNamespaceAlias(fromNamespace, toNamespace);
     }
 
     public static boolean hasAlias(String namespace) {
-        return aliasedNamespaces.containsKey(namespace);
+        return IdentifierAlias.namespaceHasAlias(namespace);
     }
 
     public static boolean hasAlias(Identifier identifier) {
@@ -21,9 +21,7 @@ public final class NamespaceAlias extends AliasSupplier {
     }
 
     public static Identifier resolveAlias(Identifier original) {
-        if(!aliasedNamespaces.containsKey(original.getNamespace())) {
-            throw NO_NAMESPACE_ALIAS;
-        }
-        return new Identifier(aliasedNamespaces.get(original.getNamespace()), original.getPath());
+        return IdentifierAlias.resolveNamespaceAlias(original);
     }
+
 }

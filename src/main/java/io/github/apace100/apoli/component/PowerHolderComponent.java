@@ -7,20 +7,15 @@ import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import dev.onyxstudios.cca.api.v3.component.tick.ServerTickingComponent;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.ModifyValueCallback;
-import io.github.apace100.apoli.networking.ModPackets;
+import io.github.apace100.apoli.networking.packet.s2c.SyncPowerS2CPacket;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.util.AttributeUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
@@ -66,34 +61,44 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static void syncPower(Entity entity, PowerType<?> powerType) {
-        if(entity == null || entity.getWorld().isClient) {
+
+        if (entity == null || entity.getWorld().isClient) {
             return;
         }
-        if(powerType instanceof PowerTypeReference) {
-            powerType = ((PowerTypeReference<?>)powerType).getReferencedPowerType();
+
+        if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
+            powerType = powerTypeRef.getReferencedPowerType();
         }
-        if(powerType == null) {
+
+        if (powerType == null) {
             return;
         }
-        PowerType<?> finalPowerType = powerType;
-        KEY.maybeGet(entity).ifPresent(phc -> {
-            if(phc.hasPower(finalPowerType)) {
-                Power power = phc.getPower(finalPowerType);
-                NbtElement elem = power.toTag();
-                PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-                buf.writeInt(entity.getId());
-                buf.writeIdentifier(finalPowerType.getIdentifier());
-                NbtCompound compound = new NbtCompound();
-                compound.put("Data", elem);
-                buf.writeNbt(compound);
-                for(ServerPlayerEntity player : PlayerLookup.tracking(entity)) {
-                    ServerPlayNetworking.send(player, ModPackets.SYNC_POWER, buf);
-                }
-                if(entity instanceof ServerPlayerEntity self) {
-                    ServerPlayNetworking.send(self, ModPackets.SYNC_POWER, buf);
-                }
-            }
-        });
+
+        PowerHolderComponent component = PowerHolderComponent.KEY
+            .maybeGet(entity)
+            .orElse(null);
+        if (component == null) {
+            return;
+        }
+
+        NbtCompound powerData = new NbtCompound();
+        Power power = component.getPower(powerType);
+
+        if (power == null) {
+            return;
+        }
+
+        powerData.put("Data", power.toTag());
+        SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), powerType.getIdentifier(), powerData);
+
+        for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
+            ServerPlayNetworking.send(otherPlayer, syncPowerPacket);
+        }
+
+        if (entity instanceof ServerPlayerEntity player) {
+            ServerPlayNetworking.send(player, syncPowerPacket);
+        }
+
     }
 
     static <T extends Power> void withPower(Entity entity, Class<T> powerClass, Predicate<T> power, Consumer<T> with) {
