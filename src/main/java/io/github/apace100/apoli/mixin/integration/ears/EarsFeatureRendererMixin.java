@@ -51,7 +51,7 @@ public abstract class EarsFeatureRendererMixin extends IndirectEarsRenderDelegat
                 this.armorG *= gr;
                 this.armorB *= bl;
                 this.armorA *= al;
-            } else if (PowerHolderComponent.hasPower(entity, InvisibilityPower.class, p -> p.doesApply(MinecraftClient.getInstance().player) && (slot == null || p.shouldRenderArmor()))) {
+            } else if (PowerHolderComponent.hasPower(entity, InvisibilityPower.class, p -> p.doesApply(MinecraftClient.getInstance().player) && (slot == null || !p.shouldRenderArmor()))) {
                 this.armorA = 0.0F;
             }
         }
