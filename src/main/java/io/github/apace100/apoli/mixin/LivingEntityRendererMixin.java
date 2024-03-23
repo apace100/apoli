@@ -10,6 +10,7 @@ import io.github.apace100.apoli.power.InvisibilityPower;
 import io.github.apace100.apoli.power.ModelColorPower;
 import io.github.apace100.apoli.power.PreventFeatureRenderPower;
 import io.github.apace100.apoli.power.ShakingPower;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -48,7 +49,7 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
 
     @ModifyExpressionValue(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getRenderLayer(Lnet/minecraft/entity/LivingEntity;ZZZ)Lnet/minecraft/client/render/RenderLayer;"))
     private RenderLayer apoli$changeRenderLayerWhenTranslucent(@Nullable RenderLayer original, LivingEntity entity) {
-        return PowerHolderComponent.hasPower(entity, ModelColorPower.class, ModelColorPower::isTranslucent)
+        return PowerHolderComponent.hasPower(entity, ModelColorPower.class, ModelColorPower::isTranslucent) && !entity.isInvisibleTo(MinecraftClient.getInstance().player)
             ? RenderLayer.getItemEntityTranslucentCull(this.getTexture(entity))
             : original;
     }
