@@ -42,7 +42,8 @@
   ],
   "custom": {
     "cardinal-components": [
-      "apoli:powers"
+      "apoli:powers",
+      "apoli:command_tags"
     ],
     "modmenu": {
       "badges": ["library"]

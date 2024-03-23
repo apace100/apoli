@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
+import io.github.apace100.apoli.component.CommandTagComponent;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
@@ -82,6 +83,8 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow public abstract double getY();
 
     @Shadow public abstract double getZ();
+
+    @Shadow public abstract World getWorld();
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -322,6 +325,30 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
         if (Math.sqrt(dy * dy) >= 0.01) {
             this.apoli$movingVertically = true;
+        }
+
+    }
+
+    @Inject(method = "addCommandTag", at = @At("TAIL"))
+    private void apoli$onAddingCommandTag(String tag, CallbackInfoReturnable<Boolean> cir) {
+        CommandTagComponent.KEY.get(this).addCommandTag(tag, cir.getReturnValue());
+    }
+
+    @Inject(method = "removeScoreboardTag", at = @At("TAIL"))
+    private void apoli$onRemovingCommandTag(String tag, CallbackInfoReturnable<Boolean> cir) {
+        CommandTagComponent.KEY.get(this).removeCommandTag(tag);
+    }
+
+    @Inject(method = "getCommandTags", at = @At("RETURN"))
+    private void apoli$onQueryingCommandTags(CallbackInfoReturnable<Set<String>> cir) {
+        CommandTagComponent.KEY.get(this).setCommandTags(cir.getReturnValue());
+    }
+
+    @Inject(method = "baseTick", at = @At("TAIL"))
+    private void apoli$syncCommandTags(CallbackInfo ci) {
+
+        if (!this.world.isClient) {
+            CommandTagComponent.KEY.get(this).sync(false);
         }
 
     }
