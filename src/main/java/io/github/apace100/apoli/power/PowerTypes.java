@@ -184,7 +184,23 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
                 JsonObject jsonObject = jsonElement.getAsJsonObject();
                 PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(id, jsonObject);
 
+                if(JsonHelper.hasString(jsonObject, "parent")) {
+                    Identifier parentId = new Identifier(JsonHelper.getString(jsonObject, "parent"));
+                    if(multiJsonDataContainer.get(parentId) != null) {
+                        for (JsonElement element : multiJsonDataContainer.get(parentId)) {
+                            for (Map.Entry<String, JsonElement> stringJsonElementEntry : element.getAsJsonObject().entrySet()) {
+                                if (!jsonObject.has(stringJsonElementEntry.getKey())) {
+                                    jsonObject.add(stringJsonElementEntry.getKey(), stringJsonElementEntry.getValue());
+                                }
+                            }
+                        }
+                    } else {
+                        Apoli.LOGGER.warn("\"parent\" field contains invalid power id: \"" + parentId + "\". Is this power registered?");
+                    }
+                }
+
                 Identifier powerFactoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
+
 
                 if (!isMultiple(powerFactoryId)) {
                     readPower(packName, id, jsonObject);

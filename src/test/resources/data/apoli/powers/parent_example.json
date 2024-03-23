@@ -1,0 +1,10 @@
+{
+	"parent": "apoli:black_on_soul_sand",
+	"condition": {
+		"type": "apoli:on_block",
+		"block_condition": {
+			"type": "apoli:block",
+			"block": "minecraft:sand"
+		}
+	}
+}
