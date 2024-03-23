@@ -31,6 +31,9 @@ public class ItemConditions {
         register(RelativeDurabilityCondition.getFactory());
         register(EquippableCondition.getFactory());
         register(FuelCondition.getFactory());
+        register(RarityCondition.getFactory());
+        register(StackableCondition.getFactory());
+        register(UsedOnReleaseCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Pair<World, ItemStack>> conditionFactory) {
