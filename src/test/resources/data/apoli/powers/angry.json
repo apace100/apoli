@@ -1,0 +1,6 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "behavior": {
+    "type": "apoli:hostile"
+  }
+}

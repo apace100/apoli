@@ -1,0 +1,57 @@
+{
+  "type": "apoli:multiple",
+  "clientside": {
+    "type": "apoli:entity_glow",
+    "bientity_condition": {
+      "type": "apoli:target_condition",
+      "condition": {
+        "type": "apoli:and",
+        "conditions": [
+          {
+            "type": "apoli:attribute",
+            "attribute": "minecraft:generic.attack_damage",
+            "comparison": ">",
+            "compare_to": 0.0
+          },
+          {
+            "type": "apoli:entity_type",
+            "entity_type": "minecraft:pig"
+          }
+        ]
+      }
+    }
+  },
+  "serverside": {
+    "type": "apoli:action_over_time",
+    "entity_action": {
+      "type": "apoli:area_of_effect",
+      "radius": 32,
+      "bientity_action": {
+        "type": "apoli:actor_action",
+        "action": {
+          "type": "apoli:execute_command",
+          "command": "say Found pig with attack attribute"
+        }
+      },
+      "bientity_condition": {
+        "type": "apoli:target_condition",
+        "condition": {
+          "type": "apoli:and",
+          "conditions": [
+            {
+              "type": "apoli:attribute",
+              "attribute": "minecraft:generic.attack_damage",
+              "comparison": ">",
+              "compare_to": 0.0
+            },
+            {
+              "type": "apoli:entity_type",
+              "entity_type": "minecraft:pig"
+            }
+          ]
+        }
+      }
+    },
+    "interval": 20
+  }
+}

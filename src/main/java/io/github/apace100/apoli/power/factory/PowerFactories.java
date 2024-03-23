@@ -31,6 +31,7 @@ public class PowerFactories {
             ModifyExhaustionPower::new, Apoli.identifier("modify_exhaustion")));
         register(ModifyHarvestPower::createFactory);
         register(ModifyJumpPower::createFactory);
+        register(ModifyMobBehaviorPower::createFactory);
         register(ModifyPlayerSpawnPower::createFactory);
         register(NightVisionPower::createFactory);
         register(ParticlePower::createFactory);

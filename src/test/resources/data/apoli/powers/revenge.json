@@ -1,0 +1,8 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "behavior": {
+    "type": "apoli:revenge",
+    "priority": 0,
+    "reset_time": 160
+  }
+}

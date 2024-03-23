@@ -1,0 +1,158 @@
+{
+  "type": "apoli:multiple",
+  "attack": {
+    "type": "apoli:action_over_time",
+    "entity_action": {
+      "type": "apoli:if_else",
+      "condition": {
+        "type": "apoli:command",
+        "command": "execute at @s if entity @a[distance=..3]",
+        "comparison": ">",
+        "compare_to": 0
+      },
+      "if_action": {
+        "type": "apoli:and",
+        "actions": [
+          {
+            "type": "apoli:spawn_effect_cloud",
+            "radius": 5.0,
+            "wait_time": 10,
+            "effect": {
+              "effect": "minecraft:instant_damage",
+              "amplifier": 1,
+              "duration": 20
+            }
+          },
+          {
+            "type": "apoli:execute_command",
+            "command": "playsound minecraft:entity.generic.extinguish_fire hostile @a ~ ~ ~ 1.0 0.4"
+          }
+        ]
+      },
+      "else_action": {
+        "type": "apoli:if_else",
+        "condition": {
+          "type": "apoli:health",
+          "comparison": "<",
+          "compare_to": 14
+        },
+        "if_action": {
+          "type": "apoli:and",
+          "actions": [
+            {
+              "type": "apoli:spawn_particles",
+              "particle": {
+                "type": "minecraft:heart"
+              },
+              "count": 8,
+              "speed": 0.0,
+              "spread": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              }
+            },
+            {
+              "type": "apoli:execute_command",
+              "command": "playsound minecraft:item.bottle.fill hostile Player626 ~ ~ ~ 1.0 1.4"
+            },
+            {
+              "type": "apoli:heal",
+              "amount": 5
+            }
+          ]
+        },
+        "else_action": {
+          "type": "apoli:and",
+          "actions": [
+            {
+              "type": "apoli:raycast",
+              "distance": 10.0,
+              "block": false,
+              "entity": true,
+              "bientity_action": {
+                "type": "apoli:damage",
+                "amount": 6,
+                "source": {
+                  "name": "player"
+                }
+              },
+              "command_along_ray": "particle minecraft:happy_villager ~ ~ ~ 0 0 0 0 1 force"
+            },
+            {
+              "type": "apoli:execute_command",
+              "command": "playsound minecraft:entity.guardian.death hostile @a ~ ~ ~ 1.0 2.0"
+            }
+          ]
+        }
+      }
+    },
+    "interval": 100,
+    "condition": {
+      "type": "apoli:nbt",
+      "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
+    }
+  },
+  "model_color": {
+    "type": "apoli:model_color",
+    "red": 0.7,
+    "green": 0.7,
+    "blue": 0.7,
+    "alpha": 0.99,
+    "condition": {
+      "type": "apoli:nbt",
+      "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
+    }
+  },
+  "immunity_to_magic_damage": {
+    "type": "apoli:modify_damage_taken",
+    "damage_condition": {
+      "type": "apoli:name",
+      "name": "indirectMagic"
+    },
+    "modifier": {
+      "name": "Immunity to magic damage",
+      "operation": "multiply_total",
+      "value": -1.0
+    },
+    "condition": {
+      "type": "apoli:nbt",
+      "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
+    }
+  },
+  "attributes": {
+    "type": "apoli:conditioned_attribute",
+    "modifier": {
+      "attribute": "minecraft:generic.max_health",
+      "operation": "addition",
+      "value": 20.0
+    },
+    "tick_rate": 100,
+    "condition": {
+      "type": "apoli:nbt",
+      "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
+    }
+  },
+  "behavior": {
+    "type": "apoli:modify_mob_behavior",
+    "behavior": {
+      "type": "apoli:hostile",
+      "priority": 0,
+      "bientity_condition": {
+        "type": "apoli:actor_condition",
+        "condition": {
+          "type": "apoli:and",
+          "conditions": [
+            {
+              "type": "apoli:nbt",
+              "nbt": "{Tags: ['apoli_custom_ocelot_test']}"
+            }
+          ]
+        }
+      },
+      "attacks": false,
+      "speed": 1.0
+    },
+    "tick_rate": 1
+  }
+}

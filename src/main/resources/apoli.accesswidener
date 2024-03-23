@@ -13,3 +13,4 @@ extendable class net/minecraft/world/event/Vibrations$ListenerData
 accessible field net/minecraft/server/command/AdvancementCommand$Selection before Z
 accessible field net/minecraft/server/command/AdvancementCommand$Selection after Z
 accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
+accessible class net/minecraft/entity/ai/brain/task/TaskTriggerer$TaskFunction

@@ -3,6 +3,7 @@ package io.github.apace100.apoli.registry;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.modifier.IModifierOperation;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -39,6 +40,8 @@ public class ApoliRegistryKeys {
     public static final RegistryKey<Registry<ActionFactory<Pair<Entity, Entity>>>> BIENTITY_ACTION;
     public static final RegistryKey<Registry<IModifierOperation>> MODIFIER_OPERATION;
 
+    public static final RegistryKey<Registry<MobBehaviorFactory<?>>> MOB_BEHAVIOR_FACTORY;
+
     static {
 
         POWER_FACTORY = create("power_factory");
@@ -57,6 +60,7 @@ public class ApoliRegistryKeys {
         BIENTITY_ACTION = create("bientity_action");
 
         MODIFIER_OPERATION = create("modifier_operation");
+        MOB_BEHAVIOR_FACTORY = create("mob_behavior_factory");
 
     }
 

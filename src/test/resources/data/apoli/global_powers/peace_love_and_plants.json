@@ -1,0 +1,10 @@
+{
+  "entity_types": [
+    "minecraft:iron_golem",
+    "minecraft:piglin",
+    "minecraft:wither"
+  ],
+  "powers": [
+    "apoli:peace_love_and_plants"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "entity_types": [
+    "minecraft:ocelot"
+  ],
+  "powers": [
+    "apoli:custom_ocelot_test"
+  ]
+}
