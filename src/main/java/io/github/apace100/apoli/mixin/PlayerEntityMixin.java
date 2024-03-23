@@ -105,7 +105,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @Inject(method = "dismountVehicle", at = @At("HEAD"))
     private void apoli$sendPlayerDismountPacket(CallbackInfo ci) {
         if (this.getVehicle() instanceof ServerPlayerEntity player) {
-            ServerPlayNetworking.send(player, new DismountPlayerS2CPacket(player.getId()));
+            ServerPlayNetworking.send(player, new DismountPlayerS2CPacket(this.getId()));
         }
     }
 
