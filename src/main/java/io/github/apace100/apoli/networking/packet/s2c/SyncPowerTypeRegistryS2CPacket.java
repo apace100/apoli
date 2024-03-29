@@ -54,10 +54,9 @@ public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> power
 
                 }
 
-                powerType.setDisplayTexts(buffer.readText(), buffer.readText());
-                if (buffer.readBoolean()) {
-                    powerType.setHidden();
-                }
+                powerType
+                    .setDisplayTexts(buffer.readText(), buffer.readText())
+                    .setHidden(buffer.readBoolean());
 
                 powers.put(powerTypeId, powerType);
 

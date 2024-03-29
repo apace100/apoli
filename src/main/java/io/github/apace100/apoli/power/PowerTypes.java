@@ -324,15 +324,10 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(descriptionJson);
 
         boolean hidden = JsonHelper.getBoolean(jsonObject, "hidden", false);
-
-        PowerType<?> powerType = powerTypeFactory.apply(id, powerFactoryInstance);
-        powerType.setDisplayTexts(name, description);
-
-        if (hidden || isSubPower) {
-            powerType.setHidden();
-        }
-
-        return powerType;
+        return powerTypeFactory.apply(id, powerFactoryInstance)
+            .setDisplayTexts(name, description)
+            .setHidden(hidden)
+            .setSubPower(isSubPower);
 
     }
 
