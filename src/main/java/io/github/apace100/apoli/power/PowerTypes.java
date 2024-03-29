@@ -326,7 +326,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         boolean hidden = JsonHelper.getBoolean(jsonObject, "hidden", false);
         return powerTypeFactory.apply(id, powerFactoryInstance)
             .setDisplayTexts(name, description)
-            .setHidden(hidden)
+            .setHidden(hidden || isSubPower)
             .setSubPower(isSubPower);
 
     }
