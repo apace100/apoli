@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.power.factory.action.entity;
 
-import com.google.gson.JsonSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -27,12 +26,7 @@ public class DamageAction {
         data.<List<Modifier>>ifPresent("modifiers", modifiers::addAll);
 
         if (!modifiers.isEmpty() && entity instanceof LivingEntity livingEntity) {
-
-            float maxHealth = livingEntity.getMaxHealth();
-            float newDamageAmount = (float) ModifierUtil.applyModifiers(livingEntity, modifiers, maxHealth);
-
-            damageAmount = newDamageAmount > maxHealth ? newDamageAmount - maxHealth : newDamageAmount;
-
+            damageAmount = (float) ModifierUtil.applyModifiers(livingEntity, modifiers, livingEntity.getMaxHealth());
         }
 
         if (damageAmount == null) {
@@ -42,8 +36,10 @@ public class DamageAction {
         try {
             DamageSource damageSource = MiscUtil.createDamageSource(entity.getDamageSources(), data.get("source"), data.get("damage_type"));
             entity.damage(damageSource, damageAmount);
-        } catch (JsonSyntaxException e) {
-            Apoli.LOGGER.error("Error trying to create damage source in a `damage` entity action: " + e.getMessage());
+        }
+
+        catch (Throwable t) {
+            Apoli.LOGGER.error("Error trying to deal damage via the `damage` entity action: " + t.getMessage());
         }
 
     }
