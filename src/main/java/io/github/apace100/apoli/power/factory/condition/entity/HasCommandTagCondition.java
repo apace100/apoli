@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power.factory.condition.entity;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.component.CommandTagComponent;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.SerializableData;
@@ -16,8 +15,8 @@ public class HasCommandTagCondition {
 
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
+        Set<String> commandTags = entity.getCommandTags();
         Set<String> specifiedCommandTags = new HashSet<>();
-        Set<String> commandTags = CommandTagComponent.KEY.get(entity).getCommandTags();
 
         data.ifPresent("command_tag", specifiedCommandTags::add);
         data.ifPresent("command_tags", specifiedCommandTags::addAll);

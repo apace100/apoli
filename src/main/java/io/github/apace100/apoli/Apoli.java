@@ -5,10 +5,9 @@ import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
 import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
-import io.github.apace100.apoli.component.CommandTagComponent;
-import io.github.apace100.apoli.component.CommandTagComponentImpl;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
+import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
@@ -33,7 +32,6 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.advancement.criterion.Criteria;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.ResourceType;
@@ -112,6 +110,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 		BiEntityActions.register();
 		PowerIntegration.register();
 
+		ApoliDataHandlers.register();
+
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
 		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));
 		ResourceConditions.register(ApoliResourceConditions.ALL_NAMESPACES_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, true));
@@ -131,10 +131,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 			.impl(PowerHolderComponentImpl.class)
 			.respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY)
 			.end(PowerHolderComponentImpl::new);
-		registry.beginRegistration(Entity.class, CommandTagComponent.KEY)
-			.impl(CommandTagComponentImpl.class)
-			.respawnStrategy(RespawnCopyStrategy.ALWAYS_COPY)
-			.end(CommandTagComponentImpl::new);
 	}
 
 	@Override
