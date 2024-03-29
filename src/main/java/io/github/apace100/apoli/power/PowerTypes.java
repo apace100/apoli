@@ -4,6 +4,7 @@ import com.google.gson.*;
 import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowerTypeRegistryS2CPacket;
 import io.github.apace100.apoli.power.factory.PowerFactory;
@@ -315,8 +316,12 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         JsonElement nameJson = jsonObject.get("name");
         JsonElement descriptionJson = jsonObject.get("description");
 
-        Text name = nameJson == null ? null : Text.Serializer.fromJson(nameJson);
-        Text description = descriptionJson == null ? null : Text.Serializer.fromJson(descriptionJson);
+        Text name = nameJson == null
+            ? null
+            : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(nameJson);
+        Text description = descriptionJson == null
+            ? null
+            : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(descriptionJson);
 
         boolean hidden = JsonHelper.getBoolean(jsonObject, "hidden", false);
 

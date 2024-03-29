@@ -198,52 +198,63 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     }
 
     @Environment(EnvType.CLIENT)
-    @Inject(method = "getTeamColorValue", at = @At("RETURN"), cancellable = true)
-    private void modifyGlowingColorFromPower(CallbackInfoReturnable<Integer> cir) {
+    @ModifyReturnValue(method = "getTeamColorValue", at = @At("RETURN"))
+    private int apoli$modifyGlowingColorFromPower(int original) {
 
-/*
-
-        Advised by @EdwinMindcraft: a solution making the hook limited to WorldRenderer ONLY.
-        Remove this comment when run into unexpected call to Entity#getTeamColorValue to fix the problem.
-
-        StackWalker walker = StackWalker.getInstance(Set.of(StackWalker.Option.RETAIN_CLASS_REFERENCE), 2);
-        boolean calledByWorldRenderer = walker.walk(s -> s.map(StackWalker.StackFrame::getDeclaringClass).anyMatch(cls -> cls == WorldRenderer.class));
-        if (!calledByWorldRenderer) {
-            return;
-        }
-
-*/
+        //  region Advised by @EdwinMindcraft: a solution for making the hook limited to WorldRenderer ONLY. Uncomment the code in this region when run into unexpected calls to Entity#getTeamColorValue to fix the problem.
+//        StackWalker walker = StackWalker.getInstance(Set.of(StackWalker.Option.RETAIN_CLASS_REFERENCE), 2);
+//        boolean calledByWorldRenderer = walker.walk(stackFrameStream -> stackFrameStream
+//            .map(StackWalker.StackFrame::getDeclaringClass)
+//            .anyMatch(cls -> cls == WorldRenderer.class));
+//
+//        if (!calledByWorldRenderer) {
+//            return original;
+//        }
+        //  endregion
 
         Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
-        Entity renderEntity = (Entity) (Object) this;
-        AbstractTeam abstractTeam = renderEntity.getScoreboardTeam();
-        boolean isUsingTeam = abstractTeam != null && abstractTeam.getColor().getColorValue() != null;
+        Entity renderedEntity = (Entity) (Object) this;
+
+        AbstractTeam team = renderedEntity.getScoreboardTeam();
+
+        boolean hasTeamColor = team != null && team.getColor().getColorValue() != null;
         int colorAmount = 0;
-        float r = 0.0F;
-        float g = 0.0F;
-        float b = 0.0F;
 
-        for (EntityGlowPower power : PowerHolderComponent.getPowers(cameraEntity, EntityGlowPower.class)) {
-            if (power.doesApply(renderEntity) && !(isUsingTeam && power.usesTeams())) {
-                colorAmount++;
-                r += power.getRed();
-                g += power.getGreen();
-                b += power.getBlue();
+        float red = 0.0f;
+        float green = 0.0f;
+        float blue = 0.0f;
+
+        for (EntityGlowPower entityGlowPower : PowerHolderComponent.getPowers(cameraEntity, EntityGlowPower.class)) {
+
+            if ((hasTeamColor && entityGlowPower.usesTeams()) || !entityGlowPower.doesApply(renderedEntity)) {
+                continue;
             }
+
+            red += entityGlowPower.getRed();
+            green += entityGlowPower.getGreen();
+            blue += entityGlowPower.getBlue();
+
+            colorAmount++;
+
         }
 
-        for (SelfGlowPower power : PowerHolderComponent.getPowers(renderEntity, SelfGlowPower.class)) {
-            if (!(isUsingTeam && power.usesTeams())) {
-                colorAmount++;
-                r += power.getRed();
-                g += power.getGreen();
-                b += power.getBlue();
+        for (SelfGlowPower selfGlowPower : PowerHolderComponent.getPowers(renderedEntity, SelfGlowPower.class)) {
+
+            if ((hasTeamColor && selfGlowPower.usesTeams()) || !selfGlowPower.doesApply(cameraEntity)) {
+                continue;
             }
+
+            red += selfGlowPower.getRed();
+            green += selfGlowPower.getGreen();
+            blue += selfGlowPower.getBlue();
+
+            colorAmount++;
+
         }
 
-        if(colorAmount > 0) {
-            cir.setReturnValue(MathHelper.packRgb(r / colorAmount, g / colorAmount, b / colorAmount));
-        }
+        return colorAmount > 0
+            ? MathHelper.packRgb(red / colorAmount, green / colorAmount, blue / colorAmount)
+            : original;
 
     }
 

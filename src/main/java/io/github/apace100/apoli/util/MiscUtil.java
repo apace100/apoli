@@ -130,9 +130,9 @@ public final class MiscUtil {
     }
 
     @Nullable
-    public static Entity getEntityByUuid(UUID uuid, @Nullable MinecraftServer server) {
+    public static Entity getEntityByUuid(@Nullable UUID uuid, @Nullable MinecraftServer server) {
 
-        if (server == null) {
+        if (uuid == null || server == null) {
             return null;
         }
 

@@ -11,12 +11,12 @@ import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -24,14 +24,9 @@ import java.util.stream.Stream;
 public abstract class EntityAttributeInstanceMixin implements OwnableAttributeInstance {
 
     @Shadow
-    @Final
-    private EntityAttribute type;
-
-    @Shadow
     public abstract Set<EntityAttributeModifier> getModifiers();
 
-    @Shadow
-    public abstract double getBaseValue();
+    @Shadow public abstract EntityAttribute getAttribute();
 
     @Unique
     @Nullable
@@ -43,7 +38,6 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
     }
 
     @Override
-    @Nullable
     public Entity apoli$getOwner() {
         return apoli$owner;
     }
@@ -51,19 +45,22 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
     @ModifyReturnValue(method = "getValue", at = @At("RETURN"))
     private double apoli$modifyAttribute(double original) {
 
-        if (!PowerHolderComponent.hasPower(this.apoli$getOwner(), ModifyAttributePower.class)) {
+        List<Modifier> powerModifiers = PowerHolderComponent.getPowers(this.apoli$getOwner(), ModifyAttributePower.class)
+            .stream()
+            .filter(p -> p.getAttribute() == this.getAttribute())
+            .flatMap(p -> p.getModifiers().stream())
+            .toList();
+
+        if (powerModifiers.isEmpty()) {
             return original;
         }
 
-        Stream<Modifier> vanillaModifiers = this.getModifiers()
+        List<Modifier> vanillaModifiers = this.getModifiers()
             .stream()
-            .map(ModifierUtil::fromAttributeModifier);
-        Stream<Modifier> powerModifiers = PowerHolderComponent.getPowers(this.apoli$getOwner(), ModifyAttributePower.class)
-            .stream()
-            .filter(p -> p.getAttribute() == type)
-            .flatMap(p -> p.getModifiers().stream());
+            .map(ModifierUtil::fromAttributeModifier)
+            .toList();
 
-        return ModifierUtil.applyModifiers(this.apoli$getOwner(), Stream.concat(vanillaModifiers, powerModifiers).toList(), this.getBaseValue());
+        return ModifierUtil.applyModifiers(this.apoli$getOwner(), Stream.concat(powerModifiers.stream(), vanillaModifiers.stream()).toList(), original);
 
     }
 
