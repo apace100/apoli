@@ -377,7 +377,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Inject(method = "baseTick", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;firstUpdate:Z"))
     private void apoli$trackCommandTags(CallbackInfo ci) {
 
-        if (!this.world.isClient && this.dataTracker.containsKey(COMMAND_TAGS) && (this.firstUpdate || this.apoli$dirtiedCommandTags)) {
+        if (this.dataTracker.containsKey(COMMAND_TAGS) && ((this.firstUpdate && !this.world.isClient) || this.apoli$dirtiedCommandTags)) {
             this.dataTracker.set(COMMAND_TAGS, Set.copyOf(this.commandTags));
         }
 
