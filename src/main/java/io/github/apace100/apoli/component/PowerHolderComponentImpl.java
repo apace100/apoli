@@ -263,7 +263,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
                 try {
                     NbtElement powerData = powerTag.get("Data");
-                    power.fromTag(powerData);
+                    power.fromTag(powerData, !callPowerOnAdd);
                 } catch (ClassCastException e) {
                     //  Occurs when the power was overridden by a data pack since last world load
                     //  where the overridden power now uses different data classes
@@ -315,6 +315,10 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void writeToNbt(@NotNull NbtCompound compoundTag) {
+        this.toTag(compoundTag, false);
+    }
+
+    private void toTag(NbtCompound compoundTag, boolean onSync) {
 
         NbtList powersTag = new NbtList();
         for (Map.Entry<PowerType<?>, Power> entry : powers.entrySet()) {
@@ -324,7 +328,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
             powerTag.putString("Factory", power.getFactory().getFactory().getSerializerId().toString());
             powerTag.putString("Type", power.getIdentifier().toString());
-            powerTag.put("Data", entry.getValue().toTag());
+            powerTag.put("Data", entry.getValue().toTag(onSync));
 
             NbtList sourcesTag = new NbtList();
             powerSources.get(entry.getKey())
@@ -342,11 +346,24 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
+    public void writeSyncPacket(PacketByteBuf buf, ServerPlayerEntity recipient) {
+
+        NbtCompound compoundTag = new NbtCompound();
+        this.toTag(compoundTag, true);
+
+        buf.writeNbt(compoundTag);
+
+    }
+
+    @Override
     public void applySyncPacket(PacketByteBuf buf) {
+
         NbtCompound compoundTag = buf.readNbt();
-        if(compoundTag != null) {
+
+        if (compoundTag != null) {
             this.fromTag(compoundTag, false);
         }
+
     }
 
     @Override

@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -11,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,7 +76,9 @@ public class EntitySetPower extends Power {
 
             this.wasActive = true;
 
-        } else if (wasActive) {
+        }
+
+        else if (wasActive) {
             this.startTicks = null;
             this.wasActive = false;
         }
@@ -95,7 +99,7 @@ public class EntitySetPower extends Power {
             Map.Entry<UUID, Integer> entry = entryIterator.next();
             entry.setValue(entry.getValue() - 1);
 
-            if (entry.getValue() <= 0 && this.remove(entry.getKey(), true)) {
+            if (entry.getValue() <= 0 && this.remove(this.getEntity(entry.getKey()))) {
                 shouldSync = true;
             }
 
@@ -107,27 +111,27 @@ public class EntitySetPower extends Power {
 
     }
 
-    public boolean validateEntities() {
+    public void validateEntities() {
 
         MinecraftServer server = entity.getServer();
-        boolean valid = true;
-
         if (server == null) {
-            return false;
+            return;
         }
 
-        for (UUID uuid : entityUuids) {
+        Iterator<UUID> uuidIterator = entityUuids.iterator();
+        while (uuidIterator.hasNext()) {
 
+            UUID uuid = uuidIterator.next();
             if (MiscUtil.getEntityByUuid(uuid, server) != null) {
                 continue;
             }
 
-            this.remove(uuid, false);
-            valid = false;
+            uuidIterator.remove();
+            entities.remove(uuid);
+            tempUuids.remove(uuid);
+            tempEntities.remove(uuid);
 
         }
-
-        return valid;
 
     }
 
@@ -166,21 +170,19 @@ public class EntitySetPower extends Power {
 
     public boolean remove(@Nullable Entity entity) {
 
-        if (entity != null && !entity.getWorld().isClient) {
-            return remove(entity.getUuid(), true);
+        if (entity == null || entity.getWorld().isClient) {
+            return false;
         }
 
-        return false;
-
-    }
-
-    protected boolean remove(UUID uuid, boolean executeActions) {
-
-        if (executeActions && actionOnRemove != null) {
-            actionOnRemove.accept(new Pair<>(this.entity, this.getEntity(uuid, false)));
+        if (actionOnRemove != null) {
+            actionOnRemove.accept(new Pair<>(this.entity, entity));
         }
 
-        return entityUuids.remove(uuid) | entities.remove(uuid) != null | tempUuids.remove(uuid) | tempEntities.remove(uuid) != null;
+        UUID uuid = entity.getUuid();
+        return entityUuids.remove(uuid)
+            | entities.remove(uuid) != null
+            | tempUuids.remove(uuid)
+            | tempEntities.remove(uuid) != null;
 
     }
 
@@ -197,7 +199,7 @@ public class EntitySetPower extends Power {
         if (actionOnRemove != null) {
 
             for (UUID entityUuid : entityUuids) {
-                actionOnRemove.accept(new Pair<>(this.entity, getEntity(entityUuid, false)));
+                actionOnRemove.accept(new Pair<>(this.entity, this.getEntity(entityUuid)));
             }
 
         }
@@ -221,11 +223,6 @@ public class EntitySetPower extends Power {
 
     @Nullable
     public Entity getEntity(UUID uuid) {
-        return getEntity(uuid, true);
-    }
-
-    @Nullable
-    public Entity getEntity(UUID uuid, boolean callRemove) {
 
         if (!entityUuids.contains(uuid)) {
             return null;
@@ -242,12 +239,18 @@ public class EntitySetPower extends Power {
             entity = MiscUtil.getEntityByUuid(uuid, server);
         }
 
-        if (callRemove && (server != null && (entity == null || entity.isRemoved()))) {
-            this.remove(uuid, false);
-            PowerHolderComponent.syncPower(this.entity, this.type);
+        return entity;
+
+    }
+
+    @Override
+    public NbtElement toTag(boolean onSync) {
+
+        if (!onSync) {
+            this.validateEntities();
         }
 
-        return entity;
+        return this.toTag();
 
     }
 
@@ -302,6 +305,33 @@ public class EntitySetPower extends Power {
         }
 
         removedTemps = rootNbt.getBoolean("RemovedTemps");
+
+    }
+
+    public static void integrateCallback(Entity removedEntity, ServerWorld world) {
+
+        Entity.RemovalReason removalReason = removedEntity.getRemovalReason();
+        if (removalReason == null || !removalReason.shouldDestroy()) {
+            return;
+        }
+
+        for (ServerWorld otherWorld : world.getServer().getWorlds()) {
+
+            for (Entity entity : ((ServerWorldAccessor) otherWorld).callGetEntityLookup().iterate()) {
+
+                if (removedEntity.equals(entity)) {
+                    continue;
+                }
+
+                PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
+                    .stream()
+                    .filter(p -> p.remove(removedEntity))
+                    .map(Power::getType)
+                    .toList());
+
+            }
+
+        }
 
     }
 

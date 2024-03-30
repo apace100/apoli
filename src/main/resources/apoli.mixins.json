@@ -61,6 +61,7 @@
         "ServerPlayerInteractionManagerAccessor",
         "ServerPlayerInteractionManagerMixin",
         "ServerPlayNetworkHandlerMixin",
+        "ServerWorldAccessor",
         "ServerWorldMixin",
         "SlotMixin",
         "StatusEffectInstanceMixin",

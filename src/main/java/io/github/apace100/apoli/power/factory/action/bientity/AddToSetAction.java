@@ -22,7 +22,7 @@ public class AddToSetAction {
             return;
         }
 
-        if (!entitySetPower.validateEntities() | entitySetPower.add(actorAndTarget.getRight(), data.get("time_limit"))) {
+        if (entitySetPower.add(actorAndTarget.getRight(), data.get("time_limit"))) {
             PowerHolderComponent.syncPower(actorAndTarget.getLeft(), powerType);
         }
 
