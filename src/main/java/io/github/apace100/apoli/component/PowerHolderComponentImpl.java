@@ -19,8 +19,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     private final LivingEntity owner;
+
     private final ConcurrentHashMap<PowerType<?>, Power> powers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<PowerType<?>, List<Identifier>> powerSources = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<PowerType<?>, Power> powersToRemove = new ConcurrentHashMap<>();
 
     public PowerHolderComponentImpl(LivingEntity owner) {
         this.owner = owner;
@@ -114,23 +117,22 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             return;
         }
 
-        List<Identifier> sources = powerSources.getOrDefault(powerType, new LinkedList<>());
-        if (sources.isEmpty()) {
+        if (!powerSources.containsKey(powerType)) {
             return;
         }
 
+        List<Identifier> sources = powerSources.get(powerType);
         sources.remove(source);
-        if (sources.isEmpty()) {
 
-            Power power = powers.remove(powerType);
-            if (power != null) {
+        if (sources.isEmpty() && powers.containsKey(powerType)) {
 
-                power.onRemoved();
-                power.onRemoved(false);
+            Power power = powers.get(powerType);
+            powersToRemove.put(powerType, power);
 
-                power.onLost();
+            power.onRemoved();
+            power.onRemoved(false);
 
-            }
+            power.onLost();
 
         }
 
@@ -141,6 +143,13 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 .map(PowerTypeRegistry::get)
                 .forEach(pt -> removePower(pt, source));
         }
+
+        if (powerType.isSubPower()) {
+            return;
+        }
+
+        powers.keySet().removeIf(powersToRemove::containsKey);
+        powersToRemove.clear();
 
     }
 
