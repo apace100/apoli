@@ -36,10 +36,7 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -268,20 +265,24 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return original || apoli$hasModifiedDamage && (int) amount <= 0;
     }
 
-    @Inject(method = "damage", at = @At("RETURN"))
-    private void invokeHitActions(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if(cir.getReturnValue()) {
-            Entity attacker = source.getAttacker();
-            if(attacker != null) {
-                PowerHolderComponent.withPowers(this, ActionWhenHitPower.class, p -> true, p -> p.whenHit(attacker, source, amount));
-                PowerHolderComponent.withPowers(attacker, ActionOnHitPower.class, p -> true, p -> p.onHit(this, source, amount));
-            }
-            PowerHolderComponent.getPowers(this, SelfActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
-            PowerHolderComponent.getPowers(this, AttackerActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
-            PowerHolderComponent.getPowers(source.getAttacker(), SelfActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
-            PowerHolderComponent.getPowers(source.getAttacker(), TargetActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
+    @Inject(method = "damage", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z")))
+    private void apoli$invokeHitActions(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
 
+        if (!cir.getReturnValue()) {
+            return;
         }
+
+        Entity attacker = source.getAttacker();
+
+        PowerHolderComponent.withPowers(this, ActionWhenHitPower.class, p -> p.doesApply(attacker, source, amount), p -> p.whenHit(attacker));
+        PowerHolderComponent.withPowers(attacker, ActionOnHitPower.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
+
+        PowerHolderComponent.withPowers(this, SelfActionWhenHitPower.class, p -> p.doesApply(source, amount), SelfActionWhenHitPower::whenHit);
+        PowerHolderComponent.withPowers(this, AttackerActionWhenHitPower.class, p -> p.doesApply(source, amount), p -> p.whenHit(attacker));
+
+        PowerHolderComponent.withPowers(attacker, SelfActionOnHitPower.class, p -> p.doesApply(this, source, amount), SelfActionOnHitPower::onHit);
+        PowerHolderComponent.withPowers(attacker, TargetActionOnHitPower.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
+
     }
 
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
