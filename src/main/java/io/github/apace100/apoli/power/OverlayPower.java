@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.AtlasHolderContainer;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -12,22 +13,30 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
+import net.minecraft.client.texture.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 public class OverlayPower extends Power {
 
-    private final Identifier texture;
-    private final Integer priority;
+    public static final Identifier ATLAS_TEXTURE = Apoli.identifier("textures/atlas/overlay.png");
+
+    private final Identifier textureId;
+    private final Identifier spriteId;
+
+    private final DrawMode drawMode;
+    private final DrawPhase drawPhase;
+
     private final float strength;
     private final float red;
     private final float green;
     private final float blue;
-    private final DrawMode drawMode;
-    private final DrawPhase drawPhase;
+
     private final boolean hideWithHud;
     private final boolean visibleInThirdPerson;
+
+    private final int priority;
 
     public enum DrawMode {
         NAUSEA, TEXTURE
@@ -37,22 +46,19 @@ public class OverlayPower extends Power {
         BELOW_HUD, ABOVE_HUD
     }
 
-    public OverlayPower(PowerType<?> type, LivingEntity entity, Identifier texture, int priority, float strength, float red, float green, float blue, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson) {
-        super(type, entity);
-        this.texture = texture;
-        this.priority = priority;
-        this.strength = strength;
+    public OverlayPower(PowerType<?> powerType, LivingEntity entity, Identifier textureId, Identifier spriteId, float red, float green, float blue, float strength, int priority, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson) {
+        super(powerType, entity);
+        this.textureId = textureId;
+        this.spriteId = spriteId;
         this.red = red;
         this.green = green;
         this.blue = blue;
+        this.strength = strength;
+        this.priority = priority;
         this.drawMode = drawMode;
         this.drawPhase = drawPhase;
         this.hideWithHud = hideWithHud;
         this.visibleInThirdPerson = visibleInThirdPerson;
-    }
-
-    public Integer getPriority() {
-        return priority;
     }
 
     public DrawPhase getDrawPhase() {
@@ -67,6 +73,10 @@ public class OverlayPower extends Power {
         return hideWithHud;
     }
 
+    public int getPriority() {
+        return priority;
+    }
+
     @Environment(EnvType.CLIENT)
     public boolean shouldRender(GameOptions options, DrawPhase targetDrawPhase) {
         return this.getDrawPhase() == targetDrawPhase
@@ -74,93 +84,162 @@ public class OverlayPower extends Power {
             && (options.getPerspective().isFirstPerson() || this.shouldBeVisibleInThirdPerson());
     }
 
+    @SuppressWarnings({"SwitchStatementWithTooFewBranches", "resource"})
     @Environment(EnvType.CLIENT)
     public void render() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        int i = client.getWindow().getScaledWidth();
-        int j = client.getWindow().getScaledHeight();
 
-        double d, e, l, m, n;
-        float g, h, k, a;
-
-        switch(drawMode) {
-            case NAUSEA:
-                d = MathHelper.lerp(strength, 2.0D, 1.0D);
-                g = red * strength;
-                h = green * strength;
-                k = blue * strength;
-                e = (double)i * d;
-                l = (double)j * d;
-                m = ((double)i - e) / 2.0D;
-                n = ((double)j - l) / 2.0D;
-                a = 1.0F;
-                break;
-            case TEXTURE: default:
-                g = red;
-                h = green;
-                k = blue;
-                a = strength;
-                e = i;
-                l = j;
-                m = 0;
-                n = 0;
-                break;
+        if (textureId == null && spriteId == null) {
+            return;
         }
+
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        int scaledWidth = client.getWindow().getScaledWidth();
+        int scaledHeight = client.getWindow().getScaledHeight();
+
+        double width, height, x1, y1, x2, y2;
+        float r, g, b, a, u1, u2, v1, v2;
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
+
         switch (drawMode) {
-            case NAUSEA:
+            case NAUSEA -> {
+
                 RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE, GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE);
-                break;
-            case TEXTURE: default:
+                double stretch = MathHelper.lerp(strength, 2.0D, 1.0D);
+
+                r = red * strength;
+                g = green * strength;
+                b = blue * strength;
+
+                width = scaledWidth * stretch;
+                height = scaledHeight * stretch;
+
+                x1 = (scaledWidth - width) / 2.0D;
+                y1 = (scaledHeight - height) / 2.0D;
+
+                a = 1.0F;
+
+            }
+            default -> {
+
                 RenderSystem.defaultBlendFunc();
-                break;
+
+                r = red;
+                g = green;
+                b = blue;
+
+                width = scaledWidth;
+                height = scaledHeight;
+
+                x1 = 0;
+                y1 = 0;
+
+                a = strength;
+
+            }
         }
-        RenderSystem.setShaderColor(g, h, k, a);
+
+        RenderSystem.setShaderColor(r, g, b, a);
         RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-        RenderSystem.setShaderTexture(0, texture);
+
+        Identifier textureToDraw;
+
+        x2 = x1 + width;
+        y2 = y1 + height;
+
+        if (spriteId != null) {
+
+            Sprite sprite = ((AtlasHolderContainer) client).apoli$getOverlay().getSprite(spriteId);
+            textureToDraw = sprite.getAtlasId();
+
+            u1 = sprite.getMinU();
+            u2 = sprite.getMaxU();
+
+            v1 = sprite.getMinV();
+            v2 = sprite.getMaxV();
+
+        }
+
+        else {
+
+            textureToDraw = textureId;
+
+            u1 = 0.0F;
+            u2 = 1.0F;
+
+            v1 = 1.0F;
+            v2 = 0.0F;
+
+        }
+
+        RenderSystem.setShaderTexture(0, textureToDraw);
+
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
+
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        bufferBuilder.vertex(m, n + l, -90.0D).texture(0.0F, 1.0F).next();
-        bufferBuilder.vertex(m + e, n + l, -90.0D).texture(1.0F, 1.0F).next();
-        bufferBuilder.vertex(m + e, n, -90.0D).texture(1.0F, 0.0F).next();
-        bufferBuilder.vertex(m, n, -90.0D).texture(0.0F, 0.0F).next();
+        bufferBuilder.vertex(x1, y1, -1.0D).texture(u1, v1).next();
+        bufferBuilder.vertex(x1, y2, -1.0D).texture(u1, v2).next();
+        bufferBuilder.vertex(x2, y2, -1.0D).texture(u2, v2).next();
+        bufferBuilder.vertex(x2, y1, -1.0D).texture(u2, v1).next();
+
         tessellator.draw();
+
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
+
+    }
+
+    @Environment(EnvType.CLIENT)
+    public static final class SpriteHolder extends SpriteAtlasHolder {
+
+        public SpriteHolder(TextureManager manager) {
+            super(manager, ATLAS_TEXTURE, Apoli.identifier("overlay"));
+        }
+
+        @Override
+        public Sprite getSprite(Identifier objectId) {
+            return super.getSprite(objectId);
+        }
+
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("overlay"),
+        return new PowerFactory<>(
+            Apoli.identifier("overlay"),
             new SerializableData()
-                .add("texture", SerializableDataTypes.IDENTIFIER)
-                .add("priority", SerializableDataTypes.INT, 1)
-                .add("strength", SerializableDataTypes.FLOAT, 1.0F)
+                .add("texture", SerializableDataTypes.IDENTIFIER, null)
+                .add("sprite", SerializableDataTypes.IDENTIFIER, null)
                 .add("red", SerializableDataTypes.FLOAT, 1.0F)
                 .add("green", SerializableDataTypes.FLOAT, 1.0F)
                 .add("blue", SerializableDataTypes.FLOAT, 1.0F)
-                .add("draw_mode", SerializableDataType.enumValue(OverlayPower.DrawMode.class))
-                .add("draw_phase", SerializableDataType.enumValue(OverlayPower.DrawPhase.class))
+                .add("strength", SerializableDataTypes.FLOAT, 1.0F)
+                .add("priority", SerializableDataTypes.INT, 1)
+                .add("draw_mode", SerializableDataType.enumValue(DrawMode.class))
+                .add("draw_phase", SerializableDataType.enumValue(DrawPhase.class))
                 .add("hide_with_hud", SerializableDataTypes.BOOLEAN, true)
                 .add("visible_in_third_person", SerializableDataTypes.BOOLEAN, false),
-            data ->
-                (type, player) -> new OverlayPower(type, player,
-                    data.getId("texture"),
-                    data.getInt("priority"),
-                    data.getFloat("strength"),
-                    data.getFloat("red"),
-                    data.getFloat("green"),
-                    data.getFloat("blue"),
-                    data.get("draw_mode"),
-                    data.get("draw_phase"),
-                    data.getBoolean("hide_with_hud"),
-                    data.getBoolean("visible_in_third_person")))
-            .allowCondition();
+            data -> (powerType, entity) -> new OverlayPower(
+                powerType,
+                entity,
+                data.get("texture"),
+                data.get("sprite"),
+                data.get("red"),
+                data.get("green"),
+                data.get("blue"),
+                data.get("strength"),
+                data.get("priority"),
+                data.get("draw_mode"),
+                data.get("draw_phase"),
+                data.get("hide_with_hud"),
+                data.get("visible_in_third_person")
+            )
+        ).allowCondition();
     }
 }
