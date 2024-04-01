@@ -268,7 +268,8 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             return null;
         }
 
-        if (isMultiple(powerFactoryId)) {
+        boolean multiple = this.isMultiple(powerFactoryId);
+        if (multiple) {
             powerFactoryId = SIMPLE;
             if (isSubPower) {
                 throw new JsonSyntaxException("Power type \"" + MULTIPLE + "\" cannot be used in a sub-power that uses the \"" + MULTIPLE + "\" power type.");
@@ -278,12 +279,22 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         int prevLoadingPriority = getLoadingPriority(id);
         if (!PowerTypeRegistry.contains(id)) {
             return finishReadingPower(PowerTypeRegistry::register, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
-        } else if (prevLoadingPriority < loadingPriority) {
-            Apoli.LOGGER.warn("Overriding power \"{}\" (with prev. loading priority of {}) with a higher loading priority of {} from data pack [{}]!", id, prevLoadingPriority, loadingPriority, packName);
-            return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
         }
 
-        return null;
+        overrideAttempt:
+        if (prevLoadingPriority < loadingPriority) {
+
+            if (multiple) {
+                Apoli.LOGGER.warn("Multiple powers, such as {}, cannot be overridden. Did you mean to override its sub-power(s)?", id);
+                break overrideAttempt;
+            }
+
+            Apoli.LOGGER.warn("Overriding power \"{}\" (with prev. loading priority of {}) with a higher loading priority of {} from data pack [{}]!", id, prevLoadingPriority, loadingPriority, packName);
+            return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
+
+        }
+
+        return PowerTypeRegistry.getNullable(id);
 
     }
 
