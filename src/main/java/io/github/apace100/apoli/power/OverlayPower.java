@@ -3,8 +3,9 @@ package io.github.apace100.apoli.power;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.AtlasHolderContainer;
+import io.github.apace100.apoli.access.OverlaySpriteHolder;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.TextureUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -22,7 +23,6 @@ public class OverlayPower extends Power {
 
     public static final Identifier ATLAS_TEXTURE = Apoli.identifier("textures/atlas/overlay.png");
 
-    private final Identifier textureId;
     private final Identifier spriteId;
 
     private final DrawMode drawMode;
@@ -38,6 +38,11 @@ public class OverlayPower extends Power {
 
     private final int priority;
 
+    private Boolean invalidTexture;
+    private Boolean legacyTexture;
+
+    private boolean erred;
+
     public enum DrawMode {
         NAUSEA, TEXTURE
     }
@@ -46,9 +51,8 @@ public class OverlayPower extends Power {
         BELOW_HUD, ABOVE_HUD
     }
 
-    public OverlayPower(PowerType<?> powerType, LivingEntity entity, Identifier textureId, Identifier spriteId, float red, float green, float blue, float strength, int priority, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson) {
+    public OverlayPower(PowerType<?> powerType, LivingEntity entity, Identifier spriteId, float red, float green, float blue, float strength, int priority, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson) {
         super(powerType, entity);
-        this.textureId = textureId;
         this.spriteId = spriteId;
         this.red = red;
         this.green = green;
@@ -84,15 +88,34 @@ public class OverlayPower extends Power {
             && (options.getPerspective().isFirstPerson() || this.shouldBeVisibleInThirdPerson());
     }
 
-    @SuppressWarnings({"SwitchStatementWithTooFewBranches", "resource"})
+    @SuppressWarnings("SwitchStatementWithTooFewBranches")
     @Environment(EnvType.CLIENT)
     public void render() {
 
-        if (textureId == null && spriteId == null) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (!(client instanceof OverlaySpriteHolder overlaySpriteHolder) || spriteId == null || (invalidTexture != null && invalidTexture)) {
             return;
         }
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        if (!erred && legacyTexture == null) {
+
+            this.legacyTexture = TextureUtil.tryLoadingTexture(spriteId)
+                .result()
+                .isPresent();
+            this.invalidTexture = !legacyTexture && TextureUtil.tryLoadingSprite(spriteId, ATLAS_TEXTURE)
+                .result()
+                .isEmpty();
+
+            if (invalidTexture) {
+
+                Apoli.LOGGER.warn("Power \"{}\" references texture \"{}\", which doesn't exist!", type.getIdentifier(), spriteId);
+                this.erred = true;
+
+                return;
+
+            }
+
+        }
 
         int scaledWidth = client.getWindow().getScaledWidth();
         int scaledHeight = client.getWindow().getScaledHeight();
@@ -150,9 +173,21 @@ public class OverlayPower extends Power {
         x2 = x1 + width;
         y2 = y1 + height;
 
-        if (spriteId != null) {
+        if (legacyTexture) {
 
-            Sprite sprite = ((AtlasHolderContainer) client).apoli$getOverlay().getSprite(spriteId);
+            textureToDraw = spriteId;
+
+            u1 = 0.0F;
+            u2 = 1.0F;
+
+            v1 = 1.0F;
+            v2 = 0.0f;
+
+        }
+
+        else {
+
+            Sprite sprite = overlaySpriteHolder.apoli$getSprite(spriteId);
             textureToDraw = sprite.getAtlasId();
 
             u1 = sprite.getMinU();
@@ -160,18 +195,6 @@ public class OverlayPower extends Power {
 
             v1 = sprite.getMinV();
             v2 = sprite.getMaxV();
-
-        }
-
-        else {
-
-            textureToDraw = textureId;
-
-            u1 = 0.0F;
-            u2 = 1.0F;
-
-            v1 = 1.0F;
-            v2 = 0.0F;
 
         }
 
@@ -215,7 +238,7 @@ public class OverlayPower extends Power {
             Apoli.identifier("overlay"),
             new SerializableData()
                 .add("texture", SerializableDataTypes.IDENTIFIER, null)
-                .add("sprite", SerializableDataTypes.IDENTIFIER, null)
+                .addFunctionedDefault("sprite", SerializableDataTypes.IDENTIFIER, data -> data.get("texture"))
                 .add("red", SerializableDataTypes.FLOAT, 1.0F)
                 .add("green", SerializableDataTypes.FLOAT, 1.0F)
                 .add("blue", SerializableDataTypes.FLOAT, 1.0F)
@@ -228,7 +251,6 @@ public class OverlayPower extends Power {
             data -> (powerType, entity) -> new OverlayPower(
                 powerType,
                 entity,
-                data.get("texture"),
                 data.get("sprite"),
                 data.get("red"),
                 data.get("green"),
