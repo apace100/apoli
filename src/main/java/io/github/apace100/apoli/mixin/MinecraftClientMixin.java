@@ -3,6 +3,7 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.OverlaySpriteHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.integration.PostLoadTexturesCallback;
 import io.github.apace100.apoli.power.EntityGlowPower;
 import io.github.apace100.apoli.power.OverlayPower;
 import io.github.apace100.apoli.power.SelfGlowPower;
@@ -53,6 +54,11 @@ public abstract class MinecraftClientMixin implements OverlaySpriteHolder {
     private void apoli$registerCustomAtlases(RunArgs args, CallbackInfo ci) {
         this.apoli$overlaySpriteHolder = new OverlayPower.SpriteHolder(this.textureManager);
         this.resourceManager.registerReloader(apoli$overlaySpriteHolder);
+    }
+
+    @Inject(method = "onFinishedLoading", at = @At("HEAD"))
+    private void apoli$postReloadTextures(MinecraftClient.LoadingContext loadingContext, CallbackInfo ci) {
+        PostLoadTexturesCallback.EVENT.invoker().onPostLoad((MinecraftClient) (Object) this);
     }
 
 }

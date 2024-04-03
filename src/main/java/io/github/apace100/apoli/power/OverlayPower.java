@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.OverlaySpriteHolder;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.TextureUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -14,13 +15,19 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
-import net.minecraft.client.texture.*;
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.texture.SpriteAtlasHolder;
+import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class OverlayPower extends Power {
 
+    private static final Map<Identifier, Identifier> INVALID_TEXTURES = new HashMap<>();
     public static final Identifier ATLAS_TEXTURE = Apoli.identifier("textures/atlas/overlay.png");
 
     private final Identifier spriteId;
@@ -38,10 +45,7 @@ public class OverlayPower extends Power {
 
     private final int priority;
 
-    private Boolean invalidTexture;
     private Boolean legacyTexture;
-
-    private boolean erred;
 
     public enum DrawMode {
         NAUSEA, TEXTURE
@@ -63,6 +67,11 @@ public class OverlayPower extends Power {
         this.drawPhase = drawPhase;
         this.hideWithHud = hideWithHud;
         this.visibleInThirdPerson = visibleInThirdPerson;
+    }
+
+    @Override
+    public void onRemoved(boolean onSync) {
+        INVALID_TEXTURES.remove(type.getIdentifier());
     }
 
     public DrawPhase getDrawPhase() {
@@ -93,23 +102,25 @@ public class OverlayPower extends Power {
     public void render() {
 
         MinecraftClient client = MinecraftClient.getInstance();
-        if (!(client instanceof OverlaySpriteHolder overlaySpriteHolder) || spriteId == null || (invalidTexture != null && invalidTexture)) {
+        Identifier powerTypeId = type.getIdentifier();
+
+        if (!(client instanceof OverlaySpriteHolder overlaySpriteHolder) || spriteId == null || INVALID_TEXTURES.containsKey(powerTypeId)) {
             return;
         }
 
-        if (!erred && legacyTexture == null) {
+        if (legacyTexture == null) {
 
             this.legacyTexture = TextureUtil.tryLoadingTexture(spriteId)
                 .result()
                 .isPresent();
-            this.invalidTexture = !legacyTexture && TextureUtil.tryLoadingSprite(spriteId, ATLAS_TEXTURE)
+            boolean invalidTexture = !legacyTexture && TextureUtil.tryLoadingSprite(spriteId, ATLAS_TEXTURE)
                 .result()
                 .isEmpty();
 
             if (invalidTexture) {
 
-                Apoli.LOGGER.warn("Power \"{}\" references texture \"{}\", which doesn't exist!", type.getIdentifier(), spriteId);
-                this.erred = true;
+                Apoli.LOGGER.warn("Power \"{}\" references texture \"{}\", which doesn't exist!", powerTypeId, spriteId);
+                INVALID_TEXTURES.put(powerTypeId, spriteId);
 
                 return;
 
@@ -121,7 +132,7 @@ public class OverlayPower extends Power {
         int scaledHeight = client.getWindow().getScaledHeight();
 
         double width, height, x1, y1, x2, y2;
-        float r, g, b, a, u1, u2, v1, v2;
+        float r, g, b, a, minU, maxU, minV, maxV;
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
@@ -177,11 +188,11 @@ public class OverlayPower extends Power {
 
             textureToDraw = spriteId;
 
-            u1 = 0.0F;
-            u2 = 1.0F;
+            minU = 0.0F;
+            maxU = 1.0F;
 
-            v1 = 1.0F;
-            v2 = 0.0f;
+            minV = 1.0F;
+            maxV = 0.0f;
 
         }
 
@@ -190,11 +201,11 @@ public class OverlayPower extends Power {
             Sprite sprite = overlaySpriteHolder.apoli$getSprite(spriteId);
             textureToDraw = sprite.getAtlasId();
 
-            u1 = sprite.getMinU();
-            u2 = sprite.getMaxU();
+            minU = sprite.getMinU();
+            maxU = sprite.getMaxU();
 
-            v1 = sprite.getMinV();
-            v2 = sprite.getMaxV();
+            minV = sprite.getMinV();
+            maxV = sprite.getMaxV();
 
         }
 
@@ -204,10 +215,10 @@ public class OverlayPower extends Power {
         BufferBuilder bufferBuilder = tessellator.getBuffer();
 
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        bufferBuilder.vertex(x1, y1, -1.0D).texture(u1, v1).next();
-        bufferBuilder.vertex(x1, y2, -1.0D).texture(u1, v2).next();
-        bufferBuilder.vertex(x2, y2, -1.0D).texture(u2, v2).next();
-        bufferBuilder.vertex(x2, y1, -1.0D).texture(u2, v1).next();
+        bufferBuilder.vertex(x1, y1, -1.0D).texture(minU, minV).next();
+        bufferBuilder.vertex(x1, y2, -1.0D).texture(minU, maxV).next();
+        bufferBuilder.vertex(x2, y2, -1.0D).texture(maxU, maxV).next();
+        bufferBuilder.vertex(x2, y1, -1.0D).texture(maxU, minV).next();
 
         tessellator.draw();
 
@@ -231,6 +242,12 @@ public class OverlayPower extends Power {
             return super.getSprite(objectId);
         }
 
+    }
+
+    @Environment(EnvType.CLIENT)
+    public static void integrateCallback(MinecraftClient client) {
+        PowerHolderComponent.getPowers(client.player, OverlayPower.class, true).forEach(p -> p.legacyTexture = null);
+        INVALID_TEXTURES.clear();
     }
 
     public static PowerFactory createFactory() {
