@@ -22,7 +22,6 @@ import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -46,11 +45,9 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
         return !PowerHolderComponent.hasPower(entity, InvisibilityPower.class, Predicate.not(InvisibilityPower::shouldRenderOutline)) && original;
     }
 
-    @ModifyExpressionValue(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getRenderLayer(Lnet/minecraft/entity/LivingEntity;ZZZ)Lnet/minecraft/client/render/RenderLayer;"))
-    private RenderLayer apoli$changeRenderLayerWhenTranslucent(@Nullable RenderLayer original, LivingEntity entity) {
-        return PowerHolderComponent.hasPower(entity, ModelColorPower.class, ModelColorPower::isTranslucent)
-            ? RenderLayer.getItemEntityTranslucentCull(this.getTexture(entity))
-            : original;
+    @WrapOperation(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getRenderLayer(Lnet/minecraft/entity/LivingEntity;ZZZ)Lnet/minecraft/client/render/RenderLayer;"))
+    private RenderLayer apoli$useTranslucentRenderLayerWhenVisible(LivingEntityRenderer<?, ?> renderer, LivingEntity entity, boolean showBody, boolean translucent, boolean showOutline, Operation<RenderLayer> original) {
+        return original.call(renderer, entity, showBody, translucent || showBody && PowerHolderComponent.hasPower(entity, ModelColorPower.class, ModelColorPower::isTranslucent), showOutline);
     }
 
     @WrapWithCondition(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/feature/FeatureRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/Entity;FFFFFF)V"))
@@ -60,11 +57,11 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
     }
 
     @WrapOperation(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V"))
-    private void apoli$renderColorChangedModel(EntityModel<?> instance, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, Operation<Void> original, LivingEntity entity) {
+    private void apoli$renderColorChangedModel(EntityModel<?> model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, Operation<Void> original, LivingEntity entity) {
 
         List<ModelColorPower> modelColorPowers = PowerHolderComponent.getPowers(entity, ModelColorPower.class);
         if (modelColorPowers.isEmpty()) {
-            original.call(instance, matrices, vertices, light, overlay, red, green, blue, alpha);
+            original.call(model, matrices, vertices, light, overlay, red, green, blue, alpha);
             return;
         }
 
@@ -88,7 +85,7 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
             .map(alphaFactor -> alpha * alphaFactor)
             .orElse(alpha);
 
-        instance.render(matrices, vertices, light, overlay, newRed, newGreen, newBlue, newAlpha);
+        original.call(model, matrices, vertices, light, overlay, newRed, newGreen, newBlue, newAlpha);
 
     }
 
