@@ -3,6 +3,8 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -527,13 +529,18 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
     }
 
-    @Redirect(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
-    private boolean invisibilityException(LivingEntity instance, Entity entity) {
-        if (entity == null || !PowerHolderComponent.hasPower(this, InvisibilityPower.class)) {
-            return instance.isInvisible();
-        } else {
-            return PowerHolderComponent.hasPower(this, InvisibilityPower.class, p -> p.doesApply(entity));
+    @WrapOperation(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
+    private boolean apoli$specificallyInvisibleTo(LivingEntity livingEntity, Operation<Boolean> original, @Nullable Entity viewer) {
+
+        List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(livingEntity, InvisibilityPower.class, true);
+        if (viewer == null || invisibilityPowers.isEmpty()) {
+            return original.call(livingEntity);
         }
+
+        return invisibilityPowers
+            .stream()
+            .anyMatch(p -> p.isActive() && p.doesApply(viewer));
+
     }
 
     @Unique
