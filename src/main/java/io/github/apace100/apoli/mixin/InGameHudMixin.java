@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.OverlayPower;
 import io.github.apace100.apoli.power.OverrideHudTexturePower;
 import io.github.apace100.apoli.screen.GameHudRender;
 import net.fabricmc.api.EnvType;
@@ -39,15 +38,8 @@ public abstract class InGameHudMixin {
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;getCurrentGameMode()Lnet/minecraft/world/GameMode;", ordinal = 0))
     private void apoli$renderOnHud(DrawContext context, float tickDelta, CallbackInfo ci) {
 
-        //  Render overlay powers over the vanilla overlays and below the vanilla status bars
-        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
-            .stream()
-            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
-            .sorted(Comparator.comparing(OverlayPower::getPriority))
-            .forEach(OverlayPower::render);
-
         //  Render resource bars
-        for(GameHudRender hudRender : GameHudRender.HUD_RENDERS) {
+        for (GameHudRender hudRender : GameHudRender.HUD_RENDERS) {
             hudRender.render(context, tickDelta);
         }
 

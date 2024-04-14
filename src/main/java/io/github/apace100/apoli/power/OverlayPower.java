@@ -22,12 +22,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class OverlayPower extends Power {
 
-    private static final Map<Identifier, Identifier> INVALID_TEXTURES = new HashMap<>();
     public static final Identifier ATLAS_TEXTURE = Apoli.identifier("textures/atlas/overlay.png");
 
     private final Identifier spriteId;
@@ -45,7 +41,9 @@ public class OverlayPower extends Power {
 
     private final int priority;
 
-    private Boolean legacyTexture;
+    private boolean initRender = true;
+    private boolean legacyTexture;
+    private boolean invalidTexture;
 
     public enum DrawMode {
         NAUSEA, TEXTURE
@@ -67,11 +65,6 @@ public class OverlayPower extends Power {
         this.drawPhase = drawPhase;
         this.hideWithHud = hideWithHud;
         this.visibleInThirdPerson = visibleInThirdPerson;
-    }
-
-    @Override
-    public void onRemoved(boolean onSync) {
-        INVALID_TEXTURES.remove(type.getIdentifier());
     }
 
     public DrawPhase getDrawPhase() {
@@ -101,29 +94,28 @@ public class OverlayPower extends Power {
     @Environment(EnvType.CLIENT)
     public void render() {
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        Identifier powerTypeId = type.getIdentifier();
-
-        if (!(client instanceof OverlaySpriteHolder overlaySpriteHolder) || spriteId == null || INVALID_TEXTURES.containsKey(powerTypeId)) {
+        if (spriteId == null || !initRender && invalidTexture) {
             return;
         }
 
-        if (legacyTexture == null) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (!(client instanceof OverlaySpriteHolder overlaySpriteHolder)) {
+            return;
+        }
+
+        if (initRender) {
 
             this.legacyTexture = TextureUtil.tryLoadingTexture(spriteId)
                 .result()
                 .isPresent();
-            boolean invalidTexture = !legacyTexture && TextureUtil.tryLoadingSprite(spriteId, ATLAS_TEXTURE)
+            this.invalidTexture = !legacyTexture && TextureUtil.tryLoadingSprite(spriteId, ATLAS_TEXTURE)
                 .result()
                 .isEmpty();
+            this.initRender = false;
 
             if (invalidTexture) {
-
-                Apoli.LOGGER.warn("Power \"{}\" references texture \"{}\", which doesn't exist!", powerTypeId, spriteId);
-                INVALID_TEXTURES.put(powerTypeId, spriteId);
-
+                Apoli.LOGGER.warn("Power \"{}\" references texture \"{}\", which doesn't exist!", type.getIdentifier(), spriteId);
                 return;
-
             }
 
         }
@@ -246,8 +238,7 @@ public class OverlayPower extends Power {
 
     @Environment(EnvType.CLIENT)
     public static void integrateCallback(MinecraftClient client) {
-        PowerHolderComponent.getPowers(client.player, OverlayPower.class, true).forEach(p -> p.legacyTexture = null);
-        INVALID_TEXTURES.clear();
+        PowerHolderComponent.getPowers(client.player, OverlayPower.class, true).forEach(p -> p.initRender = true);
     }
 
     public static PowerFactory createFactory() {
