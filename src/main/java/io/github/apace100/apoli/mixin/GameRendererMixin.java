@@ -130,7 +130,7 @@ public abstract class GameRendererMixin {
 
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0, shift = At.Shift.AFTER))
     private void apoli$renderOverlayPowersAboveHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
             .stream()
