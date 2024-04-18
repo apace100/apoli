@@ -26,6 +26,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     private final ConcurrentHashMap<PowerType<?>, List<Identifier>> powerSources = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<PowerType<?>, Power> powersToRemove = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<PowerType<?>, Power> powersToAdd = new ConcurrentHashMap<>();
 
     public PowerHolderComponentImpl(LivingEntity owner) {
         this.owner = owner;
@@ -167,6 +168,10 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public boolean addPower(PowerType<?> powerType, Identifier source) {
+        return this.addPower(powerType, source, true);
+    }
+
+    private boolean addPower(PowerType<?> powerType, Identifier source, boolean root) {
 
         StringBuilder errorMessage = new StringBuilder("Cannot add a non-existing power");
         if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
@@ -184,26 +189,43 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             return false;
         }
 
+        Power power = powerType.create(owner);
         sources.add(source);
+
+        powerSources.put(powerType, sources);
+        powers.put(powerType, power);
+
+        powersToAdd.put(powerType, power);
+
         if (powerType instanceof MultiplePowerType<?> multiplePowerType) {
             multiplePowerType.getSubPowers()
                 .stream()
                 .filter(PowerTypeRegistry::contains)
                 .map(PowerTypeRegistry::get)
-                .forEach(pt -> addPower(pt, source));
+                .forEach(pt -> this.addPower(pt, source, false));
         }
 
-        Power power = powerType.create(owner);
-        power.onGained();
+        if (!root) {
+            return true;
+        }
 
-        power.onAdded();
-        power.onAdded(false);
+        Iterator<Map.Entry<PowerType<?>, Power>> addedIterator = powersToAdd.entrySet().iterator();
+        while (addedIterator.hasNext()) {
 
-        powerSources.put(powerType, sources);
-        powers.put(powerType, power);
+            Map.Entry<PowerType<?>, Power> addedEntry = addedIterator.next();
+            Power addedPower = addedEntry.getValue();
 
-        if (owner instanceof ServerPlayerEntity player) {
-            GainedPowerCriterion.INSTANCE.trigger(player, powerType);
+            addedPower.onGained();
+
+            addedPower.onAdded();
+            addedPower.onAdded(false);
+
+            if (owner instanceof ServerPlayerEntity player) {
+                GainedPowerCriterion.INSTANCE.trigger(player, addedEntry.getKey());
+            }
+
+            addedIterator.remove();
+
         }
 
         return true;
