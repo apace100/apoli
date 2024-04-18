@@ -54,28 +54,10 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     public Set<PowerType<?>> getPowerTypes(boolean getSubPowerTypes) {
-
-        Set<PowerType<?>> powerTypes = new HashSet<>(powers.keySet());
-        if (!getSubPowerTypes) {
-
-            for (PowerType<?> powerType : powers.keySet()) {
-
-                if (!(powerType instanceof MultiplePowerType<?> multiplePowerType)) {
-                    continue;
-                }
-
-                multiplePowerType.getSubPowers()
-                    .stream()
-                    .filter(PowerTypeRegistry::contains)
-                    .map(PowerTypeRegistry::get)
-                    .forEach(powerTypes::remove);
-
-            }
-
-        }
-
-        return powerTypes;
-
+        return powers.keySet()
+            .stream()
+            .filter(pt -> getSubPowerTypes || !pt.isSubPower())
+            .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override
