@@ -112,25 +112,16 @@ public abstract class GameRendererMixin {
 
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0))
+    @Inject(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;hudHidden:Z"))
     private void apoli$renderOverlayPowersBelowHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
-
-        //  Skip this method if the HUD is not hidden or if the current screen is not null
-        //  (to make sure the overlay is not rendered twice)
-        if (!client.options.hudHidden || client.currentScreen != null) {
-            return;
-        }
-
-        //  Otherwise, render overlay powers specified to render below the HUD
         PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
             .stream()
             .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
             .sorted(Comparator.comparing(OverlayPower::getPriority))
             .forEach(OverlayPower::render);
-
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0, shift = At.Shift.AFTER))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0))
     private void apoli$renderOverlayPowersAboveHud(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
             .stream()
