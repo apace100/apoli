@@ -30,7 +30,7 @@ public class EntitySetPower extends Power {
     private final Map<UUID, Entity> entities = new HashMap<>();
 
     private final Set<UUID> tempUuids = new HashSet<>();
-    private final Map<UUID, Integer> tempEntities = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> tempEntities = new ConcurrentHashMap<>();
 
     private Integer startTicks = null;
 
@@ -63,7 +63,7 @@ public class EntitySetPower extends Power {
 
         }
 
-        if (this.isActive()) {
+        if (!tempEntities.isEmpty() && this.isActive()) {
 
             if (startTicks == null) {
                 this.startTicks = entity.age % tickRate;
@@ -87,26 +87,30 @@ public class EntitySetPower extends Power {
 
     protected void tickTempEntities() {
 
-        if (tempEntities.isEmpty()) {
-            return;
-        }
-
-        Iterator<Map.Entry<UUID, Integer>> entryIterator = tempEntities.entrySet().iterator();
-        boolean shouldSync = false;
+        Iterator<Map.Entry<UUID, Long>> entryIterator = tempEntities.entrySet().iterator();
+        long time = entity.getWorld().getTime();
 
         while (entryIterator.hasNext()) {
 
-            Map.Entry<UUID, Integer> entry = entryIterator.next();
-            entry.setValue(entry.getValue() - 1);
-
-            if (entry.getValue() <= 0 && this.remove(this.getEntity(entry.getKey()))) {
-                shouldSync = true;
+            Map.Entry<UUID, Long> entry = entryIterator.next();
+            if (time < entry.getValue()) {
+                continue;
             }
 
-        }
+            UUID uuid = entry.getKey();
+            Entity tempEntity = this.getEntity(uuid);
 
-        if (shouldSync) {
-            PowerHolderComponent.syncPower(this.entity, this.type);
+            entryIterator.remove();
+            if (entityUuids.remove(uuid) | entities.remove(uuid) != null | tempUuids.remove(uuid)) {
+
+                if (actionOnRemove != null) {
+                    actionOnRemove.accept(new Pair<>(entity, tempEntity));
+                }
+
+                this.removedTemps = true;
+
+            }
+
         }
 
     }
@@ -150,7 +154,7 @@ public class EntitySetPower extends Power {
 
         if (time != null) {
             addedToSet |= tempUuids.add(uuid);
-            tempEntities.compute(uuid, (prevUuid, prevTime) -> time);
+            tempEntities.compute(uuid, (prevUuid, prevTime) -> entity.getWorld().getTime() + time);
         }
 
         if (!entityUuids.contains(uuid)) {
@@ -169,20 +173,26 @@ public class EntitySetPower extends Power {
     }
 
     public boolean remove(@Nullable Entity entity) {
+        return this.remove(entity, true);
+    }
+
+    public boolean remove(@Nullable Entity entity, boolean executeRemoveAction) {
 
         if (entity == null || entity.getWorld().isClient) {
             return false;
         }
 
-        if (actionOnRemove != null) {
-            actionOnRemove.accept(new Pair<>(this.entity, entity));
-        }
-
         UUID uuid = entity.getUuid();
-        return entityUuids.remove(uuid)
+        boolean result = entityUuids.remove(uuid)
             | entities.remove(uuid) != null
             | tempUuids.remove(uuid)
             | tempEntities.remove(uuid) != null;
+
+        if (executeRemoveAction && result && actionOnRemove != null) {
+            actionOnRemove.accept(new Pair<>(this.entity, entity));
+        }
+
+        return result;
 
     }
 
@@ -319,13 +329,9 @@ public class EntitySetPower extends Power {
 
             for (Entity entity : ((ServerWorldAccessor) otherWorld).callGetEntityLookup().iterate()) {
 
-                if (removedEntity.equals(entity)) {
-                    continue;
-                }
-
-                PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
+                 PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
                     .stream()
-                    .filter(p -> p.remove(removedEntity))
+                    .filter(p -> p.remove(removedEntity, p.isActive()))
                     .map(Power::getType)
                     .toList());
 
