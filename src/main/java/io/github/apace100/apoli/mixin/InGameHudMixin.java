@@ -26,7 +26,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 @Mixin(InGameHud.class)
 @Environment(EnvType.CLIENT)
@@ -57,12 +56,13 @@ public abstract class InGameHudMixin {
     private Optional<OverrideHudTexturePower> apoli$getOverrideHudTexturePower() {
         return PowerHolderComponent.getPowers(this.client.player, OverrideHudTexturePower.class)
             .stream()
+            .filter(OverrideHudTexturePower::shouldRender)
             .max(Comparator.comparing(OverrideHudTexturePower::getPriority));
     }
     
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getArmor()I", shift = At.Shift.AFTER)))
     private void apoli$overrideFullArmorSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 34, 9, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -70,7 +70,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 1), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getArmor()I", shift = At.Shift.AFTER)))
     private void apoli$overrideHalfArmorSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 25, 9, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -78,7 +78,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 2), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getArmor()I", shift = At.Shift.AFTER)))
     private void apoli$overrideEmptyArmorSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 16, 9, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -86,7 +86,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getHungerManager()Lnet/minecraft/entity/player/HungerManager;", ordinal = 1, shift = At.Shift.AFTER)))
     private void apoli$overrideEmptyFoodSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, this.getCameraPlayer().hasStatusEffect(StatusEffects.HUNGER) ? 133 : 16, 27, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -94,7 +94,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 1), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getHungerManager()Lnet/minecraft/entity/player/HungerManager;", ordinal = 1, shift = At.Shift.AFTER)))
     private void apoli$overrideFullFoodSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, this.getCameraPlayer().hasStatusEffect(StatusEffects.HUNGER) ? 88 : 52, 27, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -102,7 +102,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 2), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getHungerManager()Lnet/minecraft/entity/player/HungerManager;", ordinal = 1, shift = At.Shift.AFTER)))
     private void apoli$overrideHalfFoodSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, this.getCameraPlayer().hasStatusEffect(StatusEffects.HUNGER) ? 97 : 61, 27, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -110,7 +110,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z")))
     private void apoli$overrideBubbleSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 16, 18, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -118,7 +118,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 1), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z")))
     private void apoli$overrideBurstingBubbleSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 25, 18, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -126,7 +126,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "drawHeart", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V"))
     private void apoli$overrideHeartSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original, DrawContext context, InGameHud.HeartType type, int mX, int mY, boolean hardcore, boolean blinking, boolean half) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawHeartTexture(instance, type, x, y, width, height, hardcore, blinking, half),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -134,23 +134,23 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderExperienceBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V"))
     private void apoli$overrideBaseExperienceBarSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
-            p -> p.drawBarTexture(instance, texture, x, y, 0, 64, width, height, false, OptionalInt.empty(), OptionalInt.of(5)),
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
+            p -> p.drawTexture(instance, texture, x, y, 0, 64, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
     }
 
     @WrapOperation(method = "renderExperienceBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIIIIIII)V"))
     private void apoli$overrideProgressExperienceBarSprite(DrawContext instance, Identifier texture, int i, int j, int k, int l, int x, int y, int width, int height, Operation<Void> original, @Local(ordinal = 1) int experienceProgress) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
-            p -> p.drawBarTexture(instance, texture, x, y, 0, 64, width, height, experienceProgress > 0, OptionalInt.empty(), OptionalInt.of(5)),
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
+            p -> p.drawTextureRegion(instance, texture, i, j, k, l, 0, 69, x, y, width, height),
             () -> original.call(instance, texture, i, j, k, l, x, y, width, height)
         );
     }
 
     @WrapOperation(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0))
     private void apoli$overrideCrosshairSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 0, 0, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -158,7 +158,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;getAttackIndicator()Lnet/minecraft/client/option/SimpleOption;"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIIIIIII)V")))
     private void apoli$overrideFullCrosshairAttackIndicatorSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 68, 94, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -166,7 +166,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 1), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;getAttackIndicator()Lnet/minecraft/client/option/SimpleOption;"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIIIIIII)V")))
     private void apoli$overrideBaseCrosshairAttackIndicatorSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 36, 94, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -174,31 +174,31 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIIIIIII)V"))
     private void apoli$overrideCrosshairAttackIndicatorProgressSprite(DrawContext instance, Identifier texture, int i, int j, int k, int l, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
-            p -> p.drawBarTexture(instance, texture, x, y, 36, 94, width, height, true, OptionalInt.of(16), OptionalInt.empty()),
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
+            p -> p.drawTextureRegion(instance, texture, i, j, k, l, 52, 94, x, y, width, height),
             () -> original.call(instance, texture, i, j, k, l, x, y, width, height)
         );
     }
 
     @WrapOperation(method = "renderMountJumpBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V"))
     private void apoli$overrideBaseMountJumpBarSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
-            p -> p.drawBarTexture(instance, texture, x, y, 0, 84, width, height, false, OptionalInt.empty(), OptionalInt.empty()),
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
+            p -> p.drawTexture(instance, texture, x, y, 0, 84, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
     }
 
    @WrapOperation(method = "renderMountJumpBar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIIIIIII)V"))
     private void apoli$overrideMountJumpBarProgressSprite(DrawContext instance, Identifier texture, int i, int j, int k, int l, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
-            p -> p.drawBarTexture(instance, texture, x, y, 0, 84, width, height, true, OptionalInt.empty(), OptionalInt.of(5)),
-            () -> original.call(instance, texture, i, j, k, l, x, y, width, height)
-        );
+       this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
+           p -> p.drawTextureRegion(instance, texture, i, j, k, l, 0, 89, x, y, width, height),
+           () -> original.call(instance, texture, i, j, k, l, x, y, width, height)
+       );
    }
 
    @WrapOperation(method = "renderMountHealth", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0))
     private void apoli$overrideEmptyMountHeartSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 52, 9, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -206,7 +206,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderMountHealth", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 1))
     private void apoli$overrideFullMountHeartSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 88, 9, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
@@ -214,7 +214,7 @@ public abstract class InGameHudMixin {
 
     @WrapOperation(method = "renderMountHealth", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 2))
     private void apoli$overrideHalfMountHeartSprite(DrawContext instance, Identifier texture, int x, int y, int width, int height, Operation<Void> original) {
-        apoli$getOverrideHudTexturePower().ifPresentOrElse(
+        this.apoli$getOverrideHudTexturePower().ifPresentOrElse(
             p -> p.drawTexture(instance, texture, x, y, 97, 9, width, height),
             () -> original.call(instance, texture, x, y, width, height)
         );
