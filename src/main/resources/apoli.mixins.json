@@ -26,6 +26,7 @@
         "EntityAccessor",
         "EntityAttributeInstanceMixin",
         "EntityMixin",
+        "EntityTypeMixin",
         "EquipmentMixin",
         "ExperienceOrbEntityMixin",
         "EyeHeightAccess",

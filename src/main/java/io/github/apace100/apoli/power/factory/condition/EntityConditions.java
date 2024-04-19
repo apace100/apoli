@@ -19,6 +19,7 @@ import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.passive.TameableEntity;
@@ -31,6 +32,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
@@ -283,9 +285,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("entity_group"), new SerializableData()
             .add("group", SerializableDataTypes.ENTITY_GROUP),
             (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
-        register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
-            .add("tag", SerializableDataTypes.ENTITY_TAG),
-            (data, entity) -> entity.getType().getRegistryEntry().isIn(data.get("tag"))));
+        register(InTagCondition.getFactory());
         register(ClimbingCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
             if(entity instanceof TameableEntity) {
