@@ -55,14 +55,19 @@ public class ModifyTypeTagPower extends Power implements Prioritized<ModifyTypeT
                 continue;
             }
 
-            return mttpci.getPowers(i)
+            Optional<Boolean> replaceResult = mttps
                 .stream()
                 .filter(ModifyTypeTagPower::shouldReplace)
                 .findFirst()
-                .map(replacingMttp -> replacingMttp.matches(entityTypeTag))
-                .orElseGet(() -> mttps
-                    .stream()
-                    .anyMatch(mttp -> mttp.matches(entityTypeTag)));
+                .map(replacingMttp -> replacingMttp.matches(entityTypeTag));
+
+            if (replaceResult.isPresent()) {
+                return replaceResult.get();
+            }
+
+            if (mttps.stream().anyMatch(mttp -> mttp.matches(entityTypeTag))) {
+                return true;
+            }
 
         }
 
