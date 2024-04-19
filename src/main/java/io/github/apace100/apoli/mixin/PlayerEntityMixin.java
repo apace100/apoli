@@ -179,6 +179,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     private ActionResult apoli$beforeEntityUse(Entity instance, PlayerEntity player, Hand hand, Operation<ActionResult> original, @Share("cachedPriorityZeroResult") LocalRef<ActionResult> cachedPriorityZeroResultRef) {
 
         ItemStack stackInHand = player.getStackInHand(hand);
+        cachedPriorityZeroResultRef.set(ActionResult.PASS);
+
         for (PreventEntityUsePower peup : PowerHolderComponent.getPowers(this, PreventEntityUsePower.class)) {
 
             if (peup.doesApply(instance, hand, stackInHand)) {
@@ -195,7 +197,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
         }
 
-        cachedPriorityZeroResultRef.set(ActionResult.PASS);
         Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
 
         aipci.add(player, ActionOnEntityUsePower.class, p -> p.shouldExecute(instance, hand, stackInHand) && p.getPriority() >= 0);
@@ -236,7 +237,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
                 continue;
             }
 
-            cachedPriorityZeroResultRef.set(ActionResult.PASS);
             if (previousResult == ActionResult.PASS) {
                 continue;
             }
