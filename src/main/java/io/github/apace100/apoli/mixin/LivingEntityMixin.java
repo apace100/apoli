@@ -47,7 +47,7 @@ import java.util.*;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity, MovingEntity {
+public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity, MovingEntity, JumpingEntity {
     @Shadow
     protected abstract float getJumpVelocity();
 
@@ -340,13 +340,28 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             .orElse(original);
     }
 
+    @Unique
+    private boolean apoli$applySprintJumpingEffects;
+
+    @Override
+    public boolean apoli$applySprintJumpEffects() {
+        return apoli$applySprintJumpingEffects;
+    }
+
     // SPRINT_JUMP
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
-    private float modifyJumpVelocity(LivingEntity entity) {
-        return PowerHolderComponent.modify(this, ModifyJumpPower.class, this.getJumpVelocity(), p -> {
-            p.executeAction();
-            return true;
-        });
+    @ModifyReturnValue(method = "getJumpVelocity", at = @At("RETURN"))
+    private float apoli$modifyJumpVelocity(float original) {
+
+        float modified = PowerHolderComponent.modify(this, ModifyJumpPower.class, original, p -> true, ModifyJumpPower::executeAction);
+        this.apoli$applySprintJumpingEffects = modified > 0;
+
+        return modified;
+
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z"))
+    private boolean apoli$shouldApplySprintJumpEffects(boolean original) {
+        return original && this.apoli$applySprintJumpEffects();
     }
 
     // HOTBLOODED
