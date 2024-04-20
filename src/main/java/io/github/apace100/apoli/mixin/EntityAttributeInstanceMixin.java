@@ -26,7 +26,11 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
     @Shadow
     public abstract Set<EntityAttributeModifier> getModifiers();
 
-    @Shadow public abstract EntityAttribute getAttribute();
+    @Shadow
+    public abstract EntityAttribute getAttribute();
+
+    @Shadow
+    public abstract double getBaseValue();
 
     @Unique
     @Nullable
@@ -42,6 +46,10 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
         return apoli$owner;
     }
 
+    /**
+     *  TODO: Optimize this impl. by using a modifier cache, injecting into {@link EntityAttributeInstance#computeValue()}, and calling
+     *        {@link EntityAttributeInstance#onUpdate()} if the modifier cache is no longer up-to-date - eggohito
+     */
     @ModifyReturnValue(method = "getValue", at = @At("RETURN"))
     private double apoli$modifyAttribute(double original) {
 
@@ -60,7 +68,7 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
             .map(ModifierUtil::fromAttributeModifier)
             .toList();
 
-        return ModifierUtil.applyModifiers(this.apoli$getOwner(), Stream.concat(powerModifiers.stream(), vanillaModifiers.stream()).toList(), original);
+        return ModifierUtil.applyModifiers(this.apoli$getOwner(), Stream.concat(powerModifiers.stream(), vanillaModifiers.stream()).toList(), this.getBaseValue());
 
     }
 

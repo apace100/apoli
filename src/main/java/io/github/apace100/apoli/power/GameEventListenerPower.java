@@ -251,7 +251,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         public boolean triggersAvoidCriterion() {
             //  TODO: Add a boolean field for determining if the callback for this power
             //        should trigger the criterion for avoiding vibrations
-            return true;
+            return false;
         }
 
         @Override

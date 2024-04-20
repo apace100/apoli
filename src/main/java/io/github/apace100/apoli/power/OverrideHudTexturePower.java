@@ -14,9 +14,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.OptionalInt;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class OverrideHudTexturePower extends Power implements Prioritized<OverrideHudTexturePower> {
 
     private final Map<Identifier, Identifier> textureMapping;
@@ -38,6 +36,11 @@ public class OverrideHudTexturePower extends Power implements Prioritized<Overri
 
     public Identifier getStatusBarTexture() {
         return statusBarTexture;
+    }
+
+    public boolean shouldRender() {
+        return this.getStatusBarTexture() != null
+            || !textureMapping.isEmpty();
     }
 
     @Environment(EnvType.CLIENT)
@@ -72,30 +75,27 @@ public class OverrideHudTexturePower extends Power implements Prioritized<Overri
     }
 
     @Environment(EnvType.CLIENT)
-    public void drawBarTexture(DrawContext context, Identifier texture, int x, int y, int u, int v, int width, int height, boolean hasProgress, OptionalInt uOffset, OptionalInt vOffset) {
+    public void drawTextureRegion(DrawContext context, Identifier texture, int width, int height, int minU, int minV, int legacyMinU, int legacyMinV, int x, int y, int maxU, int maxV) {
 
         if (statusBarTexture == null) {
-            Identifier newTexture = textureMapping.getOrDefault(texture, texture);
-            context.drawGuiTexture(newTexture, x, y, width, height);
-        } else {
+            context.drawGuiTexture(textureMapping.getOrDefault(texture, texture), width, height, minU, minV, x, y, maxU, maxV);
+        }
 
-            u += (uOffset.isPresent() ? (hasProgress ? uOffset.getAsInt() : 0) : 0);
-            v += (vOffset.isPresent() ? (hasProgress ? vOffset.getAsInt() : 0) : 0);
-
-            context.drawTexture(statusBarTexture, x, y, u, v, width, height);
-
+        else {
+            context.drawTexture(statusBarTexture, x, y, legacyMinU, legacyMinV, maxU, maxV);
         }
 
     }
 
     @Environment(EnvType.CLIENT)
-    public void drawTexture(DrawContext context, Identifier texture, int x, int y, int u, int v, int width, int height) {
+    public void drawTexture(DrawContext context, Identifier texture, int x, int y, int legacyU, int legacyV, int width, int height) {
 
-        if (statusBarTexture != null) {
-            context.drawTexture(statusBarTexture, x, y, u, v, width, height);
-        } else {
-            Identifier newTexture = textureMapping.getOrDefault(texture, texture);
-            context.drawGuiTexture(newTexture, x, y, width, height);
+        if (statusBarTexture == null) {
+            context.drawGuiTexture(textureMapping.getOrDefault(texture, texture), x, y, width, height);
+        }
+
+        else {
+            context.drawTexture(statusBarTexture, x, y, legacyU, legacyV, width, height);
         }
 
     }
