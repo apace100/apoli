@@ -5,6 +5,8 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -438,22 +440,16 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
-    @Unique
-    private float cachedDamageAmount;
+    @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 1))
+    private boolean apoli$preventDeath(boolean original, DamageSource source, float amount) {
 
-    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;tryUseTotem(Lnet/minecraft/entity/damage/DamageSource;)Z"))
-    private void cacheDamageAmount(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        this.cachedDamageAmount = amount;
-    }
-
-    @Inject(method = "tryUseTotem", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Hand;values()[Lnet/minecraft/util/Hand;"), cancellable = true)
-    private void preventDeath(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
-        Optional<PreventDeathPower> preventDeathPower = PowerHolderComponent.getPowers(this, PreventDeathPower.class).stream().filter(p -> p.doesApply(source, cachedDamageAmount)).findFirst();
-        if(preventDeathPower.isPresent()) {
+        if (original && PreventDeathPower.doesPrevent(this, source, amount)) {
             this.setHealth(1.0F);
-            preventDeathPower.get().executeAction();
-            cir.setReturnValue(true);
+            return false;
         }
+
+        return original;
+
     }
 
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
