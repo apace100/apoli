@@ -3,7 +3,7 @@ package io.github.apace100.apoli.data;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.gson.*;
-import io.github.apace100.apoli.Apoli;
+import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -238,7 +238,7 @@ public class ApoliDataTypes {
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
             .add("icon_index", SerializableDataTypes.INT, 0)
-            .add("sprite_location", SerializableDataTypes.IDENTIFIER, Apoli.identifier("textures/gui/resource_bar.png"))
+            .add("sprite_location", ApoliDataTypes.either(SerializableDataTypes.IDENTIFIER, HudRender.SpriteData.DATA_TYPE), HudRender.DEFAULT_SPRITE_LOCATION)
             .add("condition", ENTITY_CONDITION, null)
             .add("inverted", SerializableDataTypes.BOOLEAN, false)
             .add("order", SerializableDataTypes.INT, 0),
@@ -457,6 +457,46 @@ public class ApoliDataTypes {
 
         }
     );
+
+    //  TODO: Move to Calio
+    @SuppressWarnings("unchecked")
+    public static <L, R> SerializableDataType<Either<L, R>> either(SerializableDataType<L> leftDataType, SerializableDataType<R> rightDataType) {
+        return new SerializableDataType<>(
+            ClassUtil.castClass(Either.class),
+            (buf, either) -> either
+                .ifLeft(l -> {
+                    buf.writeByte(0);
+                    leftDataType.send(buf, l);
+                })
+                .ifRight(r -> {
+                    buf.writeByte(1);
+                    rightDataType.send(buf, r);
+                }),
+            buf -> switch (buf.readByte()) {
+                case 0 ->
+                    (Either<L, R>) Either.left(leftDataType.receive(buf));
+                case 1 ->
+                    (Either<L, R>) Either.right(rightDataType.receive(buf));
+                default ->
+                    throw new IllegalStateException();
+            },
+            jsonElement -> {
+
+                try {
+                    return Either.left(leftDataType.read(jsonElement));
+                }
+
+                 catch (Throwable ignored) {
+                    return Either.right(rightDataType.read(jsonElement));
+                 }
+
+            },
+            either -> either.map(
+                leftDataType::write,
+                rightDataType::write
+            )
+        );
+    }
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return new SerializableDataType<>(

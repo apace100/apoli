@@ -10,23 +10,18 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Environment(EnvType.CLIENT)
 public class PowerHudRenderer implements GameHudRender {
 
-    private static final int BAR_WIDTH = 71;
-    private static final int BAR_HEIGHT = 8;
-    private static final int ICON_SIZE = 8;
-
-    private static final int BAR_INDEX_OFFSET = BAR_HEIGHT + 2;
-    private static final int ICON_INDEX_OFFSET = ICON_SIZE + 1;
+    private final AtomicInteger x = new AtomicInteger();
+    private final AtomicInteger y = new AtomicInteger();
 
     @Override
     public void render(DrawContext context, float delta) {
@@ -34,60 +29,40 @@ public class PowerHudRenderer implements GameHudRender {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
 
-        if (player == null) {
+        if (player == null || !(Apoli.config instanceof ApoliConfigClient config)) {
             return;
         }
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.get(player);
-        int x = client.getWindow().getScaledWidth() / 2 + 20 + ((ApoliConfigClient) Apoli.config).resourcesAndCooldowns.hudOffsetX;
-        int y = client.getWindow().getScaledHeight() - 47 + ((ApoliConfigClient) Apoli.config).resourcesAndCooldowns.hudOffsetY;
-
-        Entity vehicle = player.getVehicle();
-        if (vehicle instanceof LivingEntity || (player.isSubmergedIn(FluidTags.WATER) || player.getAir() < player.getMaxAir())) {
-            int multiplier = (vehicle instanceof LivingEntity livingVehicle ? (int) (livingVehicle.getMaxHealth() / 20f) : 1);
-            y -= 8 * multiplier;
+        int yOffset = 49;
+        if (player.isSubmergedIn(FluidTags.WATER) || player.getAir() < player.getMaxAir()) {
+            yOffset += 10;
         }
 
-        //  Get and sort the HUD powers and its HUD render settings
-        //  TODO: Improve handling of overriding inherited order value
-        Map<HudRendered, HudRender> hudRenderedMap = component.getPowers()
+        if (player.getVehicle() instanceof LivingEntity livingVehicle) {
+            int bars = MathHelper.clamp((int) Math.ceil(livingVehicle.getMaxHealth() / 20.0), 1, 3) - 1;
+            yOffset += bars * 10;
+        }
+
+        x.set(((context.getScaledWindowWidth() / 2) + 20) + config.resourcesAndCooldowns.hudOffsetX);
+        y.set((context.getScaledWindowHeight() - yOffset) + config.resourcesAndCooldowns.hudOffsetY);
+
+        PowerHolderComponent.KEY.get(player).getPowers()
             .stream()
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)
-            .filter(HudRendered::shouldRender)
-            .map(hudRendered -> Map.entry(hudRendered, hudRendered.getRenderSettings().getChildOrSelf(player)))
-            .filter(e -> e.getValue().isPresent())
-            .sorted(Map.Entry.comparingByValue(Comparator.comparing(Optional::get)))
-            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get(), (hudRender, hudRender2) -> hudRender, LinkedHashMap::new));
+            .map(h -> Map.entry(h, h.getRenderSettings().getChildOrSelf(player)))
+            .filter(e -> e.getValue().shouldRender())
+            .sorted(Map.Entry.comparingByValue(HudRender::compareTo))
+            .forEach(entry -> {
 
-        for (Map.Entry<HudRendered, HudRender> hudRenderedEntry : hudRenderedMap.entrySet()) {
+                HudRendered hudRendered = entry.getKey();
+                HudRender hudRender = entry.getValue();
 
-            HudRendered hudRenderedPower = hudRenderedEntry.getKey();
-            HudRender childHudRender = hudRenderedEntry.getValue();
+                if (hudRender.render(hudRendered, context, x.get(), y.get())) {
+                    y.getAndAdd(-HudRender.BAR_HEIGHT);
+                }
 
-            //  Get the identifier of the sprite sheet and draw the base texture of the bar
-            Identifier currentSpriteLocation = childHudRender.getSpriteLocation();
-            context.drawTexture(currentSpriteLocation, x, y, 0, 0, BAR_WIDTH, 5);
-
-            //  Get the V coordinate for the bar and icon and the U coordinate for the icon
-            int barV = BAR_HEIGHT + childHudRender.getBarIndex() * BAR_INDEX_OFFSET;
-            int iconU = (BAR_WIDTH + 2) + childHudRender.getIconIndex() * ICON_INDEX_OFFSET;
-
-            //  Get the fill portion of the bar
-            float barFill = hudRenderedPower.getFill();
-            if (childHudRender.isInverted()) {
-                barFill = 1f - barFill;
-            }
-
-            //  Draw the fill portion of the bar
-            int barFillWidth = (int) (barFill * BAR_WIDTH);
-            context.drawTexture(currentSpriteLocation, x, y - 2, 0, barV, barFillWidth, BAR_HEIGHT);
-
-            //  Draw the icon of the bar
-            context.drawTexture(currentSpriteLocation, x - ICON_SIZE - 2, y - 2, iconU, barV, ICON_SIZE, ICON_SIZE);
-            y -= 8;
-
-        }
+            });
 
     }
 

@@ -124,4 +124,33 @@ public class TextureUtil {
 
     }
 
+    /**
+     *  <p>Checks if the texture that corresponds with the {@link Identifier id} is loaded.</p>
+     *
+     *  @param  id      the {@link Identifier} of the texture
+     *
+     *  @return         {@code true} if the texture that corresponds with the {@link Identifier} is loaded
+     */
+    public static boolean isTextureLoaded(Identifier id) {
+        return tryLoadingTexture(id)
+            .result()
+            .isPresent();
+    }
+
+    /**
+     *  <p>Checks if the sprite that corresponds with the {@link Identifier spriteId} is loaded in the sprite atlas that corresponds with the
+     *  {@link Identifier atlasId}.</p>
+     *
+     *  @param spriteId     the {@link Identifier} of the sprite
+     *  @param atlasId      the {@link Identifier} of the sprite atlas
+     *
+     *  @return             {@code true} if the sprite that corresponds with the {@link Identifier spriteId} is loaded in the sprite atlas that
+     *                      corresponds with the {@link Identifier atlasId}
+     */
+    public static boolean isSpriteLoaded(Identifier spriteId, Identifier atlasId) {
+        return tryLoadingSprite(spriteId, atlasId)
+            .result()
+            .isPresent();
+    }
+
 }
