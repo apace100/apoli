@@ -3,13 +3,13 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -115,6 +115,7 @@ public class EntitySetPower extends Power {
 
     }
 
+    @Deprecated(forRemoval = true)
     public void validateEntities() {
 
         MinecraftServer server = entity.getServer();
@@ -254,17 +255,6 @@ public class EntitySetPower extends Power {
     }
 
     @Override
-    public NbtElement toTag(boolean onSync) {
-
-        if (!onSync) {
-            this.validateEntities();
-        }
-
-        return this.toTag();
-
-    }
-
-    @Override
     public NbtElement toTag() {
 
         NbtCompound rootNbt = new NbtCompound();
@@ -321,17 +311,17 @@ public class EntitySetPower extends Power {
     public static void integrateCallback(Entity removedEntity, ServerWorld world) {
 
         Entity.RemovalReason removalReason = removedEntity.getRemovalReason();
-        if (removalReason == null || !removalReason.shouldDestroy()) {
+        if (removalReason == null || !removalReason.shouldDestroy() || removedEntity instanceof PlayerEntity) {
             return;
         }
 
         for (ServerWorld otherWorld : world.getServer().getWorlds()) {
 
-            for (Entity entity : ((ServerWorldAccessor) otherWorld).callGetEntityLookup().iterate()) {
+            for (Entity entity : otherWorld.iterateEntities()) {
 
                  PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
                     .stream()
-                    .filter(p -> p.remove(removedEntity, p.isActive()))
+                    .filter(p -> p.remove(removedEntity, false))
                     .map(Power::getType)
                     .toList());
 
