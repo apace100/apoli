@@ -265,8 +265,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 0))
     private boolean apoli$preventHitIfDamageIsZero(boolean original, DamageSource source, float amount) {
-        //  TODO: Maybe use DecimalFormat to compare the damage amount? Though it's probably unnecessary since we don't need the decimals
-        return original || apoli$hasModifiedDamage && (int) amount <= 0;
+        return original || apoli$hasModifiedDamage && amount <= 0.0F;
     }
 
     @Inject(method = "damage", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z")))
