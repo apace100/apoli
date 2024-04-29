@@ -2,6 +2,8 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
@@ -118,16 +120,24 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         return entity.isWet();
     }
 
-    @Inject(at = @At("HEAD"), method = "isInvisible", cancellable = true)
-    private void phantomInvisibility(CallbackInfoReturnable<Boolean> info) {
-        if(PowerHolderComponent.hasPower((Entity)(Object)this, InvisibilityPower.class)) {
-            info.setReturnValue(true);
-        }
+    @ModifyReturnValue(method = "isInvisible", at = @At("RETURN"))
+    private boolean apoli$invisibility(boolean original) {
+        return original
+            || PowerHolderComponent.hasPower((Entity) (Object) this, InvisibilityPower.class);
     }
 
-    @ModifyExpressionValue(method = "isInvisibleTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z"))
-    private boolean apoli$invisibilityException(boolean original, PlayerEntity player) {
-        return original || PowerHolderComponent.hasPower((Entity) (Object) this, InvisibilityPower.class, p -> !p.doesApply(player));
+    @WrapOperation(method = "isInvisibleTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isInvisible()Z"))
+    private boolean apoli$specificallyInvisibleTo(Entity entity, Operation<Boolean> original, PlayerEntity viewer) {
+
+        List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(entity, InvisibilityPower.class, true);
+        if (viewer == null || invisibilityPowers.isEmpty()) {
+            return original.call(entity);
+        }
+
+        return invisibilityPowers
+            .stream()
+            .anyMatch(p -> p.isActive() && p.doesApply(viewer));
+
     }
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;ofFloored(DDD)Lnet/minecraft/util/math/BlockPos;"), method = "pushOutOfBlocks", cancellable = true)

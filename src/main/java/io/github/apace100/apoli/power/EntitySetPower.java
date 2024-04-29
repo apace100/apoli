@@ -3,13 +3,13 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class EntitySetPower extends Power {
 
@@ -30,7 +31,7 @@ public class EntitySetPower extends Power {
     private final Map<UUID, Entity> entities = new HashMap<>();
 
     private final Set<UUID> tempUuids = new HashSet<>();
-    private final Map<UUID, Integer> tempEntities = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> tempEntities = new ConcurrentHashMap<>();
 
     private Integer startTicks = null;
 
@@ -63,7 +64,7 @@ public class EntitySetPower extends Power {
 
         }
 
-        if (this.isActive()) {
+        if (!tempEntities.isEmpty() && this.isActive()) {
 
             if (startTicks == null) {
                 this.startTicks = entity.age % tickRate;
@@ -87,38 +88,44 @@ public class EntitySetPower extends Power {
 
     protected void tickTempEntities() {
 
-        if (tempEntities.isEmpty()) {
-            return;
-        }
-
-        Iterator<Map.Entry<UUID, Integer>> entryIterator = tempEntities.entrySet().iterator();
-        boolean shouldSync = false;
+        Iterator<Map.Entry<UUID, Long>> entryIterator = tempEntities.entrySet().iterator();
+        long time = entity.getWorld().getTime();
 
         while (entryIterator.hasNext()) {
 
-            Map.Entry<UUID, Integer> entry = entryIterator.next();
-            entry.setValue(entry.getValue() - 1);
+            Map.Entry<UUID, Long> entry = entryIterator.next();
+            if (time < entry.getValue()) {
+                continue;
+            }
 
-            if (entry.getValue() <= 0 && this.remove(this.getEntity(entry.getKey()))) {
-                shouldSync = true;
+            UUID uuid = entry.getKey();
+            Entity tempEntity = this.getEntity(uuid);
+
+            entryIterator.remove();
+            if (entityUuids.remove(uuid) | entities.remove(uuid) != null | tempUuids.remove(uuid)) {
+
+                if (actionOnRemove != null) {
+                    actionOnRemove.accept(new Pair<>(entity, tempEntity));
+                }
+
+                this.removedTemps = true;
+
             }
 
         }
 
-        if (shouldSync) {
-            PowerHolderComponent.syncPower(this.entity, this.type);
-        }
-
     }
 
-    public void validateEntities() {
+    public boolean validateEntities() {
 
         MinecraftServer server = entity.getServer();
         if (server == null) {
-            return;
+            return false;
         }
 
         Iterator<UUID> uuidIterator = entityUuids.iterator();
+        boolean valid = true;
+
         while (uuidIterator.hasNext()) {
 
             UUID uuid = uuidIterator.next();
@@ -131,7 +138,11 @@ public class EntitySetPower extends Power {
             tempUuids.remove(uuid);
             tempEntities.remove(uuid);
 
+            valid = false;
+
         }
+
+        return valid;
 
     }
 
@@ -150,7 +161,7 @@ public class EntitySetPower extends Power {
 
         if (time != null) {
             addedToSet |= tempUuids.add(uuid);
-            tempEntities.compute(uuid, (prevUuid, prevTime) -> time);
+            tempEntities.compute(uuid, (prevUuid, prevTime) -> entity.getWorld().getTime() + time);
         }
 
         if (!entityUuids.contains(uuid)) {
@@ -169,20 +180,26 @@ public class EntitySetPower extends Power {
     }
 
     public boolean remove(@Nullable Entity entity) {
+        return this.remove(entity, true);
+    }
+
+    public boolean remove(@Nullable Entity entity, boolean executeRemoveAction) {
 
         if (entity == null || entity.getWorld().isClient) {
             return false;
         }
 
-        if (actionOnRemove != null) {
-            actionOnRemove.accept(new Pair<>(this.entity, entity));
-        }
-
         UUID uuid = entity.getUuid();
-        return entityUuids.remove(uuid)
+        boolean result = entityUuids.remove(uuid)
             | entities.remove(uuid) != null
             | tempUuids.remove(uuid)
             | tempEntities.remove(uuid) != null;
+
+        if (executeRemoveAction && result && actionOnRemove != null) {
+            actionOnRemove.accept(new Pair<>(this.entity, entity));
+        }
+
+        return result;
 
     }
 
@@ -244,17 +261,6 @@ public class EntitySetPower extends Power {
     }
 
     @Override
-    public NbtElement toTag(boolean onSync) {
-
-        if (!onSync) {
-            this.validateEntities();
-        }
-
-        return this.toTag();
-
-    }
-
-    @Override
     public NbtElement toTag() {
 
         NbtCompound rootNbt = new NbtCompound();
@@ -308,24 +314,28 @@ public class EntitySetPower extends Power {
 
     }
 
-    public static void integrateCallback(Entity removedEntity, ServerWorld world) {
+    public static void integrateLoadCallback(Entity loadedEntity, ServerWorld world) {
+        PowerHolderComponent.syncPowers(loadedEntity, PowerHolderComponent.getPowers(loadedEntity, EntitySetPower.class, true)
+            .stream()
+            .filter(Predicate.not(EntitySetPower::validateEntities))
+            .map(Power::getType)
+            .toList());
+    }
 
-        Entity.RemovalReason removalReason = removedEntity.getRemovalReason();
-        if (removalReason == null || !removalReason.shouldDestroy()) {
+    public static void integrateUnloadCallback(Entity unloadedEntity, ServerWorld world) {
+
+        Entity.RemovalReason removalReason = unloadedEntity.getRemovalReason();
+        if (removalReason == null || !removalReason.shouldDestroy() || unloadedEntity instanceof PlayerEntity) {
             return;
         }
 
         for (ServerWorld otherWorld : world.getServer().getWorlds()) {
 
-            for (Entity entity : ((ServerWorldAccessor) otherWorld).callGetEntityLookup().iterate()) {
+            for (Entity entity : otherWorld.iterateEntities()) {
 
-                if (removedEntity.equals(entity)) {
-                    continue;
-                }
-
-                PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
+                 PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
                     .stream()
-                    .filter(p -> p.remove(removedEntity))
+                    .filter(p -> p.remove(unloadedEntity, false))
                     .map(Power::getType)
                     .toList());
 

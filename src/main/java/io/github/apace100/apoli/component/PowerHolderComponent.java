@@ -101,7 +101,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static void syncPowers(Entity entity, Collection<? extends PowerType<?>> powerTypes) {
 
-        if (entity == null || entity.getWorld().isClient) {
+        if (entity == null || entity.getWorld().isClient || powerTypes.isEmpty()) {
             return;
         }
 

@@ -57,7 +57,7 @@ public class PowerCommand {
 					.then(argument("target", PowerHolderArgumentType.holder())
 						.executes(context -> listPowers(context, false))
 						.then(argument("subpowers", BoolArgumentType.bool())
-							.executes(context -> listPowers(context, true))))
+							.executes(context -> listPowers(context, BoolArgumentType.getBool(context, "subpowers")))))
 				)
 				.then(literal("has")
 					.then(argument("targets", PowerHolderArgumentType.holders())
