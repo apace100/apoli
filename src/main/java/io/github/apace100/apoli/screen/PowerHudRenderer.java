@@ -58,6 +58,7 @@ public class PowerHudRenderer implements GameHudRender {
             .stream()
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)
+            .filter(HudRendered::shouldRender)
             .map(h -> Map.entry(h, h.getRenderSettings().getChildOrSelf(player)))
             .filter(entry -> entry.getValue().isPresent())
             .sorted(Map.Entry.comparingByValue(Comparator.comparing(Optional::get)))
@@ -74,7 +75,7 @@ public class PowerHudRenderer implements GameHudRender {
                 int iconU = (BAR_WIDTH + 2) + hudRender.getIconIndex() * ICON_INDEX_OFFSET;
 
                 //  Draw the fill portion of the resource bar
-                int barFillWidth = (int) (hudRender.isInverted() ? 1.0F - hudRendered.getFill() : hudRendered.getFill()) * BAR_WIDTH;
+                int barFillWidth = (int) ((hudRender.isInverted() ? 1.0F - hudRendered.getFill() : hudRendered.getFill()) * BAR_WIDTH);
                 context.drawTexture(spriteLocation, x.get(), y.get() - 2, 0, barV, barFillWidth, BAR_HEIGHT);
 
                 //  Draw the icon of the resource bar
