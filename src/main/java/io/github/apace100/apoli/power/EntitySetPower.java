@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class EntitySetPower extends Power {
 
@@ -115,15 +116,16 @@ public class EntitySetPower extends Power {
 
     }
 
-    @Deprecated(forRemoval = true)
-    public void validateEntities() {
+    public boolean validateEntities() {
 
         MinecraftServer server = entity.getServer();
         if (server == null) {
-            return;
+            return false;
         }
 
         Iterator<UUID> uuidIterator = entityUuids.iterator();
+        boolean valid = true;
+
         while (uuidIterator.hasNext()) {
 
             UUID uuid = uuidIterator.next();
@@ -136,7 +138,11 @@ public class EntitySetPower extends Power {
             tempUuids.remove(uuid);
             tempEntities.remove(uuid);
 
+            valid = false;
+
         }
+
+        return valid;
 
     }
 
@@ -308,10 +314,18 @@ public class EntitySetPower extends Power {
 
     }
 
-    public static void integrateCallback(Entity removedEntity, ServerWorld world) {
+    public static void integrateLoadCallback(Entity loadedEntity, ServerWorld world) {
+        PowerHolderComponent.syncPowers(loadedEntity, PowerHolderComponent.getPowers(loadedEntity, EntitySetPower.class, true)
+            .stream()
+            .filter(Predicate.not(EntitySetPower::validateEntities))
+            .map(Power::getType)
+            .toList());
+    }
 
-        Entity.RemovalReason removalReason = removedEntity.getRemovalReason();
-        if (removalReason == null || !removalReason.shouldDestroy() || removedEntity instanceof PlayerEntity) {
+    public static void integrateUnloadCallback(Entity unloadedEntity, ServerWorld world) {
+
+        Entity.RemovalReason removalReason = unloadedEntity.getRemovalReason();
+        if (removalReason == null || !removalReason.shouldDestroy() || unloadedEntity instanceof PlayerEntity) {
             return;
         }
 
@@ -321,7 +335,7 @@ public class EntitySetPower extends Power {
 
                  PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
                     .stream()
-                    .filter(p -> p.remove(removedEntity, false))
+                    .filter(p -> p.remove(unloadedEntity, false))
                     .map(Power::getType)
                     .toList());
 
