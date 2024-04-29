@@ -2,10 +2,7 @@ package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.action.item.HolderAction;
-import io.github.apace100.apoli.power.factory.action.item.MergeNbtAction;
-import io.github.apace100.apoli.power.factory.action.item.ItemActionFactory;
-import io.github.apace100.apoli.power.factory.action.item.ModifyAction;
+import io.github.apace100.apoli.power.factory.action.item.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
@@ -124,6 +121,7 @@ public class ItemActions {
                 }
             }));
         register(HolderAction.getFactory());
+        register(ModifyItemCooldownAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<World, StackReference>> actionFactory) {
