@@ -4,6 +4,7 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.modifier.IModifierOperation;
+import io.github.apace100.apoli.util.transformer.TransformOperation;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
@@ -24,6 +25,7 @@ import org.apache.commons.lang3.tuple.Triple;
 public class ApoliRegistries {
 
     public static final Registry<PowerFactory> POWER_FACTORY;
+
     public static final Registry<ConditionFactory<Entity>> ENTITY_CONDITION;
     public static final Registry<ConditionFactory<Pair<Entity, Entity>>> BIENTITY_CONDITION;
     public static final Registry<ConditionFactory<Pair<World, ItemStack>>> ITEM_CONDITION;
@@ -35,7 +37,9 @@ public class ApoliRegistries {
     public static final Registry<ActionFactory<Pair<World, StackReference>>> ITEM_ACTION;
     public static final Registry<ActionFactory<Triple<World, BlockPos, Direction>>> BLOCK_ACTION;
     public static final Registry<ActionFactory<Pair<Entity, Entity>>> BIENTITY_ACTION;
+
     public static final Registry<IModifierOperation> MODIFIER_OPERATION;
+    public static final Registry<TransformOperation> TRANSFORM_OPERATION;
 
     static {
 
@@ -55,6 +59,7 @@ public class ApoliRegistries {
         BIENTITY_ACTION = create(ApoliRegistryKeys.BIENTITY_ACTION);
 
         MODIFIER_OPERATION = create(ApoliRegistryKeys.MODIFIER_OPERATION);
+        TRANSFORM_OPERATION = create(ApoliRegistryKeys.TRANSFORM_OPERATION);
 
     }
 

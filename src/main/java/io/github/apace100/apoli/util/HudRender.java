@@ -11,10 +11,14 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawContext;
+import io.github.apace100.apoli.util.transformer.Transform;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector2i;
+import org.joml.Vector2ic;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +27,7 @@ import java.util.function.Predicate;
 public class HudRender implements Comparable<HudRender> {
 
     public static final Either<Identifier, SpriteData> DEFAULT_SPRITE_LOCATION = Either.left(Apoli.identifier("textures/gui/resource_bar.png"));
-    public static final HudRender DONT_RENDER = new HudRender(false, 0, 0, DEFAULT_SPRITE_LOCATION, null, false, 0);
+    public static final HudRender DONT_RENDER = new HudRender(false, 0, 0, DEFAULT_SPRITE_LOCATION, List.of(), new Vector2i(), null, false, 0);
     public static final Identifier ATLAS_TEXTURE = TextureUtil.GUI_ATLAS_TEXTURE;
 
     public static final int BAR_WIDTH = 71;
@@ -40,6 +44,8 @@ public class HudRender implements Comparable<HudRender> {
     private final List<HudRender> children = new LinkedList<>();
 
     private final Either<Identifier, SpriteData> spriteLocation;
+    private final List<Transform> transforms;
+    private final Vector2ic position;
     private final Predicate<Entity> condition;
 
     private final boolean shouldRender;
@@ -57,11 +63,13 @@ public class HudRender implements Comparable<HudRender> {
 
     private int order;
 
-    public HudRender(boolean shouldRender, int barIndex, int iconIndex, Either<Identifier, SpriteData> spriteLocation, Predicate<Entity> condition, boolean inverted, int order) {
+    public HudRender(boolean shouldRender, int barIndex, int iconIndex, Either<Identifier, SpriteData> spriteLocation, List<Transform> transforms, Vector2ic position, Predicate<Entity> condition, boolean inverted, int order) {
         this.shouldRender = shouldRender;
         this.barIndex = barIndex;
         this.iconIndex = iconIndex;
         this.spriteLocation = spriteLocation;
+        this.transforms = transforms;
+        this.position = position;
         this.condition = condition;
         this.inverted = inverted;
         this.order = order;
@@ -74,6 +82,14 @@ public class HudRender implements Comparable<HudRender> {
 
     public Either<Identifier, SpriteData> getSpriteLocation() {
         return spriteLocation;
+    }
+
+    public List<Transform> getTransforms() {
+        return transforms;
+    }
+
+    public Vector2ic getPosition() {
+        return position;
     }
 
     public int getBarIndex() {
@@ -156,7 +172,7 @@ public class HudRender implements Comparable<HudRender> {
     }
 
     @Environment(EnvType.CLIENT)
-    public boolean render(HudRendered source, DrawContext context, int x, int y) {
+    public boolean render(HudRendered source, DrawContext context, int x, int y, float tickDelta) {
 
         if (init) {
 
@@ -197,7 +213,12 @@ public class HudRender implements Comparable<HudRender> {
 
         }
 
+        MatrixStack matrices = context.getMatrices();
         int barFillWidth = (int) ((inverted ? 1.0F - source.getFill() : source.getFill()) * BAR_WIDTH);
+
+        int dx = x + position.x();
+        int dy = y + position.y();
+
         return spriteLocation.map(
             id -> {
 
@@ -205,31 +226,39 @@ public class HudRender implements Comparable<HudRender> {
                     return false;
                 }
 
+                matrices.push();
+                transforms.forEach(trfm -> trfm.apply(matrices, dx, dy, tickDelta));
+
                 int barV = BAR_HEIGHT + barIndex * BAR_HORIZONTAL_INDEX_OFFSET;
                 int iconU = BAR_VERTICAL_INDEX_OFFSET + iconIndex * ICON_HORIZONTAL_INDEX_OFFSET;
 
-                context.drawTexture(id, x, y, 0, 0, BAR_WIDTH, 5);
-                context.drawTexture(id, x, y - 2, 0, barV, barFillWidth, BAR_HEIGHT);
+                context.drawTexture(id, dx, dy, 0, 0, BAR_WIDTH, 5);
+                context.drawTexture(id, dx, dy - 2, 0, barV, barFillWidth, BAR_HEIGHT);
 
-                context.drawTexture(id, x - ICON_WIDTH - 2, y - 2, iconU, barV, ICON_WIDTH, ICON_HEIGHT);
+                context.drawTexture(id, dx - ICON_WIDTH - 2, dy - 2, iconU, barV, ICON_WIDTH, ICON_HEIGHT);
 
+                matrices.pop();
                 return true;
 
             },
             spriteData -> {
 
+                matrices.push();
+                transforms.forEach(trfm -> trfm.apply(matrices, dx, dy, tickDelta));
+
                 if (!invalidBackground) {
-                    context.drawGuiTexture(spriteData.backgroundId(), x, y - 2, BAR_WIDTH, BAR_HEIGHT);
+                    context.drawGuiTexture(spriteData.backgroundId(), dx, dy - 2, BAR_WIDTH, BAR_HEIGHT);
                 }
 
                 if (!invalidBase) {
-                    context.drawGuiTexture(spriteData.baseId(), BAR_WIDTH, BAR_HEIGHT, 0, 0, x, y - 2, barFillWidth, BAR_HEIGHT);
+                    context.drawGuiTexture(spriteData.baseId(), BAR_WIDTH, BAR_HEIGHT, 0, 0, dx, dy - 2, barFillWidth, BAR_HEIGHT);
                 }
 
                 if (!invalidIcon) {
-                    context.drawGuiTexture(spriteData.iconId(), x - ICON_WIDTH - 2, y - 2, ICON_WIDTH, ICON_HEIGHT);
+                    context.drawGuiTexture(spriteData.iconId(), dx - ICON_WIDTH - 2, dy - 2, ICON_WIDTH, ICON_HEIGHT);
                 }
 
+                matrices.pop();
                 return !invalidBackground
                     || !invalidBase
                     || !invalidIcon;

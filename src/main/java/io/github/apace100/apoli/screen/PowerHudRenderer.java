@@ -58,7 +58,7 @@ public class PowerHudRenderer implements GameHudRender {
                 HudRendered hudRendered = entry.getKey();
                 HudRender hudRender = entry.getValue();
 
-                if (hudRender.render(hudRendered, context, x.get(), y.get())) {
+                if (hudRender.render(hudRendered, context, x.get(), y.get(), delta)) {
                     y.getAndAdd(-HudRender.BAR_HEIGHT);
                 }
 

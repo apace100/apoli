@@ -13,6 +13,7 @@ import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.transformer.Transform;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
@@ -44,11 +45,14 @@ import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
+import org.joml.Vector2i;
+import org.joml.Vector2ic;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -232,6 +236,36 @@ public class ApoliDataTypes {
         KEY::write
     );
 
+    public static final SerializableDataType<RotationAxis> ROTATION_AXIS = SerializableDataType.mapped(RotationAxis.class, ImmutableBiMap.of(
+        "negative_z", RotationAxis.NEGATIVE_Z,
+        "positive_z", RotationAxis.POSITIVE_Z,
+        "negative_y", RotationAxis.NEGATIVE_Y,
+        "positive_y", RotationAxis.POSITIVE_Y,
+        "negative_x", RotationAxis.NEGATIVE_X,
+        "positive_x", RotationAxis.POSITIVE_X
+    ));
+
+    public static final SerializableDataType<Vector2ic> VECTOR_2I = SerializableDataType.compound(
+        ClassUtil.castClass(Vector2i.class),
+        new SerializableData()
+            .add("x", SerializableDataTypes.INT, 0)
+            .add("y", SerializableDataTypes.INT, 0),
+        data -> new Vector2i(
+            data.getInt("x"),
+            data.getInt("y")
+        ),
+        (serializableData, vector2i) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("x", vector2i.x());
+            data.set("y", vector2i.y());
+
+            return data;
+
+        }
+    );
+
     public static final SerializableDataType<HudRender> SINGLE_HUD_RENDER = SerializableDataType.compound(
         HudRender.class,
         new SerializableData()
@@ -239,6 +273,8 @@ public class ApoliDataTypes {
             .add("bar_index", SerializableDataTypes.INT, 0)
             .add("icon_index", SerializableDataTypes.INT, 0)
             .add("sprite_location", ApoliDataTypes.either(SerializableDataTypes.IDENTIFIER, HudRender.SpriteData.DATA_TYPE), HudRender.DEFAULT_SPRITE_LOCATION)
+            .add("position", VECTOR_2I, new Vector2i())
+            .add("transforms", Transform.LIST_TYPE, new LinkedList<>())
             .add("condition", ENTITY_CONDITION, null)
             .add("inverted", SerializableDataTypes.BOOLEAN, false)
             .add("order", SerializableDataTypes.INT, 0),
@@ -247,6 +283,8 @@ public class ApoliDataTypes {
             data.get("bar_index"),
             data.get("icon_index"),
             data.get("sprite_location"),
+            data.get("transforms"),
+            data.get("position"),
             data.get("condition"),
             data.get("inverted"),
             data.get("order")
@@ -259,6 +297,8 @@ public class ApoliDataTypes {
             data.set("bar_index", hudRender.getBarIndex());
             data.set("icon_index", hudRender.getIconIndex());
             data.set("sprite_location", hudRender.getSpriteLocation());
+            data.set("transforms", hudRender.getTransforms());
+            data.set("position", hudRender.getPosition());
             data.set("condition", hudRender.getCondition());
             data.set("inverted", hudRender.isInverted());
             data.set("order", hudRender.getOrder());
