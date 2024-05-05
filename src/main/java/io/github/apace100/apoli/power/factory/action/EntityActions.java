@@ -127,33 +127,6 @@ public class EntityActions {
             .add("block_action", ApoliDataTypes.BLOCK_ACTION),
             (data, entity) -> ((ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action")).accept(
                 Triple.of(entity.getWorld(), entity.getBlockPos(), Direction.UP))));
-        register(new ActionFactory<>(Apoli.identifier("spawn_effect_cloud"), new SerializableData()
-            .add("radius", SerializableDataTypes.FLOAT, 3.0F)
-            .add("radius_on_use", SerializableDataTypes.FLOAT, -0.5F)
-            .add("wait_time", SerializableDataTypes.INT, 10)
-            .add("effect", SerializableDataTypes.STATUS_EFFECT_INSTANCE, null)
-            .add("effects", SerializableDataTypes.STATUS_EFFECT_INSTANCES, null),
-            (data, entity) -> {
-                AreaEffectCloudEntity areaEffectCloudEntity = new AreaEffectCloudEntity(entity.getWorld(), entity.getX(), entity.getY(), entity.getZ());
-                if (entity instanceof LivingEntity) {
-                    areaEffectCloudEntity.setOwner((LivingEntity)entity);
-                }
-                areaEffectCloudEntity.setRadius(data.getFloat("radius"));
-                areaEffectCloudEntity.setRadiusOnUse(data.getFloat("radius_on_use"));
-                areaEffectCloudEntity.setWaitTime(data.getInt("wait_time"));
-                areaEffectCloudEntity.setRadiusGrowth(-areaEffectCloudEntity.getRadius() / (float)areaEffectCloudEntity.getDuration());
-                List<StatusEffectInstance> effects = new LinkedList<>();
-                if(data.isPresent("effect")) {
-                    effects.add(data.get("effect"));
-                }
-                if(data.isPresent("effects")) {
-                    effects.addAll(data.get("effects"));
-                }
-                areaEffectCloudEntity.setColor(PotionUtil.getColor(effects));
-                effects.forEach(areaEffectCloudEntity::addEffect);
-
-                entity.getWorld().spawnEntity(areaEffectCloudEntity);
-            }));
         register(new ActionFactory<>(Apoli.identifier("extinguish"), new SerializableData(),
             (data, entity) -> entity.extinguish()));
         register(new ActionFactory<>(Apoli.identifier("execute_command"), new SerializableData()
@@ -372,6 +345,7 @@ public class EntityActions {
         register(RevokeAdvancementAction.getFactory());
         register(ActionOnSetAction.getFactory());
         register(RandomTeleportAction.getFactory());
+        register(SpawnEffectCloudAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {
