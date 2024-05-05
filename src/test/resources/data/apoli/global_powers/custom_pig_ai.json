@@ -1,9 +1,0 @@
-{
-  "entity_types": [
-    "minecraft:pig"
-  ],
-  "powers": [
-    "apoli:angry_pigs",
-    "apoli:even_angier_pigs_if_holding_pork"
-  ]
-}

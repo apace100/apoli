@@ -20,7 +20,7 @@
           "type": "apoli:target_condition",
           "condition": {
             "type": "apoli:power_active",
-            "power": "apoli:scare_creepers"
+            "power": "apoli:modify_mob_behavior/scare_creepers"
           }
         }
       ]

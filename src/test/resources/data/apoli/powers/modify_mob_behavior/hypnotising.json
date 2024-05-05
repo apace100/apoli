@@ -1,5 +1,6 @@
 {
   "type": "apoli:modify_mob_behavior",
+  "priority": 10,
   "behavior": {
     "type": "apoli:look",
     "bientity_condition": {

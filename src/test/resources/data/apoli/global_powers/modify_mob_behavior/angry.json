@@ -4,6 +4,6 @@
     "minecraft:piglin"
   ],
   "powers": [
-    "apoli:angry"
+    "apoli:modify_mob_behavior/angry"
   ]
 }

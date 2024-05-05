@@ -5,6 +5,6 @@
     "minecraft:wither"
   ],
   "powers": [
-    "apoli:peace_love_and_plants"
+    "apoli:modify_mob_behavior/peace_love_and_plants"
   ]
 }

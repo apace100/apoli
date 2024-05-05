@@ -3,6 +3,6 @@
     "minecraft:creeper"
   ],
   "powers": [
-    "apoli:scared_by_feline"
+    "apoli:modify_mob_behavior/scared_by_feline"
   ]
 }

@@ -16,7 +16,7 @@
         "conditions": [
           {
             "type": "apoli:power_active",
-            "power": "apoli:anger_pigs"
+            "power": "apoli:modify_mob_behavior/anger_pigs"
           },
           {
             "type": "apoli:or",

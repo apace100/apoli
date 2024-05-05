@@ -4,6 +4,6 @@
     "minecraft:wandering_trader"
   ],
   "powers": [
-    "apoli:tempt_villagers"
+    "apoli:modify_mob_behavior/tempt_villagers"
   ]
 }

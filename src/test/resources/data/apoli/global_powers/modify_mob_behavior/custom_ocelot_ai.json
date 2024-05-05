@@ -3,6 +3,6 @@
     "minecraft:ocelot"
   ],
   "powers": [
-    "apoli:custom_ocelot_test"
+    "apoli:modify_mob_behavior/custom_ocelot_test"
   ]
 }
