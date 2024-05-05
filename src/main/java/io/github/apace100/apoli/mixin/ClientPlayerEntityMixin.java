@@ -9,9 +9,9 @@ import io.github.apace100.apoli.power.ModifyAirSpeedPower;
 import io.github.apace100.apoli.power.PreventSprintingPower;
 import io.github.apace100.apoli.power.SprintingPower;
 import io.github.apace100.apoli.power.SwimmingPower;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerAbilities;
@@ -32,9 +32,11 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @Unique
     private boolean apoli$isMoving = false;
 
-    @Shadow
-    @Final
-    public ClientPlayNetworkHandler networkHandler;
+    @Shadow @Final protected MinecraftClient client;
+
+    @Shadow protected int ticksLeftToDoubleTapSprint;
+
+    @Shadow protected abstract boolean isWalking();
 
     @Shadow public Input input;
 
@@ -76,17 +78,47 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
         return !PowerHolderComponent.hasPower(this, PreventSprintingPower.class) && original;
     }
 
-    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z", shift = At.Shift.BEFORE))
+    @Unique
+    private boolean apoli$previousWalkingState = false;
+
+    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 0), ordinal = 4)
+    private boolean apoli$allowDoubleTapSprint(boolean original) {
+        return original || PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && isWalking() && this.ticksLeftToDoubleTapSprint <= 0 && !this.client.options.sprintKey.isPressed();
+    }
+
+    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 0), ordinal = 5)
+    private boolean apoli$allowDoubleTapSprint2(boolean original) {
+        return original || PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && isWalking() && this.ticksLeftToDoubleTapSprint <= 0 && !this.client.options.sprintKey.isPressed();
+    }
+
+    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 0), ordinal = 6)
+    private boolean apoli$allowDoubleTapSprint3(boolean original) {
+        boolean setWalkingState = PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && isWalking() && this.ticksLeftToDoubleTapSprint <= 0 && !this.client.options.sprintKey.isPressed();
+        if (setWalkingState) {
+            this.apoli$previousWalkingState = true;
+        }
+        return original || setWalkingState;
+    }
+
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z"))
     private void apugli$allowPowerSprinting(CallbackInfo ci) {
-        if (PowerHolderComponent.hasPower(this, SprintingPower.class) && !this.isSprinting() && (PowerHolderComponent.getPowers(this, SprintingPower.class).stream().noneMatch(SprintingPower::shouldRequireForwardMovement) || this.input.hasForwardMovement())) {
+        if (PowerHolderComponent.hasPower(this, SprintingPower.class) && !this.isSprinting() && PowerHolderComponent.getPowers(this, SprintingPower.class).stream().noneMatch(SprintingPower::shouldRequireInput) || this.client.options.sprintKey.isPressed() || this.isWalking() && !this.apoli$previousWalkingState && this.ticksLeftToDoubleTapSprint > 0) {
             this.setSprinting(true);
         }
+        if (apoli$previousWalkingState && !this.isWalking()) {
+            this.apoli$previousWalkingState = false;
+        }
+    }
+
+    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 1), ordinal = 4)
+    private boolean apugli$cancelOutWaterSprintFalse(boolean value) {
+        return value && (PowerHolderComponent.getPowers(this, SprintingPower.class).stream().noneMatch(SprintingPower::shouldRequireInput) || !this.input.hasForwardMovement());
     }
 
     @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 1), ordinal = 5)
     private boolean apugli$resetPowerSprinting(boolean value) {
         if (PowerHolderComponent.hasPower(this, SprintingPower.class)) {
-            return PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireForwardMovement) && (!this.input.hasForwardMovement() || this.horizontalCollision && !this.collidedSoftly);
+            return PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && (!this.isWalking() || this.horizontalCollision && !this.collidedSoftly);
         }
         return value;
     }
