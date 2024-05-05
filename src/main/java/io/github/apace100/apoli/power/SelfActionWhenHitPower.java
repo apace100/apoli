@@ -27,6 +27,17 @@ public class SelfActionWhenHitPower extends CooldownPower {
         this.entityAction = entityAction;
     }
 
+    public boolean doesApply(DamageSource source, float amount) {
+        return this.canUse()
+            && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
+    }
+
+    public void whenHit() {
+        this.entityAction.accept(entity);
+        this.use();
+    }
+
+    @Deprecated(forRemoval = true)
     public void whenHit(DamageSource damageSource, float damageAmount) {
         if(damageCondition == null || damageCondition.test(new Pair<>(damageSource, damageAmount))) {
             if(canUse()) {
@@ -37,16 +48,22 @@ public class SelfActionWhenHitPower extends CooldownPower {
     }
 
     public static PowerFactory createFactory(Identifier identifier) {
-        return new PowerFactory<>(identifier,
+        return new PowerFactory<>(
+            identifier,
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION)
                 .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER),
-            data ->
-                (type, player) -> new SelfActionWhenHitPower(type, player, data.getInt("cooldown"),
-                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action")))
-            .allowCondition();
+            data -> (powerType, entity) -> new SelfActionWhenHitPower(
+                powerType,
+                entity,
+                data.getInt("cooldown"),
+                data.get("hud_render"),
+                data.get("damage_condition"),
+                data.get("entity_action")
+            )
+        ).allowCondition();
     }
+
 }

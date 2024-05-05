@@ -142,7 +142,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             if (oldPower.getClass().isAssignableFrom(newPower.getClass())) {
                 //  Transfer the data of the old power to the new power if the old power is an instance of the new power
                 Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", oldPowerTypeId);
-                newPower.fromTag(oldPower.toTag());
+                newPower.fromTag(oldPower.toTag(true), true);
             } else {
                 //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
                 //  occurs if the power no longer uses the same power type as it used to
@@ -268,7 +268,8 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             return null;
         }
 
-        if (isMultiple(powerFactoryId)) {
+        boolean multiple = this.isMultiple(powerFactoryId);
+        if (multiple) {
             powerFactoryId = SIMPLE;
             if (isSubPower) {
                 throw new JsonSyntaxException("Power type \"" + MULTIPLE + "\" cannot be used in a sub-power that uses the \"" + MULTIPLE + "\" power type.");
@@ -278,12 +279,22 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         int prevLoadingPriority = getLoadingPriority(id);
         if (!PowerTypeRegistry.contains(id)) {
             return finishReadingPower(PowerTypeRegistry::register, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
-        } else if (prevLoadingPriority < loadingPriority) {
-            Apoli.LOGGER.warn("Overriding power \"{}\" (with prev. loading priority of {}) with a higher loading priority of {} from data pack [{}]!", id, prevLoadingPriority, loadingPriority, packName);
-            return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
         }
 
-        return null;
+        overrideAttempt:
+        if (prevLoadingPriority < loadingPriority) {
+
+            if (multiple) {
+                Apoli.LOGGER.warn("Multiple powers, such as {}, cannot be overridden. Did you mean to override its sub-power(s)?", id);
+                break overrideAttempt;
+            }
+
+            Apoli.LOGGER.warn("Overriding power \"{}\" (with prev. loading priority of {}) with a higher loading priority of {} from data pack [{}]!", id, prevLoadingPriority, loadingPriority, packName);
+            return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
+
+        }
+
+        return PowerTypeRegistry.getNullable(id);
 
     }
 
@@ -324,15 +335,10 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(descriptionJson);
 
         boolean hidden = JsonHelper.getBoolean(jsonObject, "hidden", false);
-
-        PowerType<?> powerType = powerTypeFactory.apply(id, powerFactoryInstance);
-        powerType.setDisplayTexts(name, description);
-
-        if (hidden || isSubPower) {
-            powerType.setHidden();
-        }
-
-        return powerType;
+        return powerTypeFactory.apply(id, powerFactoryInstance)
+            .setDisplayTexts(name, description)
+            .setHidden(hidden || isSubPower)
+            .setSubPower(isSubPower);
 
     }
 

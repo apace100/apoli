@@ -10,24 +10,18 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 
 public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>> {
 
-    protected BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> legacyEffect;
-
-    public ItemActionFactory(Identifier identifier, SerializableData data, BiConsumer<SerializableData.Instance, Pair<World, StackReference>> effect) {
+    public ItemActionFactory(Identifier identifier, SerializableData data, @NotNull BiConsumer<SerializableData.Instance, Pair<World, StackReference>> effect) {
         super(identifier, data, effect);
     }
 
-    public static ItemActionFactory createItemStackBased(Identifier identifier, SerializableData data, BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> legacyEffect) {
-
-        ItemActionFactory actionFactory = new ItemActionFactory(identifier, data, null);
-        actionFactory.legacyEffect = legacyEffect;
-
-        return actionFactory;
-
+    public static ItemActionFactory createItemStackBased(Identifier identifier, SerializableData data, @NotNull BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> legacyEffect) {
+        return new ItemActionFactory(identifier, data, (data1, worldAndStackRef) -> legacyEffect.accept(data1, new Pair<>(worldAndStackRef.getLeft(), worldAndStackRef.getRight().get())));
     }
 
     public class Instance extends ActionFactory<Pair<World, StackReference>>.Instance {
@@ -39,34 +33,24 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
         @Override
         public void accept(Pair<World, StackReference> worldAndStackReference) {
 
-            //  Skip empty stack references since those don't really matter
-            if (worldAndStackReference.getRight() == StackReference.EMPTY) {
+            //  Skip empty stack references since they're practically immutable
+            StackReference stackReference = worldAndStackReference.getRight();
+            if (stackReference == StackReference.EMPTY) {
                 return;
             }
 
-            World world = worldAndStackReference.getLeft();
-            StackReference stackReference = worldAndStackReference.getRight();
-
-            //  Check if the stack of the stack reference is an instance of ItemStack.EMPTY, which
-            //  means that it's not a "workable" empty stack
-            boolean wasntWorkableEmptyStack = stackReference.get() == ItemStack.EMPTY;
-
-            if (wasntWorkableEmptyStack) {
-                //  ModifyEnchantmentLevelPower#getOrCreateWorkableEmptyStack is not used here because
-                //  we don't have access to the owner of the stack reference...
+            //  Replace the stack of the stack reference with a "workable" empty stack if the said stack is NOT
+            //  already "workable", and if the said stack is an instance of ItemStack#EMPTY
+            if (stackReference.get() == ItemStack.EMPTY) {
                 stackReference.set(new ItemStack((Void) null));
             }
 
-            if (ItemActionFactory.this.effect != null) {
-                ItemActionFactory.this.effect.accept(this.dataInstance, worldAndStackReference);
-            }
+            //  Execute the specified effect of the item action
+            ItemActionFactory.this.effect.accept(this.dataInstance, worldAndStackReference);
 
-            if (ItemActionFactory.this.legacyEffect != null) {
-                ItemActionFactory.this.legacyEffect.accept(this.dataInstance, new Pair<>(world, stackReference.get()));
-            }
-
-            //  Replace the "workable" empty stack in the stack reference with ItemStack.EMPTY
-            if (stackReference.get().isEmpty() && (wasntWorkableEmptyStack || ModifyEnchantmentLevelPower.isWorkableEmptyStack(stackReference))) {
+            //  Replace the stack of the stack reference with ItemStack#EMPTY if the said stack is NOT
+            //  "workable", and if the said stack is empty
+            if (!ModifyEnchantmentLevelPower.isWorkableEmptyStack(stackReference) && stackReference.get().isEmpty()) {
                 stackReference.set(ItemStack.EMPTY);
             }
 
