@@ -1,0 +1,16 @@
+{
+  "entity_types": [
+    "minecraft:player"
+  ],
+  "powers": [
+    "apoli:add_velocity"
+  ],
+  "fabric:load_conditions": [
+    {
+      "condition": "apoli:any_namespace_loaded",
+      "namespaces": [
+        "test"
+      ]
+    }
+  ]
+}

@@ -2,8 +2,10 @@ package io.github.apace100.apoli.global;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.PowerTypes;
+import io.github.apace100.apoli.util.ApoliResourceConditions;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
@@ -24,6 +26,7 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
 
     public static final Set<Identifier> DEPENDENCIES = Util.make(new HashSet<>(), set -> set.add(Apoli.identifier("powers")));
     public static final Map<Identifier, GlobalPowerSet> ALL = new HashMap<>();
+    public static final Set<Identifier> DISABLED = new HashSet<>();
 
     private static final Gson GSON = new GsonBuilder()
         .disableHtmlEscaping()
@@ -58,6 +61,13 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
 
         prepared.forEach((packName, id, jsonElement) -> {
             try {
+
+                if (!isResourceConditionValid(id, jsonElement.getAsJsonObject())) {
+                    if (!ALL.containsKey(id)) {
+                        DISABLED.add(id);
+                    }
+                    return;
+                }
 
                 SerializableData.CURRENT_NAMESPACE = id.getNamespace();
                 SerializableData.CURRENT_PATH = id.getPath();
@@ -97,6 +107,7 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
                     prevPriority = loadingPriority + 1;
                 }
 
+                DISABLED.remove(id);
                 globalPowerSets.add(globalPowerSet);
 
             } catch (Exception e) {
@@ -132,6 +143,10 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
 
+    }
+
+    private boolean isResourceConditionValid(Identifier id, JsonObject jo) {
+        return ApoliResourceConditions.test(id, jo);
     }
 
     @Override
