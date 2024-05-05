@@ -6,11 +6,12 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.EntitySetPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
 
-public class InSetCondition {
+public class InEntitySetCondition {
 
     public static boolean condition(SerializableData.Instance data, Pair<Entity, Entity> actorAndTarget) {
 
@@ -26,11 +27,12 @@ public class InSetCondition {
     }
 
     public static ConditionFactory<Pair<Entity, Entity>> getFactory() {
+        IdentifierAlias.addPathAlias("in_set", "in_entity_set");
         return new ConditionFactory<>(
-            Apoli.identifier("in_set"),
+            Apoli.identifier("in_entity_set"),
             new SerializableData()
                 .add("set", ApoliDataTypes.POWER_TYPE),
-            InSetCondition::condition
+            InEntitySetCondition::condition
         );
     }
 }

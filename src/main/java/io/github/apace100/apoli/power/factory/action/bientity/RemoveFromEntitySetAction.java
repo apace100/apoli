@@ -6,12 +6,12 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.EntitySetPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
 
-public class AddToSetAction {
+public class RemoveFromEntitySetAction {
 
     public static void action(SerializableData.Instance data, Pair<Entity, Entity> actorAndTarget) {
 
@@ -22,19 +22,19 @@ public class AddToSetAction {
             return;
         }
 
-        if (entitySetPower.add(actorAndTarget.getRight(), data.get("time_limit"))) {
+        if (entitySetPower.remove(actorAndTarget.getRight())) {
             PowerHolderComponent.syncPower(actorAndTarget.getLeft(), powerType);
         }
 
     }
 
     public static ActionFactory<Pair<Entity, Entity>> getFactory() {
+        IdentifierAlias.addPathAlias("remove_from_set", "remove_from_entity_set");
         return new ActionFactory<>(
-            Apoli.identifier("add_to_set"),
+            Apoli.identifier("remove_from_entity_set"),
             new SerializableData()
-                .add("set", ApoliDataTypes.POWER_TYPE)
-                .add("time_limit", SerializableDataTypes.POSITIVE_INT, null),
-            AddToSetAction::action
+                .add("set", ApoliDataTypes.POWER_TYPE),
+            RemoveFromEntitySetAction::action
         );
     }
 }

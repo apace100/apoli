@@ -29,8 +29,8 @@ public class BiEntityActions {
         register(TameAction.getFactory());
         register(AddVelocityAction.getFactory());
         register(DamageAction.getFactory());
-        register(AddToSetAction.getFactory());
-        register(RemoveFromSetAction.getFactory());
+        register(AddToEntitySetAction.getFactory());
+        register(RemoveFromEntitySetAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<Entity, Entity>> actionFactory) {

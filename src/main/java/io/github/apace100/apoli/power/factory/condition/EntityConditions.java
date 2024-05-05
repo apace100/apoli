@@ -431,7 +431,7 @@ public class EntityConditions {
         register(InSnowCondition.getFactory());
         register(InThunderstormCondition.getFactory());
         register(AdvancementCondition.getFactory());
-        register(SetSizeCondition.getFactory());
+        register(EntitySetSizeCondition.getFactory());
         register(UsingEffectiveToolCondition.getFactory());
         register(GameModeCondition.getFactory());
         register(GlowingCondition.getFactory());
