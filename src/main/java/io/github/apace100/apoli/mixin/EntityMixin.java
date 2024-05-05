@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.access.MovingEntity;
+import io.github.apace100.apoli.access.ModifiedPoseHolder;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -17,6 +18,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
@@ -52,7 +54,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
+public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder {
 
     @Inject(method = "isFireImmune", at = @At("HEAD"), cancellable = true)
     private void makeFullyFireImmune(CallbackInfoReturnable<Boolean> cir) {
@@ -334,6 +336,19 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
             this.apoli$movingVertically = true;
         }
 
+    }
+
+    @Unique
+    private EntityPose apoli$modifiedEntityPose;
+
+    @Override
+    public EntityPose apoli$getModifiedEntityPose() {
+        return apoli$modifiedEntityPose;
+    }
+
+    @Override
+    public void apoli$setModifiedEntityPose(EntityPose modifiedEntityPose) {
+        this.apoli$modifiedEntityPose = modifiedEntityPose;
     }
 
 }

@@ -8,6 +8,7 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.access.JumpingEntity;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
+import io.github.apace100.apoli.access.ModifiedPoseHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.s2c.DismountPlayerS2CPacket;
 import io.github.apace100.apoli.power.*;
@@ -40,6 +41,7 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Mixin(value = PlayerEntity.class, priority = 999)
@@ -325,6 +327,31 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
     private boolean apoli$shouldApplySprintJumpExhaustion(boolean original) {
         return original && this.apoli$applySprintJumpEffects();
+    }
+
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;updatePose()V"))
+    private void apoli$overridePose(PlayerEntity player, Operation<Void> original) {
+
+        if (!(player instanceof ModifiedPoseHolder poseHolder)) {
+            original.call(player);
+            return;
+        }
+
+        PowerHolderComponent.getPowers(player, EntityPosePower.class)
+            .stream()
+            .max(Comparator.comparing(EntityPosePower::getPriority))
+            .map(EntityPosePower::getPose)
+            .ifPresentOrElse(
+                entityPose -> {
+                    poseHolder.apoli$setModifiedEntityPose(entityPose);
+                    player.setPose(entityPose);
+                },
+                () -> {
+                    poseHolder.apoli$setModifiedEntityPose(null);
+                    original.call(player);
+                }
+            );
+
     }
 
 }

@@ -1,17 +1,16 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.IgnoreWaterPower;
-import io.github.apace100.apoli.power.ModifyAirSpeedPower;
-import io.github.apace100.apoli.power.PreventSprintingPower;
-import io.github.apace100.apoli.power.SwimmingPower;
+import io.github.apace100.apoli.power.*;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.player.PlayerAbilities;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -69,6 +68,11 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @ModifyReturnValue(method = "canSprint", at = @At("RETURN"))
     private boolean apoli$preventSprinting(boolean original) {
         return !PowerHolderComponent.hasPower(this, PreventSprintingPower.class) && original;
+    }
+
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z"))
+    private boolean apoli$forceSneakingPose(boolean original) {
+        return original || EntityPosePower.isPosed(this, EntityPose.CROUCHING);
     }
 
 }

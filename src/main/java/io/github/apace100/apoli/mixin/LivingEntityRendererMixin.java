@@ -5,11 +5,12 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
+import io.github.apace100.apoli.access.PseudoRenderDataHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.InvisibilityPower;
-import io.github.apace100.apoli.power.ModelColorPower;
-import io.github.apace100.apoli.power.PreventFeatureRenderPower;
-import io.github.apace100.apoli.power.ShakingPower;
+import io.github.apace100.apoli.power.*;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -21,6 +22,7 @@ import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -87,6 +89,34 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
 
         original.call(model, matrices, vertices, light, overlay, newRed, newGreen, newBlue, newAlpha);
 
+    }
+
+    @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isUsingRiptide()Z"))
+    private boolean apoli$forceRiptidePose(boolean original, LivingEntity entity) {
+        return original || EntityPosePower.isPosed(entity, EntityPose.SPIN_ATTACK);
+    }
+
+    @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;deathTime:I", ordinal = 0))
+    private int apoli$forceDyingPose(int original, LivingEntity entity, @Share("applyPseudoDeathTicks") LocalBooleanRef applyPseudoDeathTicksRef, @Share("pseudoDeathTicks") LocalIntRef pseudoDeathTicksRef) {
+
+        if (original > 0 || !(entity instanceof PseudoRenderDataHolder renderData)) {
+            return original;
+        }
+
+        int pseudoDeathTicks = renderData.apoli$getPseudoDeathTicks();
+
+        pseudoDeathTicksRef.set(pseudoDeathTicks);
+        applyPseudoDeathTicksRef.set(pseudoDeathTicks > 0);
+
+        return pseudoDeathTicks;
+
+    }
+
+    @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;deathTime:I", ordinal = 1))
+    private int apoli$applyPseudoDeathTicks(int original, LivingEntity entity, @Share("applyPseudoDeathTicks") LocalBooleanRef applyPseudoDeathTicksRef, @Share("pseudoDeathTicks") LocalIntRef pseudoDeathTicksRef) {
+        return applyPseudoDeathTicksRef.get()
+            ? pseudoDeathTicksRef.get()
+            : original;
     }
 
 }
