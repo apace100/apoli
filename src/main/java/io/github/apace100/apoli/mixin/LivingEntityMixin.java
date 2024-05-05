@@ -5,8 +5,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -21,6 +19,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -34,6 +34,7 @@ import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -534,6 +535,14 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Shadow protected abstract void onStatusEffectRemoved(StatusEffectInstance effect);
 
+    @Shadow public float sidewaysSpeed;
+
+    @Shadow public float forwardSpeed;
+
+    @Shadow @Nullable public abstract EntityAttributeInstance getAttributeInstance(EntityAttribute attribute);
+
+    @Shadow public abstract double getAttributeBaseValue(RegistryEntry<EntityAttribute> attribute);
+
     @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
@@ -551,6 +560,15 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             .stream()
             .anyMatch(p -> p.isActive() && p.doesApply(viewer));
 
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z"))
+    private boolean apoli$cancelOutJumpVelocityIfNotMovingWithSprintPower(boolean original) {
+        // The movement check is here so this doesn't happen if the player is moving at a sprinting amount.
+        if (PowerHolderComponent.hasPower(this, SprintingPower.class) && this.apoli$getHorizontalMovementValue() < this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)) {
+            return false;
+        }
+        return original;
     }
 
     @Unique

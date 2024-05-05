@@ -7,7 +7,9 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.IgnoreWaterPower;
 import io.github.apace100.apoli.power.ModifyAirSpeedPower;
 import io.github.apace100.apoli.power.PreventSprintingPower;
+import io.github.apace100.apoli.power.SprintingPower;
 import io.github.apace100.apoli.power.SwimmingPower;
+import net.minecraft.client.input.Input;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -19,6 +21,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -32,6 +35,8 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @Shadow
     @Final
     public ClientPlayNetworkHandler networkHandler;
+
+    @Shadow public Input input;
 
     public ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {
         super(world, profile);
@@ -71,4 +76,18 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
         return !PowerHolderComponent.hasPower(this, PreventSprintingPower.class) && original;
     }
 
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z", shift = At.Shift.BEFORE))
+    private void apugli$allowPowerSprinting(CallbackInfo ci) {
+        if (PowerHolderComponent.hasPower(this, SprintingPower.class) && !this.isSprinting() && (PowerHolderComponent.getPowers(this, SprintingPower.class).stream().noneMatch(SprintingPower::shouldRequireForwardMovement) || this.input.hasForwardMovement())) {
+            this.setSprinting(true);
+        }
+    }
+
+    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 1), ordinal = 5)
+    private boolean apugli$resetPowerSprinting(boolean value) {
+        if (PowerHolderComponent.hasPower(this, SprintingPower.class)) {
+            return PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireForwardMovement) && (!this.input.hasForwardMovement() || this.horizontalCollision && !this.collidedSoftly);
+        }
+        return value;
+    }
 }

@@ -7,4 +7,7 @@ public interface MovingEntity {
     boolean apoli$isMovingVertically();
     boolean apoli$isMovingHorizontally();
 
+    double apoli$getVerticalMovementValue();
+    double apoli$getHorizontalMovementValue();
+
 }
