@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 public interface Prioritized<T extends Power & Prioritized<T>> {
 
@@ -69,6 +68,10 @@ public interface Prioritized<T extends Power & Prioritized<T>> {
                 this.maxPriority = priority;
             }
 
+        }
+
+        public boolean isEmpty() {
+            return this.buckets.isEmpty();
         }
 
     }
