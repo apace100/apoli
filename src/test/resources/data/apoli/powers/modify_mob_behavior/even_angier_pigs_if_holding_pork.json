@@ -1,0 +1,50 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "behavior": {
+    "type": "apoli:hostile",
+    "priority": 11,
+    "modifier": {
+      "name": "Additional damage when holding a porkchop",
+      "attribute": "minecraft:generic.attack_damage",
+      "operation": "addition",
+      "value": 4
+    },
+    "bientity_condition": {
+      "type": "apoli:target_condition",
+      "condition": {
+        "type": "apoli:and",
+        "conditions": [
+          {
+            "type": "apoli:power_active",
+            "power": "apoli:modify_mob_behavior/anger_pigs"
+          },
+          {
+            "type": "apoli:or",
+            "conditions": [
+              {
+                "type": "apoli:equipped_item",
+                "equipment_slot": "mainhand",
+                "item_condition": {
+                  "type": "apoli:ingredient",
+                  "ingredient": {
+                    "tag": "apoli:porkchops"
+                  }
+                }
+              },
+              {
+                "type": "apoli:equipped_item",
+                "equipment_slot": "offhand",
+                "item_condition": {
+                  "type": "apoli:ingredient",
+                  "ingredient": {
+                    "tag": "apoli:porkchops"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

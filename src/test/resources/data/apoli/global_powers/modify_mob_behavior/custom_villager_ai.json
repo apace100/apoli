@@ -1,0 +1,9 @@
+{
+  "entity_types": [
+    "minecraft:villager",
+    "minecraft:wandering_trader"
+  ],
+  "powers": [
+    "apoli:modify_mob_behavior/tempt_villagers"
+  ]
+}

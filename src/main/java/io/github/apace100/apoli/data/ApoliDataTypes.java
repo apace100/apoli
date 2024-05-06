@@ -9,6 +9,8 @@ import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.action.ActionType;
+import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -457,6 +459,37 @@ public class ApoliDataTypes {
 
         }
     );
+
+    public static final SerializableDataType<MobBehaviorFactory.Instance> MOB_BEHAVIOR = new SerializableDataType<MobBehaviorFactory.Instance>(MobBehaviorFactory.Instance.class,
+            (buffer, mobBehavior) -> mobBehavior.write(buffer),
+            (buffer) -> {
+                Identifier type = buffer.readIdentifier();
+                Optional<MobBehaviorFactory<?>> factory = ApoliRegistries.MOB_BEHAVIOR_FACTORY.getOrEmpty(type);
+                return factory.get().read(buffer);
+            },
+            (json) -> {
+                if(json.isJsonObject()) {
+                    JsonObject jo = json.getAsJsonObject();
+                    String type = JsonHelper.getString(jo, "type");
+                    Identifier id = Identifier.tryParse(type);
+                    if (id == null) {
+                        throw new JsonSyntaxException("Mob Behavior json requires \"type\" identifier.");
+                    }
+                    Registry<MobBehaviorFactory<?>> registry = ApoliRegistries.MOB_BEHAVIOR_FACTORY;
+                    Optional<MobBehaviorFactory<?>> optionalBehavior = registry.getOrEmpty(id);
+                    if (optionalBehavior.isEmpty()) {
+                        if (IdentifierAlias.hasAlias(id)) {
+                            optionalBehavior = registry.getOrEmpty(IdentifierAlias.resolveAlias(id));
+                        }
+                        if (optionalBehavior.isEmpty()) {
+                            throw new JsonSyntaxException("Mob Behavior json type \"" + id + "\" is not defined.");
+                        }
+                    }
+                    return optionalBehavior.get().read(jo);
+                }
+                throw new JsonSyntaxException("Mob Behavior has to be a JsonObject!");
+            },
+            MobBehaviorFactory.Instance::toJson);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return new SerializableDataType<>(

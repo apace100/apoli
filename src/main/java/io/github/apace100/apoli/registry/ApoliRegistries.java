@@ -2,6 +2,7 @@ package io.github.apace100.apoli.registry;
 
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.behavior.MobBehaviorFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.modifier.IModifierOperation;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
@@ -37,6 +38,8 @@ public class ApoliRegistries {
     public static final Registry<ActionFactory<Pair<Entity, Entity>>> BIENTITY_ACTION;
     public static final Registry<IModifierOperation> MODIFIER_OPERATION;
 
+    public static final Registry<MobBehaviorFactory<?>> MOB_BEHAVIOR_FACTORY;
+
     static {
 
         POWER_FACTORY = create(ApoliRegistryKeys.POWER_FACTORY);
@@ -55,6 +58,7 @@ public class ApoliRegistries {
         BIENTITY_ACTION = create(ApoliRegistryKeys.BIENTITY_ACTION);
 
         MODIFIER_OPERATION = create(ApoliRegistryKeys.MODIFIER_OPERATION);
+        MOB_BEHAVIOR_FACTORY = create(ApoliRegistryKeys.MOB_BEHAVIOR_FACTORY);
 
     }
 

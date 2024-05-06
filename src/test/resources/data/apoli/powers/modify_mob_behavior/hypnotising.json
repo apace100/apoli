@@ -1,0 +1,25 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "priority": 10,
+  "behavior": {
+    "type": "apoli:look",
+    "bientity_condition": {
+      "type": "apoli:target_condition",
+      "condition": {
+        "type": "apoli:equipped_item",
+        "equipment_slot": "mainhand",
+        "item_condition": {
+          "type": "apoli:ingredient",
+          "ingredient": {
+            "item": "minecraft:glow_ink_sac"
+          }
+        }
+      }
+    },
+    "move_body_bientity_condition": {
+      "type": "apoli:constant",
+      "value": true
+    }
+  },
+  "tick_rate": 1
+}

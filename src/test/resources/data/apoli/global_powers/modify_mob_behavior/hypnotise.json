@@ -1,0 +1,12 @@
+{
+  "entity_types": [
+    "minecraft:cow",
+    "minecraft:pig",
+    "minecraft:sheep",
+    "minecraft:chicken",
+    "minecraft:creeper"
+  ],
+  "powers": [
+    "apoli:modify_mob_behavior/hypnotising"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "entity_types": [
+    "minecraft:frog",
+    "minecraft:piglin"
+  ],
+  "powers": [
+    "apoli:modify_mob_behavior/angry"
+  ]
+}

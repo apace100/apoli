@@ -1,0 +1,14 @@
+{
+  "type": "apoli:modify_mob_behavior",
+  "behavior": {
+    "type": "apoli:hostile",
+    "priority": 0,
+    "bientity_condition": {
+      "type": "apoli:target_condition",
+      "condition": {
+        "type": "apoli:power_active",
+        "power": "apoli:modify_mob_behavior/anger_pigs"
+      }
+    }
+  }
+}
