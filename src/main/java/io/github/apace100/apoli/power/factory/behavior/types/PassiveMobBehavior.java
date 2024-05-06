@@ -25,7 +25,7 @@ import java.util.function.Predicate;
 
 public class PassiveMobBehavior extends MobBehavior {
 
-    public PassiveMobBehavior(MobEntity mob, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition) {
+    public PassiveMobBehavior(MobEntity mob, Predicate<Pair<Entity, Entity>> bientityCondition) {
         super(mob, 0, bientityCondition);
     }
 

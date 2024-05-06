@@ -11,6 +11,7 @@ import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.*;
 import net.minecraft.entity.ai.brain.task.*;
@@ -26,7 +27,7 @@ public class FollowMobBehavior extends MobBehavior {
     private final float distance;
     private final int completionRange;
 
-    public FollowMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, float speed, float distance, int completionRange) {
+    public FollowMobBehavior(MobEntity mob, int priority, Predicate<Pair<Entity, Entity>> bientityCondition, float speed, float distance, int completionRange) {
         super(mob, priority, bientityCondition);
         this.speed = speed;
         this.distance = distance;

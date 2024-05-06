@@ -31,13 +31,13 @@ public class MobBehavior {
 
     protected final MobEntity mob;
     protected final int priority;
-    private final Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition;
+    private final Predicate<Pair<Entity, Entity>> bientityCondition;
     private LivingEntity previousTarget;
 
     private final List<Goal> modifiedGoalSelectorGoals = new ArrayList<>();
     private final List<Goal> modifiedTargetSelectorGoals = new ArrayList<>();
 
-    public MobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition) {
+    public MobBehavior(MobEntity mob, int priority, Predicate<Pair<Entity, Entity>> bientityCondition) {
         this.mob = mob;
         this.priority = priority;
         this.bientityCondition = bientityCondition;
@@ -84,7 +84,7 @@ public class MobBehavior {
 
     }
 
-    public boolean doesApply(LivingEntity target) {
+    public boolean doesApply(Entity target) {
         return bientityCondition == null || bientityCondition.test(new Pair<>(mob, target));
     }
 

@@ -27,7 +27,7 @@ public class RevengeMobBehavior extends HostileMobBehavior {
     private int revengeTimer;
     private final int resetTime;
 
-    public RevengeMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, int attackCooldown, float speed, int resetTime) {
+    public RevengeMobBehavior(MobEntity mob, int priority, Predicate<Pair<Entity, Entity>> bientityCondition, int attackCooldown, float speed, int resetTime) {
         super(mob, priority, bientityCondition, attackCooldown, speed);
         this.resetTime = resetTime;
     }

@@ -60,6 +60,7 @@
         "LootTableMixin",
         "MobEntityAccessor",
         "MobEntityMixin",
+        "MoveControlMixin",
         "PhantomSpawnerMixin",
         "PlayerEntityMixin",
         "PlayerScreenHandlerAccessor",

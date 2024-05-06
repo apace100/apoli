@@ -15,6 +15,10 @@
           }
         }
       }
+    },
+    "move_body_bientity_condition": {
+      "type": "apoli:constant",
+      "value": true
     }
   },
   "tick_rate": 1

@@ -11,6 +11,7 @@ import io.github.apace100.apoli.registry.ApoliActivities;
 import io.github.apace100.apoli.registry.ApoliMemoryModuleTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.brain.*;
@@ -30,7 +31,7 @@ public class FleeMobBehavior extends MobBehavior {
     private final double speed;
     private final double fastSpeed;
 
-    public FleeMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, float fleeDistance, double slowSpeed, double fastSpeed) {
+    public FleeMobBehavior(MobEntity mob, int priority, Predicate<Pair<Entity, Entity>> bientityCondition, float fleeDistance, double slowSpeed, double fastSpeed) {
         super(mob, priority, bientityCondition);
         this.fleeDistance = fleeDistance;
         this.speed = slowSpeed;

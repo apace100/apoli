@@ -38,7 +38,7 @@ public class HostileMobBehavior extends AttributeMobBehavior {
     private final int attackCooldown;
     private final float speed;
 
-    public HostileMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition, int attackCooldown, float speed) {
+    public HostileMobBehavior(MobEntity mob, int priority, Predicate<Pair<Entity, Entity>> bientityCondition, int attackCooldown, float speed) {
         super(mob, priority, bientityCondition);
         this.attackCooldown = attackCooldown;
         this.speed = speed;

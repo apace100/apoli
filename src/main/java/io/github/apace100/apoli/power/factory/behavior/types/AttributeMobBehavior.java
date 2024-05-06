@@ -4,7 +4,7 @@ import com.google.common.collect.Comparators;
 import io.github.apace100.apoli.power.factory.behavior.MobBehavior;
 import io.github.apace100.apoli.mixin.AttributeContainerAccessor;
 import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -21,8 +21,12 @@ public class AttributeMobBehavior extends MobBehavior {
     private static final Map<MobEntity, AttributeMobBehavior> PREVIOUS_HIGHEST_PRIORITY_BEHAVIOR = new HashMap<>();
     private static final HashMap<MobEntity, Set<AttributeMobBehavior>> ACTIVE_ATTRIBUTE_BEHAVIORS = new HashMap<>();
 
-    public AttributeMobBehavior(MobEntity mob, int priority, Predicate<Pair<LivingEntity, LivingEntity>> bientityCondition) {
-        super(mob, priority, bientityCondition);
+    public AttributeMobBehavior(MobEntity mob, int priority, Predicate<Pair<Entity, Entity>> bientityCondition) {
+        super(mob, priority, pair -> bientityCondition.test(pair) && isLiving(pair));
+    }
+
+    private static boolean isLiving(Pair<Entity, Entity> pair) {
+        return pair.getLeft().isLiving() && pair.getRight().isLiving();
     }
 
     @Override
