@@ -125,8 +125,8 @@ public class ItemOnItemPower extends Power implements Prioritized<ItemOnItemPowe
 
         @Override
         public boolean test(ClickPhase clickPhase) {
-            return clickPhase == ANY
-                || clickPhase == this;
+            return this == ANY
+                || this == clickPhase;
         }
 
     }
