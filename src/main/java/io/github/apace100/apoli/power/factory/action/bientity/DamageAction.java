@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.power.factory.action.bientity;
 
-import com.google.gson.JsonSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -35,12 +34,7 @@ public class DamageAction {
         data.<List<Modifier>>ifPresent("modifiers", modifiers::addAll);
 
         if (!modifiers.isEmpty() && target instanceof LivingEntity livingTarget) {
-
-            float targetMaxHealth = livingTarget.getMaxHealth();
-            float newDamageAmount = (float) ModifierUtil.applyModifiers(actor, modifiers, targetMaxHealth);
-
-            damageAmount = newDamageAmount > targetMaxHealth ? newDamageAmount - targetMaxHealth : newDamageAmount;
-
+            damageAmount = (float) ModifierUtil.applyModifiers(actor, modifiers, livingTarget.getMaxHealth());
         }
 
         if (damageAmount == null) {
@@ -50,14 +44,17 @@ public class DamageAction {
         try {
             DamageSource damageSource = MiscUtil.createDamageSource(actor.getDamageSources(), data.get("source"), data.get("damage_type"), actor);
             target.damage(damageSource, damageAmount);
-        } catch (JsonSyntaxException e) {
-            Apoli.LOGGER.error("Error trying to create damage source in a `damage` bi-entity action: " + e.getMessage());
+        }
+
+        catch (Throwable t) {
+            Apoli.LOGGER.error("Error trying to deal damage via the `damage` bi-entity action: " + t.getMessage());
         }
 
     }
 
     public static ActionFactory<Pair<Entity, Entity>> getFactory() {
-        return new ActionFactory<>(Apoli.identifier("damage"),
+        return new ActionFactory<>(
+            Apoli.identifier("damage"),
             new SerializableData()
                 .add("amount", SerializableDataTypes.FLOAT, null)
                 .add("source", ApoliDataTypes.DAMAGE_SOURCE_DESCRIPTION, null)

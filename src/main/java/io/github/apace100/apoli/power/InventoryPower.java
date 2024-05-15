@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
@@ -34,7 +35,10 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     private final boolean shouldDropOnDeath;
     private final boolean recoverable;
+
     private final int containerSize;
+
+    private boolean dirty;
 
     public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<Pair<World, ItemStack>> dropOnDeathFilter, boolean recoverable) {
         super(type, entity);
@@ -64,6 +68,7 @@ public class InventoryPower extends Power implements Active, Inventory {
         this.shouldDropOnDeath = shouldDropOnDeath;
         this.dropOnDeathFilter = dropOnDeathFilter;
         this.recoverable = recoverable;
+        this.setTicking(true);
     }
 
     public enum ContainerType {
@@ -84,13 +89,20 @@ public class InventoryPower extends Power implements Active, Inventory {
     @Override
     public void onUse() {
 
-        if (!isActive()) {
-            return;
+        if (this.isActive() && entity instanceof PlayerEntity player) {
+            player.openHandledScreen(new SimpleNamedScreenHandlerFactory(containerScreen, containerTitle));
         }
 
-        if (entity instanceof PlayerEntity playerEntity) {
-            playerEntity.openHandledScreen(new SimpleNamedScreenHandlerFactory(containerScreen, containerTitle));
+    }
+
+    @Override
+    public void tick() {
+
+        if (dirty) {
+            PowerHolderComponent.syncPower(entity, type);
         }
+
+        this.dirty = false;
 
     }
 
@@ -133,7 +145,14 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public ItemStack removeStack(int slot, int amount) {
-        return Inventories.splitStack(container, slot, amount);
+
+        ItemStack stack = Inventories.splitStack(container, slot, amount);
+        if (!stack.isEmpty()) {
+            this.markDirty();
+        }
+
+        return stack;
+
     }
 
     @Override
@@ -148,12 +167,19 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     @Override
     public void setStack(int slot, ItemStack stack) {
+
         container.set(slot, stack);
+        if (!stack.isEmpty()) {
+            stack.setCount(Math.min(stack.getCount(), this.getMaxCountPerStack()));
+        }
+
+        this.markDirty();
+
     }
 
     @Override
     public void markDirty() {
-
+        this.dirty = true;
     }
 
     @Override
@@ -164,8 +190,10 @@ public class InventoryPower extends Power implements Active, Inventory {
     @Override
     public void clear() {
         this.container.clear();
+        this.markDirty();
     }
 
+    @Deprecated(forRemoval = true)
     public StackReference getStackReference(int slot) {
         return new StackReference() {
 

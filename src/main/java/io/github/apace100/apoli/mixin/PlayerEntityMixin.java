@@ -1,10 +1,12 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import io.github.apace100.apoli.access.JumpingEntity;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.s2c.DismountPlayerS2CPacket;
@@ -41,7 +43,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(value = PlayerEntity.class, priority = 999)
-public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput {
+public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput, JumpingEntity {
 
     @Shadow
     public abstract boolean damage(DamageSource source, float amount);
@@ -179,6 +181,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     private ActionResult apoli$beforeEntityUse(Entity instance, PlayerEntity player, Hand hand, Operation<ActionResult> original, @Share("cachedPriorityZeroResult") LocalRef<ActionResult> cachedPriorityZeroResultRef) {
 
         ItemStack stackInHand = player.getStackInHand(hand);
+        cachedPriorityZeroResultRef.set(ActionResult.PASS);
+
         for (PreventEntityUsePower peup : PowerHolderComponent.getPowers(this, PreventEntityUsePower.class)) {
 
             if (peup.doesApply(instance, hand, stackInHand)) {
@@ -195,7 +199,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
         }
 
-        cachedPriorityZeroResultRef.set(ActionResult.PASS);
         Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
 
         aipci.add(player, ActionOnEntityUsePower.class, p -> p.shouldExecute(instance, hand, stackInHand) && p.getPriority() >= 0);
@@ -236,7 +239,6 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
                 continue;
             }
 
-            cachedPriorityZeroResultRef.set(ActionResult.PASS);
             if (previousResult == ActionResult.PASS) {
                 continue;
             }
@@ -318,6 +320,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             ? original
             : newResult;
 
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
+    private boolean apoli$shouldApplySprintJumpExhaustion(boolean original) {
+        return original && this.apoli$applySprintJumpEffects();
     }
 
 }
