@@ -10,10 +10,8 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.power.factory.action.ActionType;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionType;
+import io.github.apace100.apoli.power.factory.action.*;
+import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.ClassUtil;
@@ -24,6 +22,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.mixin.EntityAttributeModifierAccessor;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import io.github.apace100.calio.util.DynamicIdentifier;
+import io.github.apace100.calio.util.IdentifierAlias;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -55,6 +54,7 @@ import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
@@ -64,71 +64,49 @@ public class ApoliDataTypes {
         PowerTypeReference.class, SerializableDataTypes.IDENTIFIER,
         PowerType::getIdentifier, PowerTypeReference::new);
 
-    public static final SerializableDataType<ConditionFactory<Entity>.Instance> ENTITY_CONDITION =
-        condition(ApoliRegistries.ENTITY_CONDITION, "Entity condition");
+    public static final SerializableDataType<ConditionFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditions.ALIASES, "Entity condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<Entity>.Instance>> ENTITY_CONDITIONS =
-        SerializableDataType.list(ENTITY_CONDITION);
+    public static final SerializableDataType<List<ConditionFactory<Entity>.Instance>> ENTITY_CONDITIONS = SerializableDataType.list(ENTITY_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION =
-        condition(ApoliRegistries.BIENTITY_CONDITION, "Bi-entity condition");
+    public static final SerializableDataType<ConditionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditions.ALIASES, "Bi-entity condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS =
-        SerializableDataType.list(BIENTITY_CONDITION);
+    public static final SerializableDataType<List<ConditionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = SerializableDataType.list(BIENTITY_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION =
-        condition(ApoliRegistries.ITEM_CONDITION, "Item condition");
+    public static final SerializableDataType<ConditionFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditions.ALIASES, "Item condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS =
-        SerializableDataType.list(ITEM_CONDITION);
+    public static final SerializableDataType<List<ConditionFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS = SerializableDataType.list(ITEM_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION =
-        condition(ApoliRegistries.BLOCK_CONDITION, "Block condition");
+    public static final SerializableDataType<ConditionFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditions.ALIASES, "Block condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS =
-        SerializableDataType.list(BLOCK_CONDITION);
+    public static final SerializableDataType<List<ConditionFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS = SerializableDataType.list(BLOCK_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<FluidState>.Instance> FLUID_CONDITION =
-        condition(ApoliRegistries.FLUID_CONDITION, "Fluid condition");
+    public static final SerializableDataType<ConditionFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditions.ALIASES, "Fluid condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<FluidState>.Instance>> FLUID_CONDITIONS =
-        SerializableDataType.list(FLUID_CONDITION);
+    public static final SerializableDataType<List<ConditionFactory<FluidState>.Instance>> FLUID_CONDITIONS = SerializableDataType.list(FLUID_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION =
-        condition(ApoliRegistries.DAMAGE_CONDITION, "Damage condition");
+    public static final SerializableDataType<ConditionFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditions.ALIASES, "Damage condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS =
-        SerializableDataType.list(DAMAGE_CONDITION);
+    public static final SerializableDataType<List<ConditionFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = SerializableDataType.list(DAMAGE_CONDITION);
 
-    public static final SerializableDataType<ConditionFactory<RegistryEntry<Biome>>.Instance> BIOME_CONDITION =
-        condition(ApoliRegistries.BIOME_CONDITION, "Biome condition");
+    public static final SerializableDataType<ConditionFactory<RegistryEntry<Biome>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditions.ALIASES, "Biome condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<RegistryEntry<Biome>>.Instance>> BIOME_CONDITIONS =
-        SerializableDataType.list(BIOME_CONDITION);
+    public static final SerializableDataType<List<ConditionFactory<RegistryEntry<Biome>>.Instance>> BIOME_CONDITIONS = SerializableDataType.list(BIOME_CONDITION);
 
-    public static final SerializableDataType<ActionFactory<Entity>.Instance> ENTITY_ACTION =
-        action(ApoliRegistries.ENTITY_ACTION, "Entity action");
+    public static final SerializableDataType<ActionFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActions.ALIASES, "Entity action type");
 
-    public static final SerializableDataType<List<ActionFactory<Entity>.Instance>> ENTITY_ACTIONS =
-        SerializableDataType.list(ENTITY_ACTION);
+    public static final SerializableDataType<List<ActionFactory<Entity>.Instance>> ENTITY_ACTIONS = SerializableDataType.list(ENTITY_ACTION);
 
-    public static final SerializableDataType<ActionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION =
-        action(ApoliRegistries.BIENTITY_ACTION, "Bi-entity action");
+    public static final SerializableDataType<ActionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActions.ALIASES, "Bi-entity action type");
 
-    public static final SerializableDataType<List<ActionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS =
-        SerializableDataType.list(BIENTITY_ACTION);
+    public static final SerializableDataType<List<ActionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = SerializableDataType.list(BIENTITY_ACTION);
 
-    public static final SerializableDataType<ActionFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION =
-        action(ApoliRegistries.BLOCK_ACTION, "Block action");
+    public static final SerializableDataType<ActionFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActions.ALIASES, "Block action type");
 
-    public static final SerializableDataType<List<ActionFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS =
-        SerializableDataType.list(BLOCK_ACTION);
+    public static final SerializableDataType<List<ActionFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = SerializableDataType.list(BLOCK_ACTION);
 
-    public static final SerializableDataType<ActionFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION =
-        action(ApoliRegistries.ITEM_ACTION, "Item action");
+    public static final SerializableDataType<ActionFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActions.ALIASES, "Item action type");
 
-    public static final SerializableDataType<List<ActionFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS =
-        SerializableDataType.list(ITEM_ACTION);
+    public static final SerializableDataType<List<ActionFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = SerializableDataType.list(ITEM_ACTION);
 
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
 
@@ -463,42 +441,34 @@ public class ApoliDataTypes {
     );
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
+        return condition(registry, IdentifierAlias.GLOBAL, name);
+    }
+
+    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, IdentifierAlias aliases, String name) {
+        return condition(registry, aliases, (conditionFactories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
+    }
+
+    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, IdentifierAlias aliases, BiFunction<Registry<ConditionFactory<T>>, Identifier, RuntimeException> errorHandler) {
         return new SerializableDataType<>(
             ClassUtil.castClass(ConditionFactory.Instance.class),
-            (buffer, instance) -> instance.write(buffer),
-            buffer -> {
-
-                Identifier factoryId = buffer.readIdentifier();
-                Optional<ConditionFactory<T>> factory = registry.getOrEmpty(factoryId);
-
-                if (factory.isEmpty() && IdentifierAlias.hasAlias(factoryId)) {
-                    factory = registry.getOrEmpty(IdentifierAlias.resolveAlias(factoryId, IdentifierAlias.Priority.NAMESPACE));
-                }
-
-                return factory
-                    .orElseThrow(() -> new JsonSyntaxException("%s type \"%s\" was not registered.".formatted(name, factoryId)))
-                    .read(buffer);
-
+            (buf, instance) -> instance.write(buf),
+            buf -> {
+                Identifier factoryId = buf.readIdentifier();
+                return registry
+                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
+                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
+                    .read(buf);
             },
             jsonElement -> {
 
                 if (!(jsonElement instanceof JsonObject jsonObject)) {
-                    throw new JsonSyntaxException("%s has to be a JSON object!".formatted(name));
+                    throw new JsonSyntaxException("Expected a JSON object.");
                 }
 
-                if (!jsonObject.has("type")) {
-                    throw new JsonSyntaxException("%s JSON requires a \"type\" identifier!".formatted(name));
-                }
-
-                Identifier factoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
-                Optional<ConditionFactory<T>> factory = registry.getOrEmpty(factoryId);
-
-                if (factory.isEmpty() && IdentifierAlias.hasAlias(factoryId)) {
-                    factory = registry.getOrEmpty(IdentifierAlias.resolveAlias(factoryId, IdentifierAlias.Priority.NAMESPACE));
-                }
-
-                return factory
-                    .orElseThrow(() -> new JsonSyntaxException("%s type \"%s\" is not registered.".formatted(name, factoryId)))
+                Identifier factoryId = DynamicIdentifier.of(JsonHelper.getString(jsonObject, "type"));
+                return registry
+                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
+                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
                     .read(jsonObject);
 
             },
@@ -506,56 +476,40 @@ public class ApoliDataTypes {
         );
     }
 
-    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Class<ConditionFactory<T>.Instance> dataClass, ConditionType<T> conditionType) {
-        return new SerializableDataType<>(dataClass, conditionType::write, conditionType::read, conditionType::read);
+    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, String name) {
+        return action(registry, IdentifierAlias.GLOBAL, name);
     }
 
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, String name) {
+    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, IdentifierAlias aliases, String name) {
+        return action(registry, aliases, (conditionFactories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
+    }
+
+    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, IdentifierAlias aliases, BiFunction<Registry<ActionFactory<T>>, Identifier, RuntimeException> errorHandler) {
         return new SerializableDataType<>(
             ClassUtil.castClass(ActionFactory.Instance.class),
-            (buffer, instance) -> instance.write(buffer),
-            buffer -> {
-
-                Identifier factoryId = buffer.readIdentifier();
-                Optional<ActionFactory<T>> factory = registry.getOrEmpty(factoryId);
-
-                if (factory.isEmpty() && IdentifierAlias.hasAlias(factoryId)) {
-                    factory = registry.getOrEmpty(IdentifierAlias.resolveAlias(factoryId, IdentifierAlias.Priority.NAMESPACE));
-                }
-
-                return factory
-                    .orElseThrow(() -> new JsonSyntaxException("%s type \"%s\" was not registered.".formatted(name, factoryId)))
-                    .read(buffer);
-
+            (buf, instance) -> instance.write(buf),
+            buf -> {
+                Identifier factoryId = buf.readIdentifier();
+                return registry
+                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
+                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
+                    .read(buf);
             },
             jsonElement -> {
 
                 if (!(jsonElement instanceof JsonObject jsonObject)) {
-                    throw new JsonSyntaxException("%s has to be a JSON object!".formatted(name));
+                    throw new JsonSyntaxException("Expected a JSON object.");
                 }
 
-                if (!jsonObject.has("type")) {
-                    throw new JsonSyntaxException("%s JSON requires a \"type\" identifier!".formatted(name));
-                }
-
-                Identifier factoryId = new Identifier(JsonHelper.getString(jsonObject, "type"));
-                Optional<ActionFactory<T>> factory = registry.getOrEmpty(factoryId);
-
-                if (factory.isEmpty() && IdentifierAlias.hasAlias(factoryId)) {
-                    factory = registry.getOrEmpty(IdentifierAlias.resolveAlias(factoryId, IdentifierAlias.Priority.NAMESPACE));
-                }
-
-                return factory
-                    .orElseThrow(() -> new JsonSyntaxException("%s type \"%s\" is not registered.".formatted(name, factoryId)))
+                Identifier factoryId = DynamicIdentifier.of(JsonHelper.getString(jsonObject, "type"));
+                return registry
+                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
+                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
                     .read(jsonObject);
 
             },
             ActionFactory.Instance::toJson
         );
-    }
-
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Class<ActionFactory<T>.Instance> dataClass, ActionType<T> actionType) {
-        return new SerializableDataType<>(dataClass, actionType::write, actionType::read, actionType::read);
     }
 
 }
