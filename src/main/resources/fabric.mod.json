@@ -32,9 +32,6 @@
     ],
     "modmenu": [
       "io.github.apace100.apoli.integration.ModMenuIntegration"
-    ],
-    "calio:ordered-resource-listener": [
-      "io.github.apace100.apoli.Apoli"
     ]
   },
   "mixins": [
