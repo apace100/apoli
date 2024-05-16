@@ -2,7 +2,7 @@ package io.github.apace100.apoli.power.factory.condition.item;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
-import io.github.apace100.apoli.util.IdentifierAlias;
+import io.github.apace100.apoli.power.factory.condition.ItemConditions;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.EquipmentSlot;
@@ -28,13 +28,17 @@ public class EquippableCondition {
     }
 
     public static ConditionFactory<Pair<World, ItemStack>> getFactory() {
-        IdentifierAlias.addPathAlias("is_equippable", "equippable");
-        return new ConditionFactory<>(
+
+        ConditionFactory<Pair<World, ItemStack>> factory = new ConditionFactory<>(
             Apoli.identifier("equippable"),
             new SerializableData()
                 .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT, null),
             EquippableCondition::condition
         );
+
+        ItemConditions.ALIASES.addPathAlias("is_equippable", factory.getSerializerId().getPath());
+        return factory;
+
     }
 
 }

@@ -8,6 +8,7 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
@@ -16,9 +17,9 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
-import java.util.List;
-
 public class BiomeConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
         MetaConditions.register(ApoliDataTypes.BIOME_CONDITION, BiomeConditions::register);

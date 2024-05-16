@@ -8,13 +8,13 @@ import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
+import io.github.apace100.apoli.util.InventoryUtil.ProcessMode;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 
-import static io.github.apace100.apoli.util.InventoryUtil.*;
+import static io.github.apace100.apoli.util.InventoryUtil.modifyInventory;
 
 public class ModifyInventoryAction {
 

@@ -36,8 +36,8 @@ repositories {
 		url = 'https://maven.ladysnake.org/releases'
 	}
 	maven {
-		name = "JitPack"
-		url = 'https://jitpack.io'
+		name = 'Ladysnake Mods (snapshots)'
+		url = 'https://maven.ladysnake.org/snapshots'
 	}
 	maven {
 		url = 'https://maven.cafeteria.dev'
@@ -106,8 +106,8 @@ dependencies {
 	modApi "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 
-	modApi "com.github.apace100:calio:${project.calio_version}"
-	include "com.github.apace100:calio:${project.calio_version}"
+	modApi "io.github.apace100:calio:${project.calio_version}"
+	include "io.github.apace100:calio:${project.calio_version}"
 
 	modCompileOnlyApi "com.jamieswhiteshirt:reach-entity-attributes:${rea_version}"
 
