@@ -6,7 +6,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.EntitySetPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.util.IdentifierAlias;
+import io.github.apace100.apoli.power.factory.action.BiEntityActions;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -30,13 +30,18 @@ public class AddToEntitySetAction {
     }
 
     public static ActionFactory<Pair<Entity, Entity>> getFactory() {
-        IdentifierAlias.addPathAlias("add_to_set", "add_to_entity_set");
-        return new ActionFactory<>(
+
+        ActionFactory<Pair<Entity, Entity>> factory = new ActionFactory<>(
             Apoli.identifier("add_to_entity_set"),
             new SerializableData()
                 .add("set", ApoliDataTypes.POWER_TYPE)
                 .add("time_limit", SerializableDataTypes.POSITIVE_INT, null),
             AddToEntitySetAction::action
         );
+
+        BiEntityActions.ALIASES.addPathAlias("add_to_set", factory.getSerializerId().getPath());
+        return factory;
+
     }
+
 }

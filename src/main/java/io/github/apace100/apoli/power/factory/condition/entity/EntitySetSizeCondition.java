@@ -6,8 +6,8 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.EntitySetPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.power.factory.condition.EntityConditions;
 import io.github.apace100.apoli.util.Comparison;
-import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -31,8 +31,8 @@ public class EntitySetSizeCondition {
     }
 
     public static ConditionFactory<Entity> getFactory() {
-        IdentifierAlias.addPathAlias("set_size", "entity_set_size");
-        return new ConditionFactory<>(
+
+        ConditionFactory<Entity> factory = new ConditionFactory<>(
             Apoli.identifier("entity_set_size"),
             new SerializableData()
                 .add("set", ApoliDataTypes.POWER_TYPE)
@@ -40,5 +40,9 @@ public class EntitySetSizeCondition {
                 .add("compare_to", SerializableDataTypes.INT),
             EntitySetSizeCondition::condition
         );
+
+        EntityConditions.ALIASES.addPathAlias("set_size", factory.getSerializerId().getPath());
+        return factory;
+
     }
 }

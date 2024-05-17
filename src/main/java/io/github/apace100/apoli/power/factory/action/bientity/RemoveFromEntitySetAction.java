@@ -6,7 +6,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.EntitySetPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.util.IdentifierAlias;
+import io.github.apace100.apoli.power.factory.action.BiEntityActions;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
@@ -29,12 +29,17 @@ public class RemoveFromEntitySetAction {
     }
 
     public static ActionFactory<Pair<Entity, Entity>> getFactory() {
-        IdentifierAlias.addPathAlias("remove_from_set", "remove_from_entity_set");
-        return new ActionFactory<>(
+
+        ActionFactory<Pair<Entity, Entity>> factory = new ActionFactory<>(
             Apoli.identifier("remove_from_entity_set"),
             new SerializableData()
                 .add("set", ApoliDataTypes.POWER_TYPE),
             RemoveFromEntitySetAction::action
         );
+
+        BiEntityActions.ALIASES.addPathAlias("remove_from_set", factory.getSerializerId().getPath());
+        return factory;
+
     }
+
 }
