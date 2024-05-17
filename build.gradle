@@ -6,6 +6,8 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+def ENV = System.getenv()
+
 base {
 	archivesName = project.archives_base_name
 }
@@ -174,5 +176,14 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 		mavenLocal()
+		if (ENV.MAVEN_URL && ENV.MAVEN_USERNAME && ENV.MAVEN_PASSWORD) {
+			maven {
+				url = ENV.MAVEN_URL
+				credentials {
+					username = ENV.MAVEN_USERNAME
+					password = ENV.MAVEN_PASSWORD
+				}
+			}
+		}
 	}
 }
