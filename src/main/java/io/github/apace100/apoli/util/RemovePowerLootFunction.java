@@ -14,10 +14,10 @@ import java.util.List;
 
 public class RemovePowerLootFunction extends ConditionalLootFunction {
 
-    public static final Codec<RemovePowerLootFunction> CODEC = RecordCodecBuilder.create(instance -> method_53344(instance)
-        .and(EquipmentSlot.CODEC.fieldOf("slot").forGetter(RemovePowerLootFunction::getSlot))
-        .and(Identifier.CODEC.fieldOf("power").forGetter(RemovePowerLootFunction::getPowerId))
-        .apply(instance, RemovePowerLootFunction::new));
+    public static final Codec<RemovePowerLootFunction> CODEC = RecordCodecBuilder.create(instance -> addConditionsField(instance).and(instance.group(
+        EquipmentSlot.CODEC.fieldOf("slot").forGetter(RemovePowerLootFunction::getSlot),
+        Identifier.CODEC.fieldOf("power").forGetter(RemovePowerLootFunction::getPowerId)
+    )).apply(instance, RemovePowerLootFunction::new));
     public static final LootFunctionType TYPE = new LootFunctionType(CODEC);
 
     private final EquipmentSlot slot;
