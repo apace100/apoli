@@ -411,6 +411,12 @@ public class EntityConditions {
         register(UsingEffectiveToolCondition.getFactory());
         register(GameModeCondition.getFactory());
         register(GlowingCondition.getFactory());
+        register(HasAiCondition.getFactory());
+        register(DisablesShieldCondition.getFactory());
+        register(RiptidingCondition.getFactory());
+        register(AgeCondition.getFactory());
+        register(CrawlingCondition.getFactory());
+        register(RidableInWaterCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {
