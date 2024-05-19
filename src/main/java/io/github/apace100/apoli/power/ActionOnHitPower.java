@@ -29,6 +29,18 @@ public class ActionOnHitPower extends CooldownPower {
         this.bientityCondition = bientityCondition;
     }
 
+    public boolean doesApply(Entity target, DamageSource source, float amount) {
+        return this.canUse()
+            && (bientityCondition == null || bientityCondition.test(new Pair<>(entity, target)))
+            && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
+    }
+
+    public void onHit(Entity target) {
+        this.bientityAction.accept(new Pair<>(entity, target));
+        this.use();
+    }
+
+    @Deprecated(forRemoval = true)
     public void onHit(Entity target, DamageSource damageSource, float damageAmount) {
         if(canUse()) {
             if(bientityCondition == null || bientityCondition.test(new Pair<>(entity, target))) {
@@ -48,11 +60,16 @@ public class ActionOnHitPower extends CooldownPower {
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
-            data ->
-                (type, player) -> new ActionOnHitPower(type, player, data.getInt("cooldown"),
-                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
-                    (ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"),
-                    (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition")))
-            .allowCondition();
+            data -> (powerType, entity) -> new ActionOnHitPower(
+                powerType,
+                entity,
+                data.getInt("cooldown"),
+                data.get("hud_render"),
+                data.get("damage_condition"),
+                data.get("bientity_action"),
+                data.get("bientity_condition")
+            )
+        ).allowCondition();
     }
+
 }

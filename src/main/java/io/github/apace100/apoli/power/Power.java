@@ -99,8 +99,16 @@ public class Power {
         return conditions.stream().allMatch(condition -> condition.test(entity));
     }
 
+    public NbtElement toTag(boolean onSync) {
+        return this.toTag();
+    }
+
     public NbtElement toTag() {
         return new NbtCompound();
+    }
+
+    public void fromTag(NbtElement tag, boolean onSync) {
+        this.fromTag(tag);
     }
 
     public void fromTag(NbtElement tag) {

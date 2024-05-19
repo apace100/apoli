@@ -8,6 +8,7 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -19,6 +20,8 @@ import net.minecraft.util.Pair;
 import java.util.function.Predicate;
 
 public class DamageConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {

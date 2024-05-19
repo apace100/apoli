@@ -21,7 +21,8 @@ public class PowerType<T extends Power> {
     private Text name;
     private Text description;
 
-    private boolean isHidden = false;
+    private boolean hidden = false;
+    private boolean subPower = false;
 
     public PowerType(Identifier id, PowerFactory<T>.Instance factory) {
         this.identifier = id;
@@ -37,7 +38,20 @@ public class PowerType<T extends Power> {
     }
 
     public PowerType setHidden() {
-        this.isHidden = true;
+        return this.setHidden(true);
+    }
+
+    public PowerType setSubPower() {
+        return this.setSubPower(true);
+    }
+
+    public PowerType<?> setHidden(boolean hidden) {
+        this.hidden = hidden;
+        return this;
+    }
+
+    public PowerType<?> setSubPower(boolean subPower) {
+        this.subPower = subPower;
         return this;
     }
 
@@ -46,9 +60,13 @@ public class PowerType<T extends Power> {
         this.descriptionTranslationKey = description;
     }
 
-    public void setDisplayTexts(Text name, Text description) {
+    public PowerType<?> setDisplayTexts(Text name, Text description) {
+
         this.name = name;
         this.description = description;
+
+        return this;
+
     }
 
     public T create(LivingEntity entity) {
@@ -63,7 +81,11 @@ public class PowerType<T extends Power> {
     }
 
     public boolean isHidden() {
-        return this.isHidden;
+        return this.hidden;
+    }
+
+    public boolean isSubPower() {
+        return this.subPower;
     }
 
     public boolean isActive(Entity entity) {

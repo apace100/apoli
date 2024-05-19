@@ -3,6 +3,8 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -36,10 +38,7 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -48,7 +47,7 @@ import java.util.*;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity, MovingEntity {
+public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity, MovingEntity, JumpingEntity {
     @Shadow
     protected abstract float getJumpVelocity();
 
@@ -264,24 +263,27 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 0))
     private boolean apoli$preventHitIfDamageIsZero(boolean original, DamageSource source, float amount) {
-        //  TODO: Maybe use DecimalFormat to compare the damage amount? Though it's probably unnecessary since we don't need the decimals
-        return original || apoli$hasModifiedDamage && (int) amount <= 0;
+        return original || apoli$hasModifiedDamage && amount <= 0.0F;
     }
 
-    @Inject(method = "damage", at = @At("RETURN"))
-    private void invokeHitActions(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if(cir.getReturnValue()) {
-            Entity attacker = source.getAttacker();
-            if(attacker != null) {
-                PowerHolderComponent.withPowers(this, ActionWhenHitPower.class, p -> true, p -> p.whenHit(attacker, source, amount));
-                PowerHolderComponent.withPowers(attacker, ActionOnHitPower.class, p -> true, p -> p.onHit(this, source, amount));
-            }
-            PowerHolderComponent.getPowers(this, SelfActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
-            PowerHolderComponent.getPowers(this, AttackerActionWhenHitPower.class).forEach(p -> p.whenHit(source, amount));
-            PowerHolderComponent.getPowers(source.getAttacker(), SelfActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
-            PowerHolderComponent.getPowers(source.getAttacker(), TargetActionOnHitPower.class).forEach(p -> p.onHit((LivingEntity)(Object)this, source, amount));
+    @Inject(method = "damage", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z")))
+    private void apoli$invokeHitActions(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
 
+        if (!cir.getReturnValue()) {
+            return;
         }
+
+        Entity attacker = source.getAttacker();
+
+        PowerHolderComponent.withPowers(this, ActionWhenHitPower.class, p -> p.doesApply(attacker, source, amount), p -> p.whenHit(attacker));
+        PowerHolderComponent.withPowers(attacker, ActionOnHitPower.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
+
+        PowerHolderComponent.withPowers(this, SelfActionWhenHitPower.class, p -> p.doesApply(source, amount), SelfActionWhenHitPower::whenHit);
+        PowerHolderComponent.withPowers(this, AttackerActionWhenHitPower.class, p -> p.doesApply(source, amount), p -> p.whenHit(attacker));
+
+        PowerHolderComponent.withPowers(attacker, SelfActionOnHitPower.class, p -> p.doesApply(this, source, amount), SelfActionOnHitPower::onHit);
+        PowerHolderComponent.withPowers(attacker, TargetActionOnHitPower.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
+
     }
 
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
@@ -337,13 +339,28 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             .orElse(original);
     }
 
+    @Unique
+    private boolean apoli$applySprintJumpingEffects;
+
+    @Override
+    public boolean apoli$applySprintJumpEffects() {
+        return apoli$applySprintJumpingEffects;
+    }
+
     // SPRINT_JUMP
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
-    private float modifyJumpVelocity(LivingEntity entity) {
-        return PowerHolderComponent.modify(this, ModifyJumpPower.class, this.getJumpVelocity(), p -> {
-            p.executeAction();
-            return true;
-        });
+    @ModifyReturnValue(method = "getJumpVelocity", at = @At("RETURN"))
+    private float apoli$modifyJumpVelocity(float original) {
+
+        float modified = PowerHolderComponent.modify(this, ModifyJumpPower.class, original, p -> true, ModifyJumpPower::executeAction);
+        this.apoli$applySprintJumpingEffects = modified > 0;
+
+        return modified;
+
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z"))
+    private boolean apoli$shouldApplySprintJumpEffects(boolean original) {
+        return original && this.apoli$applySprintJumpEffects();
     }
 
     // HOTBLOODED
@@ -420,22 +437,16 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
-    @Unique
-    private float cachedDamageAmount;
+    @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 1))
+    private boolean apoli$preventDeath(boolean original, DamageSource source, float amount) {
 
-    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;tryUseTotem(Lnet/minecraft/entity/damage/DamageSource;)Z"))
-    private void cacheDamageAmount(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        this.cachedDamageAmount = amount;
-    }
-
-    @Inject(method = "tryUseTotem", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Hand;values()[Lnet/minecraft/util/Hand;"), cancellable = true)
-    private void preventDeath(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
-        Optional<PreventDeathPower> preventDeathPower = PowerHolderComponent.getPowers(this, PreventDeathPower.class).stream().filter(p -> p.doesApply(source, cachedDamageAmount)).findFirst();
-        if(preventDeathPower.isPresent()) {
+        if (original && PreventDeathPower.doesPrevent(this, source, amount)) {
             this.setHealth(1.0F);
-            preventDeathPower.get().executeAction();
-            cir.setReturnValue(true);
+            return false;
         }
+
+        return original;
+
     }
 
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
@@ -526,13 +537,18 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
     }
 
-    @Redirect(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
-    private boolean invisibilityException(LivingEntity instance, Entity entity) {
-        if (entity == null || !PowerHolderComponent.hasPower(this, InvisibilityPower.class)) {
-            return instance.isInvisible();
-        } else {
-            return PowerHolderComponent.hasPower(this, InvisibilityPower.class, p -> p.doesApply(entity));
+    @WrapOperation(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
+    private boolean apoli$specificallyInvisibleTo(LivingEntity livingEntity, Operation<Boolean> original, @Nullable Entity viewer) {
+
+        List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(livingEntity, InvisibilityPower.class, true);
+        if (viewer == null || invisibilityPowers.isEmpty()) {
+            return original.call(livingEntity);
         }
+
+        return invisibilityPowers
+            .stream()
+            .anyMatch(p -> p.isActive() && p.doesApply(viewer));
+
     }
 
     @Unique

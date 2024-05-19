@@ -19,8 +19,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.util.Identifier;
 
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
 
@@ -35,6 +37,7 @@ public class ModPacketsS2C {
         ClientPlayConnectionEvents.INIT.register(((clientPlayNetworkHandler, minecraftClient) -> {
             ClientPlayNetworking.registerReceiver(SyncPowerTypeRegistryS2CPacket.TYPE, ModPacketsS2C::onPowerTypeRegistrySync);
             ClientPlayNetworking.registerReceiver(SyncPowerS2CPacket.TYPE, ModPacketsS2C::onPowerSync);
+            ClientPlayNetworking.registerReceiver(SyncPowersInBulkS2CPacket.TYPE, ModPacketsS2C::onPowerSyncInBulk);
             ClientPlayNetworking.registerReceiver(MountPlayerS2CPacket.TYPE, ModPacketsS2C::onPlayerMount);
             ClientPlayNetworking.registerReceiver(DismountPlayerS2CPacket.TYPE, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(SyncAttackerS2CPacket.TYPE, ModPacketsS2C::onAttackerSync);
@@ -154,7 +157,49 @@ public class ModPacketsS2C {
         Power power = component.getPower(powerType);
 
         if (power != null) {
-            power.fromTag(packet.powerData().get("Data"));
+            power.fromTag(packet.powerData().get("Data"), true);
+        }
+
+    }
+
+    private static void onPowerSyncInBulk(SyncPowersInBulkS2CPacket packet, ClientPlayerEntity player, PacketSender responseSender) {
+
+        Entity entity = player.getWorld().getEntityById(packet.entityId());
+        Map<Identifier, NbtElement> powerAndData = packet.powerAndData();
+
+        if (entity == null) {
+            Apoli.LOGGER.warn("Received packet for syncing {} power(s) to unknown entity!", powerAndData.size());
+            return;
+        }
+
+        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(entity);
+        if (component == null) {
+            Apoli.LOGGER.warn("Received packet for syncing {} power(s) to entity \"{}\", which cannot hold powers!", powerAndData.size(), entity.getName().getString());
+            return;
+        }
+
+        int invalidPowers = 0;
+        for (Map.Entry<Identifier, NbtElement> entry : powerAndData.entrySet()) {
+
+            Identifier powerTypeId = entry.getKey();
+            NbtElement powerTypeData = entry.getValue();
+
+            if (!PowerTypeRegistry.contains(powerTypeId)) {
+                ++invalidPowers;
+                continue;
+            }
+
+            PowerType<?> powerType = PowerTypeRegistry.get(powerTypeId);
+            Power power = component.getPower(powerType);
+
+            if (power != null) {
+                power.fromTag(powerTypeData, true);
+            }
+
+        }
+
+        if (invalidPowers > 0) {
+            Apoli.LOGGER.warn("Received packet for syncing {} invalid power(s) to entity \"{}\"", invalidPowers, entity.getName().getString());
         }
 
     }
