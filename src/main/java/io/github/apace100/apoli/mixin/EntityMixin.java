@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
@@ -31,6 +32,7 @@ import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
@@ -96,6 +98,8 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow protected boolean firstUpdate;
 
     @Shadow @Final private Set<String> commandTags;
+
+    @Shadow public abstract Text getName();
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -361,8 +365,8 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
             this.dataTracker.startTracking(COMMAND_TAGS, Set.of());
         }
 
-        catch (Throwable ignored) {
-
+        catch (Exception e) {
+            Apoli.LOGGER.warn("Couldn't register data tracker for command tags for entity {}:", this.getName().getString(), e);
         }
 
     }
@@ -372,7 +376,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         return original && (this.apoli$dirtiedCommandTags = true);
     }
 
-    @ModifyReturnValue(method = "removeScoreboardTag", at = @At("RETURN"))
+    @ModifyReturnValue(method = "removeCommandTag", at = @At("RETURN"))
     private boolean apoli$trackRemovedCommandTag(boolean original) {
         return original && (this.apoli$dirtiedCommandTags = true);
     }

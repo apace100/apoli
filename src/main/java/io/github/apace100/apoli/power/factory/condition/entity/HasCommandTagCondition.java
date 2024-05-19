@@ -2,7 +2,7 @@ package io.github.apace100.apoli.power.factory.condition.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
-import io.github.apace100.apoli.util.IdentifierAlias;
+import io.github.apace100.apoli.power.factory.condition.EntityConditions;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -28,8 +28,8 @@ public class HasCommandTagCondition {
     }
 
     public static ConditionFactory<Entity> getFactory() {
-        IdentifierAlias.addPathAlias("has_tag", "has_command_tag");
-        return new ConditionFactory<>(
+
+        ConditionFactory<Entity> factory = new ConditionFactory<>(
             Apoli.identifier("has_command_tag"),
             new SerializableData()
                 .add("tag", SerializableDataTypes.STRING, null)
@@ -38,6 +38,10 @@ public class HasCommandTagCondition {
                 .addFunctionedDefault("command_tags", SerializableDataTypes.STRINGS, data -> data.get("tags")),
             HasCommandTagCondition::condition
         );
+
+        EntityConditions.ALIASES.addPathAlias("has_tag", factory.getSerializerId().getPath());
+        return factory;
+
     }
 
 }
