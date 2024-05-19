@@ -2,6 +2,7 @@
     "required": true,
     "minVersion": "0.8",
     "package": "io.github.apace100.apoli.mixin",
+    "plugin": "io.github.apace100.apoli.ApoliMixinPlugin",
     "compatibilityLevel": "JAVA_16",
     "mixins": [
         "AbstractBlockMixin",
@@ -69,7 +70,8 @@
         "StatusEffectInstanceMixin",
         "VibrationsListenerDataMixin",
         "VibrationsTickerMixin",
-        "WeightedListEntryAccessor"
+        "WeightedListEntryAccessor",
+        "integration.appleskin.FoodHelperMixin"
     ],
     "client": [
         "BackgroundRendererMixin",
