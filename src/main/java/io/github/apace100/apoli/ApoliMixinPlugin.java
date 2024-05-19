@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 public class ApoliMixinPlugin implements IMixinConfigPlugin {
+
     @Override
     public void onLoad(String mixinPackage) {
 
@@ -21,10 +22,7 @@ public class ApoliMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains(".integration.appleskin.") && !FabricLoader.getInstance().isModLoaded("appleskin")) {
-            return false;
-        }
-        return true;
+		return !mixinClassName.contains(".integration.appleskin.") || FabricLoader.getInstance().isModLoaded("appleskin");
     }
 
     @Override
@@ -46,4 +44,5 @@ public class ApoliMixinPlugin implements IMixinConfigPlugin {
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
 
     }
+
 }
