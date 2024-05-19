@@ -8,6 +8,7 @@ import dev.onyxstudios.cca.api.v3.component.tick.ServerTickingComponent;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.ModifyValueCallback;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowerS2CPacket;
+import io.github.apace100.apoli.networking.packet.s2c.SyncPowersInBulkS2CPacket;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
@@ -16,12 +17,11 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -74,9 +74,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             return;
         }
 
-        PowerHolderComponent component = PowerHolderComponent.KEY
-            .maybeGet(entity)
-            .orElse(null);
+        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(entity);
         if (component == null) {
             return;
         }
@@ -88,7 +86,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             return;
         }
 
-        powerData.put("Data", power.toTag());
+        powerData.put("Data", power.toTag(true));
         SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), powerType.getIdentifier(), powerData);
 
         for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
@@ -97,6 +95,55 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
         if (entity instanceof ServerPlayerEntity player) {
             ServerPlayNetworking.send(player, syncPowerPacket);
+        }
+
+    }
+
+    static void syncPowers(Entity entity, Collection<? extends PowerType<?>> powerTypes) {
+
+        if (entity == null || entity.getWorld().isClient || powerTypes.isEmpty()) {
+            return;
+        }
+
+        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(entity);
+        Map<Identifier, NbtElement> powersToSync = new HashMap<>();
+
+        if (component == null) {
+            return;
+        }
+
+        for (PowerType<?> powerType : powerTypes) {
+
+            if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
+                powerType = powerTypeRef.getReferencedPowerType();
+            }
+
+            if (powerType == null) {
+                continue;
+            }
+
+            Power power = component.getPower(powerType);
+            if (power != null) {
+                powersToSync.put(powerType.getIdentifier(), power.toTag(true));
+            }
+
+        }
+
+        if (powersToSync.isEmpty()) {
+            return;
+        }
+
+        SyncPowersInBulkS2CPacket syncPowersPacket = new SyncPowersInBulkS2CPacket(entity.getId(), powersToSync);
+        for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
+
+            if (ServerPlayNetworking.canSend(otherPlayer, SyncPowersInBulkS2CPacket.TYPE)) {
+                ServerPlayNetworking.send(otherPlayer, syncPowersPacket);
+            }
+
+        }
+
+        if (entity instanceof ServerPlayerEntity player && ServerPlayNetworking.canSend(player, SyncPowersInBulkS2CPacket.TYPE)) {
+            ServerPlayNetworking.send(player, syncPowersPacket);
         }
 
     }
@@ -115,10 +162,13 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static <T extends Power> List<T> getPowers(Entity entity, Class<T> powerClass) {
-        if(entity instanceof LivingEntity) {
-            return KEY.get(entity).getPowers(powerClass);
-        }
-        return Lists.newArrayList();
+        return getPowers(entity, powerClass, false);
+    }
+
+    static <T extends Power> List<T> getPowers(Entity entity, Class<T> powerClass, boolean includeInactive) {
+        return KEY.maybeGet(entity)
+            .map(pc -> pc.getPowers(powerClass, includeInactive))
+            .orElse(Lists.newArrayList());
     }
 
     static <T extends Power> boolean hasPower(Entity entity, Class<T> powerClass) {

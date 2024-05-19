@@ -6,6 +6,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -17,7 +18,7 @@ public class ActionFactory<T> implements Factory {
 
     protected final SerializableData data;
 
-    public ActionFactory(Identifier identifier, SerializableData data, BiConsumer<SerializableData.Instance, T> effect) {
+    public ActionFactory(Identifier identifier, SerializableData data, @NotNull BiConsumer<SerializableData.Instance, T> effect) {
         this.identifier = identifier;
         this.effect = effect;
         this.data = data
