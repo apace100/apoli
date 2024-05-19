@@ -5,8 +5,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
