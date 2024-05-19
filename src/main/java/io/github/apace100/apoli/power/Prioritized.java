@@ -71,7 +71,7 @@ public interface Prioritized<T extends Power & Prioritized<T>> {
         }
 
         public boolean isEmpty() {
-            return this.buckets.isEmpty();
+            return buckets.isEmpty();
         }
 
     }

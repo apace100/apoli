@@ -20,15 +20,6 @@ public enum PriorityPhase implements IntPredicate {
             return value < 0;
         }
 
-    },
-
-    ALL {
-
-        @Override
-        public boolean test(int value) {
-            return true;
-        }
-
     }
 
 }
