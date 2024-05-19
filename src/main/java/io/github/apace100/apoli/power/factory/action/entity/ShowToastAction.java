@@ -10,16 +10,17 @@ import net.minecraft.entity.Entity;
 public class ShowToastAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
+
         if (entity instanceof CustomToastViewer viewer) {
-            viewer.apoli$showToast(data.get("toast"));
+            viewer.apoli$showToast(CustomToastData.fromData(data));
         }
+
     }
 
     public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(
             Apoli.identifier("show_toast"),
-            new SerializableData()
-                .add("toast", CustomToastData.DATA_TYPE),
+            CustomToastData.DATA,
             ShowToastAction::action
         );
     }

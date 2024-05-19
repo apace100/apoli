@@ -89,13 +89,15 @@ public class CustomToast implements Toast {
 
         }
 
-        return startTime >= duration * manager.getNotificationDisplayTimeMultiplier() ? Visibility.HIDE : Visibility.SHOW;
+        return startTime >= duration * manager.getNotificationDisplayTimeMultiplier()
+            ? Visibility.HIDE
+            : Visibility.SHOW;
 
     }
 
     @Override
     public int getHeight() {
-        return 24 + Math.min(Math.max(this.description.size(), 1), 3) * 8;
+        return 24 + (Math.max(description.size(), 1) * 8);
     }
 
 }

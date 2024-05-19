@@ -12,34 +12,42 @@ public record CustomToastData(Text title, Text description, Identifier texture, 
 
     public static final Identifier DEFAULT_TEXTURE = Apoli.identifier("toast/custom");
 
+    public static final SerializableData DATA = new SerializableData()
+        .add("title", SerializableDataTypes.TEXT)
+        .add("description", SerializableDataTypes.TEXT)
+        .add("texture", SerializableDataTypes.IDENTIFIER, DEFAULT_TEXTURE)
+        .add("icon", SerializableDataTypes.ITEM_STACK, ItemStack.EMPTY)
+        .add("duration", SerializableDataTypes.POSITIVE_INT, 5000);
+
     public static final SerializableDataType<CustomToastData> DATA_TYPE = SerializableDataType.compound(
         CustomToastData.class,
-        new SerializableData()
-            .add("title", SerializableDataTypes.TEXT)
-            .add("description", SerializableDataTypes.TEXT)
-            .add("texture", SerializableDataTypes.IDENTIFIER, DEFAULT_TEXTURE)
-            .add("icon", SerializableDataTypes.ITEM_STACK, ItemStack.EMPTY)
-            .add("duration", SerializableDataTypes.POSITIVE_INT, 5000),
-        data -> new CustomToastData(
+        DATA,
+        CustomToastData::fromData,
+        (serializableData, toastData) -> toastData.toData()
+    );
+
+    public static CustomToastData fromData(SerializableData.Instance data) {
+        return new CustomToastData(
             data.get("title"),
             data.get("description"),
             data.get("texture"),
             data.get("icon"),
             data.get("duration")
-        ),
-        (serializableData, toastData) -> {
+        );
+    }
 
-            SerializableData.Instance data = serializableData.new Instance();
+    public SerializableData.Instance toData() {
 
-            data.set("title", toastData.title);
-            data.set("description", toastData.description);
-            data.set("texture", toastData.texture);
-            data.set("icon", toastData.iconStack);
-            data.set("duration", toastData.duration);
+        SerializableData.Instance data = DATA.new Instance();
 
-            return data;
+        data.set("title", this.title());
+        data.set("description", this.description());
+        data.set("texture", this.texture());
+        data.set("icon", this.iconStack());
+        data.set("duration", this.duration());
 
-        }
-    );
+        return data;
+
+    }
 
 }
