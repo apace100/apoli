@@ -411,6 +411,7 @@ public class EntityConditions {
         register(UsingEffectiveToolCondition.getFactory());
         register(GameModeCondition.getFactory());
         register(GlowingCondition.getFactory());
+        register(HasCommandTagCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

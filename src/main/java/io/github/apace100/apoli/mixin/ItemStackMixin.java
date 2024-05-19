@@ -1,19 +1,19 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
-import io.github.apace100.apoli.access.PotentiallyEdibleItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import io.github.apace100.apoli.power.EdibleItemPower;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.PreventItemUsePower;
 import io.github.apace100.apoli.util.InventoryUtil;
+import net.fabricmc.fabric.api.item.v1.FabricItemStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -22,6 +22,7 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsage;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
@@ -36,11 +37,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Comparator;
-import java.util.Optional;
-
 @Mixin(ItemStack.class)
-public abstract class ItemStackMixin implements EntityLinkedItemStack, PotentiallyEdibleItemStack {
+public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricItemStack {
 
     @Shadow public abstract int getMaxUseTime();
 
@@ -72,28 +70,6 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, Potential
     @Override
     public void apoli$setEntity(Entity entity) {
         this.apoli$holdingEntity = entity;
-    }
-
-    @Override
-    public Optional<FoodComponent> apoli$getFoodComponent() {
-        return apoli$getEdiblePower().map(EdibleItemPower::getFoodComponent);
-    }
-
-    @Unique
-    private Optional<EdibleItemPower> apoli$getEdiblePower() {
-
-        EdibleItemPower edibleItemPower = PowerHolderComponent.getPowers(apoli$getEntity(), EdibleItemPower.class)
-            .stream()
-            .filter(p -> p.doesApply((ItemStack) (Object) this))
-            .max(Comparator.comparing(EdibleItemPower::getPriority))
-            .orElse(null);
-
-        if (edibleItemPower == null || (this.getItem().isFood() && edibleItemPower.getPriority() <= 0)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(edibleItemPower);
-
     }
 
     @ModifyReturnValue(method = "copy", at = @At("RETURN"))
@@ -158,6 +134,18 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, Potential
         if (PowerHolderComponent.hasPower(user, PreventItemUsePower.class, piup -> piup.doesPrevent(stackInHand))) {
             cir.setReturnValue(TypedActionResult.fail(stackInHand));
         }
+
+    }
+
+    @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
+    private TypedActionResult<ItemStack> apoli$consumeCustomFood(Item item, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
+
+        ItemStack stackInHand = user.getStackInHand(hand);
+        FoodComponent foodComponent = stackInHand.getFoodComponent();
+
+        return !EdibleItemPower.get((ItemStack) (Object) this).isPresent() || foodComponent == null || !user.canConsume(foodComponent.isAlwaysEdible())
+            ? original.call(item, world, user, hand)
+            : ItemUsage.consumeHeldItem(world, user, hand);
 
     }
 
@@ -284,69 +272,55 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, Potential
 
     @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
     private UseAction apoli$replaceUseAction(UseAction original) {
-        return apoli$getEdiblePower()
+        return EdibleItemPower.get((ItemStack) (Object) this)
             .map(p -> p.getConsumeAnimation().getAction())
             .orElse(original);
     }
 
     @ModifyReturnValue(method = "getEatSound", at = @At("RETURN"))
     private SoundEvent apoli$replaceEatingSound(SoundEvent original) {
-        return apoli$getEdiblePower()
+        return EdibleItemPower.get((ItemStack) (Object) this)
             .map(EdibleItemPower::getConsumeSoundEvent)
             .orElse(original);
     }
 
     @ModifyReturnValue(method = "getDrinkSound", at = @At("RETURN"))
     private SoundEvent apoli$replaceDrinkingSound(SoundEvent original) {
-        return apoli$getEdiblePower()
+        return EdibleItemPower.get((ItemStack) (Object) this)
             .map(EdibleItemPower::getConsumeSoundEvent)
             .orElse(original);
     }
 
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
     private int apoli$modifyMaxConsumingTime(int original) {
-        return apoli$getEdiblePower()
+        return EdibleItemPower.get((ItemStack) (Object) this)
             .map(EdibleItemPower::getConsumingTime)
             .orElse(original);
     }
 
     @WrapWithCondition(method = "usageTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;usageTick(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;I)V"))
     private boolean apoli$disableUsageTickOnConsumingCustomFood(Item instance, World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
-        return apoli$getEdiblePower().isEmpty();
+        return EdibleItemPower.get((ItemStack) (Object) this).isEmpty();
     }
 
     @WrapWithCondition(method = "onStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onStoppedUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)V"))
     private boolean apoli$disableOnStoppedUsingOnConsumingCustomFood(Item instance, ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        return apoli$getEdiblePower().isEmpty();
+        return EdibleItemPower.get((ItemStack) (Object) this).isEmpty();
     }
 
     @WrapOperation(method = "isUsedOnRelease", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;isUsedOnRelease(Lnet/minecraft/item/ItemStack;)Z"))
     private boolean apoli$useOnReleaseIfCustomFood(Item instance, ItemStack stack, Operation<Boolean> original) {
-        return apoli$getEdiblePower().isEmpty() ? original.call(instance, stack) : false;
-    }
-
-    @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
-    private TypedActionResult<ItemStack> apoli$consumeCustomFood(Item instance, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
-
-        EdibleItemPower edibleItemPower = apoli$getEdiblePower().orElse(null);
-        if (edibleItemPower == null) {
-            return original.call(instance, world, user, hand);
-        }
-
-        ItemStack stackInHand = user.getStackInHand(hand);
-        if (!user.canConsume(edibleItemPower.getFoodComponent().isAlwaysEdible())) {
-            return original.call(instance, world, user, hand);
-        }
-
-        user.setCurrentHand(hand);
-        return TypedActionResult.consume(stackInHand);
-
+        return EdibleItemPower.get((ItemStack) (Object) this).isEmpty()
+            ? original.call(instance, stack)
+            : false;
     }
 
     @WrapOperation(method = "finishUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;finishUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/item/ItemStack;"))
     private ItemStack apoli$finishConsumingCustomFood(Item instance, ItemStack stack, World world, LivingEntity user, Operation<ItemStack> original) {
 
-        EdibleItemPower edibleItemPower = apoli$getEdiblePower().orElse(null);
+        EdibleItemPower edibleItemPower = EdibleItemPower
+            .get((ItemStack) (Object) this)
+            .orElse(null);
         if (edibleItemPower == null) {
             return original.call(instance, stack, world, user);
         }
