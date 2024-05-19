@@ -8,6 +8,7 @@ import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
@@ -17,9 +18,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.registry.RegistryKeys;
@@ -84,6 +88,14 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow public abstract double getY();
 
     @Shadow public abstract double getZ();
+
+    @Shadow public abstract World getWorld();
+
+    @Shadow @Final protected DataTracker dataTracker;
+
+    @Shadow protected boolean firstUpdate;
+
+    @Shadow @Final private Set<String> commandTags;
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -333,6 +345,53 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         if (Math.sqrt(dy * dy) >= 0.01) {
             this.apoli$movingVertically = true;
         }
+
+    }
+
+    @Unique
+    private static final TrackedData<Set<String>> COMMAND_TAGS = DataTracker.registerData(Entity.class, ApoliDataHandlers.STRING_SET);
+
+    @Unique
+    private boolean apoli$dirtiedCommandTags;
+
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker()V"))
+    private void apoli$registerCommandTagsDataTracker(EntityType<?> type, World world, CallbackInfo ci) {
+
+        try {
+            this.dataTracker.startTracking(COMMAND_TAGS, Set.of());
+        }
+
+        catch (Throwable ignored) {
+
+        }
+
+    }
+
+    @ModifyReturnValue(method = "addCommandTag", at = @At("RETURN"))
+    private boolean apoli$trackAddedCommandTag(boolean original) {
+        return original && (this.apoli$dirtiedCommandTags = true);
+    }
+
+    @ModifyReturnValue(method = "removeScoreboardTag", at = @At("RETURN"))
+    private boolean apoli$trackRemovedCommandTag(boolean original) {
+        return original && (this.apoli$dirtiedCommandTags = true);
+    }
+
+    @ModifyReturnValue(method = "getCommandTags", at = @At("RETURN"))
+    private Set<String> apoli$queryTrackedCommandTags(Set<String> original) {
+        return this.dataTracker.containsKey(COMMAND_TAGS)
+            ? this.dataTracker.get(COMMAND_TAGS)
+            : original;
+    }
+
+    @Inject(method = "baseTick", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;firstUpdate:Z"))
+    private void apoli$trackCommandTags(CallbackInfo ci) {
+
+        if (this.dataTracker.containsKey(COMMAND_TAGS) && ((this.firstUpdate && !this.world.isClient) || this.apoli$dirtiedCommandTags)) {
+            this.dataTracker.set(COMMAND_TAGS, Set.copyOf(this.commandTags));
+        }
+
+        this.apoli$dirtiedCommandTags = false;
 
     }
 

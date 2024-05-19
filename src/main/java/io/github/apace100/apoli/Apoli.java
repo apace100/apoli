@@ -7,6 +7,7 @@ import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
+import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
@@ -106,6 +107,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		BlockActions.register();
 		BiEntityActions.register();
 		PowerIntegration.register();
+
+		ApoliDataHandlers.register();
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new PowerTypes());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
