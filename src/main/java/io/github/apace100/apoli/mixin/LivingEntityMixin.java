@@ -499,11 +499,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-    @ModifyExpressionValue(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isFood()Z"))
-    private boolean apoli$allowConsumingCustomFood(boolean original, World world, ItemStack stack) {
-        return original || ((PotentiallyEdibleItemStack) stack).apoli$getFoodComponent().isPresent();
-    }
-
     @Shadow @Nullable private LivingEntity attacker;
 
     @Shadow protected abstract void applyFoodEffects(ItemStack stack, World world, LivingEntity targetEntity);

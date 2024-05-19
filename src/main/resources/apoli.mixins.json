@@ -30,6 +30,7 @@
         "EquipmentMixin",
         "ExperienceOrbEntityMixin",
         "EyeHeightAccess",
+        "FabricItemStackMixin",
         "GrindstoneScreenHandlerBottomInputSlotMixin",
         "GrindstoneScreenHandlerMixin",
         "GrindstoneScreenHandlerOutputSlotMixin",
