@@ -69,9 +69,12 @@ public class InventoryUtil {
 
         int matches = 0;
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
+
         for (int slot : slots) {
 
-            ItemStack stack = getStack(entity, inventoryPower, slot);
+            StackReference stackReference = getStackReference(entity, inventoryPower, slot);
+            ItemStack stack = stackReference.get();
+
             if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
                 matches += processor.apply(stack);
             }
@@ -228,7 +231,7 @@ public class InventoryUtil {
         float f;
         float g;
 
-        if (retainOwnership) itemEntity.setThrower(thrower.getUuid());
+        if (retainOwnership) itemEntity.setThrower(thrower);
         if (throwRandomly) {
             f = random.nextFloat() * 0.5F;
             g = random.nextFloat() * 6.2831855F;
@@ -370,7 +373,7 @@ public class InventoryUtil {
      *      @return                  The stack reference of the specified slot
      */
     public static StackReference getStackReference(Entity entity, @Nullable InventoryPower inventoryPower, int slot) {
-        return inventoryPower == null ? entity.getStackReference(slot) : inventoryPower.getStackReference(slot);
+        return inventoryPower == null ? entity.getStackReference(slot) : StackReference.of(inventoryPower, slot);
     }
 
     /**
@@ -386,6 +389,7 @@ public class InventoryUtil {
      *      @param slot              The (numerical) slot to get the item stack from
      *      @return                  The item stack from the specified slot
      */
+    @Deprecated(forRemoval = true)
     public static ItemStack getStack(Entity entity, @Nullable InventoryPower inventoryPower, int slot) {
         return inventoryPower == null ? entity.getStackReference(slot).get() : inventoryPower.getStack(slot);
     }
@@ -403,6 +407,7 @@ public class InventoryUtil {
      *      @param stack            The item stack to set to the specified slot
      *      @param slot             The (numerical) slot to set the item stack to
      */
+    @Deprecated(forRemoval = true)
     public static void setStack(Entity entity, InventoryPower inventoryPower, ItemStack stack, int slot) {
         if (inventoryPower == null) {
             entity.getStackReference(slot).set(stack);
@@ -411,7 +416,7 @@ public class InventoryUtil {
         }
     }
 
-    /**(
+    /**
      *      <p>Creates a stack reference that is not linked to any entity for use with item actions.</p>
      *
      *      <p>Recommended for usage when either you don't have an entity for this operation, or you
@@ -421,8 +426,10 @@ public class InventoryUtil {
      *      @return A {@linkplain StackReference} that contains an ItemStack.
      */
     public static StackReference createStackReference(ItemStack startingStack) {
-        StackReference reference = new StackReference() {
-            ItemStack stack;
+        return new StackReference() {
+
+            ItemStack stack = startingStack;
+
             @Override
             public ItemStack get() {
                 return stack;
@@ -433,9 +440,8 @@ public class InventoryUtil {
                 this.stack = stack;
                 return true;
             }
+
         };
-        reference.set(startingStack.copy());
-        return reference;
     }
 
 }

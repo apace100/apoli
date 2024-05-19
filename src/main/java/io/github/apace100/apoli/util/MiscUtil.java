@@ -16,11 +16,13 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
@@ -46,7 +48,7 @@ public final class MiscUtil {
 
     public static void createExplosion(World world, Entity entity, DamageSource damageSource, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
 
-        Explosion explosion = new Explosion(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType);
+        Explosion explosion = new Explosion(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SoundEvents.ENTITY_GENERIC_EXPLODE);
 
         explosion.collectBlocksAndDamageEntities();
         explosion.affectWorld(world.isClient);
@@ -62,7 +64,7 @@ public final class MiscUtil {
 
         for (ServerPlayerEntity serverPlayerEntity : serverWorld.getPlayers()) {
             if (serverPlayerEntity.squaredDistanceTo(x, y, z) < 4096.0) {
-                serverPlayerEntity.networkHandler.sendPacket(new ExplosionS2CPacket(x, y, z, power, explosion.getAffectedBlocks(), explosion.getAffectedPlayers().get(serverPlayerEntity)));
+                serverPlayerEntity.networkHandler.sendPacket(new ExplosionS2CPacket(x, y, z, power, explosion.getAffectedBlocks(), explosion.getAffectedPlayers().get(serverPlayerEntity), explosion.getDestructionType(), explosion.getParticle(), explosion.getEmitterParticle(), explosion.getSoundEvent()));
             }
         }
 
@@ -130,9 +132,9 @@ public final class MiscUtil {
     }
 
     @Nullable
-    public static Entity getEntityByUuid(UUID uuid, @Nullable MinecraftServer server) {
+    public static Entity getEntityByUuid(@Nullable UUID uuid, @Nullable MinecraftServer server) {
 
-        if (server == null) {
+        if (uuid == null || server == null) {
             return null;
         }
 

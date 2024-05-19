@@ -29,6 +29,18 @@ public class SelfActionOnHitPower extends CooldownPower {
         this.targetCondition = targetCondition;
     }
 
+    public boolean doesApply(Entity target, DamageSource source, float amount) {
+        return this.canUse()
+            && (targetCondition == null || targetCondition.test(target))
+            && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
+    }
+
+    public void onHit() {
+        this.entityAction.accept(entity);
+        this.use();
+    }
+
+    @Deprecated(forRemoval = true)
     public void onHit(Entity target, DamageSource damageSource, float damageAmount) {
         if(targetCondition == null || targetCondition.test(target)) {
             if(damageCondition == null || damageCondition.test(new Pair<>(damageSource, damageAmount))) {
@@ -48,11 +60,16 @@ public class SelfActionOnHitPower extends CooldownPower {
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null),
-            data ->
-                (type, player) -> new SelfActionOnHitPower(type, player, data.getInt("cooldown"),
-                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action"),
-                    (ConditionFactory<Entity>.Instance)data.get("target_condition")))
-            .allowCondition();
+            data -> (powerType, entity) -> new SelfActionOnHitPower(
+                powerType,
+                entity,
+                data.get("cooldown"),
+                data.get("hud_render"),
+                data.get("damage_condition"),
+                data.get("entity_action"),
+                data.get("target_condition")
+            )
+        ).allowCondition();
     }
+
 }

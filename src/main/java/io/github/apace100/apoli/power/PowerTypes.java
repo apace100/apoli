@@ -4,12 +4,13 @@ import com.google.gson.*;
 import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowerTypeRegistryS2CPacket;
+import io.github.apace100.apoli.power.factory.PowerFactories;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ApoliResourceConditions;
-import io.github.apace100.apoli.util.IdentifierAlias;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
@@ -21,6 +22,7 @@ import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -141,7 +143,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             if (oldPower.getClass().isAssignableFrom(newPower.getClass())) {
                 //  Transfer the data of the old power to the new power if the old power is an instance of the new power
                 Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", oldPowerTypeId);
-                newPower.fromTag(oldPower.toTag());
+                newPower.fromTag(oldPower.toTag(true), true);
             } else {
                 //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
                 //  occurs if the power no longer uses the same power type as it used to
@@ -267,7 +269,8 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             return null;
         }
 
-        if (isMultiple(powerFactoryId)) {
+        boolean multiple = this.isMultiple(powerFactoryId);
+        if (multiple) {
             powerFactoryId = SIMPLE;
             if (isSubPower) {
                 throw new JsonSyntaxException("Power type \"" + MULTIPLE + "\" cannot be used in a sub-power that uses the \"" + MULTIPLE + "\" power type.");
@@ -277,24 +280,31 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         int prevLoadingPriority = getLoadingPriority(id);
         if (!PowerTypeRegistry.contains(id)) {
             return finishReadingPower(PowerTypeRegistry::register, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
-        } else if (prevLoadingPriority < loadingPriority) {
-            Apoli.LOGGER.warn("Overriding power \"{}\" (with prev. loading priority of {}) with a higher loading priority of {} from data pack [{}]!", id, prevLoadingPriority, loadingPriority, packName);
-            return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
         }
 
-        return null;
+        overrideAttempt:
+        if (prevLoadingPriority < loadingPriority) {
+
+            if (multiple) {
+                Apoli.LOGGER.warn("Multiple powers, such as {}, cannot be overridden. Did you mean to override its sub-power(s)?", id);
+                break overrideAttempt;
+            }
+
+            Apoli.LOGGER.warn("Overriding power \"{}\" (with prev. loading priority of {}) with a higher loading priority of {} from data pack [{}]!", id, prevLoadingPriority, loadingPriority, packName);
+            return finishReadingPower(PowerTypeRegistry::update, powerTypeFactory, id, powerFactoryId, jsonObject, isSubPower, loadingPriority);
+
+        }
+
+        return PowerTypeRegistry.getNullable(id);
 
     }
 
     private PowerType<?> finishReadingPower(BiFunction<Identifier, PowerType<?>, PowerType<?>> powerTypeProcessor, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory, Identifier powerId, Identifier powerFactoryId, JsonObject jsonObject, boolean isSubPower, int priority) {
 
-        Optional<PowerFactory> powerFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(powerFactoryId);
-        if (powerFactory.isEmpty() && IdentifierAlias.hasAlias(powerFactoryId)) {
-            powerFactory = ApoliRegistries.POWER_FACTORY.getOrEmpty(IdentifierAlias.resolveAlias(powerFactoryId));
-        }
-
-        PowerFactory<?>.Instance powerFactoryInstance = powerFactory
-            .orElseThrow(() -> new JsonSyntaxException("Power type \"" + powerFactoryId + "\" is not registered."))
+        Registry<PowerFactory> powerFactoryRegistry = ApoliRegistries.POWER_FACTORY;
+        PowerFactory<?>.Instance powerFactoryInstance = powerFactoryRegistry
+            .getOrEmpty(PowerFactories.ALIASES.resolveAlias(powerFactoryId, powerFactoryRegistry::containsId))
+            .orElseThrow(() -> new IllegalArgumentException("Power type \"" + powerFactoryId + "\" is not registered."))
             .read(jsonObject);
 
         PowerType<?> powerType = loadPower(powerId, powerFactoryInstance, powerTypeFactory, jsonObject, isSubPower);
@@ -315,19 +325,18 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         JsonElement nameJson = jsonObject.get("name");
         JsonElement descriptionJson = jsonObject.get("description");
 
-        Text name = nameJson == null ? null : Text.Serializer.fromJson(nameJson);
-        Text description = descriptionJson == null ? null : Text.Serializer.fromJson(descriptionJson);
+        Text name = nameJson == null
+            ? null
+            : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(nameJson);
+        Text description = descriptionJson == null
+            ? null
+            : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(descriptionJson);
 
         boolean hidden = JsonHelper.getBoolean(jsonObject, "hidden", false);
-
-        PowerType<?> powerType = powerTypeFactory.apply(id, powerFactoryInstance);
-        powerType.setDisplayTexts(name, description);
-
-        if (hidden || isSubPower) {
-            powerType.setHidden();
-        }
-
-        return powerType;
+        return powerTypeFactory.apply(id, powerFactoryInstance)
+            .setDisplayTexts(name, description)
+            .setHidden(hidden || isSubPower)
+            .setSubPower(isSubPower);
 
     }
 
@@ -339,7 +348,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
 
     private boolean isMultiple(Identifier id) {
         return MULTIPLE.equals(id)
-            || (IdentifierAlias.hasAlias(id) && MULTIPLE.equals(IdentifierAlias.resolveAlias(id)));
+            || MULTIPLE.equals(PowerFactories.ALIASES.resolveAlias(id, MULTIPLE::equals));
     }
 
     private void handleAdditionalData(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonObject json, PowerType<?> powerType) {
@@ -373,4 +382,5 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
     public Collection<Identifier> getFabricDependencies() {
         return DEPENDENCIES;
     }
+
 }

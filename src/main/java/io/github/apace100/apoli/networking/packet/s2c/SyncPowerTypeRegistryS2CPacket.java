@@ -54,10 +54,10 @@ public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> power
 
                 }
 
-                powerType.setDisplayTexts(buffer.readText(), buffer.readText());
-                if (buffer.readBoolean()) {
-                    powerType.setHidden();
-                }
+                powerType
+                    .setDisplayTexts(buffer.readText(), buffer.readText())
+                    .setSubPower(buffer.readBoolean())
+                    .setHidden(buffer.readBoolean());
 
                 powers.put(powerTypeId, powerType);
 
@@ -101,6 +101,7 @@ public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> power
             buffer.writeText(powerType.getName());
             buffer.writeText(powerType.getDescription());
 
+            buffer.writeBoolean(powerType.isSubPower());
             buffer.writeBoolean(powerType.isHidden());
 
         });

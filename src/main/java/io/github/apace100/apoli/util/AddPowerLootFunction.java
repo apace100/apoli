@@ -14,12 +14,12 @@ import java.util.List;
 
 public class AddPowerLootFunction extends ConditionalLootFunction {
 
-    public static final Codec<AddPowerLootFunction> CODEC = RecordCodecBuilder.create(instance -> method_53344(instance)
-        .and(EquipmentSlot.CODEC.fieldOf("slot").forGetter(AddPowerLootFunction::getSlot))
-        .and(Identifier.CODEC.fieldOf("power").forGetter(AddPowerLootFunction::getPowerId))
-        .and(Codec.BOOL.optionalFieldOf("hidden", false).forGetter(AddPowerLootFunction::isHidden))
-        .and(Codec.BOOL.optionalFieldOf("negative", false).forGetter(AddPowerLootFunction::isNegative))
-        .apply(instance, AddPowerLootFunction::new));
+    public static final Codec<AddPowerLootFunction> CODEC = RecordCodecBuilder.create(instance -> addConditionsField(instance).and(instance.group(
+        EquipmentSlot.CODEC.fieldOf("slot").forGetter(AddPowerLootFunction::getSlot),
+        Identifier.CODEC.fieldOf("power").forGetter(AddPowerLootFunction::getPowerId),
+        Codec.BOOL.optionalFieldOf("hidden", false).forGetter(AddPowerLootFunction::isHidden),
+        Codec.BOOL.optionalFieldOf("negative", false).forGetter(AddPowerLootFunction::isNegative)
+    )).apply(instance, AddPowerLootFunction::new));
     public static final LootFunctionType TYPE = new LootFunctionType(CODEC);
 
     private final EquipmentSlot slot;

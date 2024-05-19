@@ -29,6 +29,18 @@ public class ActionWhenHitPower extends CooldownPower {
         this.bientityCondition = bientityCondition;
     }
 
+    public boolean doesApply(Entity attacker, DamageSource source, float amount) {
+        return this.canUse()
+            && (bientityCondition == null || bientityCondition.test(new Pair<>(attacker, entity)))
+            && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
+    }
+
+    public void whenHit(Entity attacker) {
+        this.bientityAction.accept(new Pair<>(attacker, entity));
+        this.use();
+    }
+
+    @Deprecated(forRemoval = true)
     public void whenHit(Entity attacker, DamageSource damageSource, float damageAmount) {
         if(canUse()) {
             if(bientityCondition == null || bientityCondition.test(new Pair<>(attacker, entity))) {
@@ -41,18 +53,24 @@ public class ActionWhenHitPower extends CooldownPower {
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("action_when_hit"),
+        return new PowerFactory<>(
+            Apoli.identifier("action_when_hit"),
             new SerializableData()
                 .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION)
                 .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
-            data ->
-                (type, player) -> new ActionWhenHitPower(type, player, data.getInt("cooldown"),
-                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
-                    (ActionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_action"),
-                    (ConditionFactory<Pair<Entity, Entity>>.Instance)data.get("bientity_condition")))
-            .allowCondition();
+            data -> (powerType, entity) -> new ActionWhenHitPower(
+                powerType,
+                entity,
+                data.get("cooldown"),
+                data.get("hud_render"),
+                data.get("damage_condition"),
+                data.get("bientity_action"),
+                data.get("bientity_condition")
+            )
+        ).allowCondition();
     }
+
 }

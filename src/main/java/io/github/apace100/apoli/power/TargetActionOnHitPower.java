@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.LivingEntityMixin;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
@@ -29,7 +30,19 @@ public class TargetActionOnHitPower extends CooldownPower {
         this.targetCondition = targetCondition;
     }
 
-    public void onHit(LivingEntity target, DamageSource damageSource, float damageAmount) {
+    public boolean doesApply(Entity target, DamageSource source, float amount) {
+        return this.canUse()
+            && (targetCondition == null || targetCondition.test(target))
+            && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
+    }
+
+    public void onHit(Entity target) {
+        this.entityAction.accept(target);
+        this.use();
+    }
+
+    @Deprecated(forRemoval = true)
+    public void onHit(Entity target, DamageSource damageSource, float damageAmount) {
         if(targetCondition == null || targetCondition.test(target)) {
             if(damageCondition == null || damageCondition.test(new Pair<>(damageSource, damageAmount))) {
                 if(canUse()) {
@@ -48,11 +61,16 @@ public class TargetActionOnHitPower extends CooldownPower {
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("target_condition", ApoliDataTypes.ENTITY_CONDITION, null),
-            data ->
-                (type, player) -> new TargetActionOnHitPower(type, player, data.getInt("cooldown"),
-                    (HudRender)data.get("hud_render"), (ConditionFactory<Pair<DamageSource, Float>>.Instance)data.get("damage_condition"),
-                    (ActionFactory<Entity>.Instance)data.get("entity_action"),
-                    (ConditionFactory<Entity>.Instance)data.get("target_condition")))
-            .allowCondition();
+            data -> (powerType, entity) -> new TargetActionOnHitPower(
+                powerType,
+                entity,
+                data.get("cooldown"),
+                data.get("hud_render"),
+                data.get("damage_condition"),
+                data.get("entity_action"),
+                data.get("target_condition")
+            )
+        ).allowCondition();
     }
+
 }
