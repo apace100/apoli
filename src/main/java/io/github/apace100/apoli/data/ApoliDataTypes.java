@@ -440,6 +440,10 @@ public class ApoliDataTypes {
         }
     );
 
+    public static final SerializableDataType<BlockUsagePhase> BLOCK_USAGE_PHASE = SerializableDataType.enumValue(BlockUsagePhase.class);
+
+    public static final SerializableDataType<EnumSet<BlockUsagePhase>> BLOCK_USAGE_PHASE_SET = SerializableDataType.enumSet(BlockUsagePhase.class, BLOCK_USAGE_PHASE);
+
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return condition(registry, IdentifierAlias.GLOBAL, name);
     }
