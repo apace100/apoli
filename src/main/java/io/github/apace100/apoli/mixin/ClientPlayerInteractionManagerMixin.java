@@ -32,13 +32,10 @@ import java.util.List;
 public abstract class ClientPlayerInteractionManagerMixin {
 
     @WrapOperation(method = "interactBlockInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;onUse(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"))
-    private ActionResult apoli$beforeUseBlock(BlockState state, World world, PlayerEntity player, Hand hand, BlockHitResult hitResult, Operation<ActionResult> original, @Share("zeroPriority$onBlock") LocalRef<ActionResult> zeroPriority$onBlockRef, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
+    private ActionResult apoli$beforeUseBlock(BlockState state, World world, PlayerEntity player, Hand hand, BlockHitResult hitResult, Operation<ActionResult> original, @Share("zeroPriority$useBlock") LocalRef<ActionResult> zeroPriority$useBlockRef) {
 
         ItemStack stackInHand = player.getStackInHand(hand);
         BlockUsagePhase usePhase = BlockUsagePhase.BLOCK;
-
-        zeroPriority$onBlockRef.set(ActionResult.PASS);
-        zeroPriority$itemOnBlockRef.set(ActionResult.PASS);
 
         if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, hand)) {
             return ActionResult.FAIL;
@@ -69,7 +66,7 @@ public abstract class ClientPlayerInteractionManagerMixin {
             }
 
             if (i == 0) {
-                zeroPriority$onBlockRef.set(previousResult);
+                zeroPriority$useBlockRef.set(previousResult);
                 continue;
             }
 
@@ -90,15 +87,15 @@ public abstract class ClientPlayerInteractionManagerMixin {
     }
 
     @ModifyReturnValue(method = "interactBlockInternal", at = @At(value = "RETURN", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/util/ActionResult;isAccepted()Z")))
-    private ActionResult apoli$afterUseBlock(ActionResult original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$onBlock") LocalRef<ActionResult> zeroPriority$onBlockRef) {
+    private ActionResult apoli$afterUseBlock(ActionResult original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$useBlock") LocalRef<ActionResult> zeroPriority$useBlockRef) {
 
         ItemStack stackInHand = player.getStackInHand(hand);
 
-        ActionResult zeroPriority$onBlock = zeroPriority$onBlockRef.get();
+        ActionResult zeroPriority$useBlock = zeroPriority$useBlockRef.get();
         ActionResult newResult = ActionResult.PASS;
 
-        if (zeroPriority$onBlock != ActionResult.PASS) {
-            newResult = zeroPriority$onBlock;
+        if (zeroPriority$useBlock != null && zeroPriority$useBlock != ActionResult.PASS) {
+            newResult = zeroPriority$useBlock;
         }
 
         else if (original == ActionResult.PASS) {
@@ -147,12 +144,11 @@ public abstract class ClientPlayerInteractionManagerMixin {
     }
 
     @WrapOperation(method = "interactBlockInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;useOnBlock(Lnet/minecraft/item/ItemUsageContext;)Lnet/minecraft/util/ActionResult;"))
-    private ActionResult apoli$beforeItemUseOnBlock(ItemStack stack, ItemUsageContext context, Operation<ActionResult> original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
+    private ActionResult apoli$beforeItemUseOnBlock(ItemStack stack, ItemUsageContext context, Operation<ActionResult> original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$itemUseOnBlock") LocalRef<ActionResult> zeroPriority$itemUseOnBlockRef) {
 
         ItemStack stackInHand = player.getStackInHand(hand);
         BlockUsagePhase usePhase = BlockUsagePhase.ITEM;
 
-        zeroPriority$itemOnBlockRef.set(ActionResult.PASS);
         if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, hand)) {
             return ActionResult.FAIL;
         }
@@ -182,7 +178,7 @@ public abstract class ClientPlayerInteractionManagerMixin {
             }
 
             if (i == 0) {
-                zeroPriority$itemOnBlockRef.set(previousResult);
+                zeroPriority$itemUseOnBlockRef.set(previousResult);
                 continue;
             }
 
@@ -203,13 +199,13 @@ public abstract class ClientPlayerInteractionManagerMixin {
     }
 
     @ModifyReturnValue(method = "interactBlockInternal", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getItemCooldownManager()Lnet/minecraft/entity/player/ItemCooldownManager;")))
-    private ActionResult apoli$afterItemUseOnBlock(ActionResult original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
+    private ActionResult apoli$afterItemUseOnBlock(ActionResult original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$itemUseOnBlock") LocalRef<ActionResult> zeroPriority$itemUseOnBlockRef) {
 
-        ActionResult zeroPriority$itemOnBlock = zeroPriority$itemOnBlockRef.get();
+        ActionResult zeroPriority$itemUseOnBlock = zeroPriority$itemUseOnBlockRef.get();
         ActionResult newResult = ActionResult.PASS;
 
-        if (zeroPriority$itemOnBlock != ActionResult.PASS) {
-            newResult = zeroPriority$itemOnBlock;
+        if (zeroPriority$itemUseOnBlock != null && zeroPriority$itemUseOnBlock != ActionResult.PASS) {
+            newResult = zeroPriority$itemUseOnBlock;
         }
 
         else if (original == ActionResult.PASS) {

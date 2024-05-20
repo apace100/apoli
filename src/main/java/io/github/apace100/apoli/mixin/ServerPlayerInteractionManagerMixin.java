@@ -93,9 +93,6 @@ public class ServerPlayerInteractionManagerMixin {
         ItemStack stackInHand = player.getStackInHand(hand);
         BlockUsagePhase usePhase = BlockUsagePhase.BLOCK;
 
-        zeroPriority$onBlockRef.set(ActionResult.PASS);
-        zeroPriority$itemOnBlockRef.set(ActionResult.PASS);
-
         if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, hand)) {
             return ActionResult.FAIL;
         }
@@ -151,7 +148,7 @@ public class ServerPlayerInteractionManagerMixin {
         ActionResult zeroPriority$onBlock = zeroPriority$onBlockRef.get();
         ActionResult newResult = ActionResult.PASS;
 
-        if (zeroPriority$onBlock != ActionResult.PASS) {
+        if (zeroPriority$onBlock != null && zeroPriority$onBlock != ActionResult.PASS) {
             newResult = zeroPriority$onBlock;
         }
 
@@ -204,8 +201,6 @@ public class ServerPlayerInteractionManagerMixin {
     private ActionResult apoli$beforeItemUseOnBlock(ItemStack stack, ItemUsageContext context, Operation<ActionResult> original, ServerPlayerEntity mPlayer, World mWorld, ItemStack mStack, Hand mHand, BlockHitResult mHitResult, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
 
         BlockUsagePhase usePhase = BlockUsagePhase.ITEM;
-        zeroPriority$itemOnBlockRef.set(ActionResult.PASS);
-
         if (PreventBlockUsePower.doesPrevent(player, usePhase, mHitResult, mStack, mHand)) {
             return ActionResult.FAIL;
         }
@@ -261,7 +256,7 @@ public class ServerPlayerInteractionManagerMixin {
         ActionResult zeroPriority$itemOnBlock = zeroPriority$itemOnBlockRef.get();
         ActionResult newResult = ActionResult.PASS;
 
-        if (zeroPriority$itemOnBlock != ActionResult.PASS) {
+        if (zeroPriority$itemOnBlock != null && zeroPriority$itemOnBlock != ActionResult.PASS) {
             newResult = zeroPriority$itemOnBlock;
         }
 
