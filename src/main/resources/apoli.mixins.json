@@ -60,6 +60,7 @@
         "PlayerScreenHandlerMixin",
         "RecipeManagerAccessor",
         "RecipeManagerMixin",
+        "ScreenHandlerAccessor",
         "ScreenHandlerMixin",
         "ServerPlayerEntityMixin",
         "ServerPlayerInteractionManagerAccessor",

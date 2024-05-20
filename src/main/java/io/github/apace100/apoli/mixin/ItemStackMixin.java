@@ -8,11 +8,10 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ActionOnItemUsePower;
-import io.github.apace100.apoli.power.EdibleItemPower;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
-import io.github.apace100.apoli.power.PreventItemUsePower;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.PriorityPhase;
+import io.github.apace100.apoli.util.StackClickPhase;
 import net.fabricmc.fabric.api.item.v1.FabricItemStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -22,6 +21,10 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsageContext;
+import net.minecraft.screen.slot.Slot;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.*;
 import net.minecraft.item.ItemUsage;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
@@ -357,4 +360,31 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         return newReference.get();
 
     }
+
+    @WrapOperation(method = "onStackClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onStackClicked(Lnet/minecraft/item/ItemStack;Lnet/minecraft/screen/slot/Slot;Lnet/minecraft/util/ClickType;Lnet/minecraft/entity/player/PlayerEntity;)Z"))
+    private boolean apoli$itemOnItem_cursorStack(Item cursorItem, ItemStack cursorStack, Slot slot, ClickType clickType, PlayerEntity player, Operation<Boolean> original) {
+
+        StackClickPhase clickPhase = StackClickPhase.CURSOR;
+
+        StackReference cursorStackReference = ((ScreenHandlerAccessor) player.currentScreenHandler).callGetCursorStackReference();
+        StackReference slotStackReference = StackReference.of(slot.inventory, slot.getIndex());
+
+        return ItemOnItemPower.executeActions(player, PriorityPhase.BEFORE, clickPhase, clickType, slot, slotStackReference, cursorStackReference)
+            || original.call(cursorStackReference.get().getItem(), cursorStackReference.get(), slot, clickType, player)
+            || ItemOnItemPower.executeActions(player, PriorityPhase.AFTER, clickPhase, clickType, slot, slotStackReference, cursorStackReference);
+
+    }
+
+    @WrapOperation(method = "onClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onClicked(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/screen/slot/Slot;Lnet/minecraft/util/ClickType;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/inventory/StackReference;)Z"))
+    private boolean apoli$itemOnItem_slotStack(Item slotItem, ItemStack slotStack, ItemStack cursorStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference, Operation<Boolean> original) {
+
+        StackClickPhase clickPhase = StackClickPhase.SLOT;
+        StackReference slotStackReference = StackReference.of(slot.inventory, slot.getIndex());
+
+        return ItemOnItemPower.executeActions(player, PriorityPhase.BEFORE, clickPhase, clickType, slot, slotStackReference, cursorStackReference)
+            || original.call(slotStackReference.get().getItem(), slotStackReference.get(), cursorStackReference.get(), slot, clickType, player, cursorStackReference)
+            || ItemOnItemPower.executeActions(player, PriorityPhase.AFTER, clickPhase, clickType, slot, slotStackReference, cursorStackReference);
+
+    }
+
 }
