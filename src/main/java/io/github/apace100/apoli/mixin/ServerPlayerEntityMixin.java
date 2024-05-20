@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.EndRespawningEntity;
@@ -9,6 +11,7 @@ import io.github.apace100.apoli.power.KeepInventoryPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
 import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.PriorityPhase;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
@@ -154,23 +157,24 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
         return null;
     }
 
-    @Unique
-    private ItemStack apoli$stackBeforeDrop;
-
     @Inject(method = "dropSelectedItem", at = @At("HEAD"))
-    private void cacheItemStackBeforeDropping(boolean entireStack, CallbackInfoReturnable<Boolean> cir) {
-        apoli$stackBeforeDrop = this.getInventory().getMainHandStack().copy();
+    private void cacheItemStackBeforeDropping(boolean entireStack, CallbackInfoReturnable<Boolean> cir, @Share("prevSelectedStack") LocalRef<ItemStack> prevSelectedStackLocRef) {
+        prevSelectedStackLocRef.set(this.getInventory().getMainHandStack().copy());
     }
 
     @ModifyArg(method = "dropSelectedItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;dropItem(Lnet/minecraft/item/ItemStack;ZZ)Lnet/minecraft/entity/ItemEntity;"))
-    private ItemStack checkItemUsageStopping(ItemStack itemStack) {
-        if(this.isUsingItem() && !ItemStack.areItemsEqual(apoli$stackBeforeDrop, this.getInventory().getMainHandStack())) {
-            StackReference reference = InventoryUtil.createStackReference(itemStack);
-            ActionOnItemUsePower.executeActions(this, reference, apoli$stackBeforeDrop,
-                    ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.ALL);
-            reference.get();
+    private ItemStack checkItemUsageStopping(ItemStack original, @Share("prevSelectedStack") LocalRef<ItemStack> prevSelectedStackLocRef) {
+
+        ItemStack prevSelectedStack = prevSelectedStackLocRef.get();
+        if (!this.isUsingItem() || ItemStack.areEqual(prevSelectedStack, this.getInventory().getMainHandStack())) {
+            return original;
         }
-        return itemStack;
+
+        StackReference newSelectedStackRef = InventoryUtil.createStackReference(original);
+        ActionOnItemUsePower.executeActions(this, newSelectedStackRef, prevSelectedStack, ActionOnItemUsePower.TriggerType.STOP, PriorityPhase.ALL);
+
+        return newSelectedStackRef.get();
+
     }
 
     @Unique

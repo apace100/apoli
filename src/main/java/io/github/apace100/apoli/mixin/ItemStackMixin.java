@@ -104,7 +104,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, (ItemStack) (Object) this);
         ActionOnItemUsePower.executeActions(user, stackReference, (ItemStack) (Object) this,
-            ActionOnItemUsePower.TriggerType.FINISH, ActionOnItemUsePower.PriorityPhase.BEFORE);
+            ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.BEFORE);
 
         finishedStackRef.set(stackReference);
 
@@ -120,7 +120,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         ItemStack cachedStack = cachedStackRef.get();
         ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStack,
-            ActionOnItemUsePower.TriggerType.FINISH, ActionOnItemUsePower.PriorityPhase.AFTER);
+            ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.AFTER);
 
         return original.call(cachedStack.getItem(), cachedStack, world, user);
 
@@ -165,7 +165,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         ActionOnItemUsePower.TriggerType triggerType = this.getMaxUseTime() == 0
             ? ActionOnItemUsePower.TriggerType.INSTANT : ActionOnItemUsePower.TriggerType.START;
         ActionOnItemUsePower.executeActions(user, stackReference, thisAsStack,
-            triggerType, ActionOnItemUsePower.PriorityPhase.BEFORE);
+            triggerType, PriorityPhase.BEFORE);
 
         useStackRef.set(stackReference);
         return stackReference.get().getItem();
@@ -199,7 +199,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         ActionOnItemUsePower.TriggerType triggerType = this.getMaxUseTime() == 0
             ? ActionOnItemUsePower.TriggerType.INSTANT : ActionOnItemUsePower.TriggerType.START;
         ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStackRef.get(),
-            triggerType, ActionOnItemUsePower.PriorityPhase.AFTER);
+            triggerType, PriorityPhase.AFTER);
 
         return actionResult;
 
@@ -216,7 +216,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
 
         ActionOnItemUsePower.executeActions(user, stackReference, thisAsStack,
-            ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.BEFORE);
+            ActionOnItemUsePower.TriggerType.STOP, PriorityPhase.BEFORE);
 
         stoppedUsingStackRef.set(stackReference);
 
@@ -233,7 +233,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         ItemStack cachedStack = cachedStackRef.get();
         ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStack,
-            ActionOnItemUsePower.TriggerType.STOP, ActionOnItemUsePower.PriorityPhase.AFTER);
+            ActionOnItemUsePower.TriggerType.STOP, PriorityPhase.AFTER);
 
         original.call(cachedStack.getItem(), cachedStack, world, user, remainingUseTicks);
 
@@ -250,7 +250,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
 
         ActionOnItemUsePower.executeActions(user, stackReference, thisAsStack,
-            ActionOnItemUsePower.TriggerType.DURING, ActionOnItemUsePower.PriorityPhase.BEFORE);
+            ActionOnItemUsePower.TriggerType.DURING, PriorityPhase.BEFORE);
 
         usingStackRef.set(stackReference);
 
@@ -267,7 +267,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         ItemStack cachedStack = cachedStackRef.get();
         ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStack,
-            ActionOnItemUsePower.TriggerType.DURING, ActionOnItemUsePower.PriorityPhase.AFTER);
+            ActionOnItemUsePower.TriggerType.DURING, PriorityPhase.AFTER);
 
         original.call(cachedStack.getItem(), world, user, cachedStack, remainingUseTicks);
 
