@@ -14,7 +14,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -38,7 +37,7 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
     public boolean doesApply(ItemStack stack, TriggerType triggerType, io.github.apace100.apoli.util.PriorityPhase priorityPhase) {
         return this.triggerType == triggerType
             && priorityPhase.test(this.getPriority())
-            && itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
+            && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)));
     }
 
     public void executeActions(StackReference stack) {
@@ -68,20 +67,11 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
             return;
         }
 
-        ActionOnItemUsePower.CallInstance<ActionOnItemUsePower> callInstance = new ActionOnItemUsePower.CallInstance<>();
-        callInstance.add(user, ActionOnItemUsePower.class, p -> p.doesApply(checkStack, triggerType, phase));
+        ActionOnItemUsePower.CallInstance<ActionOnItemUsePower> aoiupci = new ActionOnItemUsePower.CallInstance<>();
+        aoiupci.add(user, ActionOnItemUsePower.class, p -> p.doesApply(checkStack, triggerType, phase));
 
-        for (int i = callInstance.getMaxPriority(); i >= callInstance.getMinPriority(); i--) {
-
-            if(!callInstance.hasPowers(i)) {
-                continue;
-            }
-
-            List<ActionOnItemUsePower> powers = callInstance.getPowers(i);
-            for(ActionOnItemUsePower power : powers) {
-                power.executeActions(useStack);
-            }
-
+        for (int i = aoiupci.getMaxPriority(); i >= aoiupci.getMinPriority(); i--) {
+            aoiupci.forEach(i, aoiup -> aoiup.executeActions(useStack));
         }
 
     }

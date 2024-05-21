@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
@@ -14,19 +13,16 @@ import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.apoli.util.StackClickPhase;
 import net.fabricmc.fabric.api.item.v1.FabricItemStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.*;
 import net.minecraft.item.ItemUsage;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
@@ -36,14 +32,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricItemStack {
-
-    @Shadow public abstract int getMaxUseTime();
 
     @Shadow public abstract @Nullable Entity getHolder();
 
@@ -95,181 +86,110 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
     }
 
-    @Inject(method = "finishUsing", at = @At("HEAD"))
-    public void callActionOnUseFinishBefore(World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir, @Share("finishedStackRef") LocalRef<StackReference> finishedStackRef) {
-
-        if (user == null) {
-            return;
-        }
-
-        StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, (ItemStack) (Object) this);
-        ActionOnItemUsePower.executeActions(user, stackReference, (ItemStack) (Object) this,
-            ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.BEFORE);
-
-        finishedStackRef.set(stackReference);
-
-    }
-
-    @WrapOperation(method = "finishUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;finishUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/item/ItemStack;"))
-    private ItemStack callActionOnUseFinishAfter(Item instance, ItemStack stack, World world, LivingEntity user, Operation<ItemStack> original, @Share("finishedStackRef") LocalRef<StackReference> finishedStackRef) {
-
-        StackReference cachedStackRef = finishedStackRef.get();
-        if (user == null || cachedStackRef == StackReference.EMPTY) {
-            return original.call(instance, stack, world, null);
-        }
-
-        ItemStack cachedStack = cachedStackRef.get();
-        ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStack,
-            ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.AFTER);
-
-        return original.call(cachedStack.getItem(), cachedStack, world, user);
-
-    }
-
-    @Inject(method = "use", at = @At("HEAD"), cancellable = true)
-    private void preventItemUse(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
-
-        if (user == null) {
-            return;
-        }
-
-        ItemStack stackInHand = user.getStackInHand(hand);
-        if (PowerHolderComponent.hasPower(user, PreventItemUsePower.class, piup -> piup.doesPrevent(stackInHand))) {
-            cir.setReturnValue(TypedActionResult.fail(stackInHand));
-        }
-
-    }
-
     @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
-    private TypedActionResult<ItemStack> apoli$consumeCustomFood(Item item, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
+    private TypedActionResult<ItemStack> apoli$onItemUse(Item item, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
 
-        ItemStack stackInHand = user.getStackInHand(hand);
-        FoodComponent foodComponent = stackInHand.getFoodComponent();
-
-        return !EdibleItemPower.get((ItemStack) (Object) this).isPresent() || foodComponent == null || !user.canConsume(foodComponent.isAlwaysEdible())
-            ? original.call(item, world, user, hand)
-            : ItemUsage.consumeHeldItem(world, user, hand);
-
-    }
-
-    @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
-    private Item callActionOnInstantBefore(ItemStack instance, Operation<Item> original, World world, PlayerEntity user, Hand hand, @Share("useStackRef") LocalRef<StackReference> useStackRef) {
-
-        if (user == null) {
-            return original.call(instance);
-        }
-
+        //  region  Prevent item use
         ItemStack thisAsStack = (ItemStack) (Object) this;
-        StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
-
-        ActionOnItemUsePower.TriggerType triggerType = this.getMaxUseTime() == 0
-            ? ActionOnItemUsePower.TriggerType.INSTANT : ActionOnItemUsePower.TriggerType.START;
-        ActionOnItemUsePower.executeActions(user, stackReference, thisAsStack,
-            triggerType, PriorityPhase.BEFORE);
-
-        useStackRef.set(stackReference);
-        return stackReference.get().getItem();
-
-    }
-
-    @WrapOperation(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
-    private TypedActionResult<ItemStack> callActionOnInstantAfter(Item instance, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original, @Share("useStackRef") LocalRef<StackReference> useStackRef) {
-
-        StackReference cachedStackRef = useStackRef.get();
-        ItemStack cachedStack = cachedStackRef.get();
-
-        if (user == null || cachedStackRef == StackReference.EMPTY) {
-            return original.call(instance, world, user, hand);
+        if (PowerHolderComponent.hasPower(user, PreventItemUsePower.class, piup -> piup.doesPrevent(thisAsStack))) {
+            return TypedActionResult.fail(thisAsStack);
         }
+        //  endregion
 
-        ItemStack cachedStackCopy = cachedStack.copy();
-        TypedActionResult<ItemStack> actionResult = original.call(instance, world, user, hand);
+        //  region  Action on item before use
+        StackReference useStackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
+        ItemStack useStack = useStackReference.get();
 
-        if (!actionResult.getResult().isAccepted()) {
-            return actionResult;
+        ActionOnItemUsePower.TriggerType triggerType = useStack.getMaxUseTime() == 0
+            ? ActionOnItemUsePower.TriggerType.INSTANT
+            : ActionOnItemUsePower.TriggerType.START;
+        ActionOnItemUsePower.executeActions(user, useStackReference, useStack, triggerType, PriorityPhase.BEFORE);
+        //  endregion
+
+        //  region  Edible item
+        ItemStack oldUseStack = useStack.copy();
+        FoodComponent foodComponent = useStack.getFoodComponent();
+
+        TypedActionResult<ItemStack> action = foodComponent != null && user.canConsume(foodComponent.isAlwaysEdible())
+            ? ItemUsage.consumeHeldItem(world, user, hand)
+            : original.call(useStack.getItem(), world, user, hand);
+
+        if (!action.getResult().isAccepted()) {
+            return action;
         }
+        //  endregion
 
-        //  If the item can be equipped and swapped, replace the stack reference with
-        //  the destination stack reference of the item
-        EquipmentSlot equipmentSlot = LivingEntity.getPreferredEquipmentSlot(cachedStackCopy);
-        if (equipmentSlot != EquipmentSlot.MAINHAND) {
-            cachedStackRef = StackReference.of(user, equipmentSlot);
-        }
+        //  region  Action on item after use
+        useStackReference = StackReference.of(user, LivingEntity.getPreferredEquipmentSlot(oldUseStack));
+        triggerType = useStack.getMaxUseTime() == 0
+            ? ActionOnItemUsePower.TriggerType.INSTANT
+            : ActionOnItemUsePower.TriggerType.START;
 
-        ActionOnItemUsePower.TriggerType triggerType = this.getMaxUseTime() == 0
-            ? ActionOnItemUsePower.TriggerType.INSTANT : ActionOnItemUsePower.TriggerType.START;
-        ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStackRef.get(),
-            triggerType, PriorityPhase.AFTER);
-
-        return actionResult;
-
-    }
-
-    @Inject(method = "onStoppedUsing", at = @At("HEAD"))
-    private void callActionOnUseStopBefore(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci, @Share("stoppedUsingStackRef") LocalRef<StackReference> stoppedUsingStackRef) {
-
-        if (user == null) {
-            return;
-        }
-
-        ItemStack thisAsStack = (ItemStack) (Object) this;
-        StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
-
-        ActionOnItemUsePower.executeActions(user, stackReference, thisAsStack,
-            ActionOnItemUsePower.TriggerType.STOP, PriorityPhase.BEFORE);
-
-        stoppedUsingStackRef.set(stackReference);
-
-    }
-
-    @WrapOperation(method = "onStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onStoppedUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)V"))
-    private void callActionOnUseStopAfter(Item instance, ItemStack stack, World world, LivingEntity user, int remainingUseTicks, Operation<Void> original, @Share("stoppedUsingStackRef") LocalRef<StackReference> stoppedUsingStackRef) {
-
-        StackReference cachedStackRef = stoppedUsingStackRef.get();
-        if (user == null || cachedStackRef == StackReference.EMPTY) {
-            original.call(instance, stack, world, user, remainingUseTicks);
-            return;
-        }
-
-        ItemStack cachedStack = cachedStackRef.get();
-        ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStack,
-            ActionOnItemUsePower.TriggerType.STOP, PriorityPhase.AFTER);
-
-        original.call(cachedStack.getItem(), cachedStack, world, user, remainingUseTicks);
-
-    }
-
-    @Inject(method = "usageTick", at = @At(value = "HEAD"))
-    private void callActionOnUseDuringBefore(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci, @Share("usingStackRef") LocalRef<StackReference> usingStackRef) {
-
-        if (user == null) {
-            return;
-        }
-
-        ItemStack thisAsStack = (ItemStack) (Object) this;
-        StackReference stackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
-
-        ActionOnItemUsePower.executeActions(user, stackReference, thisAsStack,
-            ActionOnItemUsePower.TriggerType.DURING, PriorityPhase.BEFORE);
-
-        usingStackRef.set(stackReference);
+        ActionOnItemUsePower.executeActions(user, useStackReference, useStack, triggerType, PriorityPhase.AFTER);
+        return action;
+        //  endregion
 
     }
 
     @WrapOperation(method = "usageTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;usageTick(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;I)V"))
-    private void callActionOnUseDuringAfter(Item instance, World world, LivingEntity user, ItemStack stack, int remainingUseTicks, Operation<Void> original, @Share("usingStackRef") LocalRef<StackReference> usingStackRef) {
+    private void apoli$actionOnItemDuringUse(Item item, World world, LivingEntity user, ItemStack stack, int remainingUseTicks, Operation<Void> original, @Share("usingStackReference") LocalRef<StackReference> sharedUsingStackReference) {
 
-        StackReference cachedStackRef = usingStackRef.get();
-        if (user == null || cachedStackRef == StackReference.EMPTY) {
-            original.call(instance, world, user, stack, remainingUseTicks);
-            return;
+        ActionOnItemUsePower.TriggerType triggerType = ActionOnItemUsePower.TriggerType.DURING;
+
+        StackReference usingStackReference = InventoryUtil.getStackReferenceFromStack(user, (ItemStack) (Object) this);
+        ItemStack usingStack = usingStackReference.get();
+
+        ActionOnItemUsePower.executeActions(user, usingStackReference, usingStack, triggerType, PriorityPhase.BEFORE);
+
+        if (EdibleItemPower.get(usingStack).isEmpty()) {
+            original.call(usingStack.getItem(), world, user, usingStack, remainingUseTicks);
         }
 
-        ItemStack cachedStack = cachedStackRef.get();
-        ActionOnItemUsePower.executeActions(user, cachedStackRef, cachedStack,
-            ActionOnItemUsePower.TriggerType.DURING, PriorityPhase.AFTER);
+        else {
+            ActionOnItemUsePower.executeActions(user, usingStackReference, usingStack, triggerType, PriorityPhase.AFTER);
+        }
 
-        original.call(cachedStack.getItem(), world, user, cachedStack, remainingUseTicks);
+    }
+
+    @WrapOperation(method = "onStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onStoppedUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)V"))
+    private void apoli$actionOnItemStoppedUsing(Item item, ItemStack stack, World world, LivingEntity user, int remainingUseTicks, Operation<Void> original, @Share("stoppedUsingStackReference") LocalRef<StackReference> sharedStoppedUsingStackReference) {
+
+        ActionOnItemUsePower.TriggerType triggerType = ActionOnItemUsePower.TriggerType.STOP;
+
+        StackReference stoppedUsingStackReference = InventoryUtil.getStackReferenceFromStack(user, (ItemStack) (Object) this);
+        ItemStack stoppedUsingStack = stoppedUsingStackReference.get();
+
+        ActionOnItemUsePower.executeActions(user, stoppedUsingStackReference, stoppedUsingStack, triggerType, PriorityPhase.BEFORE);
+
+        if (EdibleItemPower.get(stoppedUsingStack).isEmpty()) {
+            original.call(stoppedUsingStack.getItem(), stoppedUsingStack, world, user, remainingUseTicks);
+        }
+
+        else {
+            ActionOnItemUsePower.executeActions(user, stoppedUsingStackReference, stoppedUsingStack, triggerType, PriorityPhase.AFTER);
+        }
+
+    }
+
+    @WrapOperation(method = "finishUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;finishUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/item/ItemStack;"))
+    private ItemStack apoli$onFinishItemUse(Item item, ItemStack stack, World world, LivingEntity user, Operation<ItemStack> original) {
+
+        //  region  Action on item before finish using
+        StackReference finishUsingStackRef = InventoryUtil.getStackReferenceFromStack(user, stack);
+        ItemStack finishUsingStack = finishUsingStackRef.get();
+
+        ActionOnItemUsePower.executeActions(user, finishUsingStackRef, finishUsingStack, ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.BEFORE);
+        //  endregion
+
+        //  region  Edible item consumption effects
+        ItemStack newStack = original.call(finishUsingStack.getItem(), finishUsingStack, world, user);
+        finishUsingStackRef.set(newStack);
+        //  endregion
+
+        //  region  Action on item after finish using
+        ActionOnItemUsePower.executeActions(user, finishUsingStackRef, finishUsingStack, ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.AFTER);
+        return finishUsingStack;
+        //  endregion
 
     }
 
@@ -301,64 +221,11 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
             .orElse(original);
     }
 
-    @WrapWithCondition(method = "usageTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;usageTick(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;I)V"))
-    private boolean apoli$disableUsageTickOnConsumingCustomFood(Item instance, World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
-        return EdibleItemPower.get((ItemStack) (Object) this).isEmpty();
-    }
-
-    @WrapWithCondition(method = "onStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onStoppedUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)V"))
-    private boolean apoli$disableOnStoppedUsingOnConsumingCustomFood(Item instance, ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        return EdibleItemPower.get((ItemStack) (Object) this).isEmpty();
-    }
-
     @WrapOperation(method = "isUsedOnRelease", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;isUsedOnRelease(Lnet/minecraft/item/ItemStack;)Z"))
-    private boolean apoli$useOnReleaseIfCustomFood(Item instance, ItemStack stack, Operation<Boolean> original) {
-        return EdibleItemPower.get((ItemStack) (Object) this).isEmpty()
-            ? original.call(instance, stack)
+    private boolean apoli$useOnReleaseIfCustomFood(Item item, ItemStack stack, Operation<Boolean> original) {
+        return EdibleItemPower.get(stack).isEmpty()
+            ? original.call(item, stack)
             : false;
-    }
-
-    @WrapOperation(method = "finishUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;finishUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)Lnet/minecraft/item/ItemStack;"))
-    private ItemStack apoli$finishConsumingCustomFood(Item instance, ItemStack stack, World world, LivingEntity user, Operation<ItemStack> original) {
-
-        EdibleItemPower edibleItemPower = EdibleItemPower
-            .get((ItemStack) (Object) this)
-            .orElse(null);
-        if (edibleItemPower == null) {
-            return original.call(instance, stack, world, user);
-        }
-
-        edibleItemPower.applyEffects();
-        edibleItemPower.executeEntityAction();
-
-        StackReference newReference = InventoryUtil.createStackReference(user.eatFood(world, this.copy()));
-        StackReference resultReference = edibleItemPower.executeItemActions(newReference);
-
-        tryOfferingResultStack:
-        if (resultReference != StackReference.EMPTY) {
-
-            if (newReference.get().isEmpty()) {
-                return resultReference.get();
-            }
-
-            if (ItemStack.canCombine(resultReference.get(), newReference.get())) {
-                newReference.get().increment(1);
-                break tryOfferingResultStack;
-            }
-
-            if (user instanceof PlayerEntity playerEntity && !playerEntity.isCreative()) {
-                playerEntity.getInventory().offerOrDrop(resultReference.get());
-                break tryOfferingResultStack;
-            }
-
-            if (!(user instanceof PlayerEntity)) {
-                InventoryUtil.throwItem(user, resultReference.get(), false, false);
-            }
-
-        }
-
-        return newReference.get();
-
     }
 
     @WrapOperation(method = "onStackClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onStackClicked(Lnet/minecraft/item/ItemStack;Lnet/minecraft/screen/slot/Slot;Lnet/minecraft/util/ClickType;Lnet/minecraft/entity/player/PlayerEntity;)Z"))

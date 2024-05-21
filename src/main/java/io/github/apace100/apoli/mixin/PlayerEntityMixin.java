@@ -68,7 +68,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     }
 
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
-    private ItemStack apoli$modifyEatenItemStack(ItemStack original) {
+    private ItemStack apoli$modifyEatenStack(ItemStack original) {
 
         StackReference newStack = InventoryUtil.createStackReference(original);
         ModifiableFoodEntity modifiableFoodEntity = (ModifiableFoodEntity) this;
@@ -81,6 +81,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
             modifyFoodPower.setConsumedItemStackReference(newStack);
         }
+
+        EdibleItemPower.get(original.copy(), this).ifPresent(modifiableFoodEntity::apoli$setEdibleItemPower);
 
         modifiableFoodEntity.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         modifiableFoodEntity.apoli$setOriginalFoodStack(original);
