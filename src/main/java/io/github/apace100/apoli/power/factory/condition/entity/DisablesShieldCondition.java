@@ -8,7 +8,7 @@ import net.minecraft.entity.Entity;
 
 public class DisablesShieldCondition {
     public static boolean condition(SerializableData.Instance data, Entity entity) {
-        return (entity instanceof MobEntity) ? !((MobEntity) entity).disablesShield() : false;
+        return (entity instanceof MobEntity) ? ((MobEntity) entity).disablesShield() : false;
     }
 
     public static ConditionFactory<Entity> getFactory() {
