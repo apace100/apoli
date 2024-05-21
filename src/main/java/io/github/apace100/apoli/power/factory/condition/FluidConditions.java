@@ -5,10 +5,13 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.registry.Registry;
 
 public class FluidConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
         MetaConditions.register(ApoliDataTypes.FLUID_CONDITION, FluidConditions::register);

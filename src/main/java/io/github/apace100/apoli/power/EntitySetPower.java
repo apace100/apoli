@@ -3,13 +3,13 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.ServerWorldAccessor;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class EntitySetPower extends Power {
 
@@ -115,14 +116,16 @@ public class EntitySetPower extends Power {
 
     }
 
-    public void validateEntities() {
+    public boolean validateEntities() {
 
         MinecraftServer server = entity.getServer();
         if (server == null) {
-            return;
+            return false;
         }
 
         Iterator<UUID> uuidIterator = entityUuids.iterator();
+        boolean valid = true;
+
         while (uuidIterator.hasNext()) {
 
             UUID uuid = uuidIterator.next();
@@ -135,7 +138,11 @@ public class EntitySetPower extends Power {
             tempUuids.remove(uuid);
             tempEntities.remove(uuid);
 
+            valid = false;
+
         }
+
+        return valid;
 
     }
 
@@ -254,17 +261,6 @@ public class EntitySetPower extends Power {
     }
 
     @Override
-    public NbtElement toTag(boolean onSync) {
-
-        if (!onSync) {
-            this.validateEntities();
-        }
-
-        return this.toTag();
-
-    }
-
-    @Override
     public NbtElement toTag() {
 
         NbtCompound rootNbt = new NbtCompound();
@@ -318,20 +314,28 @@ public class EntitySetPower extends Power {
 
     }
 
-    public static void integrateCallback(Entity removedEntity, ServerWorld world) {
+    public static void integrateLoadCallback(Entity loadedEntity, ServerWorld world) {
+        PowerHolderComponent.syncPowers(loadedEntity, PowerHolderComponent.getPowers(loadedEntity, EntitySetPower.class, true)
+            .stream()
+            .filter(Predicate.not(EntitySetPower::validateEntities))
+            .map(Power::getType)
+            .toList());
+    }
 
-        Entity.RemovalReason removalReason = removedEntity.getRemovalReason();
-        if (removalReason == null || !removalReason.shouldDestroy()) {
+    public static void integrateUnloadCallback(Entity unloadedEntity, ServerWorld world) {
+
+        Entity.RemovalReason removalReason = unloadedEntity.getRemovalReason();
+        if (removalReason == null || !removalReason.shouldDestroy() || unloadedEntity instanceof PlayerEntity) {
             return;
         }
 
         for (ServerWorld otherWorld : world.getServer().getWorlds()) {
 
-            for (Entity entity : ((ServerWorldAccessor) otherWorld).callGetEntityLookup().iterate()) {
+            for (Entity entity : otherWorld.iterateEntities()) {
 
                  PowerHolderComponent.syncPowers(entity, PowerHolderComponent.getPowers(entity, EntitySetPower.class, true)
                     .stream()
-                    .filter(p -> p.remove(removedEntity, p.isActive()))
+                    .filter(p -> p.remove(unloadedEntity, false))
                     .map(Power::getType)
                     .toList());
 

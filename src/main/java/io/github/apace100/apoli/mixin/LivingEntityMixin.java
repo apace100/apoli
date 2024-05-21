@@ -47,7 +47,7 @@ import java.util.*;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity, MovingEntity {
+public abstract class LivingEntityMixin extends Entity implements ModifiableFoodEntity, MovingEntity, JumpingEntity {
     @Shadow
     protected abstract float getJumpVelocity();
 
@@ -263,8 +263,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 0))
     private boolean apoli$preventHitIfDamageIsZero(boolean original, DamageSource source, float amount) {
-        //  TODO: Maybe use DecimalFormat to compare the damage amount? Though it's probably unnecessary since we don't need the decimals
-        return original || apoli$hasModifiedDamage && (int) amount <= 0;
+        return original || apoli$hasModifiedDamage && amount <= 0.0F;
     }
 
     @Inject(method = "damage", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z")))
@@ -340,13 +339,28 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             .orElse(original);
     }
 
+    @Unique
+    private boolean apoli$applySprintJumpingEffects;
+
+    @Override
+    public boolean apoli$applySprintJumpEffects() {
+        return apoli$applySprintJumpingEffects;
+    }
+
     // SPRINT_JUMP
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
-    private float modifyJumpVelocity(LivingEntity entity) {
-        return PowerHolderComponent.modify(this, ModifyJumpPower.class, this.getJumpVelocity(), p -> {
-            p.executeAction();
-            return true;
-        });
+    @ModifyReturnValue(method = "getJumpVelocity", at = @At("RETURN"))
+    private float apoli$modifyJumpVelocity(float original) {
+
+        float modified = PowerHolderComponent.modify(this, ModifyJumpPower.class, original, p -> true, ModifyJumpPower::executeAction);
+        this.apoli$applySprintJumpingEffects = modified > 0;
+
+        return modified;
+
+    }
+
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z"))
+    private boolean apoli$shouldApplySprintJumpEffects(boolean original) {
+        return original && this.apoli$applySprintJumpEffects();
     }
 
     // HOTBLOODED
@@ -423,26 +437,20 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
-    @Unique
-    private float cachedDamageAmount;
+    @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 1))
+    private boolean apoli$preventDeath(boolean original, DamageSource source, float amount) {
 
-    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;tryUseTotem(Lnet/minecraft/entity/damage/DamageSource;)Z"))
-    private void cacheDamageAmount(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        this.cachedDamageAmount = amount;
-    }
-
-    @Inject(method = "tryUseTotem", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Hand;values()[Lnet/minecraft/util/Hand;"), cancellable = true)
-    private void preventDeath(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
-        Optional<PreventDeathPower> preventDeathPower = PowerHolderComponent.getPowers(this, PreventDeathPower.class).stream().filter(p -> p.doesApply(source, cachedDamageAmount)).findFirst();
-        if(preventDeathPower.isPresent()) {
+        if (original && PreventDeathPower.doesPrevent(this, source, amount)) {
             this.setHealth(1.0F);
-            preventDeathPower.get().executeAction();
-            cir.setReturnValue(true);
+            return false;
         }
+
+        return original;
+
     }
 
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
-    private ItemStack apoli$modifyEatenItemStack(ItemStack original) {
+    private ItemStack apoli$modifyEatenStack(ItemStack original) {
 
         LivingEntity thisAsLiving = (LivingEntity) (Object) this;
         if (thisAsLiving instanceof PlayerEntity) {
@@ -459,6 +467,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             modifyFoodPower.setConsumedItemStackReference(newStack);
         }
 
+        EdibleItemPower.get(original.copy(), this).ifPresent(this::apoli$setEdibleItemPower);
+
         this.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         this.apoli$setOriginalFoodStack(original);
 
@@ -467,21 +477,62 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     @ModifyVariable(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V", shift = At.Shift.AFTER), argsOnly = true)
-    private ItemStack apoli$unmodifyEatenItemStack(ItemStack modified) {
-
+    private ItemStack apoli$restoreOriginalEatenStack(ItemStack modified) {
         ItemStack original = this.apoli$getOriginalFoodStack();
-        if (original == null) {
-            return modified;
-        }
-
-        this.apoli$setOriginalFoodStack(null);
-        return original;
-
+        return original == null
+            ? modified
+            : original;
     }
 
-    @Inject(method = "eatFood", at = @At("TAIL"))
-    private void apoli$removeCurrentModifyFoodPowers(World world, ItemStack stack, CallbackInfoReturnable<ItemStack> cir) {
+    @ModifyReturnValue(method = "eatFood", at = @At("RETURN"))
+    private ItemStack apoli$modifyCustomFoodAndCleanUp(ItemStack original) {
+
+        EdibleItemPower edibleItemPower = this.apoli$getEdibleItemPower();
+        ItemStack result = original;
+
+        modifyCustomFood:
+        if (edibleItemPower != null) {
+
+            edibleItemPower.executeEntityAction();
+
+            StackReference newStackRef = InventoryUtil.createStackReference(original);
+            StackReference resultStackRef = edibleItemPower.executeItemActions(newStackRef);
+
+            ItemStack newStack = newStackRef.get();
+            ItemStack resultStack = resultStackRef.get();
+
+            if (resultStackRef == StackReference.EMPTY) {
+                result = newStack;
+                break modifyCustomFood;
+            }
+
+            else if (newStack.isEmpty()) {
+                result = resultStack;
+                break modifyCustomFood;
+            }
+
+            else if (ItemStack.canCombine(resultStack, newStack)) {
+                newStack.increment(1);
+            }
+
+            else if ((LivingEntity) (Object) this instanceof PlayerEntity player && !player.isCreative()) {
+                player.getInventory().offerOrDrop(resultStack);
+            }
+
+            else {
+                InventoryUtil.throwItem(this, resultStack, false, false);
+            }
+
+            result = newStack;
+
+        }
+
         this.apoli$setCurrentModifyFoodPowers(new LinkedList<>());
+        this.apoli$setOriginalFoodStack(null);
+        this.apoli$setEdibleItemPower(null);
+
+        return result;
+
     }
 
     @Inject(method = "applyFoodEffects", at = @At("HEAD"), cancellable = true)
@@ -489,11 +540,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         if (this.apoli$getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
             ci.cancel();
         }
-    }
-
-    @ModifyExpressionValue(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isFood()Z"))
-    private boolean apoli$allowConsumingCustomFood(boolean original, World world, ItemStack stack) {
-        return original || ((PotentiallyEdibleItemStack) stack).apoli$getFoodComponent().isPresent();
     }
 
     @Shadow @Nullable private LivingEntity attacker;
@@ -549,6 +595,9 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @Unique
     private ItemStack apoli$originalFoodStack;
 
+    @Unique
+    private EdibleItemPower apoli$edibleItemPower;
+
     @Override
     public List<ModifyFoodPower> apoli$getCurrentModifyFoodPowers() {
         return apoli$currentModifyFoodPowers;
@@ -569,8 +618,19 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         apoli$originalFoodStack = original;
     }
 
+    @Override
+    public EdibleItemPower apoli$getEdibleItemPower() {
+        return apoli$edibleItemPower;
+    }
+
+    @Override
+    public void apoli$setEdibleItemPower(EdibleItemPower power) {
+        this.apoli$edibleItemPower = power;
+    }
+
     @Inject(method = "baseTick", at = @At("TAIL"))
     private void updateItemStackHolder(CallbackInfo ci) {
         InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this));
     }
+
 }

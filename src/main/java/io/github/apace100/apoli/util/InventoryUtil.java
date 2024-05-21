@@ -231,7 +231,7 @@ public class InventoryUtil {
         float f;
         float g;
 
-        if (retainOwnership) itemEntity.setThrower(thrower.getUuid());
+        if (retainOwnership) itemEntity.setThrower(thrower);
         if (throwRandomly) {
             f = random.nextFloat() * 0.5F;
             g = random.nextFloat() * 6.2831855F;
