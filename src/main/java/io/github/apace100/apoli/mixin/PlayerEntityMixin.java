@@ -72,7 +72,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private ItemStack apoli$modifyEatenStack(ItemStack original) {
 
-        StackReference newStack = InventoryUtil.createStackReference(original);
+        StackReference newStackRef = InventoryUtil.createStackReference(original);
         ModifiableFoodEntity modifiableFoodEntity = (ModifiableFoodEntity) this;
 
         List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
@@ -81,7 +81,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             .toList();
 
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
-            modifyFoodPower.setConsumedItemStackReference(newStack);
+            modifyFoodPower.setConsumedItemStackReference(newStackRef);
         }
 
         EdibleItemPower.get(original.copy(), this).ifPresent(modifiableFoodEntity::apoli$setEdibleItemPower);
@@ -89,7 +89,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         modifiableFoodEntity.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         modifiableFoodEntity.apoli$setOriginalFoodStack(original);
 
-        return newStack.get();
+        return newStackRef.get();
 
     }
 

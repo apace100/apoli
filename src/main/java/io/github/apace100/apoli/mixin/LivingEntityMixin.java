@@ -25,6 +25,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.StackReference;
+import net.minecraft.item.FoodComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -449,6 +450,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     }
 
+    @ModifyExpressionValue(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isFood()Z"))
+    private boolean apoli$accountCustomFood(boolean original, World world, ItemStack stack) {
+        return original
+            || EdibleItemPower.get(stack).isPresent();
+    }
+
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private ItemStack apoli$modifyEatenStack(ItemStack original) {
 
@@ -457,14 +464,14 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             return original;
         }
 
-        StackReference newStack = InventoryUtil.createStackReference(original);
+        StackReference newStackRef = InventoryUtil.createStackReference(original);
         List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
             .stream()
             .filter(mfp -> mfp.doesApply(original))
             .toList();
 
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
-            modifyFoodPower.setConsumedItemStackReference(newStack);
+            modifyFoodPower.setConsumedItemStackReference(newStackRef);
         }
 
         EdibleItemPower.get(original.copy(), this).ifPresent(this::apoli$setEdibleItemPower);
@@ -472,7 +479,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         this.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         this.apoli$setOriginalFoodStack(original);
 
-        return newStack.get();
+        return newStackRef.get();
 
     }
 
@@ -533,6 +540,13 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
         return result;
 
+    }
+
+    @ModifyExpressionValue(method = "applyFoodEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;getFoodComponent()Lnet/minecraft/item/FoodComponent;"))
+    private FoodComponent apoli$useCustomFoodComponent(FoodComponent original, ItemStack stack, World world, LivingEntity target) {
+        return EdibleItemPower.get(stack, target)
+            .map(EdibleItemPower::getFoodComponent)
+            .orElse(original);
     }
 
     @Inject(method = "applyFoodEffects", at = @At("HEAD"), cancellable = true)

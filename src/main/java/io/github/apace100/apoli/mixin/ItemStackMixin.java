@@ -16,7 +16,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
-import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
@@ -108,9 +107,12 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         //  region  Edible item
         ItemStack oldUseStack = useStack.copy();
-        FoodComponent foodComponent = useStack.getFoodComponent();
+        boolean canConsumeCustomFood = EdibleItemPower.get(useStack, user)
+            .map(EdibleItemPower::getFoodComponent)
+            .map(fc -> user.canConsume(fc.isAlwaysEdible()))
+            .orElse(false);
 
-        TypedActionResult<ItemStack> action = foodComponent != null && user.canConsume(foodComponent.isAlwaysEdible())
+        TypedActionResult<ItemStack> action = canConsumeCustomFood
             ? ItemUsage.consumeHeldItem(world, user, hand)
             : original.call(useStack.getItem(), world, user, hand);
 
@@ -141,7 +143,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         ActionOnItemUsePower.executeActions(user, usingStackReference, usingStack, triggerType, PriorityPhase.BEFORE);
 
-        if (EdibleItemPower.get(usingStack).isEmpty()) {
+        if (EdibleItemPower.get(usingStack, user).isEmpty()) {
             original.call(usingStack.getItem(), world, user, usingStack, remainingUseTicks);
         }
 
@@ -161,7 +163,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         ActionOnItemUsePower.executeActions(user, stoppedUsingStackReference, stoppedUsingStack, triggerType, PriorityPhase.BEFORE);
 
-        if (EdibleItemPower.get(stoppedUsingStack).isEmpty()) {
+        if (EdibleItemPower.get(stoppedUsingStack, user).isEmpty()) {
             original.call(stoppedUsingStack.getItem(), stoppedUsingStack, world, user, remainingUseTicks);
         }
 
@@ -182,8 +184,9 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         //  endregion
 
         //  region  Edible item consumption effects
-        ItemStack newStack = original.call(finishUsingStack.getItem(), finishUsingStack, world, user);
-        finishUsingStackRef.set(newStack);
+        finishUsingStackRef.set(EdibleItemPower.get(finishUsingStack, user)
+            .map(p -> user.eatFood(world, stack))
+            .orElseGet(() -> original.call(finishUsingStack.getItem(), finishUsingStack, world, user)));
         //  endregion
 
         //  region  Action on item after finish using
