@@ -188,7 +188,7 @@ public class ServerPlayerInteractionManagerMixin {
         }
 
         if (newResult.shouldSwingHand()) {
-            player.swingHand(hand, true);
+            player.swingHand(hand);
         }
 
         return ActionResultUtil.shouldOverride(original, newResult)
@@ -239,7 +239,7 @@ public class ServerPlayerInteractionManagerMixin {
             }
 
             if (previousResult.shouldSwingHand()) {
-                player.swingHand(mHand, true);
+                player.swingHand(mHand);
             }
 
             return previousResult;
