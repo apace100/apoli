@@ -46,10 +46,10 @@ public class ActionOnBlockUsePower extends ActiveInteractionPower {
     }
 
     public boolean shouldExecute(BlockUsagePhase usePhase, PriorityPhase priorityPhase, BlockHitResult hitResult, Hand hand, ItemStack heldStack) {
-        return super.shouldExecute(hand, heldStack)
-            && priorityPhase.test(this.getPriority())
+        return priorityPhase.test(this.getPriority())
             && usePhases.contains(usePhase)
             && directions.contains(hitResult.getSide())
+            && super.shouldExecute(hand, heldStack)
             && (blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), hitResult.getBlockPos(), true)));
     }
 

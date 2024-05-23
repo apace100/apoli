@@ -3,7 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -31,11 +31,10 @@ public class ActionOnBeingUsedPower extends ActiveInteractionPower {
         this.bientityCondition = bientityCondition;
     }
 
-    public boolean shouldExecute(PlayerEntity other, Hand hand, ItemStack heldStack) {
-        if(!super.shouldExecute(hand, heldStack)) {
-            return false;
-        }
-        return bientityCondition == null || bientityCondition.test(new Pair<>(other, entity));
+    public boolean shouldExecute(PlayerEntity other, Hand hand, ItemStack heldStack, PriorityPhase priorityPhase) {
+        return priorityPhase.test(this.getPriority())
+            && super.shouldExecute(hand, heldStack)
+            && (bientityCondition == null || bientityCondition.test(new Pair<>(other, entity)));
     }
 
     public ActionResult executeAction(PlayerEntity other, Hand hand) {
