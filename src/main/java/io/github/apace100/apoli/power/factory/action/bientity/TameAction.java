@@ -20,11 +20,11 @@ public class TameAction {
             return;
         }
 
-        if (target instanceof TameableEntity tameableTarget) {
+        if (target instanceof TameableEntity tameableTarget && !tameableTarget.isTamed()) {
             tameableTarget.setOwner(actorPlayer);
         }
 
-        else if (target instanceof AbstractHorseEntity targetHorseLike) {
+        else if (target instanceof AbstractHorseEntity targetHorseLike && !targetHorseLike.isTame()) {
             targetHorseLike.bondWithPlayer(actorPlayer);
         }
 
