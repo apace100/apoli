@@ -5,13 +5,17 @@ import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.EndRespawningEntity;
+import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.CustomToastData;
+import io.github.apace100.apoli.networking.packet.s2c.ShowToastS2CPacket;
 import io.github.apace100.apoli.power.ActionOnItemUsePower;
 import io.github.apace100.apoli.power.KeepInventoryPower;
 import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
 import io.github.apace100.apoli.power.PreventSleepPower;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.PriorityPhase;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
@@ -38,7 +42,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -46,7 +49,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Mixin(ServerPlayerEntity.class)
-public abstract class ServerPlayerEntityMixin extends PlayerEntity implements ScreenHandlerListener, EndRespawningEntity {
+public abstract class ServerPlayerEntityMixin extends PlayerEntity implements ScreenHandlerListener, EndRespawningEntity, CustomToastViewer {
 
     @Shadow
     private RegistryKey<World> spawnPointDimension;
@@ -194,4 +197,10 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     public boolean apoli$hasRealRespawnPoint() {
         return spawnPointPosition != null && !hasObstructedSpawn();
     }
+
+    @Override
+    public void apoli$showToast(CustomToastData toastData) {
+        ServerPlayNetworking.send((ServerPlayerEntity) (Object) this, new ShowToastS2CPacket(toastData));
+    }
+
 }
