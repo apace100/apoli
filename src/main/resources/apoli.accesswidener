@@ -17,3 +17,4 @@ accessible class net/minecraft/entity/player/ItemCooldownManager$Entry
 accessible field net/minecraft/entity/player/ItemCooldownManager entries Ljava/util/Map;
 accessible field net/minecraft/entity/player/ItemCooldownManager$Entry startTick I
 accessible field net/minecraft/entity/player/ItemCooldownManager$Entry endTick I
+accessible class net/minecraft/client/toast/ToastManager$Entry

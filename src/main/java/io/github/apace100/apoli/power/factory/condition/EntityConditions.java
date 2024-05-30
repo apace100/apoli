@@ -15,13 +15,13 @@ import io.github.apace100.apoli.util.Shape;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
@@ -31,11 +31,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandOutput;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -46,6 +41,8 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class EntityConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {
@@ -217,29 +214,7 @@ public class EntityConditions {
             .add("entity_type", SerializableDataTypes.ENTITY_TYPE),
             (data, entity) -> entity.getType() == data.get("entity_type")));
         register(ScoreboardCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("command"), new SerializableData()
-            .add("command", SerializableDataTypes.STRING)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT),
-            (data, entity) -> {
-                MinecraftServer server = entity.getWorld().getServer();
-                if(server != null) {
-                    boolean validOutput = !(entity instanceof ServerPlayerEntity) || ((ServerPlayerEntity)entity).networkHandler != null;
-                    ServerCommandSource source = new ServerCommandSource(
-                        Apoli.config.executeCommand.showOutput && validOutput ? entity : CommandOutput.DUMMY,
-                        entity.getPos(),
-                        entity.getRotationClient(),
-                        entity.getWorld() instanceof ServerWorld ? (ServerWorld)entity.getWorld() : null,
-                        Apoli.config.executeCommand.permissionLevel,
-                        entity.getName().getString(),
-                        entity.getDisplayName(),
-                        server,
-                        entity);
-                    int output = server.getCommandManager().executeWithPrefix(source, data.getString("command"));
-                    return ((Comparison)data.get("comparison")).compare(output, data.getInt("compare_to"));
-                }
-                return false;
-            }));
+        register(CommandCondition.getFactory());
         register(PredicateCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("fall_distance"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)
@@ -287,12 +262,7 @@ public class EntityConditions {
             .add("tag", SerializableDataTypes.ENTITY_TAG),
             (data, entity) -> entity.getType().getRegistryEntry().isIn(data.get("tag"))));
         register(ClimbingCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
-            if(entity instanceof TameableEntity) {
-                return ((TameableEntity)entity).isTamed();
-            }
-            return false;
-        }));
+        register(TamedCondition.getFactory());
         register(UsingItemCondition.getFactory());
         register(MovingCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()
@@ -435,6 +405,8 @@ public class EntityConditions {
         register(UsingEffectiveToolCondition.getFactory());
         register(GameModeCondition.getFactory());
         register(GlowingCondition.getFactory());
+        register(EntityInRadiusCondition.getFactory());
+        register(HasCommandTagCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

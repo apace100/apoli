@@ -3,12 +3,15 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.item.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 
 public class ItemConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
         MetaConditions.register(ApoliDataTypes.ITEM_CONDITION, ItemConditions::register);

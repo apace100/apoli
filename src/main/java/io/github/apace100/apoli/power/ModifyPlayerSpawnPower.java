@@ -105,7 +105,7 @@ public class ModifyPlayerSpawnPower extends Power {
         Vec3d tpPos = Dismounting.findRespawnPos(playerEntity.getType(), newSpawn.getLeft(), newSpawn.getRight(), true);
         if (tpPos == null) {
             serverPlayerEntity.teleport(newSpawnDimension, newSpawnPos.getX(), newSpawnPos.getY(), newSpawnPos.getZ(), entity.getPitch(), entity.getYaw());
-            Apoli.LOGGER.warn("Power {} could not find a suitable spawnpoint for {}! Teleporting to the desired location directly...", this.getType().getIdentifier(), entity.getEntityName());
+            Apoli.LOGGER.warn("Power {} could not find a suitable spawnpoint for {}! Teleporting to the desired location directly...", this.getType().getIdentifier(), entity.getNameForScoreboard());
         }
 
         else serverPlayerEntity.teleport(newSpawnDimension, tpPos.x, tpPos.y, tpPos.z, entity.getPitch(), entity.getYaw());
@@ -124,7 +124,7 @@ public class ModifyPlayerSpawnPower extends Power {
 
         ServerWorld targetDimension = server.getWorld(dimension);
         if (targetDimension == null) {
-            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at dimension \"{}\" as it's not registered! Falling back to default spawnpoint...", this.getType().getIdentifier(), entity.getEntityName(), dimension.getValue());
+            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at dimension \"{}\" as it's not registered! Falling back to default spawnpoint...", this.getType().getIdentifier(), entity.getNameForScoreboard(), dimension.getValue());
             return null;
         }
 
@@ -156,7 +156,7 @@ public class ModifyPlayerSpawnPower extends Power {
 
         Optional<Biome> targetBiome = targetDimension.getRegistryManager().get(RegistryKeys.BIOME).getOrEmpty(biomeId);
         if (targetBiome.isEmpty()) {
-            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at biome \"{}\" as it's not registered in dimension \"{}\".", this.getType().getIdentifier(), entity.getEntityName(), biomeId, dimension.getValue());
+            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at biome \"{}\" as it's not registered in dimension \"{}\".", this.getType().getIdentifier(), entity.getNameForScoreboard(), biomeId, dimension.getValue());
             return Optional.empty();
         }
         int radius = ((ApoliConfig)Apoli.config).modifyPlayerSpawnPower.radius;
@@ -174,7 +174,7 @@ public class ModifyPlayerSpawnPower extends Power {
         );
         if (targetBiomePos != null) return Optional.of(targetBiomePos.getFirst());
         else {
-            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at biome \"{}\" as it couldn't be found in dimension \"{}\".", this.getType().getIdentifier(), entity.getEntityName(), biomeId, dimension.getValue());
+            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at biome \"{}\" as it couldn't be found in dimension \"{}\".", this.getType().getIdentifier(), entity.getNameForScoreboard(), biomeId, dimension.getValue());
             return Optional.empty();
         }
     }
@@ -222,7 +222,7 @@ public class ModifyPlayerSpawnPower extends Power {
                 );
 
         if (structurePos == null) {
-            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at structure \"{}\" as it couldn't be found in dimension \"{}\".", this.getType().getIdentifier(), entity.getEntityName(), structureTagOrName, dimension.getValue());
+            Apoli.LOGGER.warn("Power {} could not set {}'s spawnpoint at structure \"{}\" as it couldn't be found in dimension \"{}\".", this.getType().getIdentifier(), entity.getNameForScoreboard(), structureTagOrName, dimension.getValue());
             return Optional.empty();
         }
 

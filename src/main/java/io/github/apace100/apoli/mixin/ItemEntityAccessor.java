@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface ItemEntityAccessor {
 
     @Nullable
-    @Accessor
+    @Accessor("throwerUuid")
     UUID getThrower();
 
 }

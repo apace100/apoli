@@ -39,11 +39,17 @@ public class PreventEntityUsePower extends InteractionPower {
     }
 
     public ActionResult executeAction(Entity other, Hand hand) {
-        if(biEntityAction != null) {
+
+        if (biEntityAction != null) {
             biEntityAction.accept(new Pair<>(entity, other));
         }
-        performActorItemStuff(this, (PlayerEntity) entity, hand);
-        return getActionResult();
+
+        if (entity instanceof PlayerEntity player) {
+            this.performActorItemStuff(this, player, hand);
+        }
+
+        return this.getActionResult();
+
     }
 
     public static PowerFactory createFactory() {
