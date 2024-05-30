@@ -11,7 +11,7 @@ public class ShowToastAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
 
-        if (entity instanceof CustomToastViewer viewer) {
+        if (!entity.getWorld().isClient && entity instanceof CustomToastViewer viewer) {
             viewer.apoli$showToast(CustomToastData.fromData(data));
         }
 
@@ -20,7 +20,7 @@ public class ShowToastAction {
     public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(
             Apoli.identifier("show_toast"),
-            CustomToastData.DATA,
+            CustomToastData.DATA.copy(),
             ShowToastAction::action
         );
     }
