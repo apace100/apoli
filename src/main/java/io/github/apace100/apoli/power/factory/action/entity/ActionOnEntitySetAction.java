@@ -6,7 +6,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.EntitySetPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.util.IdentifierAlias;
+import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -64,8 +64,8 @@ public class ActionOnEntitySetAction {
     }
 
     public static ActionFactory<Entity> getFactory() {
-        IdentifierAlias.addPathAlias("action_on_set", "action_on_entity_set");
-        return new ActionFactory<>(
+
+        ActionFactory<Entity> factory = new ActionFactory<>(
             Apoli.identifier("action_on_entity_set"),
             new SerializableData()
                 .add("set", ApoliDataTypes.POWER_TYPE)
@@ -75,5 +75,9 @@ public class ActionOnEntitySetAction {
                 .add("reverse", SerializableDataTypes.BOOLEAN, false),
             ActionOnEntitySetAction::action
         );
+
+        EntityActions.ALIASES.addPathAlias("action_on_set", factory.getSerializerId().getPath());
+        return factory;
+
     }
 }
