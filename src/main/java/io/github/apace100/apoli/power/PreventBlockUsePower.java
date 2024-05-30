@@ -61,9 +61,9 @@ public class PreventBlockUsePower extends ActiveInteractionPower {
     }
 
     public boolean doesPrevent(BlockUsagePhase usePhase, BlockHitResult hitResult, ItemStack heldStack, Hand hand) {
-        return super.shouldExecute(hand, heldStack)
-            && usePhases.contains(usePhase)
+        return usePhases.contains(usePhase)
             && directions.contains(hitResult.getSide())
+            && super.shouldExecute(hand, heldStack)
             && (blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), hitResult.getBlockPos(), true)));
     }
 

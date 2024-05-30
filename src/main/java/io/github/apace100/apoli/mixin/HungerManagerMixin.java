@@ -2,11 +2,13 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
+import io.github.apace100.apoli.power.EdibleItemPower;
 import io.github.apace100.apoli.power.ModifyFoodPower;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
@@ -34,6 +36,19 @@ public class HungerManagerMixin {
 
     @Unique
     private boolean apoli$ShouldUpdateManually = false;
+
+    @ModifyExpressionValue(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;isFood()Z"))
+    private boolean apoli$accountCustomFoodWhenEating(boolean original, Item item, ItemStack stack) {
+        return original
+            || EdibleItemPower.get(stack, apoli$cachedPlayer).isPresent();
+    }
+
+    @ModifyExpressionValue(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;getFoodComponent()Lnet/minecraft/item/FoodComponent;"))
+    private FoodComponent apoli$replaceWithCustomFood(FoodComponent original, Item item, ItemStack stack) {
+        return EdibleItemPower.get(stack, apoli$cachedPlayer)
+            .map(EdibleItemPower::getFoodComponent)
+            .orElse(original);
+    }
 
     @ModifyExpressionValue(method = "eat", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/FoodComponent;getHunger()I"))
     private int apoli$modifyHunger(int original, Item item, ItemStack stack) {

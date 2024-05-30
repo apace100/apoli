@@ -134,7 +134,7 @@ public abstract class ClientPlayerInteractionManagerMixin {
         }
 
         if (newResult.shouldSwingHand()) {
-            player.swingHand(hand, true);
+            player.swingHand(hand);
         }
 
         return ActionResultUtil.shouldOverride(original, newResult)

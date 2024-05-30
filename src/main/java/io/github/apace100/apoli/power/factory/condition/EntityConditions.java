@@ -23,7 +23,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
@@ -268,12 +267,7 @@ public class EntityConditions {
             (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
         register(InTagCondition.getFactory());
         register(ClimbingCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("tamed"), new SerializableData(), (data, entity) -> {
-            if(entity instanceof TameableEntity) {
-                return ((TameableEntity)entity).isTamed();
-            }
-            return false;
-        }));
+        register(TamedCondition.getFactory());
         register(UsingItemCondition.getFactory());
         register(MovingCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()
