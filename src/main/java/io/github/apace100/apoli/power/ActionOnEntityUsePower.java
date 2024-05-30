@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -30,19 +31,21 @@ public class ActionOnEntityUsePower extends ActiveInteractionPower {
         this.bientityCondition = bientityCondition;
     }
 
-    public boolean shouldExecute(Entity other, Hand hand, ItemStack heldStack) {
-        if(!super.shouldExecute(hand, heldStack)) {
-            return false;
-        }
-        return bientityCondition == null || bientityCondition.test(new Pair<>(entity, other));
+    public boolean shouldExecute(Entity other, Hand hand, ItemStack heldStack, PriorityPhase priorityPhase) {
+        return priorityPhase.test(this.getPriority())
+            && super.shouldExecute(hand, heldStack)
+            && (bientityCondition == null || bientityCondition.test(new Pair<>(entity, other)));
     }
 
     public ActionResult executeAction(Entity other, Hand hand) {
-        if(biEntityAction != null) {
+
+        if (biEntityAction != null) {
             biEntityAction.accept(new Pair<>(entity, other));
         }
-        performActorItemStuff(this, (PlayerEntity) entity, hand);
-        return getActionResult();
+
+        this.performActorItemStuff(this, (PlayerEntity) entity, hand);
+        return this.getActionResult();
+
     }
 
     public static PowerFactory createFactory() {
