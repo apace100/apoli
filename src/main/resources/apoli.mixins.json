@@ -75,6 +75,7 @@
         "integration.appleskin.FoodHelperMixin"
     ],
     "client": [
+        "AbstractClientPlayerEntityMixin",
         "BackgroundRendererMixin",
         "CapeFeatureRendererMixin",
         "ChunkRendererRegionMixin",
