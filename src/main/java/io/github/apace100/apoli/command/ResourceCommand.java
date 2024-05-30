@@ -12,8 +12,9 @@ import io.github.apace100.apoli.power.VariableIntPower;
 import net.minecraft.command.argument.ScoreHolderArgumentType;
 import net.minecraft.command.argument.ScoreboardObjectiveArgumentType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.scoreboard.ScoreAccess;
+import net.minecraft.scoreboard.ScoreHolder;
 import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
@@ -76,23 +77,23 @@ public class ResourceCommand {
             case HAS -> {
 
                 if (isPowerInvalid(power)) {
-                    source.sendError(Text.translatable("commands.execute.conditional.fail"));
+                    source.sendError(Text.stringifiedTranslatable("commands.execute.conditional.fail"));
                     yield 0;
                 }
 
-                source.sendFeedback(() -> Text.translatable("commands.execute.conditional.pass"), true);
+                source.sendFeedback(() -> Text.stringifiedTranslatable("commands.execute.conditional.pass"), true);
                 yield  1;
 
             }
             case GET -> {
 
                 if (isPowerInvalid(power)) {
-                    source.sendError(Text.translatable("commands.scoreboard.players.get.null", powerType.getIdentifier(), target.getName().getString()));
+                    source.sendError(Text.stringifiedTranslatable("commands.scoreboard.players.get.null", powerType.getIdentifier(), target.getName().getString()));
                     yield 0;
                 }
 
                 int value = getValue(power);
-                source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.get.success", target.getName().getString(), value, powerType.getIdentifier()), true);
+                source.sendFeedback(() -> Text.stringifiedTranslatable("commands.scoreboard.players.get.success", target.getName().getString(), value, powerType.getIdentifier()), true);
 
                 yield value;
 
@@ -100,7 +101,7 @@ public class ResourceCommand {
             case SET -> {
 
                 if (isPowerInvalid(power)) {
-                    source.sendError(Text.translatable("argument.scoreHolder.empty"));
+                    source.sendError(Text.stringifiedTranslatable("argument.scoreHolder.empty"));
                     yield 0;
                 }
 
@@ -108,7 +109,7 @@ public class ResourceCommand {
                 setValue(power, value);
 
                 PowerHolderComponent.syncPower(target, powerType);
-                source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.set.success.single", powerType.getIdentifier(), target.getName().getString(), value), true);
+                source.sendFeedback(() -> Text.stringifiedTranslatable("commands.scoreboard.players.set.success.single", powerType.getIdentifier(), target.getName().getString(), value), true);
 
                 yield value;
 
@@ -116,7 +117,7 @@ public class ResourceCommand {
             case CHANGE -> {
 
                 if (isPowerInvalid(power)) {
-                    source.sendError(Text.translatable("argument.scoreHolder.empty"));
+                    source.sendError(Text.stringifiedTranslatable("argument.scoreHolder.empty"));
                     yield 0;
                 }
 
@@ -126,27 +127,26 @@ public class ResourceCommand {
                 setValue(power, total);
                 PowerHolderComponent.syncPower(target, powerType);
 
-                source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.add.success.single", value, powerType.getIdentifier(), target.getName().getString(), total), true);
+                source.sendFeedback(() -> Text.stringifiedTranslatable("commands.scoreboard.players.add.success.single", value, powerType.getIdentifier(), target.getName().getString(), total), true);
                 yield total;
 
             }
             case OPERATION -> {
 
                 if (isPowerInvalid(power)) {
-                    source.sendError(Text.translatable("argument.scoreHolder.empty"));
+                    source.sendError(Text.stringifiedTranslatable("argument.scoreHolder.empty"));
                     yield 0;
                 }
 
-                String scoreHolder = ScoreHolderArgumentType.getScoreHolder(context, "entity");
+                ScoreHolder scoreHolder = ScoreHolderArgumentType.getScoreHolder(context, "entity");
                 ScoreboardObjective scoreboardObjective = ScoreboardObjectiveArgumentType.getObjective(context, "objective");
 
-                ScoreboardPlayerScore scoreboardPlayerScore = source.getServer().getScoreboard().getPlayerScore(scoreHolder, scoreboardObjective);
-                context.getArgument("operation", PowerOperation.Operation.class).apply(power, scoreboardPlayerScore);
+                ScoreAccess scoreAccess = source.getServer().getScoreboard().getOrCreateScore(scoreHolder, scoreboardObjective);
+                context.getArgument("operation", PowerOperation.Operation.class).apply(power, scoreAccess);
 
                 int value = getValue(power);
-                PowerHolderComponent.syncPower(target, powerType);
+                source.sendFeedback(() -> Text.stringifiedTranslatable("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), target.getName().getString(), value), true);
 
-                source.sendFeedback(() -> Text.translatable("commands.scoreboard.players.operation.success.single", powerType.getIdentifier(), target.getName().getString(), value), true);
                 yield value;
 
             }
