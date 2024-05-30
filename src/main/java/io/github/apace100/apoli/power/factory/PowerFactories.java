@@ -134,6 +134,7 @@ public class PowerFactories {
         register(ActionOnBlockPlacePower::createFactory);
         register(PreventBlockPlacePower::createFactory);
         register(EntitySetPower::createFactory);
+        register(ModifyFovPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

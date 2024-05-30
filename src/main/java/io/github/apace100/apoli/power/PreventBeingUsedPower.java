@@ -39,11 +39,14 @@ public class PreventBeingUsedPower extends InteractionPower {
     }
 
     public ActionResult executeAction(PlayerEntity other, Hand hand) {
-        if(biEntityAction != null) {
+
+        if (biEntityAction != null) {
             biEntityAction.accept(new Pair<>(other, entity));
         }
-        performActorItemStuff(this, other, hand);
-        return getActionResult();
+
+        this.performActorItemStuff(this, other, hand);
+        return this.getActionResult();
+
     }
 
     public static PowerFactory createFactory() {

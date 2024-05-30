@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -13,7 +14,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -34,17 +34,22 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
         this.priority = priority;
     }
 
-    public boolean doesApply(ItemStack stack) {
-        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
+    public boolean doesApply(ItemStack stack, TriggerType triggerType, io.github.apace100.apoli.util.PriorityPhase priorityPhase) {
+        return this.triggerType == triggerType
+            && priorityPhase.test(this.getPriority())
+            && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)));
     }
 
     public void executeActions(StackReference stack) {
-        if(itemAction != null) {
+
+        if (itemAction != null) {
             itemAction.accept(new Pair<>(entity.getWorld(), stack));
         }
-        if(entityAction != null) {
+
+        if (entityAction != null) {
             entityAction.accept(entity);
         }
+
     }
 
     @Override
@@ -52,33 +57,23 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
         return this.priority;
     }
 
-    private boolean isInPhase(PriorityPhase phase) {
-        return phase == PriorityPhase.ALL || (phase == PriorityPhase.BEFORE && getPriority() >= 0) || (phase == PriorityPhase.AFTER && getPriority() < 0);
-    }
-
     public enum TriggerType {
         INSTANT, START, STOP, FINISH, DURING
     }
 
-    public enum PriorityPhase {
-        BEFORE, AFTER, ALL
-    }
-
     public static void executeActions(Entity user, StackReference useStack, ItemStack checkStack, TriggerType triggerType, PriorityPhase phase) {
-        if(user.getWorld().isClient) {
+
+        if (user.getWorld().isClient) {
             return;
         }
-        ActionOnItemUsePower.CallInstance<ActionOnItemUsePower> callInstance = new ActionOnItemUsePower.CallInstance<>();
-        callInstance.add(user, ActionOnItemUsePower.class, p -> p.triggerType == triggerType && p.doesApply(checkStack) && p.isInPhase(phase));
-        for(int i = callInstance.getMaxPriority(); i >= callInstance.getMinPriority(); i--) {
-            if(!callInstance.hasPowers(i)) {
-                continue;
-            }
-            List<ActionOnItemUsePower> powers = callInstance.getPowers(i);
-            for(ActionOnItemUsePower power : powers) {
-                power.executeActions(useStack);
-            }
+
+        ActionOnItemUsePower.CallInstance<ActionOnItemUsePower> aoiupci = new ActionOnItemUsePower.CallInstance<>();
+        aoiupci.add(user, ActionOnItemUsePower.class, p -> p.doesApply(checkStack, triggerType, phase));
+
+        for (int i = aoiupci.getMaxPriority(); i >= aoiupci.getMinPriority(); i--) {
+            aoiupci.forEach(i, aoiup -> aoiup.executeActions(useStack));
         }
+
     }
 
     public static PowerFactory createFactory() {
