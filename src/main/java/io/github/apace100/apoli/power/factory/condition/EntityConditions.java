@@ -405,6 +405,7 @@ public class EntityConditions {
         register(UsingEffectiveToolCondition.getFactory());
         register(GameModeCondition.getFactory());
         register(GlowingCondition.getFactory());
+        register(EntityInRadiusCondition.getFactory());
         register(HasCommandTagCondition.getFactory());
     }
 
