@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.integration.PowerClearCallback;
+import io.github.apace100.apoli.integration.PowerOverrideCallback;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,11 +27,15 @@ public class PowerTypeRegistry {
     }
 
     protected static PowerType update(Identifier id, PowerType powerType) {
-        if(idToPower.containsKey(id)) {
-            PowerType old = idToPower.get(id);
-            idToPower.remove(id);
+
+        PowerType oldPower = idToPower.remove(id);
+        if (oldPower instanceof MultiplePowerType<?> oldMultiple) {
+            oldMultiple.getSubPowers().forEach(PowerTypeRegistry::remove);
         }
+
+        PowerOverrideCallback.EVENT.invoker().onPowerOverride(id);
         return register(id, powerType);
+
     }
 
     protected static void disable(Identifier id) {

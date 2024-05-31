@@ -20,7 +20,7 @@ public class ShowToastAction {
     public static ActionFactory<Entity> getFactory() {
         return new ActionFactory<>(
             Apoli.identifier("show_toast"),
-            CustomToastData.DATA.copy(),
+            CustomToastData.DATA,
             ShowToastAction::action
         );
     }
