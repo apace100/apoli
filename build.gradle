@@ -1,37 +1,59 @@
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.6-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
-
-archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
+def ENV = System.getenv()
+
+base {
+	archivesName = project.archives_base_name
+}
+
 repositories {
-	maven {
-		name = 'Ladysnake Mods'
-		url = 'https://maven.ladysnake.org/releases'
+	mavenLocal()
+	mavenCentral()
+
+	exclusiveContent {
+
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+
+		filter {
+			includeGroup "maven.modrinth"
+		}
+		
 	}
 	maven {
-		name = "JitPack"
-		url = 'https://jitpack.io'
+		name = "Ladysnake Mods (Releases)"
+		url = "https://maven.ladysnake.org/releases"
 	}
 	maven {
-		url = 'https://maven.cafeteria.dev'
+		name = "Ladysnake Mods (Snapshots)"
+		url = "https://maven.ladysnake.org/snapshots"
+	}
+	maven {
+		url = "https://maven.cafeteria.dev"
 		content {
-			includeGroup 'net.adriantodt.fabricmc'
+			includeGroup "net.adriantodt.fabricmc"
 		}
 	}
 	maven {
-		url "https://maven.shedaniel.me/"
+		url = "https://maven.shedaniel.me"
 	}
 	maven {
-		url "https://maven.terraformersmc.com/"
+		url = "https://maven.terraformersmc.com"
 	}
-	mavenLocal()
+	maven {
+		name = "JitPack"
+		url = "https://jitpack.io"
+	}
 }
 
 loom {
@@ -67,33 +89,30 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}") {
+	//	Cardinal Components
+	include(modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
-	}
-	include "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}"
-
-	modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}") {
+	})
+	include(modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
-	}
-	include "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
+	})
 
-	modApi "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
-	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
+	//	PlayerAbilityLib
+	include(modApi("io.github.ladysnake:PlayerAbilityLib:${project.pal_version}"))
 
-	modApi "com.github.apace100:calio:v${project.calio_version}"
-	include "com.github.apace100:calio:v${project.calio_version}"
+	//	Calio
+	include(modApi("io.github.apace100:calio:${project.calio_version}"))
 
-	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") {
+	//	Cloth Config
+	include(modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
-	}
-	include "me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}"
+	})
 
-	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+	//	Mod Menu
+	include(modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}"))
 
-	modApi "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
-	include "com.github.DaFuqs:AdditionalEntityAttributes:${project.aea_version}"
-	// modImplementation "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
-	// include "de.dafuqs:AdditionalEntityAttributes:${project.aea_version}"
+	//	Additional Entity Attributes
+	include(modApi("maven.modrinth:AdditionalEntityAttributes:${project.aea_version}"))
 }
 
 processResources {
@@ -119,25 +138,22 @@ java {
 	// if it is present.
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${project.base.archivesName.get()}"}
 	}
 }
 
 // configure the maven publication
 publishing {
 	publications {
-		mavenJava(MavenPublication) {
-			// add all the jars that should be included when publishing to maven
-			artifact(remapJar) {
-				builtBy remapJar
-			}
-			artifact(sourcesJar) {
-				builtBy remapSourcesJar
-			}
+		create("mavenJava", MavenPublication) {
+			from components.java
 		}
 	}
 
@@ -148,5 +164,14 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 		mavenLocal()
+		if (ENV.MAVEN_URL && ENV.MAVEN_USERNAME && ENV.MAVEN_PASSWORD) {
+			maven {
+				url = ENV.MAVEN_URL
+				credentials {
+					username = ENV.MAVEN_USERNAME
+					password = ENV.MAVEN_PASSWORD
+				}
+			}
+		}
 	}
 }
