@@ -4,10 +4,12 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MovingEntity;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
@@ -17,16 +19,21 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
@@ -84,6 +91,16 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow public abstract double getY();
 
     @Shadow public abstract double getZ();
+
+    @Shadow public abstract World getWorld();
+
+    @Shadow @Final protected DataTracker dataTracker;
+
+    @Shadow @Final private Set<String> commandTags;
+
+    @Shadow public abstract Text getName();
+
+    @Shadow public abstract DataTracker getDataTracker();
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -353,6 +370,65 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
             this.apoli$movingVertically = true;
         }
 
+    }
+
+    @Unique
+    private static final TrackedData<Set<String>> COMMAND_TAGS = DataTracker.registerData(Entity.class, ApoliDataHandlers.STRING_SET);
+
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker()V"))
+    private void apoli$registerCommandTagsDataTracker(EntityType<?> type, World world, CallbackInfo ci) {
+
+        try {
+            this.dataTracker.startTracking(COMMAND_TAGS, Set.of());
+        }
+
+        catch (Exception e) {
+            Apoli.LOGGER.warn("Couldn't register data tracker for command tags for entity {}:", this.getName().getString(), e);
+        }
+
+    }
+
+    @ModifyReturnValue(method = "addCommandTag", at = @At("RETURN"))
+    private boolean apoli$trackAddedCommandTag(boolean original) {
+
+        if (original && this.getDataTracker().containsKey(COMMAND_TAGS)) {
+            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
+        }
+
+        return original;
+
+    }
+
+    @ModifyReturnValue(method = "removeCommandTag", at = @At("RETURN"))
+    private boolean apoli$trackRemovedCommandTag(boolean original) {
+
+        if (original && this.getDataTracker().containsKey(COMMAND_TAGS)) {
+            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
+        }
+
+        return original;
+
+    }
+
+    @ModifyReturnValue(method = "getCommandTags", at = @At("RETURN"))
+    private Set<String> apoli$queryTrackedCommandTags(Set<String> original) {
+        return this.getDataTracker().containsKey(COMMAND_TAGS)
+            ? this.getDataTracker().get(COMMAND_TAGS)
+            : original;
+    }
+
+    @Inject(method = "readNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
+    private void apoli$trackCommandTagsFromNbt(NbtCompound nbt, CallbackInfo ci) {
+
+        if (this.getDataTracker().containsKey(COMMAND_TAGS)) {
+            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
+        }
+
+    }
+
+    @Redirect(method = "writeNbt", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;commandTags:Ljava/util/Set;"))
+    private Set<String> apoli$overrideCommandTagsFieldAccess(Entity entity) {
+        return entity.getCommandTags();
     }
 
 }

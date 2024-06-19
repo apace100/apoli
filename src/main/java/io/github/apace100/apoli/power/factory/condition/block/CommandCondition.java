@@ -11,6 +11,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.world.World;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class CommandCondition {
 
     public static boolean condition(SerializableData.Instance data, CachedBlockPosition cachedBlockPosition) {
@@ -20,17 +22,20 @@ public class CommandCondition {
             return false;
         }
 
+        AtomicInteger result = new AtomicInteger();
         ServerCommandSource source = server.getCommandSource()
             .withPosition(cachedBlockPosition.getBlockPos().toCenterPos())
             .withLevel(Apoli.config.executeCommand.permissionLevel)
+            .withReturnValueConsumer((successful, returnValue) -> result.set(returnValue))
             .withSilent();
+
         Comparison comparison = data.get("comparison");
         String command = data.get("command");
 
         int compareTo = data.get("compare_to");
-        int result = server.getCommandManager().executeWithPrefix(source, command);
+        server.getCommandManager().executeWithPrefix(source, command);
 
-        return comparison.compare(result, compareTo);
+        return comparison.compare(result.get(), compareTo);
 
     }
 

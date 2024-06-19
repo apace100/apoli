@@ -21,6 +21,7 @@ public class ConditionFactory<T> implements Factory {
         this.identifier = identifier;
         this.condition = condition;
         this.data = data
+            .copy()
             .add("inverted", SerializableDataTypes.BOOLEAN, false);
     }
 

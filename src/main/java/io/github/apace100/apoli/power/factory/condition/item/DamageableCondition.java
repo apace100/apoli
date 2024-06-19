@@ -2,7 +2,7 @@ package io.github.apace100.apoli.power.factory.condition.item;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
-import io.github.apace100.apoli.util.IdentifierAlias;
+import io.github.apace100.apoli.power.factory.condition.DamageConditions;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
@@ -15,12 +15,16 @@ public class DamageableCondition {
     }
 
     public static ConditionFactory<Pair<World, ItemStack>> getFactory() {
-        IdentifierAlias.addPathAlias("is_damageable", "damageable");
-        return new ConditionFactory<>(
+
+        ConditionFactory<Pair<World, ItemStack>> factory = new ConditionFactory<>(
             Apoli.identifier("damageable"),
             new SerializableData(),
             DamageableCondition::condition
         );
+
+        DamageConditions.ALIASES.addPathAlias("is_damageable", factory.getSerializerId().getPath());
+        return factory;
+
     }
 
 }
