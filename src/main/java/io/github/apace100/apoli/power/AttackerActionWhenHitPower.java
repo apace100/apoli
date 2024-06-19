@@ -3,8 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.HudRender;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -28,7 +26,8 @@ public class AttackerActionWhenHitPower extends CooldownPower {
     }
 
     public boolean doesApply(DamageSource source, float amount) {
-        return this.canUse()
+        return source.getAttacker() != null
+            && this.canUse()
             && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
     }
 

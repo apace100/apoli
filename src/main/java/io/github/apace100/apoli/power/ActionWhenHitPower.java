@@ -3,8 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.HudRender;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -12,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.util.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -29,8 +28,9 @@ public class ActionWhenHitPower extends CooldownPower {
         this.bientityCondition = bientityCondition;
     }
 
-    public boolean doesApply(Entity attacker, DamageSource source, float amount) {
-        return this.canUse()
+    public boolean doesApply(@Nullable Entity attacker, DamageSource source, float amount) {
+        return attacker != null
+            && this.canUse()
             && (bientityCondition == null || bientityCondition.test(new Pair<>(attacker, entity)))
             && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
     }
