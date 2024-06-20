@@ -47,11 +47,9 @@ public class KeybindRegistry {
             while ((line = bufferedReader.readLine()) != null) {
                 Pattern pattern = Pattern.compile("key_" + binding.getName().getString() +":(.*)");
                 Matcher matcher = pattern.matcher(line);
-                Apoli.LOGGER.info(line);
                 if (matcher.find()) {
                     String savedKey = matcher.group(1);
                     key = InputUtil.fromTranslationKey(savedKey);
-                    Apoli.LOGGER.info(key);
                 }
             }
         } catch (IOException e) {
