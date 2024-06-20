@@ -51,6 +51,7 @@ public class KeybindRegistry {
                 if (matcher.find()) {
                     String savedKey = matcher.group(1);
                     key = InputUtil.fromTranslationKey(savedKey);
+                    Apoli.LOGGER.info(key);
                 }
             }
         } catch (IOException e) {
