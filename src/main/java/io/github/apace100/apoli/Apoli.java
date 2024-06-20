@@ -24,8 +24,10 @@ import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
@@ -112,11 +114,15 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new PowerTypes());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new KeyBindingManager());
 
 		ResourceConditions.register(ApoliResourceConditions.ANY_NAMESPACE_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, false));
 		ResourceConditions.register(ApoliResourceConditions.ALL_NAMESPACES_LOADED, jsonObject -> ApoliResourceConditions.namespacesLoaded(jsonObject, PowerTypes.LOADED_NAMESPACES, true));
 
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);
+
+		ServerWorldEvents.UNLOAD.register(((server, world) -> KeybindRegistry.clear()));
+		ClientPlayConnectionEvents.DISCONNECT.register(((handler, client) -> KeybindRegistry.clear()));
 
 		LOGGER.info("Apoli " + VERSION + " has initialized. Ready to power up your game!");
 	}
