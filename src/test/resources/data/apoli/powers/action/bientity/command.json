@@ -1,0 +1,16 @@
+{
+	"type": "apoli:action_on_entity_use",
+	"bientity_action": {
+		"type": "apoli:and",
+		"actions": [
+			{
+				"type": "apoli:execute_command",
+				"command": "tellraw @s [\"Target:\",{\"selector\":\"%t\"}]"
+			},
+			{
+				"type": "apoli:execute_command",
+				"command": "tellraw @s [\"Actor: \",{\"selector\":\"%a\"}]"
+			}
+		]
+	}
+}
