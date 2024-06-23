@@ -31,6 +31,7 @@ public class BiEntityActions {
         register(DamageAction.getFactory());
         register(AddToSetAction.getFactory());
         register(RemoveFromSetAction.getFactory());
+        register(ExecuteCommandAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<Entity, Entity>> actionFactory) {
