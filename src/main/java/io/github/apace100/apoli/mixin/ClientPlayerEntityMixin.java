@@ -1,19 +1,17 @@
 package io.github.apace100.apoli.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
 import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
-import io.github.apace100.apoli.power.IgnoreWaterPower;
-import io.github.apace100.apoli.power.ModifyAirSpeedPower;
-import io.github.apace100.apoli.power.PreventSprintingPower;
-import io.github.apace100.apoli.power.SprintingPower;
-import io.github.apace100.apoli.power.SwimmingPower;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.screen.toast.CustomToast;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.input.Input;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -22,12 +20,12 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implements WaterMovingEntity, CustomToastViewer {
@@ -35,15 +33,14 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @Unique
     private boolean apoli$isMoving = false;
 
-    @Shadow @Final protected MinecraftClient client;
+    @Shadow
+    @Final
+    protected MinecraftClient client;
 
-    @Shadow protected int ticksLeftToDoubleTapSprint;
+    @Shadow
+    protected abstract boolean isWalking();
 
-    @Shadow protected abstract boolean isWalking();
-
-    @Shadow public Input input;
-
-    public ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {
+    private ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {
         super(world, profile);
     }
 
@@ -76,11 +73,6 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
         return PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, playerAbilities.getFlySpeed());
     }
 
-    @ModifyReturnValue(method = "canSprint", at = @At("RETURN"))
-    private boolean apoli$preventSprinting(boolean original) {
-        return !PowerHolderComponent.hasPower(this, PreventSprintingPower.class) && original;
-    }
-
     @Override
     public void apoli$showToast(CustomToastData toastData) {
         MinecraftClient client = MinecraftClient.getInstance();
@@ -90,48 +82,36 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
         });
     }
 
-    @Unique
-    private boolean apoli$previousWalkingState = false;
-
-    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 0), ordinal = 4)
-    private boolean apoli$allowDoubleTapSprint(boolean original) {
-        return original || PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && isWalking() && this.ticksLeftToDoubleTapSprint <= 0 && !this.client.options.sprintKey.isPressed();
+    @Inject(method = "tickMovement", at = @At("HEAD"))
+    private void apoli$cacheSprintingPowers(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+        sprintingPowersRef.set(PowerHolderComponent.getPowers(this, SprintingPower.class));
+        preventSprintingRef.set(PowerHolderComponent.hasPower(this, PreventSprintingPower.class));
     }
 
-    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 0), ordinal = 5)
-    private boolean apoli$allowDoubleTapSprint2(boolean original) {
-        return original || PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && isWalking() && this.ticksLeftToDoubleTapSprint <= 0 && !this.client.options.sprintKey.isPressed();
-    }
-
-    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 0), ordinal = 6)
-    private boolean apoli$allowDoubleTapSprint3(boolean original) {
-        boolean setWalkingState = PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && isWalking() && this.ticksLeftToDoubleTapSprint <= 0 && !this.client.options.sprintKey.isPressed();
-        if (setWalkingState) {
-            this.apoli$previousWalkingState = true;
-        }
-        return original || setWalkingState;
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
+    private boolean apoli$allowActivePowerSprinting(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+        return original || (this.isWalking() && sprintingPowersRef.get()
+            .stream()
+            .anyMatch(SprintingPower::shouldRequireInput));
     }
 
     @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z"))
-    private void apugli$allowPowerSprinting(CallbackInfo ci) {
-        if (PowerHolderComponent.hasPower(this, SprintingPower.class) && !this.isSprinting() && PowerHolderComponent.getPowers(this, SprintingPower.class).stream().noneMatch(SprintingPower::shouldRequireInput) || this.client.options.sprintKey.isPressed() || this.isWalking() && !this.apoli$previousWalkingState && this.ticksLeftToDoubleTapSprint > 0) {
-            this.setSprinting(true);
+    private void apoli$allowPassivePowerSprinting(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+
+        if (this.isSprinting() || preventSprintingRef.get()) {
+            return;
         }
-        if (apoli$previousWalkingState && !this.isWalking()) {
-            this.apoli$previousWalkingState = false;
-        }
+
+        this.setSprinting(sprintingPowersRef.get()
+            .stream()
+            .anyMatch(Predicate.not(SprintingPower::shouldRequireInput)));
+
     }
 
-    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 1), ordinal = 4)
-    private boolean apugli$cancelOutWaterSprintFalse(boolean value) {
-        return value && (PowerHolderComponent.getPowers(this, SprintingPower.class).stream().noneMatch(SprintingPower::shouldRequireInput) || !this.input.hasForwardMovement());
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"))
+    private boolean apoli$accountForSprintingPowersWhenCancelling(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+        return (original || !sprintingPowersRef.get().isEmpty())
+            && !preventSprintingRef.get();
     }
 
-    @ModifyVariable(method = "tickMovement", at = @At(value = "STORE", ordinal = 1), ordinal = 5)
-    private boolean apugli$resetPowerSprinting(boolean value) {
-        if (PowerHolderComponent.hasPower(this, SprintingPower.class)) {
-            return PowerHolderComponent.getPowers(this, SprintingPower.class).stream().anyMatch(SprintingPower::shouldRequireInput) && (!this.isWalking() || this.horizontalCollision && !this.collidedSoftly);
-        }
-        return value;
-    }
 }
