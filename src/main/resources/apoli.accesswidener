@@ -13,3 +13,8 @@ extendable class net/minecraft/world/event/Vibrations$ListenerData
 accessible field net/minecraft/server/command/AdvancementCommand$Selection before Z
 accessible field net/minecraft/server/command/AdvancementCommand$Selection after Z
 accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
+accessible class net/minecraft/entity/player/ItemCooldownManager$Entry
+accessible field net/minecraft/entity/player/ItemCooldownManager entries Ljava/util/Map;
+accessible field net/minecraft/entity/player/ItemCooldownManager$Entry startTick I
+accessible field net/minecraft/entity/player/ItemCooldownManager$Entry endTick I
+accessible class net/minecraft/client/toast/ToastManager$Entry

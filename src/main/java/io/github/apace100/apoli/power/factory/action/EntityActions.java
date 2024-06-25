@@ -11,6 +11,7 @@ import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -37,6 +38,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class EntityActions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {
@@ -343,8 +346,9 @@ public class EntityActions {
         register(SelectorAction.getFactory());
         register(GrantAdvancementAction.getFactory());
         register(RevokeAdvancementAction.getFactory());
-        register(ActionOnSetAction.getFactory());
+        register(ActionOnEntitySetAction.getFactory());
         register(RandomTeleportAction.getFactory());
+        register(ShowToastAction.getFactory());
         register(SpawnEffectCloudAction.getFactory());
     }
 

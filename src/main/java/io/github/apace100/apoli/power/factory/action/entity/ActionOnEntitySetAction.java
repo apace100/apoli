@@ -6,6 +6,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.EntitySetPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -18,7 +19,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class ActionOnSetAction {
+public class ActionOnEntitySetAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
 
@@ -63,15 +64,20 @@ public class ActionOnSetAction {
     }
 
     public static ActionFactory<Entity> getFactory() {
-        return new ActionFactory<>(
-            Apoli.identifier("action_on_set"),
+
+        ActionFactory<Entity> factory = new ActionFactory<>(
+            Apoli.identifier("action_on_entity_set"),
             new SerializableData()
                 .add("set", ApoliDataTypes.POWER_TYPE)
                 .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION)
                 .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
                 .add("limit", SerializableDataTypes.INT, 0)
                 .add("reverse", SerializableDataTypes.BOOLEAN, false),
-            ActionOnSetAction::action
+            ActionOnEntitySetAction::action
         );
+
+        EntityActions.ALIASES.addPathAlias("action_on_set", factory.getSerializerId().getPath());
+        return factory;
+
     }
 }

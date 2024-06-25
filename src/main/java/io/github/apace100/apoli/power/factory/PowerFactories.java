@@ -4,10 +4,13 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.util.IdentifierAlias;
 import io.github.ladysnake.pal.VanillaAbilities;
 import net.minecraft.registry.Registry;
 
 public class PowerFactories {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {
@@ -131,6 +134,7 @@ public class PowerFactories {
         register(ActionOnBlockPlacePower::createFactory);
         register(PreventBlockPlacePower::createFactory);
         register(EntitySetPower::createFactory);
+        register(ModifyFovPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

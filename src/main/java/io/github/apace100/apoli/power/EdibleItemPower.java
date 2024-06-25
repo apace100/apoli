@@ -1,6 +1,8 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.EntityLinkedItemStack;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.InventoryUtil;
@@ -20,9 +22,12 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Pair;
 import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -124,6 +129,19 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     public int getConsumingTime() {
         return (int) ModifierUtil.applyModifiers(entity, consumingTimeModifiers, this.getFoodComponent().isSnack() ? 16 : 32);
+    }
+
+    public static Optional<EdibleItemPower> get(ItemStack stack, @Nullable Entity holder) {
+        return PowerHolderComponent.getPowers(holder, EdibleItemPower.class)
+            .stream()
+            .filter(p -> p.doesApply(stack))
+            .max(Comparator.comparing(EdibleItemPower::getPriority))
+            .filter(p -> !stack.getItem().isFood() || p.getPriority() > 1);
+    }
+
+    public static Optional<EdibleItemPower> get(ItemStack stack) {
+        Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity();
+        return get(stack, stackHolder);
     }
 
     public static PowerFactory createFactory() {

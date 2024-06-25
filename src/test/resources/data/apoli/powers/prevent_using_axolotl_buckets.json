@@ -1,0 +1,9 @@
+{
+  "type": "apoli:prevent_item_use",
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "item": "minecraft:axolotl_bucket"
+    }
+  }
+}
