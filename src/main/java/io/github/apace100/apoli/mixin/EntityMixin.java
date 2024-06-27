@@ -12,6 +12,7 @@ import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.util.ApoliArmPose;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import net.fabricmc.api.EnvType;
@@ -56,8 +57,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 @Mixin(Entity.class)
@@ -103,6 +103,10 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @Shadow public abstract Text getName();
 
     @Shadow public abstract DataTracker getDataTracker();
+
+    @Shadow public abstract void setPose(EntityPose pose);
+
+    @Shadow public abstract EntityPose getPose();
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -415,7 +419,13 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     }
 
     @Unique
+    private EntityPose apoli$previousEntityPose;
+
+    @Unique
     private EntityPose apoli$modifiedEntityPose;
+
+    @Unique
+    private ApoliArmPose apoli$modifiedArmPose;
 
     @Override
     public EntityPose apoli$getModifiedEntityPose() {
@@ -423,8 +433,56 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     }
 
     @Override
-    public void apoli$setModifiedEntityPose(EntityPose modifiedEntityPose) {
-        this.apoli$modifiedEntityPose = modifiedEntityPose;
+    public void apoli$setModifiedEntityPose(EntityPose entityPose) {
+        this.apoli$modifiedEntityPose = entityPose;
+    }
+
+    @Override
+    public ApoliArmPose apoli$getModifiedArmPose() {
+        return apoli$modifiedArmPose;
+    }
+
+    @Override
+    public void apoli$setModifiedArmPose(ApoliArmPose armPose) {
+        this.apoli$modifiedArmPose = armPose;
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void apoli$overridePose(CallbackInfo ci) {
+        PowerHolderComponent.getPowers((Entity) (Object) this, PosePower.class)
+            .stream()
+            .max(Comparator.comparing(PosePower::getPriority))
+            .ifPresentOrElse(
+                posePower -> {
+
+                    if (!((Entity) (Object) this instanceof PlayerEntity) && apoli$previousEntityPose == null) {
+                        this.apoli$previousEntityPose = this.getPose();
+                    }
+
+                    @Nullable
+                    EntityPose entityPose = posePower.getEntityPose();
+
+                    this.apoli$setModifiedEntityPose(entityPose);
+                    this.apoli$setModifiedArmPose(posePower.getArmPose());
+
+                    if (entityPose != null) {
+                        this.setPose(entityPose);
+                    }
+
+                },
+                () -> {
+
+                    this.apoli$setModifiedEntityPose(null);
+                    this.apoli$setModifiedArmPose(null);
+
+                    if (apoli$previousEntityPose != null) {
+                        this.setPose(apoli$previousEntityPose);
+                    }
+
+                    this.apoli$previousEntityPose = null;
+
+                }
+            );
     }
 
 }

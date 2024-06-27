@@ -85,7 +85,7 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z"))
     private boolean apoli$forceSneakingPose(boolean original) {
-        return original || EntityPosePower.isPosed(this, EntityPose.CROUCHING);
+        return original || PosePower.hasEntityPose(this, EntityPose.CROUCHING);
     }
 
 }

@@ -135,7 +135,7 @@ public class PowerFactories {
         register(PreventBlockPlacePower::createFactory);
         register(EntitySetPower::createFactory);
         register(ModifyFovPower::createFactory);
-        register(EntityPosePower::createFactory);
+        register(PosePower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {

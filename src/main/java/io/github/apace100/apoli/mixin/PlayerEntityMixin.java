@@ -2,6 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
@@ -43,11 +44,10 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Mixin(value = PlayerEntity.class, priority = 999)
-public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput, JumpingEntity {
+public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput, JumpingEntity, ModifiedPoseHolder {
 
     @Shadow
     public abstract boolean damage(DamageSource source, float amount);
@@ -323,29 +323,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         return original && this.apoli$applySprintJumpEffects();
     }
 
-    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;updatePose()V"))
-    private void apoli$overridePose(PlayerEntity player, Operation<Void> original) {
-
-        if (!(player instanceof ModifiedPoseHolder poseHolder)) {
-            original.call(player);
-            return;
-        }
-
-        PowerHolderComponent.getPowers(player, EntityPosePower.class)
-            .stream()
-            .max(Comparator.comparing(EntityPosePower::getPriority))
-            .map(EntityPosePower::getPose)
-            .ifPresentOrElse(
-                entityPose -> {
-                    poseHolder.apoli$setModifiedEntityPose(entityPose);
-                    player.setPose(entityPose);
-                },
-                () -> {
-                    poseHolder.apoli$setModifiedEntityPose(null);
-                    original.call(player);
-                }
-            );
-
+    @WrapWithCondition(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;updatePose()V"))
+    private boolean apoli$preventUpdatingPose(PlayerEntity player) {
+        return this.apoli$getModifiedEntityPose() == null;
     }
 
 }

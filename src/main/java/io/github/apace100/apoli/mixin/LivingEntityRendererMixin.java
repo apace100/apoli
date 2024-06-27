@@ -93,7 +93,7 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
 
     @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isUsingRiptide()Z"))
     private boolean apoli$forceRiptidePose(boolean original, LivingEntity entity) {
-        return original || EntityPosePower.isPosed(entity, EntityPose.SPIN_ATTACK);
+        return original || PosePower.hasEntityPose(entity, EntityPose.SPIN_ATTACK);
     }
 
     @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;deathTime:I", ordinal = 0))
