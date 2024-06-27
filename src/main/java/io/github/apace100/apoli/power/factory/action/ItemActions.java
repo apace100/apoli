@@ -2,15 +2,13 @@ package io.github.apace100.apoli.power.factory.action;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.action.item.HolderAction;
-import io.github.apace100.apoli.power.factory.action.item.MergeNbtAction;
-import io.github.apace100.apoli.power.factory.action.item.ItemActionFactory;
-import io.github.apace100.apoli.power.factory.action.item.ModifyAction;
+import io.github.apace100.apoli.power.factory.action.item.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -27,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ItemActions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {
@@ -124,6 +124,7 @@ public class ItemActions {
                 }
             }));
         register(HolderAction.getFactory());
+        register(ModifyItemCooldownAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<World, StackReference>> actionFactory) {

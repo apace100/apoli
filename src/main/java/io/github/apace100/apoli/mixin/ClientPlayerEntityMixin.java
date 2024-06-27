@@ -3,9 +3,13 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
+import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.CustomToastData;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.screen.toast.CustomToast;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -23,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
-public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implements WaterMovingEntity {
+public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implements WaterMovingEntity, CustomToastViewer {
 
     @Unique
     private boolean apoli$isMoving = false;
@@ -68,6 +72,15 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @ModifyReturnValue(method = "canSprint", at = @At("RETURN"))
     private boolean apoli$preventSprinting(boolean original) {
         return !PowerHolderComponent.hasPower(this, PreventSprintingPower.class) && original;
+    }
+
+    @Override
+    public void apoli$showToast(CustomToastData toastData) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        client.execute(() -> {
+            CustomToast toast = new CustomToast(toastData);
+            client.getToastManager().add(toast);
+        });
     }
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z"))

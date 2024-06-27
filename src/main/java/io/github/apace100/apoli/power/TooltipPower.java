@@ -92,7 +92,7 @@ public class TooltipPower extends Power {
         NbtList tooltipTextsNbt = new NbtList();
 
         for (Text tooltipText : tooltipTexts) {
-            NbtString tooltipTextNbt = NbtString.of(Text.Serializer.toJson(tooltipText));
+            NbtString tooltipTextNbt = NbtString.of(Text.Serialization.toJsonString(tooltipText));
             tooltipTextsNbt.add(tooltipTextNbt);
         }
 
@@ -110,7 +110,7 @@ public class TooltipPower extends Power {
         NbtList tooltipTextsNbt = rootNbt.getList("Tooltips", NbtElement.STRING_TYPE);
 
         for (int i = 0; i < tooltipTextsNbt.size(); i++) {
-            Text tooltipText = Text.Serializer.fromJson(tooltipTextsNbt.getString(i));
+            Text tooltipText = Text.Serialization.fromJson(tooltipTextsNbt.getString(i));
             tooltipTexts.add(tooltipText);
         }
 
@@ -143,7 +143,7 @@ public class TooltipPower extends Power {
             entity.getRotationClient(),
             (ServerWorld) entity.getWorld(),
             Apoli.config.executeCommand.permissionLevel,
-            entity.getEntityName(),
+            entity.getNameForScoreboard(),
             entity.getName(),
             entity.getWorld().getServer(),
             entity

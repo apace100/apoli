@@ -1,4 +1,5 @@
 package io.github.apace100.apoli.command;
+
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -10,7 +11,7 @@ import io.github.apace100.apoli.power.CooldownPower;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.VariableIntPower;
 import net.minecraft.command.CommandSource;
-import net.minecraft.scoreboard.ScoreboardPlayerScore;
+import net.minecraft.scoreboard.ScoreAccess;
 import net.minecraft.text.Text;
 
 import java.util.concurrent.CompletableFuture;
@@ -152,6 +153,6 @@ public class PowerOperation implements ArgumentType<PowerOperation.Operation> {
     }
 
     public interface Operation {
-        void apply(Power power, ScoreboardPlayerScore score) throws CommandSyntaxException;
+        void apply(Power power, ScoreAccess score) throws CommandSyntaxException;
     }
 }

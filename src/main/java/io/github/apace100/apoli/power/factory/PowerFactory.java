@@ -23,7 +23,7 @@ public class PowerFactory<P extends Power> implements Factory {
 
     public PowerFactory(Identifier id, SerializableData data, Function<SerializableData.Instance, BiFunction<PowerType<P>, LivingEntity, P>> factoryConstructor) {
         this.id = id;
-        this.data = data;
+        this.data = data.copy();
         this.factoryConstructor = factoryConstructor;
     }
 
