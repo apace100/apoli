@@ -306,6 +306,12 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     private boolean apoli$movingVertically;
 
     @Unique
+    private double apoli$horizontalMovementValue;
+
+    @Unique
+    private double apoli$verticalMovementValue;
+
+    @Unique
     private Vec3d apoli$prevPos;
 
     @Override
@@ -316,6 +322,16 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Override
     public boolean apoli$isMovingVertically() {
         return apoli$movingVertically;
+    }
+
+    @Override
+    public double apoli$getHorizontalMovementValue() {
+        return apoli$horizontalMovementValue;
+    }
+
+    @Override
+    public double apoli$getVerticalMovementValue() {
+        return apoli$verticalMovementValue;
     }
 
     @Override
@@ -341,13 +357,16 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         double dy = apoli$prevPos.y - this.getY();
         double dz = apoli$prevPos.z - this.getZ();
 
+        this.apoli$horizontalMovementValue = Math.sqrt(dx * dx + dz * dz);
+        this.apoli$verticalMovementValue = Math.sqrt(dy * dy);
+
         this.apoli$prevPos = this.getPos();
 
-        if (Math.sqrt(dx * dx + dz * dz) >= 0.01) {
+        if (this.apoli$horizontalMovementValue >= 0.01) {
             this.apoli$movingHorizontally = true;
         }
 
-        if (Math.sqrt(dy * dy) >= 0.01) {
+        if (this.apoli$verticalMovementValue >= 0.01) {
             this.apoli$movingVertically = true;
         }
 

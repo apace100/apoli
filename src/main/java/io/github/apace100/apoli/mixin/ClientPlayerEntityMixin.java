@@ -1,19 +1,18 @@
 package io.github.apace100.apoli.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
 import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
-import io.github.apace100.apoli.power.IgnoreWaterPower;
-import io.github.apace100.apoli.power.ModifyAirSpeedPower;
-import io.github.apace100.apoli.power.PreventSprintingPower;
-import io.github.apace100.apoli.power.SwimmingPower;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.screen.toast.CustomToast;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerAbilities;
@@ -21,11 +20,12 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity implements WaterMovingEntity, CustomToastViewer {
@@ -35,9 +35,12 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 
     @Shadow
     @Final
-    public ClientPlayNetworkHandler networkHandler;
+    protected MinecraftClient client;
 
-    public ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {
+    @Shadow
+    protected abstract boolean isWalking();
+
+    private ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {
         super(world, profile);
     }
 
@@ -70,11 +73,6 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
         return PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, playerAbilities.getFlySpeed());
     }
 
-    @ModifyReturnValue(method = "canSprint", at = @At("RETURN"))
-    private boolean apoli$preventSprinting(boolean original) {
-        return !PowerHolderComponent.hasPower(this, PreventSprintingPower.class) && original;
-    }
-
     @Override
     public void apoli$showToast(CustomToastData toastData) {
         MinecraftClient client = MinecraftClient.getInstance();
@@ -82,6 +80,38 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
             CustomToast toast = new CustomToast(toastData);
             client.getToastManager().add(toast);
         });
+    }
+
+    @Inject(method = "tickMovement", at = @At("HEAD"))
+    private void apoli$cacheSprintingPowers(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+        sprintingPowersRef.set(PowerHolderComponent.getPowers(this, SprintingPower.class));
+        preventSprintingRef.set(PowerHolderComponent.hasPower(this, PreventSprintingPower.class));
+    }
+
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
+    private boolean apoli$allowActivePowerSprinting(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+        return original || (this.isWalking() && sprintingPowersRef.get()
+            .stream()
+            .anyMatch(SprintingPower::shouldRequireInput));
+    }
+
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z"))
+    private void apoli$allowPassivePowerSprinting(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+
+        if (this.isSprinting() || preventSprintingRef.get()) {
+            return;
+        }
+
+        this.setSprinting(sprintingPowersRef.get()
+            .stream()
+            .anyMatch(Predicate.not(SprintingPower::shouldRequireInput)));
+
+    }
+
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"))
+    private boolean apoli$accountForSprintingPowersWhenCancelling(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+        return (original || !sprintingPowersRef.get().isEmpty())
+            && !preventSprintingRef.get();
     }
 
 }
