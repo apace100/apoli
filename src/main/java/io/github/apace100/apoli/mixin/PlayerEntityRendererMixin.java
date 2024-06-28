@@ -8,12 +8,11 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
-import io.github.apace100.apoli.access.ModifiedPoseHolder;
 import io.github.apace100.apoli.access.PseudoRenderDataHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PosePower;
 import io.github.apace100.apoli.power.ModelColorPower;
-import io.github.apace100.apoli.util.ApoliArmPose;
+import io.github.apace100.apoli.util.ArmPoseReference;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.ModelPart;
@@ -91,9 +90,9 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     @ModifyReturnValue(method = "getArmPose", at = @At("RETURN"))
     private static BipedEntityModel.ArmPose apoli$overrideArmPose(BipedEntityModel.ArmPose original, AbstractClientPlayerEntity player) {
-        return player instanceof ModifiedPoseHolder poseHolder
-            ? ApoliArmPose.convertOrOriginal(poseHolder.apoli$getModifiedArmPose(), original)
-            : original;
+        return ArmPoseReference
+            .getArmPose(player)
+            .orElse(original);
     }
 
 }

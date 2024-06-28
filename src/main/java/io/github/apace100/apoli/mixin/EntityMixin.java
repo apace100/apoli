@@ -12,7 +12,7 @@ import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.apoli.util.ApoliArmPose;
+import io.github.apace100.apoli.util.ArmPoseReference;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import net.fabricmc.api.EnvType;
@@ -425,7 +425,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     private EntityPose apoli$modifiedEntityPose;
 
     @Unique
-    private ApoliArmPose apoli$modifiedArmPose;
+    private ArmPoseReference apoli$modifiedArmPose;
 
     @Override
     public EntityPose apoli$getModifiedEntityPose() {
@@ -438,12 +438,12 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     }
 
     @Override
-    public ApoliArmPose apoli$getModifiedArmPose() {
+    public ArmPoseReference apoli$getModifiedArmPose() {
         return apoli$modifiedArmPose;
     }
 
     @Override
-    public void apoli$setModifiedArmPose(ApoliArmPose armPose) {
+    public void apoli$setModifiedArmPose(ArmPoseReference armPose) {
         this.apoli$modifiedArmPose = armPose;
     }
 

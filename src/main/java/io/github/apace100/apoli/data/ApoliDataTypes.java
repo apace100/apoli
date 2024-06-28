@@ -453,7 +453,7 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<EntityPose> ENTITY_POSE = SerializableDataType.enumValue(EntityPose.class);
 
-    public static final SerializableDataType<ApoliArmPose> APOLI_ARM_POSE = SerializableDataType.enumValue(ApoliArmPose.class);
+    public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return condition(registry, IdentifierAlias.GLOBAL, name);

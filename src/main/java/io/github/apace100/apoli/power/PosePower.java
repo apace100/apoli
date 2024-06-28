@@ -4,7 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.ModifiedPoseHolder;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.util.ApoliArmPose;
+import io.github.apace100.apoli.util.ArmPoseReference;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -18,11 +18,11 @@ public class PosePower extends Power implements Prioritized<PosePower> {
     private final EntityPose entityPose;
 
     @Nullable
-    private final ApoliArmPose armPose;
+    private final ArmPoseReference armPose;
 
     private final int priority;
 
-    public PosePower(PowerType<?> type, LivingEntity entity, @Nullable EntityPose entityPose, @Nullable ApoliArmPose armPose, int priority) {
+    public PosePower(PowerType<?> type, LivingEntity entity, @Nullable EntityPose entityPose, @Nullable ArmPoseReference armPose, int priority) {
         super(type, entity);
         this.entityPose = entityPose;
         this.armPose = armPose;
@@ -46,7 +46,7 @@ public class PosePower extends Power implements Prioritized<PosePower> {
     }
 
     @Nullable
-    public ApoliArmPose getArmPose() {
+    public ArmPoseReference getArmPose() {
         return armPose;
     }
 
@@ -65,7 +65,7 @@ public class PosePower extends Power implements Prioritized<PosePower> {
             Apoli.identifier("pose"),
             new SerializableData()
                 .add("entity_pose", ApoliDataTypes.ENTITY_POSE, null)
-                .add("arm_pose", ApoliDataTypes.APOLI_ARM_POSE, null)
+                .add("arm_pose", ApoliDataTypes.ARM_POSE_REFERENCE, null)
                 .add("priority", SerializableDataTypes.INT, 0),
             data -> (powerType, livingEntity) -> new PosePower(
                 powerType,

@@ -1,11 +1,14 @@
 package io.github.apace100.apoli.util;
 
+import io.github.apace100.apoli.access.ModifiedPoseHolder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.entity.Entity;
 
-public enum ApoliArmPose {
+import java.util.Optional;
+
+public enum ArmPoseReference {
 
     EMPTY,
     ITEM,
@@ -19,13 +22,13 @@ public enum ApoliArmPose {
     BRUSH;
 
     @Environment(EnvType.CLIENT)
-    public static BipedEntityModel.ArmPose convertOrOriginal(@Nullable ApoliArmPose apoliArmPose, BipedEntityModel.ArmPose original) {
+    public static Optional<BipedEntityModel.ArmPose> getArmPose(Entity entity) {
 
-        if (apoliArmPose == null) {
-            return original;
+        if (!(entity instanceof ModifiedPoseHolder poseHolder) || poseHolder.apoli$getModifiedArmPose() == null) {
+            return Optional.empty();
         }
 
-        return switch (apoliArmPose) {
+        return Optional.of(switch (poseHolder.apoli$getModifiedArmPose()) {
             case EMPTY ->
                 BipedEntityModel.ArmPose.EMPTY;
             case ITEM ->
@@ -46,7 +49,7 @@ public enum ApoliArmPose {
                 BipedEntityModel.ArmPose.CROSSBOW_HOLD;
             case CROSSBOW_CHARGE ->
                 BipedEntityModel.ArmPose.CROSSBOW_CHARGE;
-        };
+        });
 
     }
 

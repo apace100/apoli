@@ -1,8 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import io.github.apace100.apoli.access.ModifiedPoseHolder;
-import io.github.apace100.apoli.util.ApoliArmPose;
+import io.github.apace100.apoli.util.ArmPoseReference;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.entity.model.AnimalModel;
@@ -19,16 +18,16 @@ public abstract class BipedEntityModelMixin<T extends LivingEntity> extends Anim
 
     @ModifyExpressionValue(method = "positionRightArm", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/entity/model/BipedEntityModel;rightArmPose:Lnet/minecraft/client/render/entity/model/BipedEntityModel$ArmPose;"))
     private BipedEntityModel.ArmPose apoli$overrideRightArmPose(BipedEntityModel.ArmPose original, T entity) {
-        return entity instanceof ModifiedPoseHolder poseHolder
-            ? ApoliArmPose.convertOrOriginal(poseHolder.apoli$getModifiedArmPose(), original)
-            : original;
+        return ArmPoseReference
+            .getArmPose(entity)
+            .orElse(original);
     }
 
     @ModifyExpressionValue(method = "positionLeftArm", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/entity/model/BipedEntityModel;leftArmPose:Lnet/minecraft/client/render/entity/model/BipedEntityModel$ArmPose;"))
     private BipedEntityModel.ArmPose apoli$overrideLeftArmPose(BipedEntityModel.ArmPose original, T entity) {
-        return entity instanceof ModifiedPoseHolder poseHolder
-            ? ApoliArmPose.convertOrOriginal(poseHolder.apoli$getModifiedArmPose(), original)
-            : original;
+        return ArmPoseReference
+            .getArmPose(entity)
+            .orElse(original);
     }
 
 }
