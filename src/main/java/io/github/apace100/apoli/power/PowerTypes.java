@@ -6,11 +6,14 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.integration.*;
+import io.github.apace100.apoli.networking.packet.s2c.SyncKeyBindingRegistryS2CPacket;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowerTypeRegistryS2CPacket;
 import io.github.apace100.apoli.power.factory.PowerFactories;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ApoliResourceConditions;
+import io.github.apace100.apoli.util.KeyBindingData;
+import io.github.apace100.apoli.util.KeybindRegistry;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
@@ -80,7 +83,12 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             Map<Identifier, PowerType<?>> powers = new HashMap<>();
             PowerTypeRegistry.forEach(powers::put);
 
+
+            Map<Identifier, KeyBindingData> keyBindingData = new HashMap<>();
+            KeybindRegistry.forEach(keyBindingData::put);
+
             ServerPlayNetworking.send(player, new SyncPowerTypeRegistryS2CPacket(powers));
+            ServerPlayNetworking.send(player, new SyncKeyBindingRegistryS2CPacket(keyBindingData));
 
             //  Sync power holder CCA component upon the player joining the server
             if (joined) {

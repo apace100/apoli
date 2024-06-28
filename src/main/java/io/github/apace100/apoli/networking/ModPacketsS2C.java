@@ -3,11 +3,13 @@ package io.github.apace100.apoli.networking;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.mixin.GameOptionsAccessor;
 import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.networking.packet.s2c.*;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.util.KeybindRegistry;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -15,6 +17,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworkin
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -37,6 +41,7 @@ public class ModPacketsS2C {
 
         ClientPlayConnectionEvents.INIT.register(((clientPlayNetworkHandler, minecraftClient) -> {
             ClientPlayNetworking.registerReceiver(SyncPowerTypeRegistryS2CPacket.TYPE, ModPacketsS2C::onPowerTypeRegistrySync);
+            ClientPlayNetworking.registerReceiver(SyncKeyBindingRegistryS2CPacket.TYPE, ModPacketsS2C::onKeyBindingRegistrySync);
             ClientPlayNetworking.registerReceiver(SyncPowerS2CPacket.TYPE, ModPacketsS2C::onPowerSync);
             ClientPlayNetworking.registerReceiver(SyncPowersInBulkS2CPacket.TYPE, ModPacketsS2C::onPowerSyncInBulk);
             ClientPlayNetworking.registerReceiver(MountPlayerS2CPacket.TYPE, ModPacketsS2C::onPlayerMount);
@@ -92,6 +97,12 @@ public class ModPacketsS2C {
     private static void onPowerTypeRegistrySync(SyncPowerTypeRegistryS2CPacket packet, ClientPlayerEntity player, PacketSender responseSender) {
         PowerTypeRegistry.clear();
         packet.powers().forEach(PowerTypeRegistry::register);
+    }
+
+    private static void onKeyBindingRegistrySync(SyncKeyBindingRegistryS2CPacket packet, ClientPlayerEntity player, PacketSender responseSender) {
+        KeybindRegistry.clear();
+        packet.keyBindings().forEach(KeybindRegistry::registerClient);
+        ((GameOptionsAccessor)MinecraftClient.getInstance().options).setAllKeys(KeyBindingRegistryImpl.process(MinecraftClient.getInstance().options.allKeys));
     }
 
     private static void onPlayerMount(MountPlayerS2CPacket packet, ClientPlayerEntity player, PacketSender responseSender) {

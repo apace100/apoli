@@ -527,4 +527,17 @@ public class ApoliDataTypes {
         );
     }
 
+    public static final SerializableDataType<KeyBindingData> KEYBINDING = SerializableDataType.compound(KeyBindingData.class,
+            new SerializableData()
+                    .add("key", SerializableDataTypes.STRING)
+                    .add("category", SerializableDataTypes.STRING)
+                    .add("name", SerializableDataTypes.TEXT, null),
+            dataInstance -> new KeyBindingData(dataInstance.get("name"), dataInstance.get("key"), dataInstance.get("category")),
+            (serializableData, keyBinding) -> {
+                SerializableData.Instance data = serializableData.new Instance();
+                data.set("name", keyBinding.getName());
+                data.set("key", keyBinding.getKey());
+                data.set("category", keyBinding.getCategory());
+                return data;
+            });
 }
