@@ -136,6 +136,7 @@ public class PowerFactories {
         register(EntitySetPower::createFactory);
         register(ModifyFovPower::createFactory);
         register(PreventEntitySelectionPower::createFactory);
+        register(SprintingPower::createFactory);
     }
 
     private static void register(PowerFactory<?> powerFactory) {
