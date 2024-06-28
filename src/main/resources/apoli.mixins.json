@@ -78,6 +78,7 @@
     "client": [
         "AbstractClientPlayerEntityMixin",
         "BackgroundRendererMixin",
+        "BipedEntityModelMixin",
         "CapeFeatureRendererMixin",
         "ChunkRendererRegionMixin",
         "ClientAdvancementManagerAccessor",
@@ -86,6 +87,7 @@
         "ClientPlayerInteractionManagerMixin",
         "ConfigScreenProviderMixin",
         "ElytraFeatureRendererMixin",
+        "EntityMixinClient",
         "EntityParticleMixin",
         "EntityRenderDispatcherMixin",
         "GameRendererMixin",

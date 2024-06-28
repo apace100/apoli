@@ -15,6 +15,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.player.PlayerAbilities;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -112,6 +113,11 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     private boolean apoli$accountForSprintingPowersWhenCancelling(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
         return (original || !sprintingPowersRef.get().isEmpty())
             && !preventSprintingRef.get();
+    }
+
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z"))
+    private boolean apoli$forceSneakingPose(boolean original) {
+        return original || PosePower.hasEntityPose(this, EntityPose.CROUCHING);
     }
 
 }

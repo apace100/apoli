@@ -2,12 +2,14 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.access.JumpingEntity;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
+import io.github.apace100.apoli.access.ModifiedPoseHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.s2c.DismountPlayerS2CPacket;
 import io.github.apace100.apoli.power.*;
@@ -45,7 +47,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(value = PlayerEntity.class, priority = 999)
-public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput, JumpingEntity {
+public abstract class PlayerEntityMixin extends LivingEntity implements Nameable, CommandOutput, JumpingEntity, ModifiedPoseHolder {
 
     @Shadow
     public abstract boolean damage(DamageSource source, float amount);
@@ -319,6 +321,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
     private boolean apoli$shouldApplySprintJumpExhaustion(boolean original) {
         return original && this.apoli$applySprintJumpEffects();
+    }
+
+    @WrapWithCondition(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;updatePose()V"))
+    private boolean apoli$preventUpdatingPose(PlayerEntity player) {
+        return this.apoli$getModifiedEntityPose() == null;
     }
 
 }
