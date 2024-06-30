@@ -10,11 +10,11 @@ import io.github.apace100.apoli.networking.packet.s2c.SyncPowerTypeRegistryS2CPa
 import io.github.apace100.apoli.power.factory.PowerFactories;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.ApoliResourceConditions;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.CalioResourceConditions;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -30,6 +30,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
+import net.minecraft.util.Util;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
 
@@ -213,8 +214,13 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
 
     }
 
-    private boolean isResourceConditionValid(Identifier id, JsonObject jo) {
-        return ApoliResourceConditions.test(id, jo);
+    @Override
+    public void onReject(String packName, Identifier resourceId) {
+
+        if (!PowerTypeRegistry.contains(resourceId)) {
+            PowerTypeRegistry.disable(resourceId);
+        }
+
     }
 
     private void readPower(String packName, Identifier id, JsonObject jsonObject) {
@@ -264,7 +270,16 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
 
     @Nullable
     private PowerType<?> readSubPower(String packName, Identifier id, JsonObject jsonObject) {
-        return readPower(packName, id, jsonObject, true, PowerType::new);
+
+        if (CalioResourceConditions.objectMatchesConditions(id, jsonObject)) {
+            return readPower(packName, id, jsonObject, true, PowerType::new);
+        }
+
+        else {
+            this.onReject(packName, id);
+            return null;
+        }
+
     }
 
     @Nullable
@@ -272,16 +287,6 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
 
         Identifier powerFactoryId = SerializableDataTypes.IDENTIFIER.read(JsonHelper.getElement(jsonObject, "type"));
         int loadingPriority = JsonHelper.getInt(jsonObject, "loading_priority", 0);
-
-        if (!isResourceConditionValid(id, jsonObject)) {
-
-            if (!PowerTypeRegistry.contains(id)) {
-                PowerTypeRegistry.disable(id);
-            }
-
-            return null;
-
-        }
 
         boolean multiple = this.isMultiple(powerFactoryId);
         if (multiple) {
@@ -329,18 +334,15 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
 
     private PowerType<?> loadPower(Identifier id, PowerFactory<?>.Instance powerFactoryInstance, BiFunction<Identifier, PowerFactory<?>.Instance, PowerType<?>> powerTypeFactory, JsonObject jsonObject, boolean isSubPower) {
 
-        JsonElement nameJson = jsonObject.get("name");
-        JsonElement descriptionJson = jsonObject.get("description");
+        String nameTranslationKey = Util.createTranslationKey("power", id) + ".name";
+        String descriptionTranslationKey = Util.createTranslationKey("power", id) + ".description";
 
-        Text name = nameJson == null
-            ? null
-            : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(nameJson);
-        Text description = descriptionJson == null
-            ? null
-            : ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(descriptionJson);
+        Text name = ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(jsonObject.asMap().getOrDefault("name", new JsonPrimitive(nameTranslationKey)));
+        Text description = ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT.read(jsonObject.asMap().getOrDefault("description", new JsonPrimitive(descriptionTranslationKey)));
 
         boolean hidden = JsonHelper.getBoolean(jsonObject, "hidden", false);
         return powerTypeFactory.apply(id, powerFactoryInstance)
+            .setTranslationKeys(nameTranslationKey, descriptionTranslationKey)
             .setDisplayTexts(name, description)
             .setHidden(hidden || isSubPower)
             .setSubPower(isSubPower);

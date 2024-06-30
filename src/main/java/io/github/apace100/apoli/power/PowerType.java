@@ -9,6 +9,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 
 public class PowerType<T extends Power> {
 
@@ -55,9 +56,13 @@ public class PowerType<T extends Power> {
         return this;
     }
 
-    public void setTranslationKeys(String name, String description) {
+    public PowerType<?> setTranslationKeys(String name, String description) {
+
         this.nameTranslationKey = name;
         this.descriptionTranslationKey = description;
+
+        return this;
+
     }
 
     public PowerType<?> setDisplayTexts(Text name, Text description) {
@@ -107,11 +112,13 @@ public class PowerType<T extends Power> {
     }
 
     public String getOrCreateNameTranslationKey() {
-        if(nameTranslationKey == null || nameTranslationKey.isEmpty()) {
-            nameTranslationKey =
-                "power." + identifier.getNamespace() + "." + identifier.getPath() + ".name";
+
+        if (nameTranslationKey == null || nameTranslationKey.isEmpty()) {
+            this.nameTranslationKey = Util.createTranslationKey("power", identifier) + ".name";
         }
+
         return nameTranslationKey;
+
     }
 
     public MutableText getName() {
@@ -119,11 +126,13 @@ public class PowerType<T extends Power> {
     }
 
     public String getOrCreateDescriptionTranslationKey() {
-        if(descriptionTranslationKey == null || descriptionTranslationKey.isEmpty()) {
-            descriptionTranslationKey =
-                "power." + identifier.getNamespace() + "." + identifier.getPath() + ".description";
+
+        if (descriptionTranslationKey == null || descriptionTranslationKey.isEmpty()) {
+            this.descriptionTranslationKey = Util.createTranslationKey("power", identifier) + ".description";
         }
+
         return descriptionTranslationKey;
+
     }
 
     public MutableText getDescription() {
