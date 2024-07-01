@@ -235,17 +235,19 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
         for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
 
             String subPowerName = entry.getKey();
+            String fullSubPowerName = id + "_" + subPowerName;
+
             if (this.shouldIgnoreField(subPowerName)) {
                 continue;
             }
 
-            Identifier subPowerId = new Identifier(id + "_" + subPowerName);
-            if (!(entry.getValue() instanceof JsonObject subPowerJson)) {
-                throw new JsonSyntaxException("Expected a JSON object");
-            }
-
             try {
 
+                if (!(entry.getValue() instanceof JsonObject subPowerJson)) {
+                    throw new JsonSyntaxException("Expected a JSON object");
+                }
+
+                Identifier subPowerId = new Identifier(fullSubPowerName);
                 if (this.readSubPower(packName, subPowerId, subPowerJson) != null) {
                     subPowerIds.add(subPowerId);
                 }
@@ -253,7 +255,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
             }
 
             catch (Exception e) {
-                Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power file \"{}\" (skipping): {}", subPowerId, id, e.getMessage());
+                Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power file \"{}\" (skipping): {}", fullSubPowerName, id, e.getMessage());
             }
 
         }
