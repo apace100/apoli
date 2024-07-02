@@ -4,11 +4,15 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.MovingEntity;
+import io.github.apace100.apoli.access.ModifiedPoseHolder;
 import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.util.ArmPoseReference;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import net.fabricmc.api.EnvType;
@@ -17,16 +21,22 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
@@ -47,12 +57,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
+public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder {
 
     @Inject(method = "isFireImmune", at = @At("HEAD"), cancellable = true)
     private void makeFullyFireImmune(CallbackInfoReturnable<Boolean> cir) {
@@ -84,6 +93,20 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Shadow public abstract double getY();
 
     @Shadow public abstract double getZ();
+
+    @Shadow public abstract World getWorld();
+
+    @Shadow @Final protected DataTracker dataTracker;
+
+    @Shadow @Final private Set<String> commandTags;
+
+    @Shadow public abstract Text getName();
+
+    @Shadow public abstract DataTracker getDataTracker();
+
+    @Shadow public abstract void setPose(EntityPose pose);
+
+    @Shadow public abstract EntityPose getPose();
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
@@ -289,6 +312,12 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     private boolean apoli$movingVertically;
 
     @Unique
+    private double apoli$horizontalMovementValue;
+
+    @Unique
+    private double apoli$verticalMovementValue;
+
+    @Unique
     private Vec3d apoli$prevPos;
 
     @Override
@@ -299,6 +328,16 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
     @Override
     public boolean apoli$isMovingVertically() {
         return apoli$movingVertically;
+    }
+
+    @Override
+    public double apoli$getHorizontalMovementValue() {
+        return apoli$horizontalMovementValue;
+    }
+
+    @Override
+    public double apoli$getVerticalMovementValue() {
+        return apoli$verticalMovementValue;
     }
 
     @Override
@@ -324,16 +363,145 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         double dy = apoli$prevPos.y - this.getY();
         double dz = apoli$prevPos.z - this.getZ();
 
+        this.apoli$horizontalMovementValue = Math.sqrt(dx * dx + dz * dz);
+        this.apoli$verticalMovementValue = Math.sqrt(dy * dy);
+
         this.apoli$prevPos = this.getPos();
 
-        if (Math.sqrt(dx * dx + dz * dz) >= 0.01) {
+        if (this.apoli$horizontalMovementValue >= 0.01) {
             this.apoli$movingHorizontally = true;
         }
 
-        if (Math.sqrt(dy * dy) >= 0.01) {
+        if (this.apoli$verticalMovementValue >= 0.01) {
             this.apoli$movingVertically = true;
         }
 
+    }
+
+    @Unique
+    private static final TrackedData<Set<String>> COMMAND_TAGS = DataTracker.registerData(Entity.class, ApoliDataHandlers.STRING_SET);
+
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker()V"))
+    private void apoli$registerCommandTagsDataTracker(EntityType<?> type, World world, CallbackInfo ci) {
+
+        try {
+            this.dataTracker.startTracking(COMMAND_TAGS, Set.of());
+        }
+
+        catch (Exception e) {
+            Apoli.LOGGER.warn("Couldn't register data tracker for command tags for entity {}:", this.getName().getString(), e);
+        }
+
+    }
+
+    @ModifyReturnValue(method = "addCommandTag", at = @At("RETURN"))
+    private boolean apoli$trackAddedCommandTag(boolean original) {
+
+        if (original && this.getDataTracker().containsKey(COMMAND_TAGS)) {
+            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
+        }
+
+        return original;
+
+    }
+
+    @ModifyReturnValue(method = "removeCommandTag", at = @At("RETURN"))
+    private boolean apoli$trackRemovedCommandTag(boolean original) {
+
+        if (original && this.getDataTracker().containsKey(COMMAND_TAGS)) {
+            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
+        }
+
+        return original;
+
+    }
+
+    @ModifyReturnValue(method = "getCommandTags", at = @At("RETURN"))
+    private Set<String> apoli$queryTrackedCommandTags(Set<String> original) {
+        return this.getDataTracker().containsKey(COMMAND_TAGS)
+            ? this.getDataTracker().get(COMMAND_TAGS)
+            : original;
+    }
+
+    @Inject(method = "readNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
+    private void apoli$trackCommandTagsFromNbt(NbtCompound nbt, CallbackInfo ci) {
+
+        if (this.getDataTracker().containsKey(COMMAND_TAGS)) {
+            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
+        }
+
+    }
+
+    @Redirect(method = "writeNbt", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;commandTags:Ljava/util/Set;"))
+    private Set<String> apoli$overrideCommandTagsFieldAccess(Entity entity) {
+        return entity.getCommandTags();
+    }
+
+    @Unique
+    private EntityPose apoli$previousEntityPose;
+
+    @Unique
+    private EntityPose apoli$modifiedEntityPose;
+
+    @Unique
+    private ArmPoseReference apoli$modifiedArmPose;
+
+    @Override
+    public EntityPose apoli$getModifiedEntityPose() {
+        return apoli$modifiedEntityPose;
+    }
+
+    @Override
+    public void apoli$setModifiedEntityPose(EntityPose entityPose) {
+        this.apoli$modifiedEntityPose = entityPose;
+    }
+
+    @Override
+    public ArmPoseReference apoli$getModifiedArmPose() {
+        return apoli$modifiedArmPose;
+    }
+
+    @Override
+    public void apoli$setModifiedArmPose(ArmPoseReference armPose) {
+        this.apoli$modifiedArmPose = armPose;
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void apoli$overridePose(CallbackInfo ci) {
+        PowerHolderComponent.getPowers((Entity) (Object) this, PosePower.class)
+            .stream()
+            .max(Comparator.comparing(PosePower::getPriority))
+            .ifPresentOrElse(
+                posePower -> {
+
+                    if (!((Entity) (Object) this instanceof PlayerEntity) && apoli$previousEntityPose == null) {
+                        this.apoli$previousEntityPose = this.getPose();
+                    }
+
+                    @Nullable
+                    EntityPose entityPose = posePower.getEntityPose();
+
+                    this.apoli$setModifiedEntityPose(entityPose);
+                    this.apoli$setModifiedArmPose(posePower.getArmPose());
+
+                    if (entityPose != null) {
+                        this.setPose(entityPose);
+                    }
+
+                },
+                () -> {
+
+                    this.apoli$setModifiedEntityPose(null);
+                    this.apoli$setModifiedArmPose(null);
+
+                    if (apoli$previousEntityPose != null) {
+                        this.setPose(apoli$previousEntityPose);
+                    }
+
+                    this.apoli$previousEntityPose = null;
+
+                }
+            );
     }
 
 }

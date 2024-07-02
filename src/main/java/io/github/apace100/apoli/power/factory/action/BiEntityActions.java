@@ -5,11 +5,14 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.bientity.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Pair;
 
 public class BiEntityActions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
         register(AndAction.getFactory(ApoliDataTypes.BIENTITY_ACTIONS));
@@ -29,8 +32,9 @@ public class BiEntityActions {
         register(TameAction.getFactory());
         register(AddVelocityAction.getFactory());
         register(DamageAction.getFactory());
-        register(AddToSetAction.getFactory());
-        register(RemoveFromSetAction.getFactory());
+        register(AddToEntitySetAction.getFactory());
+        register(RemoveFromEntitySetAction.getFactory());
+        register(LeashAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<Entity, Entity>> actionFactory) {

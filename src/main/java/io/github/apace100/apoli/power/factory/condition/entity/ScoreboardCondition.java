@@ -7,7 +7,8 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.scoreboard.ScoreAccess;
+import net.minecraft.scoreboard.ScoreHolder;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 
@@ -15,21 +16,19 @@ public class ScoreboardCondition {
 
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
-        String name = data.getString("name");
-        if (name == null) {
-            if (entity instanceof PlayerEntity playerEntity) name = playerEntity.getName().getString();
-            else name = entity.getUuidAsString();
-        }
-
+        ScoreHolder scoreHolder = ScoreHolder.fromName(entity.getNameForScoreboard());
         Scoreboard scoreboard = entity.getWorld().getScoreboard();
-        ScoreboardObjective scoreboardObjective = scoreboard.getNullableObjective(data.getString("objective"));
 
-        if (scoreboardObjective != null && scoreboard.playerHasObjective(name, scoreboardObjective)) {
-            int score = scoreboard.getPlayerScore(name, scoreboardObjective).getScore();
-            return ((Comparison) data.get("comparison")).compare(score, data.getInt("compare_to"));
+        ScoreboardObjective scoreboardObjective = scoreboard.getNullableObjective(data.get("objective"));
+        if (scoreboardObjective == null) {
+            return false;
         }
 
-        return false;
+        Comparison comparison = data.get("comparison");
+        int compareTo = data.get("compare_to");
+
+        ScoreAccess scoreAccess = scoreboard.getOrCreateScore(scoreHolder, scoreboardObjective);
+        return comparison.compare(scoreAccess.getScore(), compareTo);
 
     }
 

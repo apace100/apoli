@@ -33,8 +33,8 @@
     "modmenu": [
       "io.github.apace100.apoli.integration.ModMenuIntegration"
     ],
-    "calio:ordered-resource-listener": [
-      "io.github.apace100.apoli.Apoli"
+    "appleskin": [
+      "io.github.apace100.apoli.integration.AppleSkinIntegration"
     ]
   },
   "mixins": [
@@ -56,9 +56,9 @@
 
   "depends": {
     "java": ">=17",
-    "fabricloader": ">=0.15.3",
-    "fabric-api": ">=0.91.2",
-    "minecraft": "~1.20.2",
-    "calio": ">=1.12.0"
+    "fabricloader": ">=0.15.10",
+    "fabric-api": ">=0.97.0",
+    "minecraft": ">=1.20.3 <=1.20.4",
+    "calio": ">=1.13.0"
   }
 }
