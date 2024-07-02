@@ -12,7 +12,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.*;
@@ -20,13 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Environment(EnvType.CLIENT)
 public class PowerHudRenderer implements GameHudRender {
-
-    private static final int BAR_WIDTH = 71;
-    private static final int BAR_HEIGHT = 8;
-    private static final int ICON_SIZE = 8;
-
-    private static final int BAR_INDEX_OFFSET = BAR_HEIGHT + 2;
-    private static final int ICON_INDEX_OFFSET = ICON_SIZE + 1;
 
     private final AtomicInteger x = new AtomicInteger();
     private final AtomicInteger y = new AtomicInteger();
@@ -47,7 +39,7 @@ public class PowerHudRenderer implements GameHudRender {
         }
 
         if (player.getVehicle() instanceof LivingEntity livingVehicle) {
-            int bars = MathHelper.clamp((int) Math.ceil(livingVehicle.getMaxHealth() / 20.0F), 1, 3) - 1;
+            int bars = MathHelper.clamp((int) Math.ceil(livingVehicle.getMaxHealth() / 20.0), 1, 3) - 1;
             yOffset += bars * 10;
         }
 
@@ -58,29 +50,17 @@ public class PowerHudRenderer implements GameHudRender {
             .stream()
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)
-            .filter(HudRendered::shouldRender)
             .map(h -> Map.entry(h, h.getRenderSettings().getChildOrSelf(player)))
-            .filter(entry -> entry.getValue().isPresent())
-            .sorted(Map.Entry.comparingByValue(Comparator.comparing(Optional::get)))
+            .filter(e -> e.getValue().shouldRender())
+            .sorted(Map.Entry.comparingByValue(HudRender::compareTo))
             .forEach(entry -> {
 
                 HudRendered hudRendered = entry.getKey();
-                HudRender hudRender = entry.getValue().get();
+                HudRender hudRender = entry.getValue();
 
-                //  Draw the background texture of the resource bar
-                Identifier spriteLocation = hudRender.getSpriteLocation();
-                context.drawTexture(spriteLocation, x.get(), y.get(), 0, 0, BAR_WIDTH, 5);
-
-                int barV = BAR_HEIGHT + hudRender.getBarIndex() * BAR_INDEX_OFFSET;
-                int iconU = (BAR_WIDTH + 2) + hudRender.getIconIndex() * ICON_INDEX_OFFSET;
-
-                //  Draw the fill portion of the resource bar
-                int barFillWidth = (int) ((hudRender.isInverted() ? 1.0F - hudRendered.getFill() : hudRendered.getFill()) * BAR_WIDTH);
-                context.drawTexture(spriteLocation, x.get(), y.get() - 2, 0, barV, barFillWidth, BAR_HEIGHT);
-
-                //  Draw the icon of the resource bar
-                context.drawTexture(spriteLocation, x.get() - ICON_SIZE - 2, y.get() - 2, iconU, barV, ICON_SIZE, ICON_SIZE);
-                y.getAndAdd(-8);
+                if (hudRender.render(hudRendered, context, x.get(), y.get(), delta)) {
+                    y.getAndAdd(-HudRender.BAR_HEIGHT);
+                }
 
             });
 

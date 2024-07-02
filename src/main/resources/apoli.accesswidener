@@ -18,3 +18,4 @@ accessible field net/minecraft/entity/player/ItemCooldownManager entries Ljava/u
 accessible field net/minecraft/entity/player/ItemCooldownManager$Entry startTick I
 accessible field net/minecraft/entity/player/ItemCooldownManager$Entry endTick I
 accessible class net/minecraft/client/toast/ToastManager$Entry
+accessible class net/minecraft/client/MinecraftClient$LoadingContext

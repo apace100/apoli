@@ -2,11 +2,8 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.Apoli;
+import com.google.gson.*;
+import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
@@ -14,6 +11,7 @@ import io.github.apace100.apoli.power.factory.action.*;
 import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.transformer.Transform;
 import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
@@ -48,11 +46,14 @@ import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
+import org.joml.Vector2i;
+import org.joml.Vector2ic;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -215,13 +216,45 @@ public class ApoliDataTypes {
         KEY::write
     );
 
+    public static final SerializableDataType<RotationAxis> ROTATION_AXIS = SerializableDataType.mapped(RotationAxis.class, ImmutableBiMap.of(
+        "negative_z", RotationAxis.NEGATIVE_Z,
+        "positive_z", RotationAxis.POSITIVE_Z,
+        "negative_y", RotationAxis.NEGATIVE_Y,
+        "positive_y", RotationAxis.POSITIVE_Y,
+        "negative_x", RotationAxis.NEGATIVE_X,
+        "positive_x", RotationAxis.POSITIVE_X
+    ));
+
+    public static final SerializableDataType<Vector2ic> VECTOR_2I = SerializableDataType.compound(
+        ClassUtil.castClass(Vector2i.class),
+        new SerializableData()
+            .add("x", SerializableDataTypes.INT, 0)
+            .add("y", SerializableDataTypes.INT, 0),
+        data -> new Vector2i(
+            data.getInt("x"),
+            data.getInt("y")
+        ),
+        (serializableData, vector2i) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+
+            data.set("x", vector2i.x());
+            data.set("y", vector2i.y());
+
+            return data;
+
+        }
+    );
+
     public static final SerializableDataType<HudRender> SINGLE_HUD_RENDER = SerializableDataType.compound(
         HudRender.class,
         new SerializableData()
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("bar_index", SerializableDataTypes.INT, 0)
             .add("icon_index", SerializableDataTypes.INT, 0)
-            .add("sprite_location", SerializableDataTypes.IDENTIFIER, Apoli.identifier("textures/gui/resource_bar.png"))
+            .add("sprite_location", ApoliDataTypes.either(SerializableDataTypes.IDENTIFIER, HudRender.SpriteData.DATA_TYPE), HudRender.DEFAULT_SPRITE_LOCATION)
+            .add("position", VECTOR_2I, new Vector2i())
+            .add("transforms", Transform.LIST_TYPE, new LinkedList<>())
             .add("condition", ENTITY_CONDITION, null)
             .add("inverted", SerializableDataTypes.BOOLEAN, false)
             .add("order", SerializableDataTypes.INT, 0),
@@ -230,6 +263,8 @@ public class ApoliDataTypes {
             data.get("bar_index"),
             data.get("icon_index"),
             data.get("sprite_location"),
+            data.get("transforms"),
+            data.get("position"),
             data.get("condition"),
             data.get("inverted"),
             data.get("order")
@@ -242,6 +277,8 @@ public class ApoliDataTypes {
             data.set("bar_index", hudRender.getBarIndex());
             data.set("icon_index", hudRender.getIconIndex());
             data.set("sprite_location", hudRender.getSpriteLocation());
+            data.set("transforms", hudRender.getTransforms());
+            data.set("position", hudRender.getPosition());
             data.set("condition", hudRender.getCondition());
             data.set("inverted", hudRender.isInverted());
             data.set("order", hudRender.getOrder());
@@ -442,11 +479,11 @@ public class ApoliDataTypes {
 
         }
     );
-  
+
     public static final SerializableDataType<StackClickPhase> STACK_CLICK_PHASE = SerializableDataType.enumValue(StackClickPhase.class);
 
     public static final SerializableDataType<EnumSet<StackClickPhase>> STACK_CLICK_PHASE_SET = SerializableDataType.enumSet(StackClickPhase.class, STACK_CLICK_PHASE);
-  
+
     public static final SerializableDataType<BlockUsagePhase> BLOCK_USAGE_PHASE = SerializableDataType.enumValue(BlockUsagePhase.class);
 
     public static final SerializableDataType<EnumSet<BlockUsagePhase>> BLOCK_USAGE_PHASE_SET = SerializableDataType.enumSet(BlockUsagePhase.class, BLOCK_USAGE_PHASE);
@@ -454,6 +491,46 @@ public class ApoliDataTypes {
     public static final SerializableDataType<EntityPose> ENTITY_POSE = SerializableDataType.enumValue(EntityPose.class);
 
     public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
+
+    //  TODO: Move to Calio
+    @SuppressWarnings("unchecked")
+    public static <L, R> SerializableDataType<Either<L, R>> either(SerializableDataType<L> leftDataType, SerializableDataType<R> rightDataType) {
+        return new SerializableDataType<>(
+            ClassUtil.castClass(Either.class),
+            (buf, either) -> either
+                .ifLeft(l -> {
+                    buf.writeByte(0);
+                    leftDataType.send(buf, l);
+                })
+                .ifRight(r -> {
+                    buf.writeByte(1);
+                    rightDataType.send(buf, r);
+                }),
+            buf -> switch (buf.readByte()) {
+                case 0 ->
+                    (Either<L, R>) Either.left(leftDataType.receive(buf));
+                case 1 ->
+                    (Either<L, R>) Either.right(rightDataType.receive(buf));
+                default ->
+                    throw new IllegalStateException();
+            },
+            jsonElement -> {
+
+                try {
+                    return Either.left(leftDataType.read(jsonElement));
+                }
+
+                 catch (Throwable ignored) {
+                    return Either.right(rightDataType.read(jsonElement));
+                 }
+
+            },
+            either -> either.map(
+                leftDataType::write,
+                rightDataType::write
+            )
+        );
+    }
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return condition(registry, IdentifierAlias.GLOBAL, name);
