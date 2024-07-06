@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.util;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
@@ -14,11 +14,11 @@ import java.util.List;
 
 public class RemovePowerLootFunction extends ConditionalLootFunction {
 
-    public static final Codec<RemovePowerLootFunction> CODEC = RecordCodecBuilder.create(instance -> addConditionsField(instance).and(instance.group(
+    public static final MapCodec<RemovePowerLootFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
         EquipmentSlot.CODEC.fieldOf("slot").forGetter(RemovePowerLootFunction::getSlot),
         Identifier.CODEC.fieldOf("power").forGetter(RemovePowerLootFunction::getPowerId)
     )).apply(instance, RemovePowerLootFunction::new));
-    public static final LootFunctionType TYPE = new LootFunctionType(CODEC);
+    public static final LootFunctionType<RemovePowerLootFunction> TYPE = new LootFunctionType<>(CODEC);
 
     private final EquipmentSlot slot;
     private final Identifier powerId;
@@ -30,13 +30,14 @@ public class RemovePowerLootFunction extends ConditionalLootFunction {
     }
 
     @Override
-    public LootFunctionType getType() {
+    public LootFunctionType<? extends ConditionalLootFunction> getType() {
         return TYPE;
     }
 
     @Override
     public ItemStack process(ItemStack stack, LootContext context) {
-        StackPowerUtil.removePower(stack, slot, powerId);
+        //  TODO: Uncomment this after re-implementing stack powers as an item component
+//        StackPowerUtil.removePower(stack, slot, powerId);
         return stack;
     }
 

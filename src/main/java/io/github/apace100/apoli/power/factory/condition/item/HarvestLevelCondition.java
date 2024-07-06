@@ -3,23 +3,25 @@ package io.github.apace100.apoli.power.factory.condition.item;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
-import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ToolItem;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 
+//  TODO: This is deprecated (harvest levels no longer exist), remove this! -eggohito
+@Deprecated(forRemoval = true)
 public class HarvestLevelCondition {
 
     public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
-        Comparison comparison = data.get("comparison");
-        int compareTo = data.get("compare_to");
+//        Comparison comparison = data.get("comparison");
+//        int compareTo = data.get("compare_to");
+//
+//        return worldAndStack.getRight().getItem() instanceof ToolItem toolItem
+//            && comparison.compare(toolItem.getMaterial().getMiningLevel(), compareTo);
 
-        return worldAndStack.getRight().getItem() instanceof ToolItem toolItem
-            && comparison.compare(toolItem.getMaterial().getMiningLevel(), compareTo);
+        return false;
 
     }
 

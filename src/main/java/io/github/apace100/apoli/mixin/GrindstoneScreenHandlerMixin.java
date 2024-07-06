@@ -2,7 +2,6 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.PowerModifiedGrindstone;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.ModifyGrindstonePower;
 import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
@@ -33,7 +32,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
 
     @Shadow
     @Final
-    private Inventory input;
+    Inventory input;
 
     @Shadow @Final private Inventory result;
 

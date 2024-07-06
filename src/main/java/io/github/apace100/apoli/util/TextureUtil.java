@@ -17,7 +17,7 @@ import java.util.function.Function;
 @Environment(EnvType.CLIENT)
 public class TextureUtil {
 
-    public static final Identifier GUI_ATLAS_TEXTURE = new Identifier("textures/atlas/gui.png");
+    public static final Identifier GUI_ATLAS_TEXTURE = Identifier.ofVanilla("textures/atlas/gui.png");
 
     /**
      *  <p>Tries loading the texture that corresponds with the specified {@link Identifier}.</p>

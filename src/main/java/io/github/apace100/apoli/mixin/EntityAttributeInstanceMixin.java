@@ -10,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.registry.entry.RegistryEntry;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,10 +28,9 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
     public abstract Set<EntityAttributeModifier> getModifiers();
 
     @Shadow
-    public abstract EntityAttribute getAttribute();
-
-    @Shadow
     public abstract double getBaseValue();
+
+    @Shadow public abstract RegistryEntry<EntityAttribute> getAttribute();
 
     @Unique
     @Nullable
@@ -48,7 +48,7 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
 
     /**
      *  TODO: Optimize this impl. by using a modifier cache, injecting into {@link EntityAttributeInstance#computeValue()}, and calling
-     *        {@link EntityAttributeInstance#onUpdate()} if the modifier cache is no longer up-to-date - eggohito
+     *        {@link EntityAttributeInstance#onUpdate()} if the modifier cache is no longer up-to-date -eggohito
      */
     @ModifyReturnValue(method = "getValue", at = @At("RETURN"))
     private double apoli$modifyAttribute(double original) {

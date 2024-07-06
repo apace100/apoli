@@ -6,25 +6,28 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.function.BiConsumer;
 
 public class SyncStatusEffectsUtil {
 
-    public static void sendStatusEffectUpdatePacket(LivingEntity livingEntity, UpdateType updateType, StatusEffectInstance instance) {
+    public static void sendStatusEffectUpdatePacket(LivingEntity entity, UpdateType updateType, StatusEffectInstance instance) {
 
-        if (livingEntity.getWorld().isClient) {
+        if (entity.getWorld().isClient) {
             return;
         }
 
         NbtCompound statusEffectNbt = new NbtCompound();
         if (instance != null && updateType != UpdateType.CLEAR) {
-            instance.writeNbt(statusEffectNbt);
+            statusEffectNbt = (NbtCompound) instance.writeNbt();
         }
 
-        SyncStatusEffectS2CPacket syncStatusEffectPacket = new SyncStatusEffectS2CPacket(livingEntity.getId(), statusEffectNbt, updateType);
-        for (ServerPlayerEntity player : PlayerLookup.tracking(livingEntity)) {
+        SyncStatusEffectS2CPacket syncStatusEffectPacket = new SyncStatusEffectS2CPacket(entity.getId(), statusEffectNbt, updateType);
+        for (ServerPlayerEntity player : PlayerLookup.tracking(entity)) {
             ServerPlayNetworking.send(player, syncStatusEffectPacket);
         }
 
@@ -48,6 +51,8 @@ public class SyncStatusEffectsUtil {
             }
 
         });
+
+        public static final PacketCodec<PacketByteBuf, UpdateType> PACKET_CODEC = PacketCodecs.indexed(index -> values()[index], UpdateType::ordinal).cast();
 
         final BiConsumer<LivingEntity, StatusEffectInstance> consumer;
         UpdateType(BiConsumer<LivingEntity, StatusEffectInstance> consumer) {

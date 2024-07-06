@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power;
 
 import com.google.gson.*;
-import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
@@ -10,17 +9,18 @@ import io.github.apace100.apoli.networking.packet.s2c.SyncPowerTypeRegistryS2CPa
 import io.github.apace100.apoli.power.factory.PowerFactories;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.util.CalioResourceConditions;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
+import net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.Registry;
@@ -33,6 +33,7 @@ import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Util;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
+import org.ladysnake.cca.api.v3.component.ComponentProvider;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -247,7 +248,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
                     throw new JsonSyntaxException("Expected a JSON object");
                 }
 
-                Identifier subPowerId = new Identifier(fullSubPowerName);
+                Identifier subPowerId = Identifier.of(fullSubPowerName);
                 if (this.readSubPower(packName, subPowerId, subPowerJson) != null) {
                     subPowerIds.add(subPowerId);
                 }
@@ -273,7 +274,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
     @Nullable
     private PowerType<?> readSubPower(String packName, Identifier id, JsonObject jsonObject) {
 
-        if (CalioResourceConditions.objectMatchesConditions(id, jsonObject)) {
+        if (ResourceConditionsImpl.applyResourceConditions(jsonObject, directoryName, id, Calio.DYNAMIC_REGISTRIES.get())) {
             return readPower(packName, id, jsonObject, true, PowerType::new);
         }
 

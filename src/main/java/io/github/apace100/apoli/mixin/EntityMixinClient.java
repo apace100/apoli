@@ -20,7 +20,7 @@ public abstract class EntityMixinClient implements PseudoRenderDataHolder {
     private int apoli$pseudoDeathTicks;
 
     @Unique
-    private int apoli$pseudoRoll;
+    private int apoli$pseudoFallFlyingTicks;
 
     @Override
     public int apoli$getPseudoDeathTicks() {
@@ -28,8 +28,8 @@ public abstract class EntityMixinClient implements PseudoRenderDataHolder {
     }
 
     @Override
-    public int apoli$getPseudoRoll() {
-        return apoli$pseudoRoll;
+    public int apoli$getPseudoFallFlyingTicks() {
+        return apoli$pseudoFallFlyingTicks;
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -45,11 +45,11 @@ public abstract class EntityMixinClient implements PseudoRenderDataHolder {
         }
 
         if (PosePower.hasEntityPose(thisAsEntity, EntityPose.FALL_FLYING)) {
-            ++this.apoli$pseudoRoll;
+            ++this.apoli$pseudoFallFlyingTicks;
         }
 
         else {
-            this.apoli$pseudoRoll = 0;
+            this.apoli$pseudoFallFlyingTicks = 0;
         }
 
     }

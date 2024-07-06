@@ -5,7 +5,6 @@ import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.condition.entity.*;
@@ -19,6 +18,7 @@ import io.github.apace100.calio.util.IdentifierAlias;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -255,12 +255,11 @@ public class EntityConditions {
                     }
                 }
                 return comparison.compare(count, compareTo);}));
-        register(new ConditionFactory<>(Apoli.identifier("entity_group"), new SerializableData()
-            .add("group", SerializableDataTypes.ENTITY_GROUP),
-            (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
-        register(new ConditionFactory<>(Apoli.identifier("in_tag"), new SerializableData()
-            .add("tag", SerializableDataTypes.ENTITY_TAG),
-            (data, entity) -> entity.getType().getRegistryEntry().isIn(data.get("tag"))));
+        //  TODO: This is deprecated, remove it! -eggohito
+//        register(new ConditionFactory<>(Apoli.identifier("entity_group"), new SerializableData()
+//            .add("group", SerializableDataTypes.ENTITY_GROUP),
+//            (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
+        register(InTagCondition.getFactory());
         register(ClimbingCondition.getFactory());
         register(TamedCondition.getFactory());
         register(UsingItemCondition.getFactory());
@@ -272,18 +271,29 @@ public class EntityConditions {
             .add("calculation", SerializableDataTypes.STRING, "sum")
             .add("use_modifications", SerializableDataTypes.BOOLEAN, true),
             (data, entity) -> {
+                //  TODO: Uncomment these after fixing the `modify_enchantment_level` power type
                 int value = 0;
                 if(entity instanceof LivingEntity le) {
-                    Enchantment enchantment = data.get("enchantment");
+
+                    Registry<Enchantment> enchantmentRegistry = entity.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+
+                    RegistryKey<Enchantment> enchantmentKey = data.get("enchantment");
+                    Enchantment enchantment = enchantmentRegistry.getOrThrow(enchantmentKey);
+
+                    RegistryEntry<Enchantment> enchantmentEntry = enchantmentRegistry.getEntry(enchantment);
+
                     String calculation = data.getString("calculation");
+
                     switch(calculation) {
                         case "sum":
                             for(ItemStack stack : enchantment.getEquipment(le).values()) {
-                                value += ModifyEnchantmentLevelPower.getLevel(le, enchantment, stack, data.getBoolean("use_modifications"));
+//                                value += ModifyEnchantmentLevelPower.getLevel(le, enchantment, stack, data.getBoolean("use_modifications"));
+                                value += EnchantmentHelper.getLevel(enchantmentEntry, stack);
                             }
                             break;
                         case "max":
-                            value = ModifyEnchantmentLevelPower.getEquipmentLevel(enchantment, le, data.getBoolean("use_modifications"));
+//                            value = ModifyEnchantmentLevelPower.getEquipmentLevel(enchantmentKey, le, data.getBoolean("use_modifications"));
+                            value = EnchantmentHelper.getEquipmentLevel(enchantmentEntry, le);
                             break;
                         default:
                             Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");

@@ -1,25 +1,22 @@
 package io.github.apace100.apoli.mixin;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.ApoliClient;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.power.PreventItemUsePower;
-import io.github.apace100.apoli.power.TooltipPower;
 import io.github.apace100.apoli.util.ApoliConfigClient;
 import io.github.apace100.apoli.util.KeyBindingUtil;
-import io.github.apace100.apoli.util.StackPowerUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.component.ComponentMap;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -32,11 +29,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+//  TODO: Append tooltips of the stack power item component -eggohito
 @Environment(EnvType.CLIENT)
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixinClient {
@@ -44,135 +41,89 @@ public abstract class ItemStackMixinClient {
     @Shadow
     public abstract UseAction getUseAction();
 
-    @Shadow protected abstract int getHideFlags();
+    @Shadow public abstract ComponentMap getComponents();
 
-    @Shadow
-    private static boolean isSectionVisible(int flags, ItemStack.TooltipSection tooltipSection) {
-        return (flags & tooltipSection.getFlag()) == 0;
-    }
+    @Shadow public abstract Item getItem();
 
-    @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 0, shift = At.Shift.AFTER))
-    private void apoli$addUnusableTooltip(@Nullable PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, @Local List<Text> tooltip) {
+    @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/tooltip/TooltipType;isAdvanced()Z", ordinal = 1))
+    private void apoli$test(Item.TooltipContext context, @Nullable PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir) {
 
-        if (player == null) {
-            return;
-        }
-
+        List<Text> tooltip = cir.getReturnValue();
         ApoliConfigClient.Tooltips config = ((ApoliConfigClient) Apoli.config).tooltips;
-        if (!config.showUsabilityHints || !isSectionVisible(getHideFlags(), ItemStack.TooltipSection.ADDITIONAL)) {
+
+        if (!config.showUsabilityHints || this.getComponents().contains(DataComponentTypes.HIDE_ADDITIONAL_TOOLTIP)) {
             return;
         }
 
-        List<PreventItemUsePower> powers = PowerHolderComponent.getPowers(player, PreventItemUsePower.class)
+        List<PreventItemUsePower> preventItemUsePowers = PowerHolderComponent.getPowers(player, PreventItemUsePower.class)
             .stream()
             .filter(p -> p.doesPrevent((ItemStack) (Object) this))
             .toList();
-        if (powers.isEmpty()) {
+
+        if (preventItemUsePowers.isEmpty()) {
             return;
         }
 
-        String translationKey = "tooltip.apoli.unusable." + getUseAction().toString().toLowerCase(Locale.ROOT) + (powers.size() == 1 ? ".single" : ".multiple");
+        if (!tooltip.isEmpty() && tooltip.getLast().getString().isEmpty()) {
+            tooltip.add(Text.empty());
+        }
 
-        Formatting baseTextColor = Formatting.GRAY;
-        Formatting powerTextColor = Formatting.RED;
+        String translationKey = "tooltip.apoli.unusuable." + this.getUseAction().toString().toLowerCase(Locale.ROOT) + (preventItemUsePowers.size() == 1 ? ".single" : ".multiple");
 
-        Text baseText;
+        Formatting baseTextFormat = Formatting.GRAY;
+        Formatting powerTextFormat = Formatting.RED;
+
         Text powerText;
+        Text baseText;
 
-        if (config.compactUsabilityHints || powers.size() == 1) {
+        if (preventItemUsePowers.size() == 1) {
 
-            if (powers.size() == 1) {
+            PreventItemUsePower preventItemUsePower = preventItemUsePowers.getFirst();
 
-                PreventItemUsePower power = powers.get(0);
+            powerText = preventItemUsePower.getType().getName().formatted(powerTextFormat);
+            baseText = Text.translatable(translationKey, powerText).formatted(baseTextFormat);
 
-                powerText = power.getType().getName().formatted(powerTextColor);
-                baseText = Text.translatable(translationKey, powerText).formatted(baseTextColor);
+            tooltip.add(baseText);
+
+        }
+
+        else if (config.compactUsabilityHints) {
+
+            MinecraftClient client = MinecraftClient.getInstance();
+            KeyBinding keyBinding = ApoliClient.showPowersOnUsabilityHint;
+
+            Integer keyCode = !keyBinding.isUnbound()
+                ? InputUtil.fromTranslationKey(keyBinding.getBoundKeyTranslationKey()).getCode()
+                : null;
+            boolean isKeyPressed = keyCode != null
+                && InputUtil.isKeyPressed(client.getWindow().getHandle(), keyCode);
+
+            if (isKeyPressed) {
+                this.apoli$addExpandedTooltip(preventItemUsePowers, tooltip, translationKey, powerTextFormat, powerTextFormat);
+            }
+
+            else {
+
+                powerText = Text.translatable("tooltip.apoli.usability_hint.power_count", preventItemUsePowers.size()).formatted(powerTextFormat);
+                baseText = Text.translatable(translationKey, powerText).formatted(baseTextFormat);
 
                 tooltip.add(baseText);
+                tooltip.add(Text.empty());
 
-            } else {
+                Text keyBindingText = KeyBindingUtil.getLocalizedName(keyBinding.getTranslationKey()).styled(style -> style
+                    .withColor(Formatting.YELLOW)
+                    .withItalic(keyBinding.isUnbound()));
 
-                MinecraftClient client = MinecraftClient.getInstance();
-                KeyBinding keyBinding = ApoliClient.showPowersOnUsabilityHint;
-
-                Integer keyCode = keyBinding.isUnbound() ? null : InputUtil.fromTranslationKey(keyBinding.getBoundKeyTranslationKey()).getCode();
-                boolean isKeyPressed = keyCode != null && InputUtil.isKeyPressed(client.getWindow().getHandle(), keyCode);
-
-                if (isKeyPressed) {
-                    apoli$addExpandedTooltip(powers, tooltip, translationKey, powerTextColor, baseTextColor);
-                } else {
-
-                    powerText = Text.translatable("tooltip.apoli.usability_hint.power_count", powers.size()).formatted(powerTextColor);
-                    baseText = Text.translatable(translationKey, powerText).formatted(baseTextColor);
-
-                    tooltip.add(baseText);
-                    tooltip.add(Text.empty());
-
-                    Text keybindText = KeyBindingUtil.getLocalizedName(keyBinding.getTranslationKey()).styled(style -> style
-                        .withColor(Formatting.YELLOW)
-                        .withItalic(keyBinding.isUnbound())
-                    );
-
-                    Text guideText = Text.translatable("tooltip.apoli.usability_hint.show_powers", keybindText).formatted(baseTextColor);
-                    tooltip.add(guideText);
-
-                }
-
-            }
-        } else {
-            apoli$addExpandedTooltip(powers, tooltip, translationKey, powerTextColor, baseTextColor);
-        }
-
-    }
-
-    @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;hasNbt()Z", ordinal = 1))
-    private void apoli$addStackPowerTooltips(@Nullable PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, @Local List<Text> texts) {
-
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-
-            List<StackPowerUtil.StackPower> stackPowers = StackPowerUtil.getPowers((ItemStack) (Object) this, slot)
-                .stream()
-                .filter(sp -> !sp.isHidden)
-                .toList();
-            if (stackPowers.isEmpty()) {
-                continue;
-            }
-
-            texts.add(Text.empty());
-            texts.add(Text.translatable("item.modifiers." + slot.getName()).formatted(Formatting.GRAY));
-
-            for (StackPowerUtil.StackPower stackPower : stackPowers) {
-
-                if (!PowerTypeRegistry.contains(stackPower.powerId)) {
-                    continue;
-                }
-
-                PowerType<?> powerType = PowerTypeRegistry.get(stackPower.powerId);
-                Text powerNameText = Text
-                    .literal(" ")
-                    .append(powerType.getName())
-                    .formatted(stackPower.isNegative ? Formatting.RED : Formatting.BLUE);
-                texts.add(powerNameText);
-
-                if (!context.isAdvanced()) {
-                    continue;
-                }
-
-                Text powerDescriptionText = Text
-                    .literal("  ")
-                    .append(powerType.getDescription())
-                    .formatted(Formatting.GRAY);
-                texts.add(powerDescriptionText);
+                Text guideText = Text.translatable("tooltip.apoli.usability_hint.show_powers", keyBindingText).formatted(baseTextFormat);
+                tooltip.add(guideText);
 
             }
 
         }
 
-        PowerHolderComponent.getPowers(player, TooltipPower.class)
-            .stream()
-            .filter(p -> p.doesApply((ItemStack) (Object) this))
-            .sorted(Comparator.comparing(TooltipPower::getOrder))
-            .forEachOrdered(p -> p.addToTooltip(texts));
+        else {
+            this.apoli$addExpandedTooltip(preventItemUsePowers, tooltip, translationKey, powerTextFormat, baseTextFormat);
+        }
 
     }
 

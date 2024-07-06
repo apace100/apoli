@@ -8,7 +8,8 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -238,7 +239,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void readFromNbt(@NotNull NbtCompound compoundTag) {
+    public void readFromNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup lookup) {
         this.fromTag(compoundTag, true);
     }
 
@@ -345,7 +346,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void writeToNbt(@NotNull NbtCompound compoundTag) {
+    public void writeToNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup wrapperLookup) {
         this.toTag(compoundTag, false);
     }
 
@@ -381,7 +382,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void writeSyncPacket(PacketByteBuf buf, ServerPlayerEntity recipient) {
+    public void writeSyncPacket(RegistryByteBuf buf, ServerPlayerEntity recipient) {
 
         NbtCompound compoundTag = new NbtCompound();
         this.toTag(compoundTag, true);
@@ -391,7 +392,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void applySyncPacket(PacketByteBuf buf) {
+    public void applySyncPacket(RegistryByteBuf buf) {
 
         NbtCompound compoundTag = buf.readNbt();
 

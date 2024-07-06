@@ -4,11 +4,9 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.MovingEntity;
-import io.github.apace100.apoli.access.ModifiedPoseHolder;
-import io.github.apace100.apoli.access.SubmergableEntity;
-import io.github.apace100.apoli.access.WaterMovingEntity;
+import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.power.*;
@@ -23,7 +21,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
@@ -32,7 +29,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.server.world.ServerWorld;
@@ -55,20 +51,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder {
-
-    @Inject(method = "isFireImmune", at = @At("HEAD"), cancellable = true)
-    private void makeFullyFireImmune(CallbackInfoReturnable<Boolean> cir) {
-        if(PowerHolderComponent.hasPower((Entity)(Object)this, FireImmunityPower.class)) {
-            cir.setReturnValue(true);
-        }
-    }
+public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder, LeashableEntity {
 
     @Shadow
     private World world;
@@ -108,39 +96,41 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
 
     @Shadow public abstract EntityPose getPose();
 
-    @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
-    private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
-        if(PowerHolderComponent.hasPower((Entity)(Object)this, IgnoreWaterPower.class)) {
-            if(this instanceof WaterMovingEntity) {
-                if(((WaterMovingEntity)this).apoli$isInMovementPhase()) {
-                    cir.setReturnValue(false);
-                }
-            }
+    @Shadow public abstract boolean isSwimming();
+
+    @ModifyReturnValue(method = "isFireImmune", at = @At("RETURN"))
+    private boolean apoli$makeFullyFireImmune(boolean original) {
+        return original
+            || PowerHolderComponent.hasPower((Entity) (Object) this, FireImmunityPower.class);
+    }
+
+    @ModifyReturnValue(method = "isTouchingWater", at = @At("RETURN"))
+    private boolean apoli$makeEntitiesIgnoreWater(boolean original) {
+
+        if (!(this instanceof WaterMovingEntity waterMovingEntity)) {
+            return original;
         }
+
+        return original
+            && !(waterMovingEntity.apoli$isInMovementPhase() && PowerHolderComponent.hasPower((Entity) (Object) this, IgnoreWaterPower.class));
+
     }
 
     @Inject(method = "fall", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onLandedUpon(Lnet/minecraft/world/World;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;F)V"))
     private void invokeActionOnLand(CallbackInfo ci) {
-        List<ActionOnLandPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, ActionOnLandPower.class);
-        powers.forEach(ActionOnLandPower::executeAction);
+        PowerHolderComponent.withPowers((Entity) (Object) this, ActionOnLandPower.class, p -> true, ActionOnLandPower::executeAction);
     }
 
-    @Inject(at = @At("HEAD"), method = "isInvulnerableTo", cancellable = true)
-    private void makeOriginInvulnerable(DamageSource damageSource, CallbackInfoReturnable<Boolean> cir) {
-        if((Object)this instanceof LivingEntity) {
-            PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
-            if(component.getPowers(InvulnerablePower.class).stream().anyMatch(inv -> inv.doesApply(damageSource))) {
-                cir.setReturnValue(true);
-            }
-        }
+    @ModifyReturnValue(method = "isInvulnerableTo", at = @At("RETURN"))
+    private boolean apoli$makeEntitiesInvulnerable(boolean original, DamageSource source) {
+        return original
+            || PowerHolderComponent.hasPower((Entity) (Object) this, InvulnerablePower.class, p -> p.doesApply(source));
     }
 
-    @Redirect(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isWet()Z"))
-    private boolean preventExtinguishingFromSwimming(Entity entity) {
-        if(PowerHolderComponent.hasPower(entity, SwimmingPower.class) && entity.isSwimming() && !(getFluidHeight(FluidTags.WATER) > 0)) {
-            return false;
-        }
-        return entity.isWet();
+    @ModifyExpressionValue(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isWet()Z"))
+    private boolean apoli$preventExtinguishingFromPowerSwimming(boolean original) {
+        return original
+            && !(this.isSwimming() && PowerHolderComponent.hasPower((Entity) (Object) this, SwimmingPower.class));
     }
 
     @ModifyReturnValue(method = "isInvisible", at = @At("RETURN"))
@@ -163,14 +153,14 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
 
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;ofFloored(DDD)Lnet/minecraft/util/math/BlockPos;"), method = "pushOutOfBlocks", cancellable = true)
-    protected void pushOutOfBlocks(double x, double y, double z, CallbackInfo info) {
-        List<PhasingPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, PhasingPower.class);
-        if(!powers.isEmpty()) {
-            if(powers.stream().anyMatch(phasingPower -> phasingPower.doesApply(BlockPos.ofFloored(x, y, z)))) {
-                info.cancel();
-            }
+    //  TODO: Use MixinExtras' @WrapMethod from its new beta releases -eggohito
+    @Inject(method = "pushOutOfBlocks", at = @At(value = "NEW", target = "()Lnet/minecraft/util/math/BlockPos$Mutable;"), cancellable = true)
+    protected void apoli$ignorePhasingEntities(double x, double y, double z, CallbackInfo ci, @Local BlockPos pos) {
+
+        if (PowerHolderComponent.hasPower((Entity) (Object) this, PhasingPower.class, p -> p.doesApply(pos))) {
+            ci.cancel();
         }
+
     }
 
     @Redirect(method = "method_30022", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/util/shape/VoxelShape;"))
@@ -381,15 +371,19 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @Unique
     private static final TrackedData<Set<String>> COMMAND_TAGS = DataTracker.registerData(Entity.class, ApoliDataHandlers.STRING_SET);
 
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker()V"))
-    private void apoli$registerCommandTagsDataTracker(EntityType<?> type, World world, CallbackInfo ci) {
+    @Unique
+    private boolean apoli$hasCommandTagsTracker = true;
+
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker(Lnet/minecraft/entity/data/DataTracker$Builder;)V"))
+    private void apoli$registerCommandTagsDataTracker(EntityType<?> type, World world, CallbackInfo ci, @Local DataTracker.Builder builder) {
 
         try {
-            this.dataTracker.startTracking(COMMAND_TAGS, Set.of());
+            builder.add(COMMAND_TAGS, Set.of());
         }
 
         catch (Exception e) {
             Apoli.LOGGER.warn("Couldn't register data tracker for command tags for entity {}:", this.getName().getString(), e);
+            this.apoli$hasCommandTagsTracker = false;
         }
 
     }
@@ -397,7 +391,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @ModifyReturnValue(method = "addCommandTag", at = @At("RETURN"))
     private boolean apoli$trackAddedCommandTag(boolean original) {
 
-        if (original && this.getDataTracker().containsKey(COMMAND_TAGS)) {
+        if (original && apoli$hasCommandTagsTracker) {
             this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
         }
 
@@ -408,7 +402,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @ModifyReturnValue(method = "removeCommandTag", at = @At("RETURN"))
     private boolean apoli$trackRemovedCommandTag(boolean original) {
 
-        if (original && this.getDataTracker().containsKey(COMMAND_TAGS)) {
+        if (original && apoli$hasCommandTagsTracker) {
             this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
         }
 
@@ -418,7 +412,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
 
     @ModifyReturnValue(method = "getCommandTags", at = @At("RETURN"))
     private Set<String> apoli$queryTrackedCommandTags(Set<String> original) {
-        return this.getDataTracker().containsKey(COMMAND_TAGS)
+        return apoli$hasCommandTagsTracker
             ? this.getDataTracker().get(COMMAND_TAGS)
             : original;
     }
@@ -426,7 +420,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @Inject(method = "readNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
     private void apoli$trackCommandTagsFromNbt(NbtCompound nbt, CallbackInfo ci) {
 
-        if (this.getDataTracker().containsKey(COMMAND_TAGS)) {
+        if (apoli$hasCommandTagsTracker) {
             this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
         }
 
@@ -502,6 +496,19 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
 
                 }
             );
+    }
+
+    @Unique
+    private boolean apoli$customLeashed;
+
+    @Override
+    public boolean apoli$isCustomLeashed() {
+        return apoli$customLeashed;
+    }
+
+    @Override
+    public void apoli$setCustomLeashed(boolean customLeashed) {
+        this.apoli$customLeashed = customLeashed;
     }
 
 }

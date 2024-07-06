@@ -5,14 +5,12 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.LegacyMaterial;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.registry.Registries;
 
 import java.util.List;
 
+//  TODO: Perhaps this should be removed? It's been long since its deprecation...
 public class MaterialCondition {
 
     public static boolean condition(SerializableData.Instance data, CachedBlockPosition cachedBlockPosition) {

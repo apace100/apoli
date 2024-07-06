@@ -1,30 +1,28 @@
 package io.github.apace100.apoli.networking;
 
 import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
-import io.github.apace100.apoli.networking.packet.c2s.PlayerLandedC2SPacket;
-import io.github.apace100.apoli.networking.packet.c2s.PreventedEntityInteractionC2SPacket;
 import io.github.apace100.apoli.networking.packet.c2s.UseActivePowersC2SPacket;
 import io.github.apace100.apoli.networking.packet.s2c.*;
-import net.minecraft.util.Identifier;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 
-
-/**
- *  A class containing all the {@link Identifier Identifiers} of the packets used by Apoli. This is <b>deprecated</b>, instantiate
- *  classes from the package {@link io.github.apace100.apoli.networking.packet} instead.
- */
-@SuppressWarnings("unused")
-@Deprecated(forRemoval = true, since = "1.11.0")
 public class ModPackets {
 
-    public static final Identifier HANDSHAKE = VersionHandshakePacket.TYPE.getId();
-    public static final Identifier USE_ACTIVE_POWERS = UseActivePowersC2SPacket.TYPE.getId();
-    public static final Identifier POWER_LIST = SyncPowerTypeRegistryS2CPacket.TYPE.getId();
-    public static final Identifier SYNC_POWER = SyncPowerS2CPacket.TYPE.getId();
-    public static final Identifier PLAYER_LANDED = PlayerLandedC2SPacket.TYPE.getId();
-    public static final Identifier PLAYER_MOUNT = MountPlayerS2CPacket.TYPE.getId();
-    public static final Identifier PLAYER_DISMOUNT = DismountPlayerS2CPacket.TYPE.getId();
-    public static final Identifier PREVENTED_ENTITY_USE = PreventedEntityInteractionC2SPacket.TYPE.getId();
-    public static final Identifier SET_ATTACKER = SyncAttackerS2CPacket.TYPE.getId();
-    public static final Identifier SYNC_STATUS_EFFECT = SyncStatusEffectS2CPacket.TYPE.getId();
+    public static void register() {
+
+        PayloadTypeRegistry.configurationS2C().register(VersionHandshakePacket.PACKET_ID, VersionHandshakePacket.PACKET_CODEC);
+        PayloadTypeRegistry.configurationC2S().register(VersionHandshakePacket.PACKET_ID, VersionHandshakePacket.PACKET_CODEC);
+
+        PayloadTypeRegistry.playS2C().register(SyncAttackerS2CPacket.PACKET_ID, SyncAttackerS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(DismountPlayerS2CPacket.PACKET_ID, DismountPlayerS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncStatusEffectS2CPacket.PACKET_ID, SyncStatusEffectS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(ShowToastS2CPacket.PACKET_ID, ShowToastS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(MountPlayerS2CPacket.PACKET_ID, MountPlayerS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncPowerS2CPacket.PACKET_ID, SyncPowerS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncPowersInBulkS2CPacket.PACKET_ID, SyncPowersInBulkS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncPowerTypeRegistryS2CPacket.PACKET_ID, SyncPowerTypeRegistryS2CPacket.PACKET_CODEC);
+
+        PayloadTypeRegistry.playC2S().register(UseActivePowersC2SPacket.PACKET_ID, UseActivePowersC2SPacket.PACKET_CODEC);
+
+    }
 
 }

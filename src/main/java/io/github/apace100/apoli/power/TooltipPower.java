@@ -92,7 +92,7 @@ public class TooltipPower extends Power {
         NbtList tooltipTextsNbt = new NbtList();
 
         for (Text tooltipText : tooltipTexts) {
-            NbtString tooltipTextNbt = NbtString.of(Text.Serialization.toJsonString(tooltipText));
+            NbtString tooltipTextNbt = NbtString.of(Text.Serialization.toJsonString(tooltipText, entity.getRegistryManager()));
             tooltipTextsNbt.add(tooltipTextNbt);
         }
 
@@ -110,7 +110,7 @@ public class TooltipPower extends Power {
         NbtList tooltipTextsNbt = rootNbt.getList("Tooltips", NbtElement.STRING_TYPE);
 
         for (int i = 0; i < tooltipTextsNbt.size(); i++) {
-            Text tooltipText = Text.Serialization.fromJson(tooltipTextsNbt.getString(i));
+            Text tooltipText = Text.Serialization.fromJson(tooltipTextsNbt.getString(i), entity.getRegistryManager());
             tooltipTexts.add(tooltipText);
         }
 

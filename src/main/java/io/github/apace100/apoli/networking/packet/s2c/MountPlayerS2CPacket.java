@@ -1,29 +1,23 @@
 package io.github.apace100.apoli.networking.packet.s2c;
 
 import io.github.apace100.apoli.Apoli;
-import net.fabricmc.fabric.api.networking.v1.FabricPacket;
-import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.network.packet.CustomPayload;
 
-public record MountPlayerS2CPacket(int actorId, int targetId) implements FabricPacket {
+public record MountPlayerS2CPacket(int actorId, int targetId) implements CustomPayload {
 
-    public static final PacketType<MountPlayerS2CPacket> TYPE = PacketType.create(
-        Apoli.identifier("s2c/mount_player"), MountPlayerS2CPacket::read
+    public static final Id<MountPlayerS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/mount_player"));
+    public static final PacketCodec<PacketByteBuf, MountPlayerS2CPacket> PACKET_CODEC = PacketCodec.tuple(
+        PacketCodecs.VAR_INT, MountPlayerS2CPacket::actorId,
+        PacketCodecs.VAR_INT, MountPlayerS2CPacket::targetId,
+        MountPlayerS2CPacket::new
     );
 
-    private static MountPlayerS2CPacket read(PacketByteBuf buffer) {
-        return new MountPlayerS2CPacket(buffer.readVarInt(), buffer.readVarInt());
-    }
-
     @Override
-    public void write(PacketByteBuf buffer) {
-        buffer.writeVarInt(actorId);
-        buffer.writeVarInt(targetId);
-    }
-
-    @Override
-    public PacketType<?> getType() {
-        return TYPE;
+    public Id<? extends CustomPayload> getId() {
+        return PACKET_ID;
     }
 
 }

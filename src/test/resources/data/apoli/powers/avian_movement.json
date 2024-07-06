@@ -1,18 +1,18 @@
 {
-  "type": "apoli:multiple",
-  "on_ground": {
-    "type": "apoli:attribute",
-    "modifier": {
-      "name": "Tailwind speed bonus",
-      "attribute": "minecraft:generic.movement_speed",
-      "value": 0.2,
-      "operation": "multiply_base"
+    "type": "apoli:multiple",
+    "on_ground": {
+        "type": "apoli:attribute",
+        "modifier": {
+            "id": "*:*",
+            "attribute": "minecraft:generic.movement_speed",
+            "value": 0.2,
+            "operation": "add_multiplied_base"
+        }
+    },
+    "in_air": {
+        "type": "apoli:attribute_modify_transfer",
+        "class": "modify_air_speed",
+        "attribute": "minecraft:generic.movement_speed",
+        "multiplier": 1
     }
-  },
-  "in_air": {
-    "type": "apoli:attribute_modify_transfer",
-    "class": "modify_air_speed",
-    "attribute": "minecraft:generic.movement_speed",
-    "multiplier": 1
-  }
 }

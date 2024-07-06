@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -38,8 +37,9 @@ public class RestrictArmorPower extends Power {
     }
 
     public boolean canEquip(ItemStack itemStack, EquipmentSlot slot) {
-        if (armorConditions.get(slot) == null) return true;
-        return !armorConditions.get(slot).test(new Pair<>(entity.getWorld(), itemStack));
+        Predicate<Pair<World, ItemStack>> armorCondition = armorConditions.get(slot);
+        return armorCondition == null
+            || !armorCondition.test(new Pair<>(entity.getWorld(), itemStack));
     }
 
     public static PowerFactory createFactory() {

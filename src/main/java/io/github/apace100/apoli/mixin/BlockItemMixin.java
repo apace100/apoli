@@ -109,7 +109,7 @@ public class BlockItemMixin {
 
     }
 
-    @WrapOperation(method = "useOnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/BlockItem;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
+    @WrapOperation(method = "useOnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
     private TypedActionResult<ItemStack> apoli$preventItemUseIfFoodBlockItem(BlockItem instance, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
         ItemStack handStack = user.getStackInHand(hand);
         return PowerHolderComponent.hasPower(user, PreventItemUsePower.class, p -> p.doesPrevent(handStack))

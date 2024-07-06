@@ -21,8 +21,6 @@ public abstract class EntityParticleMixin extends Entity {
 
     @Shadow public abstract EntityDimensions getDimensions(EntityPose pose);
 
-    @Shadow protected abstract float getEyeHeight(EntityPose pose, EntityDimensions dimensions);
-
     public EntityParticleMixin(EntityType<?> type, World world) {
         super(type, world);
     }

@@ -10,6 +10,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.Identifier;
@@ -32,7 +33,7 @@ public class PowerHudRenderer implements GameHudRender {
     private final AtomicInteger y = new AtomicInteger();
 
     @Override
-    public void render(DrawContext context, float delta) {
+    public void render(DrawContext context, RenderTickCounter delta) {
 
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;

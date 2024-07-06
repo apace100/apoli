@@ -24,6 +24,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.ColorHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -58,36 +59,38 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
             && !PowerHolderComponent.hasPower(entity, PreventFeatureRenderPower.class, p -> p.doesApply(instance));
     }
 
-    @WrapOperation(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V"))
-    private void apoli$renderColorChangedModel(EntityModel<?> model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, Operation<Void> original, LivingEntity entity) {
+    @WrapOperation(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))
+    private void apoli$renderColorChangedModel(EntityModel<LivingEntity> entityModel, MatrixStack matrixStack, VertexConsumer vertexConsumer, int light, int overlay, int argb, Operation<Void> original, LivingEntity entity) {
 
         List<ModelColorPower> modelColorPowers = PowerHolderComponent.getPowers(entity, ModelColorPower.class);
         if (modelColorPowers.isEmpty()) {
-            original.call(model, matrices, vertices, light, overlay, red, green, blue, alpha);
+            original.call(entityModel, matrixStack, vertexConsumer, light, overlay, argb);
             return;
         }
 
-        //  TODO: Implement custom blending modes for blending colors
+        //  TODO: Implement custom blending modes for blending colors -eggohito
         float newRed = modelColorPowers
             .stream()
             .map(ModelColorPower::getRed)
-            .reduce(red, (a, b) -> a * b);
+            .reduce((float) ColorHelper.Argb.getRed(argb) / 255, (a, b) -> a * b);
         float newGreen = modelColorPowers
             .stream()
             .map(ModelColorPower::getGreen)
-            .reduce(green, (a, b) -> a * b);
+            .reduce((float) ColorHelper.Argb.getGreen(argb) / 255, (a, b) -> a * b);
         float newBlue = modelColorPowers
             .stream()
             .map(ModelColorPower::getBlue)
-            .reduce(blue, (a, b) -> a * b);
+            .reduce((float) ColorHelper.Argb.getBlue(argb) / 255, (a, b) -> a * b);
+
+        float oldAlpha = (float) ColorHelper.Argb.getAlpha(argb) / 255;
         float newAlpha = modelColorPowers
             .stream()
             .map(ModelColorPower::getAlpha)
             .min(Float::compareTo)
-            .map(alphaFactor -> alpha * alphaFactor)
-            .orElse(alpha);
+            .map(alphaFactor -> oldAlpha * alphaFactor)
+            .orElse(oldAlpha);
 
-        original.call(model, matrices, vertices, light, overlay, newRed, newGreen, newBlue, newAlpha);
+        original.call(entityModel, matrixStack, vertexConsumer, light, overlay, ColorHelper.Argb.fromFloats(newAlpha, newRed, newGreen, newBlue));
 
     }
 

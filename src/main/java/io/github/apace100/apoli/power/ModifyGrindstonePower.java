@@ -1,9 +1,10 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.PowerModifiedGrindstone;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -13,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.GrindstoneScreenHandler;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -108,6 +110,16 @@ public class ModifyGrindstonePower extends Power {
         if(blockAction != null && pos.isPresent()) {
             blockAction.accept(Triple.of(entity.getWorld(), pos.get(), Direction.UP));
         }
+    }
+
+    public static boolean allowsInTopSlot(GrindstoneScreenHandler screenHandler, ItemStack stack) {
+        return screenHandler instanceof PowerModifiedGrindstone powerModifiedGrindstone
+            && PowerHolderComponent.hasPower(powerModifiedGrindstone.apoli$getPlayer(), ModifyGrindstonePower.class, p -> p.allowsInTop(stack));
+    }
+
+    public static boolean allowsInBottomSlot(GrindstoneScreenHandler screenHandler, ItemStack stack) {
+        return screenHandler instanceof PowerModifiedGrindstone powerModifiedGrindstone
+            && PowerHolderComponent.hasPower(powerModifiedGrindstone.apoli$getPlayer(), ModifyGrindstonePower.class, p -> p.allowsInBottom(stack));
     }
 
     public static PowerFactory createFactory() {

@@ -7,13 +7,15 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.registry.entry.RegistryEntry;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class EffectImmunityPower extends Power {
 
-    protected final HashSet<StatusEffect> effects = new HashSet<>();
+    protected final Set<RegistryEntry<StatusEffect>> effects = new HashSet<>();
     private final boolean inverted;
 
     public EffectImmunityPower(PowerType<?> type, LivingEntity entity, boolean inverted) {
@@ -21,7 +23,7 @@ public class EffectImmunityPower extends Power {
         this.inverted = inverted;
     }
 
-    public EffectImmunityPower addEffect(StatusEffect effect) {
+    public EffectImmunityPower addEffect(RegistryEntry<StatusEffect> effect) {
         effects.add(effect);
         return this;
     }
@@ -30,26 +32,26 @@ public class EffectImmunityPower extends Power {
         return doesApply(instance.getEffectType());
     }
 
-    public boolean doesApply(StatusEffect effect) {
+    public boolean doesApply(RegistryEntry<StatusEffect> effect) {
         return inverted ^ effects.contains(effect);
     }
 
     public static PowerFactory createFactory() {
         return new PowerFactory<>(Apoli.identifier("effect_immunity"),
             new SerializableData()
-                .add("effect", SerializableDataTypes.STATUS_EFFECT, null)
-                .add("effects", SerializableDataTypes.STATUS_EFFECTS, null)
+                .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY, null)
+                .add("effects", SerializableDataTypes.STATUS_EFFECT_ENTRIES, null)
                 .add("inverted", SerializableDataTypes.BOOLEAN, false),
             data ->
                 (type, player) -> {
+
                     EffectImmunityPower power = new EffectImmunityPower(type, player, data.get("inverted"));
-                    if(data.isPresent("effect")) {
-                        power.addEffect(data.get("effect"));
-                    }
-                    if(data.isPresent("effects")) {
-                        ((List<StatusEffect>)data.get("effects")).forEach(power::addEffect);
-                    }
+
+                    data.ifPresent("effect", power::addEffect);
+                    data.<List<RegistryEntry<StatusEffect>>>ifPresent("effects", effects -> effects.forEach(power::addEffect));
+
                     return power;
+
                 })
             .allowCondition();
     }

@@ -8,7 +8,7 @@ import java.util.List;
 public final class AttributeUtil {
 
     public static void sortModifiers(List<EntityAttributeModifier> modifiers) {
-        modifiers.sort(Comparator.comparing(e -> e.getOperation().getId()));
+        modifiers.sort(Comparator.comparing(e -> e.operation().getId()));
     }
 
     public static double sortAndApplyModifiers(List<EntityAttributeModifier> modifiers, double baseValue) {
@@ -17,22 +17,24 @@ public final class AttributeUtil {
     }
 
     public static double applyModifiers(List<EntityAttributeModifier> modifiers, double baseValue) {
+
+        if (modifiers == null || modifiers.isEmpty()) {
+            return baseValue;
+        }
+
         double currentValue = baseValue;
-        if(modifiers != null) {
-            for(EntityAttributeModifier modifier : modifiers) {
-                switch(modifier.getOperation()) {
-                    case ADDITION:
-                        currentValue += modifier.getValue();
-                        break;
-                    case MULTIPLY_BASE:
-                        currentValue += baseValue * modifier.getValue();
-                        break;
-                    case MULTIPLY_TOTAL:
-                        currentValue *= (1 + modifier.getValue());
-                        break;
-                }
+        for (EntityAttributeModifier modifier : modifiers) {
+            switch (modifier.operation()) {
+                case ADD_MULTIPLIED_TOTAL ->
+                    currentValue += modifier.value();
+                case ADD_MULTIPLIED_BASE ->
+                    currentValue += baseValue * modifier.value();
+                case ADD_VALUE ->
+                    currentValue *= (1 + modifier.value());
             }
         }
+
         return currentValue;
+
     }
 }

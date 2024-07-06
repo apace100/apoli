@@ -7,7 +7,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageSources;
@@ -124,7 +123,7 @@ public final class MiscUtil {
         }
 
         if ((entityNbt == null || entityNbt.isEmpty()) && entityToSpawn instanceof MobEntity mobToSpawn) {
-            mobToSpawn.initialize(serverWorld, serverWorld.getLocalDifficulty(BlockPos.ofFloored(pos)), SpawnReason.COMMAND, null, null);
+            mobToSpawn.initialize(serverWorld, serverWorld.getLocalDifficulty(BlockPos.ofFloored(pos)), SpawnReason.COMMAND, null);
         }
 
         return Optional.of(entityToSpawn);
@@ -151,7 +150,7 @@ public final class MiscUtil {
 
     }
 
-    public static BlockState getInWallBlockState(LivingEntity playerEntity) {
+    public static BlockState getInWallBlockState(Entity playerEntity) {
         BlockPos.Mutable mutable = new BlockPos.Mutable();
 
         for(int i = 0; i < 8; ++i) {

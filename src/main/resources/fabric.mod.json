@@ -55,10 +55,10 @@
   "accessWidener": "apoli.accesswidener",
 
   "depends": {
-    "java": ">=17",
-    "fabricloader": ">=0.15.10",
-    "fabric-api": ">=0.97.0",
-    "minecraft": ">=1.20.3 <=1.20.4",
+    "java": ">=21",
+    "fabricloader": ">=0.15.11",
+    "fabric-api": ">=0.100.4",
+    "minecraft": "1.21",
     "calio": ">=1.13.0"
   }
 }

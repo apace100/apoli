@@ -16,14 +16,18 @@ import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.util.ActionResultUtil;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.PriorityPhase;
+import io.github.apace100.apoli.util.modifier.Modifier;
+import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -37,6 +41,7 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -53,14 +58,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     public abstract boolean damage(DamageSource source, float amount);
 
     @Shadow
-    public abstract EntityDimensions getDimensions(EntityPose pose);
-
-    @Shadow
     public abstract ItemStack getEquippedStack(EquipmentSlot slot);
 
     @Shadow
     @Final
-    private PlayerInventory inventory;
+    PlayerInventory inventory;
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -92,6 +94,66 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         modifiableFoodEntity.apoli$setOriginalFoodStack(original);
 
         return newStackRef.get();
+
+    }
+
+    @Unique
+    private boolean apoli$updateStatsManually = false;
+
+    @ModifyVariable(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;eat(Lnet/minecraft/component/type/FoodComponent;)V"), argsOnly = true)
+    private FoodComponent apoli$modifyFoodComponent(FoodComponent original, World world, ItemStack stack, @Share("modifyFoodPowers") LocalRef<List<ModifyFoodPower>> sharedModifyFoodPowers) {
+
+        List<ModifyFoodPower> modifyFoodPowers = ((ModifiableFoodEntity) this).apoli$getCurrentModifyFoodPowers()
+            .stream()
+            .filter(p -> p.doesApply(stack))
+            .toList();
+
+        sharedModifyFoodPowers.set(modifyFoodPowers);
+        this.apoli$updateStatsManually = false;
+
+        List<Modifier> nutritionModifiers = modifyFoodPowers
+            .stream()
+            .flatMap(p -> p.getFoodModifiers().stream())
+            .toList();
+        List<Modifier> saturationModifiers = modifyFoodPowers
+            .stream()
+            .flatMap(p -> p.getFoodModifiers().stream())
+            .toList();
+
+        int oldNutrition = original.nutrition();
+        float oldSaturation = original.saturation();
+
+        int newNutrition = (int) ModifierUtil.applyModifiers(this, nutritionModifiers, oldNutrition);
+        float newSaturation = (float) ModifierUtil.applyModifiers(this, saturationModifiers, oldSaturation);
+
+        if ((newNutrition != oldNutrition && newNutrition == 0) || (newSaturation != oldSaturation && newSaturation == 0)) {
+            this.apoli$updateStatsManually = true;
+        }
+
+        return new FoodComponent(
+            newNutrition,
+            oldNutrition,
+            original.canAlwaysEat(),
+            original.eatSeconds(),
+            original.usingConvertsTo(),
+            original.effects()
+        );
+
+    }
+
+    @Inject(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;eat(Lnet/minecraft/component/type/FoodComponent;)V"))
+    private void apoli$executeActionsAfterEating(World world, ItemStack stack, FoodComponent foodComponent, CallbackInfoReturnable<ItemStack> cir, @Share("modifyFoodPowers") LocalRef<List<ModifyFoodPower>> sharedModifyFoodPowers) {
+
+        List<ModifyFoodPower> modifyFoodPowers = sharedModifyFoodPowers.get();
+        if (!((PlayerEntity) (Object) this instanceof ServerPlayerEntity serverPlayer) || modifyFoodPowers == null) {
+            return;
+        }
+
+        modifyFoodPowers.forEach(ModifyFoodPower::eat);
+        if (apoli$updateStatsManually) {
+            HungerManager hungerManager = serverPlayer.getHungerManager();
+            serverPlayer.networkHandler.sendPacket(new HealthUpdateS2CPacket(this.getHealth(), hungerManager.getFoodLevel(), hungerManager.getSaturationLevel()));
+        }
 
     }
 
@@ -142,15 +204,14 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     // Prevent healing if DisableRegenPower
     // Note that this function was called "shouldHeal" instead of "canFoodHeal" at some point in time.
-    @Inject(method = "canFoodHeal", at = @At("HEAD"), cancellable = true)
-    private void disableHeal(CallbackInfoReturnable<Boolean> info) {
-        if(PowerHolderComponent.hasPower(this, DisableRegenPower.class)) {
-            info.setReturnValue(false);
-        }
+    @ModifyReturnValue(method = "canFoodHeal", at = @At("RETURN"))
+    private boolean apoli$disableFoodRegen(boolean original) {
+        return original
+            && !PowerHolderComponent.hasPower(this, DisableRegenPower.class);
     }
 
     // ModifyExhaustion
-    @ModifyVariable(at = @At("HEAD"), method = "addExhaustion", ordinal = 0, name = "exhaustion")
+    @ModifyVariable(at = @At("HEAD"), method = "addExhaustion", argsOnly = true)
     private float modifyExhaustion(float exhaustionIn) {
         return PowerHolderComponent.modify(this, ModifyExhaustionPower.class, exhaustionIn);
     }
@@ -162,25 +223,23 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
                 inventoryPower.dropItemsOnDeath();
             }
         });
-        PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(keepInventoryPower -> {
-            keepInventoryPower.preventItemsFromDropping(inventory);
-        });
+        PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(p ->
+            p.preventItemsFromDropping(inventory)
+        );
     }
 
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V", shift = At.Shift.AFTER))
     private void restoreKeptInventory(CallbackInfo ci) {
-        PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(keepInventoryPower -> {
-            keepInventoryPower.restoreSavedItems(inventory);
-        });
+        PowerHolderComponent.getPowers(this, KeepInventoryPower.class).forEach(p ->
+            p.restoreSavedItems(inventory)
+        );
     }
 
-    @Inject(method = "canEquip", at = @At("HEAD"), cancellable = true)
-    private void preventArmorDispensing(ItemStack stack, CallbackInfoReturnable<Boolean> info) {
-        EquipmentSlot slot = MobEntity.getPreferredEquipmentSlot(stack);
-        PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
-        if(component.getPowers(RestrictArmorPower.class).stream().anyMatch(rap -> !rap.canEquip(stack, slot))) {
-            info.setReturnValue(false);
-        }
+    @ModifyReturnValue(method = "canEquip", at = @At("RETURN"))
+    private boolean apoli$preventArmorDispensing(boolean original, ItemStack stack) {
+        EquipmentSlot preferredSlot = this.getPreferredEquipmentSlot(stack);
+        return original
+            && !PowerHolderComponent.hasPower(this, RestrictArmorPower.class, p -> !p.canEquip(stack, preferredSlot));
     }
 
     @WrapOperation(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;interact(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))

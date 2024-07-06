@@ -28,6 +28,7 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -55,35 +56,35 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         float blue = modelColorPowers.stream().map(ModelColorPower::getBlue).reduce((a, b) -> a * b).orElse(1.0f);
         float alpha = modelColorPowers.stream().map(ModelColorPower::getAlpha).min(Float::compare).orElse(1.0f);
 
-        instance.render(matrices, mVertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(skinTextureId)), light, overlay, red, green, blue, alpha);
+        instance.render(matrices, mVertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(skinTextureId)), light, overlay, ColorHelper.Argb.fromFloats(alpha, red, green, blue));
 
     }
 
-    @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isFallFlying()Z"))
-    private boolean apoli$forceFallFlyingPose(boolean original, AbstractClientPlayerEntity player, @Share("applyPseudoRoll") LocalBooleanRef applyPseudoRollRef, @Share("pseudoRoll") LocalIntRef pseudoRollRef) {
+    @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isFallFlying()Z"))
+    private boolean apoli$forceFallFlyingPose(boolean original, AbstractClientPlayerEntity player, @Share("applyPseudoFallFlyingTicks") LocalBooleanRef applyPseudoFallFlyingTicksRef, @Share("pseudoRoll") LocalIntRef pseudoRollRef) {
 
         if (original || !(player instanceof PseudoRenderDataHolder renderData)) {
             return original;
         }
 
-        int pseudoRoll = renderData.apoli$getPseudoRoll();
+        int pseudoRoll = renderData.apoli$getPseudoFallFlyingTicks();
         boolean apply = pseudoRoll > 0;
 
         pseudoRollRef.set(pseudoRoll);
-        applyPseudoRollRef.set(apply);
+        applyPseudoFallFlyingTicksRef.set(apply);
 
         return apply;
 
     }
 
-    @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isUsingRiptide()Z"))
+    @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isUsingRiptide()Z"))
     private boolean apoli$accountForForcedRiptide(boolean original, AbstractClientPlayerEntity player) {
         return original || PosePower.hasEntityPose(player, EntityPose.SPIN_ATTACK);
     }
 
-    @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getRoll()I"))
-    private int apoli$applyPseudoRoll(int original, AbstractClientPlayerEntity player, @Share("applyPseudoRoll") LocalBooleanRef applyPseudoRollRef, @Share("pseudoRoll") LocalIntRef pseudoRollRef) {
-        return applyPseudoRollRef.get()
+    @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getFallFlyingTicks()I"))
+    private int apoli$applyPseudoFallFlyingTicks(int original, AbstractClientPlayerEntity player, @Share("applyPseudoFallFlyingTicks") LocalBooleanRef applyPseudoFallFlyingTicksRef, @Share("pseudoRoll") LocalIntRef pseudoRollRef) {
+        return applyPseudoFallFlyingTicksRef.get()
             ? pseudoRollRef.get()
             : original;
     }

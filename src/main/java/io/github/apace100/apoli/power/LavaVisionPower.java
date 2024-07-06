@@ -15,7 +15,7 @@ public class LavaVisionPower extends AttributePower {
 
     public LavaVisionPower(PowerType<?> type, LivingEntity entity, float s, float v) {
         super(type, entity, false);
-        addModifier(AdditionalEntityAttributes.LAVA_VISIBILITY, new EntityAttributeModifier("Lava vision power", v - 1, EntityAttributeModifier.Operation.ADDITION));
+        addModifier(AdditionalEntityAttributes.LAVA_VISIBILITY, new EntityAttributeModifier(this.getType().getIdentifier(), v - 1, EntityAttributeModifier.Operation.ADD_VALUE));
         this.s = s;
         this.v = v;
     }

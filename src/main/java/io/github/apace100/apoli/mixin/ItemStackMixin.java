@@ -43,6 +43,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
     @Shadow public abstract ItemStack copy();
 
+    @Shadow private @Nullable Entity holder;
     @Unique
     private Entity apoli$holdingEntity;
 
@@ -71,13 +72,16 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         Entity holder = this.apoli$getEntity();
         if (holder != null) {
 
-            if (original.isEmpty()) {
-                original = ModifyEnchantmentLevelPower.getOrCreateWorkableEmptyStack(holder);
-            }
+            //  TODO: Uncomment this after fixing the `modify_enchantment_level` power type
+//            if (original.isEmpty()) {
+//                original = ModifyEnchantmentLevelPower.getOrCreateWorkableEmptyStack(holder);
+//            }
+//
+//            else {
+//                ((EntityLinkedItemStack) original).apoli$setEntity(holder);
+//            }
 
-            else {
-                ((EntityLinkedItemStack) original).apoli$setEntity(holder);
-            }
+            ((EntityLinkedItemStack) original).apoli$setEntity(holder);
 
         }
 
@@ -99,7 +103,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         StackReference useStackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
         ItemStack useStack = useStackReference.get();
 
-        ActionOnItemUsePower.TriggerType triggerType = useStack.getMaxUseTime() == 0
+        ActionOnItemUsePower.TriggerType triggerType = useStack.getMaxUseTime(user) == 0
             ? ActionOnItemUsePower.TriggerType.INSTANT
             : ActionOnItemUsePower.TriggerType.START;
         ActionOnItemUsePower.executeActions(user, useStackReference, useStack, triggerType, PriorityPhase.BEFORE);
@@ -109,7 +113,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         ItemStack oldUseStack = useStack.copy();
         boolean canConsumeCustomFood = EdibleItemPower.get(useStack, user)
             .map(EdibleItemPower::getFoodComponent)
-            .map(fc -> user.canConsume(fc.isAlwaysEdible()))
+            .map(fc -> user.canConsume(fc.canAlwaysEat()))
             .orElse(false);
 
         TypedActionResult<ItemStack> action = canConsumeCustomFood
@@ -122,8 +126,8 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         //  endregion
 
         //  region  Action on item after use
-        useStackReference = StackReference.of(user, LivingEntity.getPreferredEquipmentSlot(oldUseStack));
-        triggerType = useStack.getMaxUseTime() == 0
+        useStackReference = StackReference.of(user, user.getPreferredEquipmentSlot(oldUseStack));
+        triggerType = useStack.getMaxUseTime(user) == 0
             ? ActionOnItemUsePower.TriggerType.INSTANT
             : ActionOnItemUsePower.TriggerType.START;
 
@@ -185,7 +189,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         //  region  Edible item consumption effects
         finishUsingStackRef.set(EdibleItemPower.get(finishUsingStack, user)
-            .map(p -> user.eatFood(world, stack))
+            .map(p -> user.eatFood(world, stack, p.getFoodComponent()))
             .orElseGet(() -> original.call(finishUsingStack.getItem(), finishUsingStack, world, user)));
         //  endregion
 

@@ -6,7 +6,6 @@ import io.github.apace100.apoli.power.factory.condition.ItemConditions;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Equipment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
@@ -17,13 +16,11 @@ public class EquippableCondition {
     public static boolean condition(SerializableData.Instance data, Pair<World, ItemStack> worldAndStack) {
 
         ItemStack stack = worldAndStack.getRight();
+        Equipment equipment = Equipment.fromStack(stack);
+
         EquipmentSlot equipmentSlot = data.get("equipment_slot");
-
-        if (equipmentSlot == null) {
-            return Equipment.fromStack(stack) != null;
-        }
-
-        return LivingEntity.getPreferredEquipmentSlot(stack) == equipmentSlot;
+        return (equipmentSlot == null && equipment != null)
+            || (equipment != null && equipment.getSlotType() == equipmentSlot);
 
     }
 

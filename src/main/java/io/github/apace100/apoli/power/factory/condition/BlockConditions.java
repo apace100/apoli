@@ -137,9 +137,9 @@ public class BlockConditions {
             (data, block) -> {
                 NbtCompound nbt = new NbtCompound();
                 if(block.getBlockEntity() != null) {
-                    nbt = block.getBlockEntity().createNbtWithIdentifyingData();
+                    nbt = block.getBlockEntity().createNbtWithIdentifyingData(block.getWorld().getRegistryManager());
                 }
-                return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
+                return NbtHelper.matches(data.get("nbt"), nbt, true);
             }));
         register(new ConditionFactory<>(Apoli.identifier("slipperiness"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)

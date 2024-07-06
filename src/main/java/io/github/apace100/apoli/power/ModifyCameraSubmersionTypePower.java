@@ -4,7 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.client.render.CameraSubmersionType;
+import net.minecraft.block.enums.CameraSubmersionType;
 import net.minecraft.entity.LivingEntity;
 
 import java.util.Optional;

@@ -2,28 +2,21 @@ package io.github.apace100.apoli.networking.packet.s2c;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.CustomToastData;
-import net.fabricmc.fabric.api.networking.v1.FabricPacket;
-import net.fabricmc.fabric.api.networking.v1.PacketType;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 
-public record ShowToastS2CPacket(CustomToastData toastData) implements FabricPacket {
+public record ShowToastS2CPacket(CustomToastData toastData) implements CustomPayload {
 
-    public static final PacketType<ShowToastS2CPacket> TYPE = PacketType.create(
-        Apoli.identifier("s2c/show_toast"), ShowToastS2CPacket::read
+    public static final Id<ShowToastS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/show_toast"));
+    public static final PacketCodec<RegistryByteBuf, ShowToastS2CPacket> PACKET_CODEC = PacketCodec.of(
+        (value, buf) -> CustomToastData.DATA_TYPE.send(buf, value),
+        buf -> new ShowToastS2CPacket(CustomToastData.DATA_TYPE.receive(buf))
     );
 
-    public static ShowToastS2CPacket read(PacketByteBuf buf) {
-        return new ShowToastS2CPacket(CustomToastData.DATA_TYPE.receive(buf));
-    }
-
     @Override
-    public void write(PacketByteBuf buf) {
-        CustomToastData.DATA_TYPE.send(buf, toastData);
-    }
-
-    @Override
-    public PacketType<?> getType() {
-        return TYPE;
+    public Id<? extends CustomPayload> getId() {
+        return PACKET_ID;
     }
 
 }

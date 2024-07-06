@@ -22,8 +22,8 @@ public class ItemConditions {
         register(HarvestLevelCondition.getFactory());
         register(EnchantmentCondition.getFactory());
         register(MeatCondition.getFactory());
-        register(NbtCondition.getFactory());
-        register(FireproofCondition.getFactory());
+        register(CustomDataCondition.getFactory());
+        register(FireResistantCondition.getFactory());
         register(EnchantableCondition.getFactory());
         register(PowerCountCondition.getFactory());
         register(HasPowerCondition.getFactory());

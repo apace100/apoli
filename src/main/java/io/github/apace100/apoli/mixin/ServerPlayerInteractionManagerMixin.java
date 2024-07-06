@@ -17,13 +17,13 @@ import io.github.apace100.apoli.util.SavedBlockPosition;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -87,18 +87,18 @@ public class ServerPlayerInteractionManagerMixin {
             aobbp -> aobbp.executeActions(harvestedSuccessfully, pos, apoli$blockBreakDirection));
     }
 
-    @WrapOperation(method = "interactBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;onUse(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"))
-    private ActionResult apoli$beforeUseBlock(BlockState state, World world, PlayerEntity player, Hand hand, BlockHitResult hitResult, Operation<ActionResult> original, @Share("zeroPriority$onBlock") LocalRef<ActionResult> zeroPriority$onBlockRef, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
+    @WrapOperation(method = "interactBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;onUse(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"))
+    private ActionResult apoli$beforeUseBlock(BlockState state, World world, PlayerEntity player, BlockHitResult hitResult, Operation<ActionResult> original, ServerPlayerEntity mPlayer, World mWorld, ItemStack mStack, Hand mHand, @Share("zeroPriority$onBlock") LocalRef<ActionResult> zeroPriority$onBlockRef, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
 
-        ItemStack stackInHand = player.getStackInHand(hand);
+        ItemStack stackInHand = player.getStackInHand(mHand);
         BlockUsagePhase usePhase = BlockUsagePhase.BLOCK;
 
-        if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, hand)) {
+        if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, mHand)) {
             return ActionResult.FAIL;
         }
 
         Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, hand, stackInHand));
+        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, mHand, stackInHand));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -112,7 +112,7 @@ public class ServerPlayerInteractionManagerMixin {
             for (ActiveInteractionPower aip : aips) {
 
                 ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
-                    ? aobup.executeAction(hitResult, hand)
+                    ? aobup.executeAction(hitResult, mHand)
                     : ActionResult.PASS;
 
                 if (ActionResultUtil.shouldOverride(previousResult, currentResult)) {
@@ -131,14 +131,14 @@ public class ServerPlayerInteractionManagerMixin {
             }
 
             if (previousResult.shouldSwingHand()) {
-                player.swingHand(hand);
+                player.swingHand(mHand);
             }
 
             return previousResult;
 
         }
 
-        return original.call(state, world, player, hand, hitResult);
+        return original.call(state, world, player, hitResult);
 
     }
 
@@ -197,16 +197,16 @@ public class ServerPlayerInteractionManagerMixin {
 
     }
 
-    @WrapOperation(method = "interactBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;useOnBlock(Lnet/minecraft/item/ItemUsageContext;)Lnet/minecraft/util/ActionResult;"))
-    private ActionResult apoli$beforeItemUseOnBlock(ItemStack stack, ItemUsageContext context, Operation<ActionResult> original, ServerPlayerEntity mPlayer, World mWorld, ItemStack mStack, Hand mHand, BlockHitResult mHitResult, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
+    @WrapOperation(method = "interactBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;onUseWithItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ItemActionResult;"))
+    private ItemActionResult apoli$beforeItemUseOnBlock(BlockState state, ItemStack stack, World world, PlayerEntity player, Hand hand, BlockHitResult hitResult, Operation<ItemActionResult> original, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
 
         BlockUsagePhase usePhase = BlockUsagePhase.ITEM;
-        if (PreventBlockUsePower.doesPrevent(player, usePhase, mHitResult, mStack, mHand)) {
-            return ActionResult.FAIL;
+        if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stack, hand)) {
+            return ItemActionResult.FAIL;
         }
 
         Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, mHitResult, mHand, mStack));
+        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, hand, stack));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -220,7 +220,7 @@ public class ServerPlayerInteractionManagerMixin {
             for (ActiveInteractionPower aip : aips) {
 
                 ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
-                    ? aobup.executeAction(mHitResult, mHand)
+                    ? aobup.executeAction(hitResult, hand)
                     : ActionResult.PASS;
 
                 if (ActionResultUtil.shouldOverride(previousResult, currentResult)) {
@@ -239,18 +239,29 @@ public class ServerPlayerInteractionManagerMixin {
             }
 
             if (previousResult.shouldSwingHand()) {
-                player.swingHand(mHand);
+                player.swingHand(hand);
             }
 
-            return previousResult;
+            return switch (previousResult) {
+                case SUCCESS, SUCCESS_NO_ITEM_USED ->
+                    ItemActionResult.SUCCESS;
+                case CONSUME ->
+                    ItemActionResult.CONSUME;
+                case CONSUME_PARTIAL ->
+                    ItemActionResult.CONSUME_PARTIAL;
+                case FAIL ->
+                    ItemActionResult.FAIL;
+                default ->
+                    throw new IllegalStateException("Unexpected value: " + previousResult);
+            };
 
         }
 
-        return original.call(stack, context);
+        return original.call(state, stack, world, player, hand, hitResult);
 
     }
 
-    @ModifyReturnValue(method = "interactBlock", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;getItemCooldownManager()Lnet/minecraft/entity/player/ItemCooldownManager;")))
+    @ModifyReturnValue(method = "interactBlock", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/util/ItemActionResult;isAccepted()Z")))
     private ActionResult apoli$afterItemUseOnBlock(ActionResult original, ServerPlayerEntity player, World world, ItemStack stack, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
 
         ActionResult zeroPriority$itemOnBlock = zeroPriority$itemOnBlockRef.get();

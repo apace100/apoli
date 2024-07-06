@@ -79,7 +79,7 @@ public class EntityActions {
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("clear_effect"), new SerializableData()
-            .add("effect", SerializableDataTypes.STATUS_EFFECT, null),
+            .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY, null),
             (data, entity) -> {
                 if(entity instanceof LivingEntity le) {
                     if(data.isPresent("effect")) {

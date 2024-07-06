@@ -1,16 +1,21 @@
 package io.github.apace100.apoli.util;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
+import io.github.apace100.apoli.mixin.SlotRangesAccessor;
 import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.ArgumentWrapper;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.SlotRange;
+import net.minecraft.inventory.SlotRanges;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
@@ -55,7 +60,9 @@ public class InventoryUtil {
         data.<ArgumentWrapper<Integer>>ifPresent("slot", iaw -> slots.add(iaw.get()));
         data.<List<ArgumentWrapper<Integer>>>ifPresent("slots", iaws -> slots.addAll(iaws.stream().map(ArgumentWrapper::get).toList()));
 
-        if (slots.isEmpty()) slots.addAll(ItemSlotArgumentTypeAccessor.getSlotMappings().values());
+        if (slots.isEmpty()) {
+            slots.addAll(getAllSlots());
+        }
 
         return slots;
 
@@ -144,9 +151,10 @@ public class InventoryUtil {
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
         for (int slot : slots) {
 
-            StackReference stack = getStackReference(entity, inventoryPower, slot);
+            StackReference stackReference = getStackReference(entity, inventoryPower, slot);
+            ItemStack stack = stackReference.get();
 
-            if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack.get())))) {
+            if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
                 continue;
             }
 
@@ -155,14 +163,15 @@ public class InventoryUtil {
             }
 
             ItemStack stackAfterReplacement = replacementStack.copy();
-            if (mergeNbt && stack.get().hasNbt()) {
-                stack.get().getOrCreateNbt().copyFrom(stackAfterReplacement.getOrCreateNbt());
-                stackAfterReplacement.setNbt(stack.get().getOrCreateNbt());
+            if (mergeNbt) {
+                //  TODO: Either keep this, or re-implement it to merge components in a possibly hacky way (I'd rather not though) -eggohito
+                NbtCompound orgNbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).getNbt();
+                NbtComponent.set(DataComponentTypes.CUSTOM_DATA, stackAfterReplacement, repNbt -> repNbt.copyFrom(orgNbt));
             }
 
-            stack.set(stackAfterReplacement);
+            stackReference.set(stackAfterReplacement);
             if (itemAction != null) {
-                itemAction.accept(new Pair<>(entity.getWorld(), stack));
+                itemAction.accept(new Pair<>(entity.getWorld(), stackReference));
             }
 
         }
@@ -259,7 +268,7 @@ public class InventoryUtil {
     public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
 
         int slotToSkip = getDuplicatedSlotIndex(entity);
-        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+        for (int slot : getAllSlots()) {
 
             if (slot == slotToSkip) {
                 slotToSkip = Integer.MIN_VALUE;
@@ -304,7 +313,7 @@ public class InventoryUtil {
     public static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack, BiPredicate<ItemStack, ItemStack> equalityPredicate) {
 
         int slotToSkip = getDuplicatedSlotIndex(entity);
-        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+        for (int slot : getAllSlots()) {
 
             if (slot == slotToSkip) {
                 slotToSkip = Integer.MIN_VALUE;
@@ -322,12 +331,19 @@ public class InventoryUtil {
 
     }
 
+    private static final List<String> EXEMPT_SLOTS = List.of("weapon", "weapon.mainhand");
+
     private static void deduplicateSlots(Entity entity, Set<Integer> slots) {
-        int hotbarSlot = getDuplicatedSlotIndex(entity);
-        if(hotbarSlot != Integer.MIN_VALUE && slots.contains(hotbarSlot)) {
-            Integer mainHandSlot = ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand");
-            slots.remove(mainHandSlot);
+
+        int selectedHotbarSlot = getDuplicatedSlotIndex(entity);
+        if (selectedHotbarSlot != Integer.MIN_VALUE && slots.contains(selectedHotbarSlot)) {
+            SlotRangesAccessor.getSlotRanges()
+                .stream()
+                .filter(sr -> EXEMPT_SLOTS.contains(sr.asString()))
+                .flatMapToInt(sr -> sr.getSlotIds().intStream())
+                .forEach(slots::remove);
         }
+
     }
 
     /**
@@ -338,11 +354,15 @@ public class InventoryUtil {
      *      @return         The slot ID of the hotbar slot or {@link Integer#MIN_VALUE} if the entity is not a player
      */
     private static int getDuplicatedSlotIndex(Entity entity) {
-        if(entity instanceof PlayerEntity player) {
-            int selectedSlot = player.getInventory().selectedSlot;
-            return ItemSlotArgumentTypeAccessor.getSlotMappings().get("hotbar." + selectedSlot);
-        }
-        return Integer.MIN_VALUE;
+
+        SlotRange slotRange = entity instanceof PlayerEntity player
+            ? SlotRanges.fromName("hotbar." + player.getInventory().selectedSlot)
+            : null;
+
+        return slotRange != null
+            ? slotRange.getSlotIds().getFirst()
+            : Integer.MIN_VALUE;
+
     }
 
     /**
@@ -442,6 +462,31 @@ public class InventoryUtil {
             }
 
         };
+    }
+
+    public static List<Integer> getAllSlots() {
+        return SlotRangesAccessor.getSlotRanges()
+            .stream()
+            .flatMapToInt(slotRange -> slotRange.getSlotIds().intStream())
+            .boxed()
+            .toList();
+    }
+
+    @Nullable
+    public static Integer getSlotFromStackReference(Entity entity, StackReference stackReference) {
+
+        for (int slot : getAllSlots()) {
+
+            StackReference queriedStackRef = entity.getStackReference(slot);
+
+            if (queriedStackRef != StackReference.EMPTY && queriedStackRef.equals(stackReference)) {
+                return slot;
+            }
+
+        }
+
+        return null;
+
     }
 
 }

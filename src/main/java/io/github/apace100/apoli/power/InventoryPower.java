@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.component.EnchantmentEffectComponentTypes;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -110,7 +111,7 @@ public class InventoryPower extends Power implements Active, Inventory {
     public NbtCompound toTag() {
 
         NbtCompound tag = new NbtCompound();
-        Inventories.writeNbt(tag, container);
+        Inventories.writeNbt(tag, container, entity.getRegistryManager());
 
         return tag;
 
@@ -124,7 +125,7 @@ public class InventoryPower extends Power implements Active, Inventory {
         }
 
         this.clear();
-        Inventories.readNbt(rootNbt, container);
+        Inventories.readNbt(rootNbt, container, entity.getRegistryManager());
 
     }
 
@@ -245,7 +246,7 @@ public class InventoryPower extends Power implements Active, Inventory {
             }
 
             this.removeStack(i);
-            if (!EnchantmentHelper.hasVanishingCurse(currentStack)) {
+            if (!EnchantmentHelper.hasAnyEnchantmentsWith(currentStack, EnchantmentEffectComponentTypes.PREVENT_EQUIPMENT_DROP)) {
                 playerEntity.dropItem(currentStack, true, false);
             }
 

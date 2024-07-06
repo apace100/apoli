@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(Equipment.class)
 public interface EquipmentMixin {
 
+    //  TODO: Use MixinExtras' @WrapMethod in its new beta releases -eggohito
     @Inject(method = "equipAndSwap", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getEquippedStack(Lnet/minecraft/entity/EquipmentSlot;)Lnet/minecraft/item/ItemStack;"), cancellable = true)
     private void preventArmorEquipping(Item item, World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir, ItemStack itemStack, EquipmentSlot equipmentSlot) {
         PowerHolderComponent component = PowerHolderComponent.KEY.get(user);
@@ -26,4 +27,5 @@ public interface EquipmentMixin {
             cir.setReturnValue(TypedActionResult.fail(itemStack));
         }
     }
+
 }

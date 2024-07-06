@@ -5,11 +5,11 @@ import io.github.apace100.apoli.power.EdibleItemPower;
 import io.github.apace100.apoli.power.ModifyFoodPower;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import squeek.appleskin.api.AppleSkinApi;
 import squeek.appleskin.api.event.FoodValuesEvent;
-import squeek.appleskin.api.food.FoodValues;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class AppleSkinIntegration implements AppleSkinApi {
 
             EdibleItemPower.get(stack, player)
                 .map(EdibleItemPower::getFoodComponent)
-                .ifPresent(fc -> event.modifiedFoodValues = new FoodValues(fc.getHunger(), fc.getSaturationModifier()));
+                .ifPresent(foodComponent -> event.modifiedFoodComponent = foodComponent);
 
             List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(player, ModifyFoodPower.class)
                 .stream()
@@ -35,23 +35,30 @@ public class AppleSkinIntegration implements AppleSkinApi {
                 return;
             }
 
-            FoodValues originalValues = !event.modifiedFoodValues.equals(event.defaultFoodValues)
-                ? event.modifiedFoodValues
-                : event.defaultFoodValues;
+            FoodComponent originalFoodComponent = !event.modifiedFoodComponent.equals(event.defaultFoodComponent)
+                ? event.modifiedFoodComponent
+                : event.defaultFoodComponent;
 
-            List<Modifier> foodModifiers = modifyFoodPowers
+            List<Modifier> nutritionModifiers = modifyFoodPowers
                 .stream()
                 .flatMap(p -> p.getFoodModifiers().stream())
                 .toList();
             List<Modifier> saturationModifiers = modifyFoodPowers
                 .stream()
-                .flatMap(p -> p.getFoodModifiers().stream())
+                .flatMap(p -> p.getSaturationModifiers().stream())
                 .toList();
 
-            int hunger = (int) ModifierUtil.applyModifiers(player, foodModifiers, originalValues.hunger);
-            float saturation = (float) ModifierUtil.applyModifiers(player, saturationModifiers, originalValues.saturationModifier);
+            int newNutrition = (int) ModifierUtil.applyModifiers(player, nutritionModifiers, originalFoodComponent.nutrition());
+            float newSaturation = (float) ModifierUtil.applyModifiers(player, saturationModifiers, originalFoodComponent.saturation());
 
-            event.modifiedFoodValues = new FoodValues(hunger, saturation);
+            event.modifiedFoodComponent = new FoodComponent(
+                newNutrition,
+                newSaturation,
+                originalFoodComponent.canAlwaysEat(),
+                originalFoodComponent.eatSeconds(),
+                originalFoodComponent.usingConvertsTo(),
+                originalFoodComponent.effects()
+            );
 
         });
 

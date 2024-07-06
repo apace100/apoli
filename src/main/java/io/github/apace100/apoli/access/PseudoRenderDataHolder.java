@@ -2,5 +2,5 @@ package io.github.apace100.apoli.access;
 
 public interface PseudoRenderDataHolder {
     int apoli$getPseudoDeathTicks();
-    int apoli$getPseudoRoll();
+    int apoli$getPseudoFallFlyingTicks();
 }

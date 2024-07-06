@@ -2,22 +2,18 @@ package io.github.apace100.apoli.util;
 
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.registry.entry.RegistryEntry;
 
-public class AttributedEntityAttributeModifier {
+public record AttributedEntityAttributeModifier(RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier) {
 
-    private final EntityAttribute attribute;
-    private final EntityAttributeModifier modifier;
-
-    public AttributedEntityAttributeModifier(EntityAttribute attribute, EntityAttributeModifier modifier) {
-        this.attribute = attribute;
-        this.modifier = modifier;
+    @Deprecated
+    public RegistryEntry<EntityAttribute> getAttribute() {
+        return this.attribute();
     }
 
+    @Deprecated
     public EntityAttributeModifier getModifier() {
-        return modifier;
+        return this.modifier();
     }
 
-    public EntityAttribute getAttribute() {
-        return attribute;
-    }
 }

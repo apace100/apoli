@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.Active;
 import io.github.apace100.apoli.power.PowerType;
@@ -19,7 +20,6 @@ import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.mixin.EntityAttributeModifierAccessor;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import io.github.apace100.calio.util.DynamicIdentifier;
 import io.github.apace100.calio.util.IdentifierAlias;
@@ -29,6 +29,7 @@ import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.command.EntitySelector;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.ItemSlotArgumentType;
+import net.minecraft.component.ComponentChanges;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -42,6 +43,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextCodecs;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
@@ -120,50 +122,76 @@ public class ApoliDataTypes {
     public static final SerializableDataType<InventoryUtil.ProcessMode> PROCESS_MODE = SerializableDataType.enumValue(InventoryUtil.ProcessMode.class);
 
     public static final SerializableDataType<AttributedEntityAttributeModifier> ATTRIBUTED_ATTRIBUTE_MODIFIER = SerializableDataType.compound(
-        AttributedEntityAttributeModifier.class,
+        ClassUtil.castClass(AttributedEntityAttributeModifier.class),
         new SerializableData()
-            .add("attribute", SerializableDataTypes.ATTRIBUTE)
+            .add("attribute", SerializableDataTypes.ATTRIBUTE_ENTRY)
             .add("operation", SerializableDataTypes.MODIFIER_OPERATION)
             .add("value", SerializableDataTypes.DOUBLE)
-            .add("name", SerializableDataTypes.STRING, "Unnamed EntityAttributeModifier"),
-        dataInst -> new AttributedEntityAttributeModifier(dataInst.get("attribute"),
-            new EntityAttributeModifier(
-                dataInst.getString("name"),
-                dataInst.getDouble("value"),
-                dataInst.get("operation"))),
-        (data, inst) -> {
-            SerializableData.Instance dataInst = data.new Instance();
-            dataInst.set("attribute", inst.getAttribute());
-            dataInst.set("operation", inst.getModifier().getOperation());
-            dataInst.set("value", inst.getModifier().getValue());
-            dataInst.set("name", ((EntityAttributeModifierAccessor) inst.getModifier()).getName());
-            return dataInst;
-        });
+            .add("id", SerializableDataTypes.IDENTIFIER),
+        data -> {
+
+            EntityAttributeModifier modifier = new EntityAttributeModifier(
+                data.get("id"),
+                data.get("value"),
+                data.get("operation")
+            );
+
+            return new AttributedEntityAttributeModifier(
+                data.get("attribute"),
+                modifier
+            );
+
+        },
+        (serializableData, attributedEntityAttributeModifier) -> {
+
+            SerializableData.Instance data = serializableData.new Instance();
+            EntityAttributeModifier attributeModifier = attributedEntityAttributeModifier.modifier();
+
+            data.set("attribute", attributedEntityAttributeModifier.attribute());
+            data.set("operation", attributeModifier.operation());
+            data.set("value", attributeModifier.value());
+            data.set("id", attributeModifier.id());
+
+            return data;
+
+        }
+    );
 
     public static final SerializableDataType<List<AttributedEntityAttributeModifier>> ATTRIBUTED_ATTRIBUTE_MODIFIERS =
         SerializableDataType.list(ATTRIBUTED_ATTRIBUTE_MODIFIER);
 
-    public static final SerializableDataType<Pair<Integer, ItemStack>> POSITIONED_ITEM_STACK = SerializableDataType.compound(ClassUtil.castClass(Pair.class),
+    public static final SerializableDataType<Pair<Integer, ItemStack>> POSITIONED_ITEM_STACK = SerializableDataType.compound(
+        ClassUtil.castClass(Pair.class),
         new SerializableData()
             .add("item", SerializableDataTypes.ITEM)
             .add("amount", SerializableDataTypes.INT, 1)
-            .add("tag", SerializableDataTypes.NBT, null)
+            .add("components", SerializableDataTypes.COMPONENT_CHANGES, ComponentChanges.EMPTY)
             .add("slot", SerializableDataTypes.INT, Integer.MIN_VALUE),
-        (data) ->  {
-            ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
-            if(data.isPresent("tag")) {
-                stack.setNbt(data.get("tag"));
-            }
+        data -> {
+
+            Item item = data.get("item");
+            ItemStack stack = item.getDefaultStack();
+
+            stack.setCount(data.getInt("amount"));
+            stack.applyChanges(data.get("components"));
+
             return new Pair<>(data.getInt("slot"), stack);
+
         },
-        ((serializableData, positionedStack) -> {
+        (serializableData, slotAndStack) -> {
+
             SerializableData.Instance data = serializableData.new Instance();
-            data.set("item", positionedStack.getRight().getItem());
-            data.set("amount", positionedStack.getRight().getCount());
-            data.set("tag", positionedStack.getRight().hasNbt() ? positionedStack.getRight().getNbt() : null);
-            data.set("slot", positionedStack.getLeft());
+            ItemStack stack = slotAndStack.getRight();
+
+            data.set("item", stack.getItem());
+            data.set("amount", stack.getCount());
+            data.set("components", stack.getComponentChanges());
+            data.set("slot", slotAndStack.getLeft());
+
             return data;
-        }));
+
+        }
+    );
 
     public static final SerializableDataType<List<Pair<Integer, ItemStack>>> POSITIONED_ITEM_STACKS = SerializableDataType.list(POSITIONED_ITEM_STACK);
 
@@ -345,8 +373,8 @@ public class ApoliDataTypes {
                     continue;
                 }
 
-                Identifier keyId = new Identifier(key);
-                Identifier valId = new Identifier(jsonPrimitive.getAsString());
+                Identifier keyId = DynamicIdentifier.of(key);
+                Identifier valId = DynamicIdentifier.of(jsonPrimitive.getAsString());
 
                 map.put(keyId, valId);
 
@@ -413,21 +441,16 @@ public class ApoliDataTypes {
 
     //  This is for keeping backwards compatibility to fields that used to accept strings as translation keys
     public static final SerializableDataType<Text> DEFAULT_TRANSLATABLE_TEXT = new SerializableDataType<>(
-        Text.class,
-        PacketByteBuf::writeText,
-        PacketByteBuf::readText,
-        jsonElement -> {
-
-            //  If the JSON is a primitive, use it as a translation key
-            if (jsonElement instanceof JsonPrimitive jsonPrimitive) {
-                return Text.translatable(jsonPrimitive.getAsString());
-            }
-
-            //  Otherwise, serialize it as a text as usual
-            return Text.Serialization.fromJsonTree(jsonElement);
-
-        },
-        Text.Serialization::toJsonTree
+        ClassUtil.castClass(Text.class),
+        TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC::encode,
+        TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC::decode,
+        jsonElement -> jsonElement instanceof JsonPrimitive jsonPrimitive
+            ? Text.translatable(jsonPrimitive.getAsString())
+            : SerializableDataTypes.TEXT.read(jsonElement),
+        text -> TextCodecs.CODEC.encodeStart(JsonOps.INSTANCE, text)
+            .mapError(err -> "Failed to serialize text to JSON (skipping): " + err)
+            .resultOrPartial(Apoli.LOGGER::warn)
+            .orElseGet(JsonObject::new)
     );
 
     public static final SerializableDataType<Integer> NON_NEGATIVE_INT = SerializableDataType.boundNumber(

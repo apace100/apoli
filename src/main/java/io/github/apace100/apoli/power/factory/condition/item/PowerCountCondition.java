@@ -4,10 +4,8 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.Comparison;
-import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
@@ -20,15 +18,16 @@ public class PowerCountCondition {
         int compareTo = data.get("compare_to");
         int total = 0;
 
-        if (data.isPresent("slot")) {
-            total = StackPowerUtil.getPowers(worldAndStack.getRight(), data.get("slot")).size();
-        } else {
-
-            for (EquipmentSlot slot : EquipmentSlot.values()) {
-                total += StackPowerUtil.getPowers(worldAndStack.getRight(), slot).size();
-            }
-
-        }
+        //  TODO: Uncomment after re-implementing stack powers as an item component -eggohito
+//        if (data.isPresent("slot")) {
+//            total = StackPowerUtil.getPowers(worldAndStack.getRight(), data.get("slot")).size();
+//        } else {
+//
+//            for (EquipmentSlot slot : EquipmentSlot.values()) {
+//                total += StackPowerUtil.getPowers(worldAndStack.getRight(), slot).size();
+//            }
+//
+//        }
 
         return comparison.compare(total, compareTo);
 

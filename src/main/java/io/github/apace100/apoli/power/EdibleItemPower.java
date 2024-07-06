@@ -11,11 +11,11 @@ import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.inventory.StackReference;
-import net.minecraft.item.FoodComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -102,19 +102,6 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     }
 
-    public void applyEffects() {
-
-        if (entity.getWorld().isClient) {
-            return;
-        }
-
-        foodComponent.getStatusEffects()
-            .stream()
-            .filter(pair -> entity.getWorld().getRandom().nextFloat() < pair.getSecond())
-            .forEach(pair -> entity.addStatusEffect(new StatusEffectInstance(pair.getFirst())));
-
-    }
-
     public FoodComponent getFoodComponent() {
         return foodComponent;
     }
@@ -128,7 +115,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
     }
 
     public int getConsumingTime() {
-        return (int) ModifierUtil.applyModifiers(entity, consumingTimeModifiers, this.getFoodComponent().isSnack() ? 16 : 32);
+        return (int) ModifierUtil.applyModifiers(entity, consumingTimeModifiers, this.getFoodComponent().eatSeconds());
     }
 
     public static Optional<EdibleItemPower> get(ItemStack stack, @Nullable Entity holder) {
@@ -136,7 +123,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
             .stream()
             .filter(p -> p.doesApply(stack))
             .max(Comparator.comparing(EdibleItemPower::getPriority))
-            .filter(p -> !stack.getItem().isFood() || p.getPriority() > 1);
+            .filter(p -> stack.get(DataComponentTypes.FOOD) == null || p.getPriority() > 1);
     }
 
     public static Optional<EdibleItemPower> get(ItemStack stack) {

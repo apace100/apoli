@@ -1,12 +1,11 @@
 package io.github.apace100.apoli.power.factory.action.item;
 
 import com.google.gson.JsonObject;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
@@ -50,7 +49,8 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
 
             //  Replace the stack of the stack reference with ItemStack#EMPTY if the said stack is NOT
             //  "workable", and if the said stack is empty
-            if (!ModifyEnchantmentLevelPower.isWorkableEmptyStack(stackReference) && stackReference.get().isEmpty()) {
+            //  TODO: Uncomment this after fixing the `modify_enchantment_level` power type
+            if (/*!ModifyEnchantmentLevelPower.isWorkableEmptyStack(stackReference) &&*/ stackReference.get().isEmpty()) {
                 stackReference.set(ItemStack.EMPTY);
             }
 
@@ -62,7 +62,7 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
         return new ItemActionFactory.Instance(data.read(json));
     }
 
-    public ItemActionFactory.Instance read(PacketByteBuf buffer) {
+    public ItemActionFactory.Instance read(RegistryByteBuf buffer) {
         return new ItemActionFactory.Instance(data.read(buffer));
     }
 

@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:loot_table",
-          "name": "apoli:replaced_loot_table"
+          "value": "apoli:replaced_loot_table"
         }
       ]
     }

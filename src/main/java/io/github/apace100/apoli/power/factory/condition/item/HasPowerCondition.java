@@ -2,7 +2,6 @@ package io.github.apace100.apoli.power.factory.condition.item;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
-import io.github.apace100.apoli.util.StackPowerUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.EquipmentSlot;
@@ -33,9 +32,11 @@ public class HasPowerCondition {
     }
 
     private static boolean hasMatchingStackPowers(Identifier powerId, ItemStack stack, EquipmentSlot slot) {
-        return StackPowerUtil.getPowers(stack, slot)
-            .stream()
-            .anyMatch(sp -> sp.powerId.equals(powerId));
+        //  TODO: Uncomment after re-implementing stack powers as an item component -eggohito
+//        return StackPowerUtil.getPowers(stack, slot)
+//            .stream()
+//            .anyMatch(sp -> sp.powerId.equals(powerId));
+        return false;
     }
 
     public static ConditionFactory<Pair<World, ItemStack>> getFactory() {

@@ -20,7 +20,7 @@ public class PowerFactories {
         register(CooldownPower::createFactory);
         register(EffectImmunityPower::createFactory);
         register(ElytraFlightPower::createFactory);
-        register(SetEntityGroupPower::createFactory);
+//        register(SetEntityGroupPower::createFactory);
         register(FireProjectilePower::createFactory);
         register(InventoryPower::createFactory);
         register(InvisibilityPower::createFactory);

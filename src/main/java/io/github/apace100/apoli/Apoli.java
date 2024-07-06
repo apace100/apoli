@@ -1,8 +1,5 @@
 package io.github.apace100.apoli;
 
-import dev.onyxstudios.cca.api.v3.entity.EntityComponentFactoryRegistry;
-import dev.onyxstudios.cca.api.v3.entity.EntityComponentInitializer;
-import dev.onyxstudios.cca.api.v3.entity.RespawnCopyStrategy;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -10,6 +7,7 @@ import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.integration.PowerIntegration;
+import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerFactories;
@@ -39,6 +37,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ladysnake.cca.api.v3.entity.EntityComponentFactoryRegistry;
+import org.ladysnake.cca.api.v3.entity.EntityComponentInitializer;
+import org.ladysnake.cca.api.v3.entity.RespawnCopyStrategy;
 
 public class Apoli implements ModInitializer, EntityComponentInitializer {
 
@@ -77,6 +78,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		});
 
 		ModPacketsC2S.register();
+		ModPackets.register();
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			PowerCommand.register(dispatcher);
@@ -121,7 +123,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 	}
 
 	public static Identifier identifier(String path) {
-		return new Identifier(MODID, path);
+		return Identifier.of(MODID, path);
 	}
 
 	@Override

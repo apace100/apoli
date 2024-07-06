@@ -1,10 +1,6 @@
 package io.github.apace100.apoli.component;
 
 import com.google.common.collect.Lists;
-import dev.onyxstudios.cca.api.v3.component.ComponentKey;
-import dev.onyxstudios.cca.api.v3.component.ComponentRegistry;
-import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
-import dev.onyxstudios.cca.api.v3.component.tick.ServerTickingComponent;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.ModifyValueCallback;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowerS2CPacket;
@@ -20,6 +16,12 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.ladysnake.cca.api.v3.component.ComponentKey;
+import org.ladysnake.cca.api.v3.component.ComponentRegistry;
+import org.ladysnake.cca.api.v3.component.sync.AutoSyncedComponent;
+import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -135,30 +137,36 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
         SyncPowersInBulkS2CPacket syncPowersPacket = new SyncPowersInBulkS2CPacket(entity.getId(), powersToSync);
         for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
-
-            if (ServerPlayNetworking.canSend(otherPlayer, SyncPowersInBulkS2CPacket.TYPE)) {
-                ServerPlayNetworking.send(otherPlayer, syncPowersPacket);
-            }
-
+            ServerPlayNetworking.send(otherPlayer, syncPowersPacket);
         }
 
-        if (entity instanceof ServerPlayerEntity player && ServerPlayNetworking.canSend(player, SyncPowersInBulkS2CPacket.TYPE)) {
+        if (entity instanceof ServerPlayerEntity player) {
             ServerPlayNetworking.send(player, syncPowersPacket);
         }
 
     }
 
-    static <T extends Power> void withPower(Entity entity, Class<T> powerClass, Predicate<T> power, Consumer<T> with) {
-        if(entity instanceof LivingEntity) {
-            Optional<T> optional = KEY.get(entity).getPowers(powerClass).stream().filter(p -> power == null || power.test(p)).findAny();
-            optional.ifPresent(with);
-        }
+    static <T extends Power> boolean withPower(@Nullable Entity entity, Class<T> powerClass, @NotNull Predicate<T> filter, Consumer<T> action) {
+
+        Optional<T> power = KEY.maybeGet(entity)
+            .stream()
+            .flatMap(pc -> pc.getPowers(powerClass).stream())
+            .filter(filter)
+            .findFirst();
+
+        power.ifPresent(action);
+        return power.isPresent();
+
     }
 
-    static <T extends Power> void withPowers(Entity entity, Class<T> powerClass, Predicate<T> filter, Consumer<T> with) {
-        if(entity instanceof LivingEntity) {
-            KEY.get(entity).getPowers(powerClass).stream().filter(p -> filter == null || filter.test(p)).forEach(with);
-        }
+    static <T extends Power> boolean withPowers(@Nullable Entity entity, Class<T> powerClass, @NotNull Predicate<T> filter, @NotNull Consumer<T> action) {
+        return KEY.maybeGet(entity)
+            .stream()
+            .flatMap(pc -> pc.getPowers(powerClass).stream())
+            .filter(filter)
+            .peek(action)
+            .findAny()
+            .isPresent();
     }
 
     static <T extends Power> List<T> getPowers(Entity entity, Class<T> powerClass) {
