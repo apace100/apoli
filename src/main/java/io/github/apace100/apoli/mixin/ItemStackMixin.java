@@ -71,18 +71,11 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         Entity holder = this.apoli$getEntity();
         if (holder != null) {
-
-            //  TODO: Uncomment this after fixing the `modify_enchantment_level` power type
-//            if (original.isEmpty()) {
-//                original = ModifyEnchantmentLevelPower.getOrCreateWorkableEmptyStack(holder);
-//            }
-//
-//            else {
-//                ((EntityLinkedItemStack) original).apoli$setEntity(holder);
-//            }
-
-            ((EntityLinkedItemStack) original).apoli$setEntity(holder);
-
+            if (original.isEmpty()) {
+                original = ModifyEnchantmentLevelPower.getOrCreateWorkableEmptyStack(holder);
+            } else {
+                ((EntityLinkedItemStack) original).apoli$setEntity(holder);
+            }
         }
 
         return original;

@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory.action.item;
 
 import com.google.gson.JsonObject;
+import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.inventory.StackReference;
@@ -49,8 +50,7 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
 
             //  Replace the stack of the stack reference with ItemStack#EMPTY if the said stack is NOT
             //  "workable", and if the said stack is empty
-            //  TODO: Uncomment this after fixing the `modify_enchantment_level` power type
-            if (/*!ModifyEnchantmentLevelPower.isWorkableEmptyStack(stackReference) &&*/ stackReference.get().isEmpty()) {
+            if (!ModifyEnchantmentLevelPower.isWorkableEmptyStack(stackReference) && stackReference.get().isEmpty()) {
                 stackReference.set(ItemStack.EMPTY);
             }
 
