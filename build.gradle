@@ -6,6 +6,8 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+def ENV = System.getenv()
+
 base {
 	archivesName = project.archives_base_name
 }
@@ -36,8 +38,8 @@ repositories {
 		url = 'https://maven.ladysnake.org/releases'
 	}
 	maven {
-		name = "JitPack"
-		url = 'https://jitpack.io'
+		name = 'Ladysnake Mods (snapshots)'
+		url = 'https://maven.ladysnake.org/snapshots'
 	}
 	maven {
 		url = 'https://maven.cafeteria.dev'
@@ -56,6 +58,9 @@ repositories {
 	}
 	maven {
 		url "https://maven.terraformersmc.com/"
+	}
+	maven {
+		url "https://maven.ryanliptak.com/"
 	}
 }
 
@@ -106,8 +111,8 @@ dependencies {
 	modApi "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
 
-	modApi "com.github.apace100:calio:${project.calio_version}"
-	include "com.github.apace100:calio:${project.calio_version}"
+	modApi "io.github.apace100:calio:${project.calio_version}"
+	include "io.github.apace100:calio:${project.calio_version}"
 
 	modCompileOnlyApi "com.jamieswhiteshirt:reach-entity-attributes:${rea_version}"
 
@@ -123,6 +128,11 @@ dependencies {
 //	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 //	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
 
+	modCompileOnly("squeek.appleskin:appleskin-fabric:${appleskin_version}:api") {
+		transitive = false
+	}
+	modCompileOnly "squeek.appleskin:appleskin-fabric:${appleskin_version}"
+//	modLocalRuntime "squeek.appleskin:appleskin-fabric:${appleskin_version}"
 }
 
 processResources {
@@ -174,5 +184,14 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 		mavenLocal()
+		if (ENV.MAVEN_URL && ENV.MAVEN_USERNAME && ENV.MAVEN_PASSWORD) {
+			maven {
+				url = ENV.MAVEN_URL
+				credentials {
+					username = ENV.MAVEN_USERNAME
+					password = ENV.MAVEN_PASSWORD
+				}
+			}
+		}
 	}
 }

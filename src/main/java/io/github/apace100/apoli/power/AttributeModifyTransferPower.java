@@ -7,6 +7,7 @@ import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.ClassDataRegistry;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.mixin.EntityAttributeModifierAccessor;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -38,7 +39,7 @@ public class AttributeModifyTransferPower extends Power {
             EntityAttributeInstance attributeInstance = attrContainer.getCustomInstance(attribute);
             attributeInstance.getModifiers().forEach(mod -> {
                 EntityAttributeModifier transferMod =
-                    new EntityAttributeModifier(mod.getName(), mod.getValue() * valueMultiplier, mod.getOperation());
+                    new EntityAttributeModifier(((EntityAttributeModifierAccessor) mod).getName(), mod.getValue() * valueMultiplier, mod.getOperation());
                 modifiers.add(ModifierUtil.fromAttributeModifier(transferMod));
             });
         }
@@ -50,7 +51,7 @@ public class AttributeModifyTransferPower extends Power {
             EntityAttributeInstance attributeInstance = attrContainer.getCustomInstance(attribute);
             attributeInstance.getModifiers().forEach(mod -> {
                 EntityAttributeModifier transferMod =
-                    new EntityAttributeModifier(mod.getName(), mod.getValue() * valueMultiplier, mod.getOperation());
+                    new EntityAttributeModifier(((EntityAttributeModifierAccessor) mod).getName(), mod.getValue() * valueMultiplier, mod.getOperation());
                 modifiers.add(transferMod);
             });
         }

@@ -5,8 +5,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -21,12 +19,15 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.StackReference;
+import net.minecraft.item.FoodComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -34,6 +35,7 @@ import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -451,47 +453,103 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     }
 
+    @ModifyExpressionValue(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isFood()Z"))
+    private boolean apoli$accountCustomFood(boolean original, World world, ItemStack stack) {
+        return original
+            || EdibleItemPower.get(stack).isPresent();
+    }
+
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
-    private ItemStack apoli$modifyEatenItemStack(ItemStack original) {
+    private ItemStack apoli$modifyEatenStack(ItemStack original) {
 
         LivingEntity thisAsLiving = (LivingEntity) (Object) this;
         if (thisAsLiving instanceof PlayerEntity) {
             return original;
         }
 
-        StackReference newStack = InventoryUtil.createStackReference(original);
+        StackReference newStackRef = InventoryUtil.createStackReference(original);
         List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
             .stream()
             .filter(mfp -> mfp.doesApply(original))
             .toList();
 
         for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
-            modifyFoodPower.setConsumedItemStackReference(newStack);
+            modifyFoodPower.setConsumedItemStackReference(newStackRef);
         }
+
+        EdibleItemPower.get(original.copy(), this).ifPresent(this::apoli$setEdibleItemPower);
 
         this.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         this.apoli$setOriginalFoodStack(original);
 
-        return newStack.get();
+        return newStackRef.get();
 
     }
 
     @ModifyVariable(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyFoodEffects(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;)V", shift = At.Shift.AFTER), argsOnly = true)
-    private ItemStack apoli$unmodifyEatenItemStack(ItemStack modified) {
-
+    private ItemStack apoli$restoreOriginalEatenStack(ItemStack modified) {
         ItemStack original = this.apoli$getOriginalFoodStack();
-        if (original == null) {
-            return modified;
+        return original == null
+            ? modified
+            : original;
+    }
+
+    @ModifyReturnValue(method = "eatFood", at = @At("RETURN"))
+    private ItemStack apoli$modifyCustomFoodAndCleanUp(ItemStack original) {
+
+        EdibleItemPower edibleItemPower = this.apoli$getEdibleItemPower();
+        ItemStack result = original;
+
+        modifyCustomFood:
+        if (edibleItemPower != null) {
+
+            edibleItemPower.executeEntityAction();
+
+            StackReference newStackRef = InventoryUtil.createStackReference(original);
+            StackReference resultStackRef = edibleItemPower.executeItemActions(newStackRef);
+
+            ItemStack newStack = newStackRef.get();
+            ItemStack resultStack = resultStackRef.get();
+
+            if (resultStackRef == StackReference.EMPTY) {
+                result = newStack;
+                break modifyCustomFood;
+            }
+
+            else if (newStack.isEmpty()) {
+                result = resultStack;
+                break modifyCustomFood;
+            }
+
+            else if (ItemStack.canCombine(resultStack, newStack)) {
+                newStack.increment(1);
+            }
+
+            else if ((LivingEntity) (Object) this instanceof PlayerEntity player && !player.isCreative()) {
+                player.getInventory().offerOrDrop(resultStack);
+            }
+
+            else {
+                InventoryUtil.throwItem(this, resultStack, false, false);
+            }
+
+            result = newStack;
+
         }
 
+        this.apoli$setCurrentModifyFoodPowers(new LinkedList<>());
         this.apoli$setOriginalFoodStack(null);
-        return original;
+        this.apoli$setEdibleItemPower(null);
+
+        return result;
 
     }
 
-    @Inject(method = "eatFood", at = @At("TAIL"))
-    private void apoli$removeCurrentModifyFoodPowers(World world, ItemStack stack, CallbackInfoReturnable<ItemStack> cir) {
-        this.apoli$setCurrentModifyFoodPowers(new LinkedList<>());
+    @ModifyExpressionValue(method = "applyFoodEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;getFoodComponent()Lnet/minecraft/item/FoodComponent;"))
+    private FoodComponent apoli$useCustomFoodComponent(FoodComponent original, ItemStack stack, World world, LivingEntity target) {
+        return EdibleItemPower.get(stack, target)
+            .map(EdibleItemPower::getFoodComponent)
+            .orElse(original);
     }
 
     @Inject(method = "applyFoodEffects", at = @At("HEAD"), cancellable = true)
@@ -499,11 +557,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         if (this.apoli$getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
             ci.cancel();
         }
-    }
-
-    @ModifyExpressionValue(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isFood()Z"))
-    private boolean apoli$allowConsumingCustomFood(boolean original, World world, ItemStack stack) {
-        return original || ((PotentiallyEdibleItemStack) stack).apoli$getFoodComponent().isPresent();
     }
 
     @Shadow @Nullable private LivingEntity attacker;
@@ -534,6 +587,14 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Shadow protected abstract void onStatusEffectRemoved(StatusEffectInstance effect);
 
+    @Shadow public float sidewaysSpeed;
+
+    @Shadow public float forwardSpeed;
+
+    @Shadow @Nullable public abstract EntityAttributeInstance getAttributeInstance(EntityAttribute attribute);
+
+    @Shadow public abstract double getAttributeBaseValue(RegistryEntry<EntityAttribute> attribute);
+
     @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
         cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
@@ -553,11 +614,23 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     }
 
+    @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z"))
+    private boolean apoli$cancelOutJumpVelocityIfNotMovingWithSprintPower(boolean original) {
+        // The movement check is here so this doesn't happen if the player is moving at a sprinting amount.
+        if (PowerHolderComponent.hasPower(this, SprintingPower.class) && this.apoli$getHorizontalMovementValue() < this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)) {
+            return false;
+        }
+        return original;
+    }
+
     @Unique
     private List<ModifyFoodPower> apoli$currentModifyFoodPowers = new LinkedList<>();
 
     @Unique
     private ItemStack apoli$originalFoodStack;
+
+    @Unique
+    private EdibleItemPower apoli$edibleItemPower;
 
     @Override
     public List<ModifyFoodPower> apoli$getCurrentModifyFoodPowers() {
@@ -579,8 +652,19 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         apoli$originalFoodStack = original;
     }
 
+    @Override
+    public EdibleItemPower apoli$getEdibleItemPower() {
+        return apoli$edibleItemPower;
+    }
+
+    @Override
+    public void apoli$setEdibleItemPower(EdibleItemPower power) {
+        this.apoli$edibleItemPower = power;
+    }
+
     @Inject(method = "baseTick", at = @At("TAIL"))
     private void updateItemStackHolder(CallbackInfo ci) {
         InventoryUtil.forEachStack(this, stack -> ((EntityLinkedItemStack) stack).apoli$setEntity(this));
     }
+
 }

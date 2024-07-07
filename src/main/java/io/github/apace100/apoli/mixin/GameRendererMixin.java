@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import net.fabricmc.api.EnvType;
@@ -218,4 +219,12 @@ public abstract class GameRendererMixin {
         BlockPos.stream(cameraBox).forEach(p -> set.add(p.toImmutable()));
         return set;
     }
+
+    @ModifyExpressionValue(method = "method_18144", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;canHit()Z"))
+    private static boolean apoli$preventEntitySelection(boolean original, Entity target) {
+        Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
+        return original
+            && !PowerHolderComponent.hasPower(cameraEntity, PreventEntitySelectionPower.class, p -> p.doesPrevent(target));
+    }
+
 }

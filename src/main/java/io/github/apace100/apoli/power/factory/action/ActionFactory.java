@@ -22,6 +22,7 @@ public class ActionFactory<T> implements Factory {
         this.identifier = identifier;
         this.effect = effect;
         this.data = data
+            .copy()
             .add("inverted", SerializableDataTypes.BOOLEAN, false);
     }
 

@@ -2,6 +2,7 @@
     "required": true,
     "minVersion": "0.8",
     "package": "io.github.apace100.apoli.mixin",
+    "plugin": "io.github.apace100.apoli.ApoliMixinPlugin",
     "compatibilityLevel": "JAVA_16",
     "mixins": [
         "AbstractBlockMixin",
@@ -42,6 +43,7 @@
         "ItemSlotArgumentTypeAccessor",
         "ItemStackMixin",
         "ItemUsageContextAccessor",
+        "LivingEntityAccessor",
         "LivingEntityMixin",
         "LoginMixin",
         "LootContextBuilderMixin",
@@ -58,6 +60,7 @@
         "PlayerScreenHandlerMixin",
         "RecipeManagerAccessor",
         "RecipeManagerMixin",
+        "ScreenHandlerAccessor",
         "ScreenHandlerMixin",
         "ServerPlayerEntityMixin",
         "ServerPlayerInteractionManagerAccessor",
@@ -69,10 +72,13 @@
         "StatusEffectInstanceMixin",
         "VibrationsListenerDataMixin",
         "VibrationsTickerMixin",
-        "WeightedListEntryAccessor"
+        "WeightedListEntryAccessor",
+        "integration.appleskin.FoodHelperMixin"
     ],
     "client": [
+        "AbstractClientPlayerEntityMixin",
         "BackgroundRendererMixin",
+        "BipedEntityModelMixin",
         "CapeFeatureRendererMixin",
         "ChunkRendererRegionMixin",
         "ClientAdvancementManagerAccessor",
@@ -81,6 +87,7 @@
         "ClientPlayerInteractionManagerMixin",
         "ConfigScreenProviderMixin",
         "ElytraFeatureRendererMixin",
+        "EntityMixinClient",
         "EntityParticleMixin",
         "EntityRenderDispatcherMixin",
         "GameRendererMixin",
@@ -95,6 +102,7 @@
         "PlayerEntityRendererMixin",
         "SpriteAtlasTextureAccessor",
         "TextureManagerAccessor",
+        "ToastManagerEntryMixin",
         "WorldRendererMixin"
     ],
     "injectors": {

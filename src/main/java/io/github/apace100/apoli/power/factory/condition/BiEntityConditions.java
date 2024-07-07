@@ -3,11 +3,14 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.bientity.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Pair;
 
 public class BiEntityConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
         MetaConditions.register(ApoliDataTypes.BIENTITY_CONDITION, BiEntityConditions::register);
@@ -28,7 +31,7 @@ public class BiEntityConditions {
         register(AttackerCondition.getFactory());
         register(RelativeRotationCondition.getFactory());
         register(EqualCondition.getFactory());
-        register(InSetCondition.getFactory());
+        register(InEntitySetCondition.getFactory());
         register(CommandCondition.getFactory());
     }
 

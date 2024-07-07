@@ -21,8 +21,9 @@ import java.util.*;
 public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implements IdentifiableResourceReloadListener {
 
     public static final Identifier PHASE = Apoli.identifier("phase/global_powers");
-
     public static final Set<Identifier> DEPENDENCIES = Util.make(new HashSet<>(), set -> set.add(Apoli.identifier("powers")));
+
+    public static final Set<Identifier> DISABLED = new HashSet<>();
     public static final Map<Identifier, GlobalPowerSet> ALL = new HashMap<>();
 
     private static final Gson GSON = new GsonBuilder()
@@ -51,8 +52,10 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
     @Override
     protected void apply(MultiJsonDataContainer prepared, ResourceManager manager, Profiler profiler) {
 
-        ALL.clear();
         prevId = null;
+
+        DISABLED.clear();
+        ALL.clear();
 
         Map<Identifier, List<GlobalPowerSet>> loadedGlobalPowerSets = new HashMap<>();
 
@@ -97,6 +100,7 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
                     prevPriority = loadingPriority + 1;
                 }
 
+                DISABLED.remove(id);
                 globalPowerSets.add(globalPowerSet);
 
             } catch (Exception e) {
@@ -131,6 +135,15 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
 
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
+
+    }
+
+    @Override
+    public void onReject(String packName, Identifier resourceId) {
+
+        if (!ALL.containsKey(resourceId)) {
+            DISABLED.add(resourceId);
+        }
 
     }
 
