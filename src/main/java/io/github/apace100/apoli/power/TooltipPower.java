@@ -25,6 +25,7 @@ import net.minecraft.world.World;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class TooltipPower extends Power {
@@ -122,8 +123,16 @@ public class TooltipPower extends Power {
         return order;
     }
 
-    public void addToTooltip(List<Text> tooltip) {
-        tooltip.addAll(shouldResolve ? tooltipTexts : texts);
+    public void addToTooltip(Consumer<Text> tooltipConsumer) {
+
+        if (shouldResolve) {
+            tooltipTexts.forEach(tooltipConsumer);
+        }
+
+        else {
+            texts.forEach(tooltipConsumer);
+        }
+
     }
 
     public boolean doesApply(ItemStack stack) {
