@@ -7,7 +7,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.ApoliClient;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
-import io.github.apace100.apoli.component.item.StackPowersComponent;
+import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.power.PreventItemUsePower;
 import io.github.apace100.apoli.power.TooltipPower;
 import io.github.apace100.apoli.util.ApoliConfigClient;
@@ -170,21 +170,21 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
     }
 
     @Inject(method = "appendAttributeModifiersTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;applyAttributeModifier(Lnet/minecraft/component/type/AttributeModifierSlot;Ljava/util/function/BiConsumer;)V", shift = At.Shift.AFTER))
-    private void apoli$appendStackPowersTooltipWithoutModifiers(Consumer<Text> tooltipConsumer, @Nullable PlayerEntity player, CallbackInfo ci, @Local AttributeModifierSlot modifierSlot, @Local MutableBoolean shouldAppendSlotName) {
+    private void apoli$appendItemPowersTooltipWithoutModifiers(Consumer<Text> tooltipConsumer, @Nullable PlayerEntity player, CallbackInfo ci, @Local AttributeModifierSlot modifierSlot, @Local MutableBoolean shouldAppendSlotName) {
 
         if (apoli$tooltipContext == null || apoli$tooltipType == null || apoli$appendedSlots.contains(modifierSlot)) {
             return;
         }
 
-        StackPowersComponent stackPowers = this.get(ApoliDataComponentTypes.STACK_POWERS_COMPONENT);
-        if (stackPowers == null || !stackPowers.containsSlot(modifierSlot)) {
+        ItemPowersComponent itemPowers = this.get(ApoliDataComponentTypes.POWERS);
+        if (itemPowers == null || !itemPowers.containsSlot(modifierSlot)) {
             return;
         }
 
         tooltipConsumer.accept(ScreenTexts.EMPTY);
         tooltipConsumer.accept(Text.translatable("item.modifiers." + modifierSlot.asString()).formatted(Formatting.GRAY));
 
-        stackPowers.appendTooltip(modifierSlot, apoli$tooltipContext, tooltipConsumer, apoli$tooltipType);
+        itemPowers.appendTooltip(modifierSlot, apoli$tooltipContext, tooltipConsumer, apoli$tooltipType);
         apoli$appendedSlots.add(modifierSlot);
 
     }
@@ -196,11 +196,11 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
             return;
         }
 
-        StackPowersComponent stackPowers = this.get(ApoliDataComponentTypes.STACK_POWERS_COMPONENT);
+        ItemPowersComponent itemPowers = this.get(ApoliDataComponentTypes.POWERS);
         apoli$appendedSlots.add(modifierSlot);
 
-        if (stackPowers != null && stackPowers.containsSlot(modifierSlot)) {
-            stackPowers.appendTooltip(modifierSlot, apoli$tooltipContext, apoli$tooltip::add, apoli$tooltipType);
+        if (itemPowers != null && itemPowers.containsSlot(modifierSlot)) {
+            itemPowers.appendTooltip(modifierSlot, apoli$tooltipContext, apoli$tooltip::add, apoli$tooltipType);
         }
 
     }

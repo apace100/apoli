@@ -7,13 +7,13 @@ import net.minecraft.registry.Registry;
 
 public class ApoliDataComponentTypes {
 
-    public static final ComponentType<StackPowersComponent> STACK_POWERS_COMPONENT = ComponentType.<StackPowersComponent>builder()
-        .codec(StackPowersComponent.CODEC)
-        .packetCodec(StackPowersComponent.PACKET_CODEC)
+    public static final ComponentType<ItemPowersComponent> POWERS = ComponentType.<ItemPowersComponent>builder()
+        .codec(ItemPowersComponent.CODEC)
+        .packetCodec(ItemPowersComponent.PACKET_CODEC)
         .build();
 
     public static void register() {
-        Registry.register(Registries.DATA_COMPONENT_TYPE, Apoli.identifier("stack_powers"), STACK_POWERS_COMPONENT);
+        Registry.register(Registries.DATA_COMPONENT_TYPE, Apoli.identifier("powers"), POWERS);
     }
 
 }

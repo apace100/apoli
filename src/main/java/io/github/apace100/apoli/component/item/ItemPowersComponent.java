@@ -9,7 +9,7 @@ import io.github.apace100.apoli.power.PowerTypeRegistry;
 import io.github.apace100.apoli.util.ApoliCodecs;
 import io.github.apace100.apoli.util.ApoliPacketCodecs;
 import io.github.apace100.apoli.util.codec.SetCodec;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -28,20 +28,20 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 //  TODO: Make the data of stack powers persist in the item stack
-public class StackPowersComponent {
+public class ItemPowersComponent {
 
-    public static final Codec<StackPowersComponent> CODEC = SetCodec.of(Entry.CODEC).xmap(
-        StackPowersComponent::fromEntrySet,
-        stackPowersComponent -> stackPowersComponent.entries
+    public static final Codec<ItemPowersComponent> CODEC = SetCodec.of(Entry.CODEC).xmap(
+        entries -> new ItemPowersComponent(new ObjectLinkedOpenHashSet<>(entries)),
+        itemPowersComponent -> itemPowersComponent.entries
     );
-    public static final PacketCodec<PacketByteBuf, StackPowersComponent> PACKET_CODEC = PacketCodecs.collection(size -> new ObjectArraySet<>(), Entry.PACKET_CODEC).xmap(
-        StackPowersComponent::new,
-        stackPowersComponent -> stackPowersComponent.entries
+    public static final PacketCodec<PacketByteBuf, ItemPowersComponent> PACKET_CODEC = PacketCodecs.collection(size -> new ObjectLinkedOpenHashSet<>(), Entry.PACKET_CODEC).xmap(
+        ItemPowersComponent::new,
+        itemPowersComponent -> itemPowersComponent.entries
     );
 
-    final ObjectArraySet<Entry> entries;
+    final ObjectLinkedOpenHashSet<Entry> entries;
 
-    public StackPowersComponent(ObjectArraySet<Entry> entries) {
+    ItemPowersComponent(ObjectLinkedOpenHashSet<Entry> entries) {
         this.entries = entries;
     }
 
@@ -50,7 +50,7 @@ public class StackPowersComponent {
         for (Entry entry : entries) {
 
             PowerType<?> power = entry.power();
-            if (entry.hidden() || !containsSlot(entry, modifierSlot)) {
+            if (entry.hidden() || !entry.slots().contains(modifierSlot)) {
                 continue;
             }
 
@@ -73,23 +73,11 @@ public class StackPowersComponent {
     }
 
     public boolean containsSlot(AttributeModifierSlot modifierSlot) {
-        return entries.stream()
-            .anyMatch(entry -> containsSlot(entry, modifierSlot));
-    }
-
-    public static boolean matchesSlot(Entry entry, EquipmentSlot slot) {
-        return entry.slots()
+        return entries
             .stream()
-            .anyMatch(modifierSlot -> modifierSlot.matches(slot));
+            .anyMatch(entry -> entry.slots().contains(modifierSlot));
     }
 
-    public static boolean containsSlot(Entry entry, AttributeModifierSlot modifierSlot) {
-        return entry.slots()
-            .stream()
-            .anyMatch(modifierSlot::equals);
-    }
-
-    @SuppressWarnings("ReplaceInefficientStreamCount")
     public static void onChangeEquipment(LivingEntity entity, EquipmentSlot slot, ItemStack previousStack, ItemStack currentStack) {
 
         if (ItemStack.areEqual(previousStack, currentStack) || !PowerHolderComponent.KEY.isProvidedBy(entity)) {
@@ -97,16 +85,19 @@ public class StackPowersComponent {
         }
 
         PowerHolderComponent powerComponent = PowerHolderComponent.KEY.get(entity);
-        Identifier sourceId = Apoli.identifier("stack_power/" + slot.getName());
+        Identifier sourceId = Apoli.identifier("item/" + slot.getName());
 
-        StackPowersComponent prevStackPowers = previousStack.get(ApoliDataComponentTypes.STACK_POWERS_COMPONENT);
+        ItemPowersComponent prevStackPowers = previousStack.get(ApoliDataComponentTypes.POWERS);
         if (prevStackPowers != null) {
 
-            boolean revoked = prevStackPowers.entries
-                .stream()
-                .filter(entry -> matchesSlot(entry, slot)
-                    && powerComponent.removePower(entry.power(), sourceId))
-                .count() > 0;
+            boolean revoked = false;
+            for (Entry prevEntry : prevStackPowers.entries) {
+
+                if (prevEntry.matchesSlot(slot) && powerComponent.removePower(prevEntry.power(), sourceId)) {
+                    revoked = true;
+                }
+
+            }
 
             if (revoked) {
                 powerComponent.sync();
@@ -114,14 +105,17 @@ public class StackPowersComponent {
 
         }
 
-        StackPowersComponent currStackPowers = currentStack.get(ApoliDataComponentTypes.STACK_POWERS_COMPONENT);
+        ItemPowersComponent currStackPowers = currentStack.get(ApoliDataComponentTypes.POWERS);
         if (currStackPowers != null) {
 
-            boolean granted = currStackPowers.entries
-                .stream()
-                .filter(entry -> matchesSlot(entry, slot)
-                    && powerComponent.addPower(entry.power(), sourceId))
-                .count() > 0;
+            boolean granted = false;
+            for (Entry currEntry : currStackPowers.entries) {
+
+                if (currEntry.matchesSlot(slot) && powerComponent.addPower(currEntry.power(), sourceId)) {
+                    granted = true;
+                }
+
+            }
 
             if (granted) {
                 powerComponent.sync();
@@ -129,10 +123,6 @@ public class StackPowersComponent {
 
         }
 
-    }
-
-    private static StackPowersComponent fromEntrySet(Set<Entry> entries) {
-        return new StackPowersComponent(new ObjectArraySet<>(entries));
     }
 
     public record Entry(PowerType<?> power, Set<AttributeModifierSlot> slots, NbtCompound data, boolean hidden, boolean negative) {
@@ -159,6 +149,12 @@ public class StackPowersComponent {
             return this == obj
                 || (obj instanceof Entry other
                 && this.power().equals(other.power()));
+        }
+
+        public boolean matchesSlot(EquipmentSlot equipmentSlot) {
+            return slots
+                .stream()
+                .anyMatch(modifierSlot -> modifierSlot.matches(equipmentSlot));
         }
 
     }
