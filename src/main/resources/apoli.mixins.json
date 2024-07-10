@@ -55,6 +55,7 @@
         "PlayerEntityMixin",
         "PlayerManagerMixin",
         "PlayerScreenHandlerAccessor",
+        "PlayerScreenHandlerMixin",
         "RecipeInputInventoryMixin",
         "RecipeManagerMixin",
         "ReloadableRegistriesLookupMixin",

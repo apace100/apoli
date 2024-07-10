@@ -2,8 +2,10 @@ package io.github.apace100.apoli;
 
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
+import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
+import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.integration.PowerIntegration;
@@ -25,6 +27,7 @@ import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
@@ -77,8 +80,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 			}
 		});
 
-		ModPacketsC2S.register();
 		ModPackets.register();
+		ModPacketsC2S.register();
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			PowerCommand.register(dispatcher);
@@ -96,6 +99,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ApoliClassData.registerAll();
 
 		ModifierOperations.registerAll();
+		ApoliDataComponentTypes.register();
 
 		PowerFactories.register();
 		EntityConditions.register();
@@ -115,6 +119,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new PowerTypes());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
+
+		ServerEntityEvents.EQUIPMENT_CHANGE.register(ItemPowersComponent::onChangeEquipment);
 
 		CalioResourceConditions.ALIASES.addNamespaceAlias(MODID, Calio.MOD_NAMESPACE);
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);

@@ -32,7 +32,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     ComponentKey<PowerHolderComponent> KEY = ComponentRegistry.getOrCreate(Apoli.identifier("powers"), PowerHolderComponent.class);
 
-    void removePower(PowerType<?> powerType, Identifier source);
+    boolean removePower(PowerType<?> powerType, Identifier source);
 
     int removeAllPowersFromSource(Identifier source);
 

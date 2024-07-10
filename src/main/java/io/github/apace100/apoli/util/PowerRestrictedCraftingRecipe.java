@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+//  TODO: Move away from using a single recipe instance -eggohito
 public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
 
     public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(PowerRestrictedCraftingRecipe::new);

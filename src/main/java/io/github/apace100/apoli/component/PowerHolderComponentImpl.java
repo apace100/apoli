@@ -91,11 +91,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void removePower(PowerType<?> powerType, Identifier source) {
-        this.removePower(powerType, source, true);
+    public boolean removePower(PowerType<?> powerType, Identifier source) {
+        return this.removePower(powerType, source, true);
     }
 
-    protected void removePower(PowerType<?> powerType, Identifier source, boolean root) {
+    protected boolean removePower(PowerType<?> powerType, Identifier source, boolean root) {
 
         StringBuilder errorMessage= new StringBuilder("Cannot remove a non-existing power");
         if (powerType instanceof PowerTypeReference<?> powerTypeReference) {
@@ -105,11 +105,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
         if (powerType == null) {
             Apoli.LOGGER.error(errorMessage.append(" from entity ").append(owner.getName().getString()));
-            return;
+            return false;
         }
 
         if (!powerSources.containsKey(powerType)) {
-            return;
+            return false;
         }
 
         List<Identifier> sources = powerSources.get(powerType);
@@ -136,13 +136,15 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         }
 
         if (!root) {
-            return;
+            return true;
         }
 
         powers.keySet().removeIf(powersToRemove::containsKey);
         powerSources.keySet().removeIf(powersToRemove::containsKey);
 
         powersToRemove.clear();
+
+        return true;
 
     }
 
