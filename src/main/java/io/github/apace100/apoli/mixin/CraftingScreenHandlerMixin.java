@@ -8,6 +8,7 @@ import io.github.apace100.apoli.access.SlotState;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
 import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.CraftingResultInventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.inventory.StackReference;
@@ -15,10 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.recipe.input.CraftingRecipeInput;
-import net.minecraft.screen.AbstractRecipeScreenHandler;
-import net.minecraft.screen.CraftingScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.screen.*;
 import net.minecraft.screen.slot.CraftingResultSlot;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.World;
@@ -54,6 +52,15 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
 
     private CraftingScreenHandlerMixin(ScreenHandlerType screenHandlerType, int i) {
         super(screenHandlerType, i);
+    }
+
+    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At("TAIL"))
+    private void apoli$cachePlayerToCraftingInventory(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, CallbackInfo ci) {
+
+        if (this.input instanceof PowerCraftingInventory pci) {
+            pci.apoli$setPlayer(playerInventory.player);
+        }
+
     }
 
     @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/recipe/RecipeManager;getFirstMatch(Lnet/minecraft/recipe/RecipeType;Lnet/minecraft/recipe/input/RecipeInput;Lnet/minecraft/world/World;Lnet/minecraft/recipe/RecipeEntry;)Ljava/util/Optional;"))
