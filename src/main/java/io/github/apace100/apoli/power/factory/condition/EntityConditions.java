@@ -5,6 +5,7 @@ import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
+import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.condition.entity.*;
@@ -271,7 +272,6 @@ public class EntityConditions {
             .add("calculation", SerializableDataTypes.STRING, "sum")
             .add("use_modifications", SerializableDataTypes.BOOLEAN, true),
             (data, entity) -> {
-                //  TODO: Uncomment these after fixing the `modify_enchantment_level` power type
                 int value = 0;
                 if(entity instanceof LivingEntity le) {
 
@@ -287,13 +287,16 @@ public class EntityConditions {
                     switch(calculation) {
                         case "sum":
                             for(ItemStack stack : enchantment.getEquipment(le).values()) {
-//                                value += ModifyEnchantmentLevelPower.getLevel(le, enchantment, stack, data.getBoolean("use_modifications"));
-                                value += EnchantmentHelper.getLevel(enchantmentEntry, stack);
+                                value += ModifyEnchantmentLevelPower.getEnchantments(stack, stack.getEnchantments(), data.getBoolean("use_modifications")).getLevel(enchantmentEntry);
                             }
                             break;
                         case "max":
-//                            value = ModifyEnchantmentLevelPower.getEquipmentLevel(enchantmentKey, le, data.getBoolean("use_modifications"));
-                            value = EnchantmentHelper.getEquipmentLevel(enchantmentEntry, le);
+                            for(ItemStack stack : enchantment.getEquipment(le).values()) {
+                                int potential = ModifyEnchantmentLevelPower.getEnchantments(stack, stack.getEnchantments(), data.getBoolean("use_modifications")).getLevel(enchantmentEntry);
+                                if (potential > value) {
+                                    value = potential;
+                                }
+                            }
                             break;
                         default:
                             Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");
