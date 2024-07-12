@@ -22,6 +22,7 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -34,7 +35,10 @@ import java.util.function.Predicate;
 
 public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
+    @ApiStatus.Internal
+    public static final ConcurrentHashMap<UUID, WeakHashMap<ItemStack, ItemStack>> COPY_TO_ORIGINAL_STACK = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<UUID, WeakHashMap<ItemStack, ItemEnchantmentsComponent>> ITEM_ENCHANTMENTS = new ConcurrentHashMap<>();
+
     private static final ConcurrentHashMap<UUID, ItemStack> MODIFIED_EMPTY_STACKS = new ConcurrentHashMap<>();
     private static final WeakHashMap<Pair<UUID, ItemStack>, ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new WeakHashMap<>(256);
 
@@ -73,9 +77,13 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         }
 
         MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
+        COPY_TO_ORIGINAL_STACK.remove(entity.getUuid());
 
     }
 
+    //  FIXME: Workable empty stacks are only created on the server-side, which makes modifying certain enchantments (e.g: efficiency, swift sneak,
+    //         etc.) on empty stacks impossible. Either add a common tick method with a 'client' boolean arg, or separate tick methods for each
+    //         side -eggohito
     @Override
     public void tick() {
 
@@ -94,12 +102,21 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         }
 
     }
+
     public static ItemEnchantmentsComponent getEnchantments(ItemStack stack, ItemEnchantmentsComponent original, boolean modified) {
 
         Entity entity = ((EntityLinkedItemStack)stack).apoli$getEntity();
+        if (entity == null || !modified) {
+            return original;
+        }
 
-        if (modified && entity != null && ITEM_ENCHANTMENTS.containsKey(entity.getUuid()) && ITEM_ENCHANTMENTS.get(entity.getUuid()).containsKey(stack)) {
-            return ITEM_ENCHANTMENTS.get(entity.getUuid()).get(stack);
+        UUID uuid = entity.getUuid();
+        ItemStack actualStack = COPY_TO_ORIGINAL_STACK.containsKey(uuid)
+            ? COPY_TO_ORIGINAL_STACK.get(uuid).getOrDefault(stack, stack)
+            : stack;
+
+        if (ITEM_ENCHANTMENTS.containsKey(uuid) && ITEM_ENCHANTMENTS.get(uuid).containsKey(actualStack)) {
+            return ITEM_ENCHANTMENTS.get(uuid).get(actualStack);
         }
 
         return original;

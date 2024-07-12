@@ -1,15 +1,14 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagKey;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -17,28 +16,28 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(EnchantmentHelper.class)
 public class EnchantmentHelperMixin {
 
-    @ModifyVariable(method = "getLevel", at = @At(value = "LOAD"))
-    private static ItemEnchantmentsComponent apoli$modifyEnchantmentsForLevel(ItemEnchantmentsComponent original, RegistryEntry<Enchantment> enchantment, ItemStack stack) {
-        return ModifyEnchantmentLevelPower.getAndUpdateModifiedEnchantments(stack, original);
+    @WrapOperation(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/type/ItemEnchantmentsComponent;getLevel(Lnet/minecraft/registry/entry/RegistryEntry;)I"))
+    private static int apoli$modifyEnchantmentsOnLevelQuery(ItemEnchantmentsComponent enchantmentsComponent, RegistryEntry<Enchantment> enchantment, Operation<Integer> original, RegistryEntry<Enchantment> mEnchantment, ItemStack stack) {
+        return original.call(ModifyEnchantmentLevelPower.getAndUpdateModifiedEnchantments(stack, enchantmentsComponent), enchantment);
     }
 
-    @ModifyVariable(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;)V", at = @At(value = "LOAD"))
-    private static ItemEnchantmentsComponent apoli$modifyForEachEnchantments(ItemEnchantmentsComponent original, ItemStack stack, EnchantmentHelper.Consumer consumer) {
+    @ModifyVariable(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;)V", at = @At("STORE"))
+    private static ItemEnchantmentsComponent apoli$modifyEnchantmentsOnForEach(ItemEnchantmentsComponent original, ItemStack stack) {
         return ModifyEnchantmentLevelPower.getAndUpdateModifiedEnchantments(stack, original);
     }
 
     @ModifyExpressionValue(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/enchantment/EnchantmentHelper$ContextAwareConsumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private static boolean apoli$allowWorkableEmptiesInForEach(boolean original, ItemStack stack, EquipmentSlot slot, LivingEntity entity, EnchantmentHelper.ContextAwareConsumer contextAwareConsumer) {
+    private static boolean apoli$allowWorkableEmptiesInForEach(boolean original, ItemStack stack) {
         return original && !ModifyEnchantmentLevelPower.isWorkableEmptyStack(stack);
     }
 
-    @ModifyVariable(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/enchantment/EnchantmentHelper$ContextAwareConsumer;)V", at = @At(value = "LOAD"))
-    private static ItemEnchantmentsComponent apoli$modifyForEachContextAwareEnchantments(ItemEnchantmentsComponent original, ItemStack stack, EquipmentSlot slot, LivingEntity entity, EnchantmentHelper.ContextAwareConsumer contextAwareConsumer) {
+    @ModifyVariable(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/enchantment/EnchantmentHelper$ContextAwareConsumer;)V", at = @At("STORE"))
+    private static ItemEnchantmentsComponent apoli$modifyEnchantmentsOnForEachWithContext(ItemEnchantmentsComponent original, ItemStack stack) {
         return ModifyEnchantmentLevelPower.getAndUpdateModifiedEnchantments(stack, original);
     }
 
-    @ModifyVariable(method = "hasAnyEnchantmentsIn", at = @At(value = "LOAD"))
-    private static ItemEnchantmentsComponent apoli$hasEnchantmentsIn(ItemEnchantmentsComponent original, ItemStack stack, TagKey<Enchantment> tag) {
+    @ModifyVariable(method = "hasAnyEnchantmentsIn", at = @At("STORE"))
+    private static ItemEnchantmentsComponent apoli$modifyEnchantmentsOnInTagQuery(ItemEnchantmentsComponent original, ItemStack stack) {
         return ModifyEnchantmentLevelPower.getAndUpdateModifiedEnchantments(stack, original);
     }
 
