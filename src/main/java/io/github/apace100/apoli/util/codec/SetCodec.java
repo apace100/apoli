@@ -3,9 +3,8 @@ package io.github.apace100.apoli.util.codec;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.datafixers.util.Unit;
 import com.mojang.serialization.*;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -54,11 +53,11 @@ public record SetCodec<E>(Codec<E> elementCodec, int minSize, int maxSize) imple
     }
 
     private <R> DataResult<R> createTooShortError(int size) {
-        return DataResult.error(() -> "Set has too few elements; expected set to have " + minSize + " to " + maxSize + " element(s), but has " + size + " element(s)");
+        return DataResult.error(() -> "Set has too few elements; expected to have at least " + minSize + " element(s), but only has " + size + " element(s)");
     }
 
     private <R> DataResult<R> createTooLongError(int size) {
-        return DataResult.error(() -> "Set has too much elements; expected set to have " + minSize + " to " + maxSize + " element(s), but has " + size + " element(s)");
+        return DataResult.error(() -> "Set has too much elements; expected to only have " + maxSize + " element(s), but has " + size + " element(s)");
     }
 
     public static <T> SetCodec<T> of(Codec<T> codec) {
@@ -70,15 +69,16 @@ public record SetCodec<E>(Codec<E> elementCodec, int minSize, int maxSize) imple
         private final Stream.Builder<T> failed;
 
         private final DynamicOps<T> ops;
-        private final List<E> elements;
+        private final Set<E> elements;
 
-        private DataResult<Unit> result = DataResult.success(Unit.INSTANCE, Lifecycle.stable());
+        private DataResult<Unit> result;
         private int totalCount;
 
         private DecoderState(DynamicOps<T> ops) {
             this.failed = Stream.builder();
             this.ops = ops;
-            this.elements = new ArrayList<>();
+            this.elements = new ObjectArraySet<>();
+            this.result = DataResult.success(Unit.INSTANCE, Lifecycle.stable());
         }
 
         public void accept(T value) {
