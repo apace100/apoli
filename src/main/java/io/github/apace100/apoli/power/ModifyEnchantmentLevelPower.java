@@ -33,6 +33,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
+//  TODO: Fix this power type unreliably modifying attribute modifier enchantment effects -eggohito
 public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
     @ApiStatus.Internal
@@ -76,14 +77,13 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
 
         }
 
-        MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
         COPY_TO_ORIGINAL_STACK.remove(entity.getUuid());
+        ITEM_ENCHANTMENTS.remove(entity.getUuid());
+
+        MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
 
     }
 
-    //  FIXME: Workable empty stacks are only created on the server-side, which makes modifying certain enchantments (e.g: efficiency, swift sneak,
-    //         etc.) on empty stacks impossible. Either add a common tick method with a 'client' boolean arg, or separate tick methods for each
-    //         side -eggohito
     @Override
     public void tick() {
 
