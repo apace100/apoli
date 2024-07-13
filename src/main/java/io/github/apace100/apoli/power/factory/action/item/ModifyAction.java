@@ -29,7 +29,10 @@ public class ModifyAction {
         }
 
         RegistryKey<LootFunction> itemModifierKey = data.get("modifier");
-        LootFunction itemModifier = serverWorld.getRegistryManager().get(RegistryKeys.ITEM_MODIFIER).getOrThrow(itemModifierKey);
+        LootFunction itemModifier = serverWorld.getServer().getReloadableRegistries()
+            .getRegistryManager()
+            .get(RegistryKeys.ITEM_MODIFIER)
+            .getOrThrow(itemModifierKey);
 
         StackReference stack = worldAndStack.getRight();
         Entity stackHolder = ((EntityLinkedItemStack) stack.get()).apoli$getEntity();

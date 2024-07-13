@@ -25,7 +25,10 @@ public class PredicateCondition {
         }
 
         RegistryKey<LootCondition> predicateKey = data.get("predicate");
-        LootCondition predicate = serverWorld.getRegistryManager().get(RegistryKeys.PREDICATE).getOrThrow(predicateKey);
+        LootCondition predicate = serverWorld.getServer().getReloadableRegistries()
+            .getRegistryManager()
+            .get(RegistryKeys.PREDICATE)
+            .getOrThrow(predicateKey);
 
         LootContextParameterSet lootContextParameterSet = new LootContextParameterSet.Builder(serverWorld)
             .add(LootContextParameters.ORIGIN, entity.getPos())
