@@ -30,6 +30,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
+import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
@@ -274,7 +275,7 @@ public class PowerTypes extends IdentifiableMultiJsonDataLoader implements Ident
     @Nullable
     private PowerType<?> readSubPower(String packName, Identifier id, JsonObject jsonObject) {
 
-        if (ResourceConditionsImpl.applyResourceConditions(jsonObject, directoryName, id, Calio.DYNAMIC_REGISTRIES.get())) {
+        if (ResourceConditionsImpl.applyResourceConditions(jsonObject, directoryName, id, Calio.DYNAMIC_REGISTRIES.get(Unit.INSTANCE))) {
             return readPower(packName, id, jsonObject, true, PowerType::new);
         }
 
