@@ -126,7 +126,6 @@ public class ItemPowersComponent {
             PowerType<?> power = PowerTypeRegistry.getNullable(prevEntry.powerId());
             if (power != null && prevEntry.slot().matches(equipmentSlot) && powerComponent.removePower(power, sourceId)) {
                 shouldSync = true;
-                break;
             }
 
         }
@@ -137,7 +136,6 @@ public class ItemPowersComponent {
             PowerType<?> power = PowerTypeRegistry.getNullable(currEntry.powerId());
             if (power != null && currEntry.slot().matches(equipmentSlot) && powerComponent.addPower(power, sourceId)) {
                 shouldSync = true;
-                break;
             }
 
         }
