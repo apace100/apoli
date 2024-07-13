@@ -1,15 +1,16 @@
 package io.github.apace100.apoli.component.item;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeRegistry;
-import io.github.apace100.apoli.util.ApoliCodecs;
-import io.github.apace100.apoli.util.ApoliPacketCodecs;
 import io.github.apace100.apoli.util.codec.SetCodec;
+import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -17,40 +18,65 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 //  TODO: Make the data of stack powers persist in the item stack
 public class ItemPowersComponent {
 
-    public static final Codec<ItemPowersComponent> CODEC = SetCodec.of(Entry.CODEC).xmap(
-        entries -> new ItemPowersComponent(new ObjectLinkedOpenHashSet<>(entries)),
-        itemPowersComponent -> itemPowersComponent.entries
-    );
-    public static final PacketCodec<PacketByteBuf, ItemPowersComponent> PACKET_CODEC = PacketCodecs.collection(size -> new ObjectLinkedOpenHashSet<>(), Entry.PACKET_CODEC).xmap(
+    public static final ItemPowersComponent DEFAULT = new ItemPowersComponent(Set.of());
+
+    public static final Codec<ItemPowersComponent> CODEC = SetCodec.of(Entry.MAP_CODEC.codec()).xmap(
         ItemPowersComponent::new,
-        itemPowersComponent -> itemPowersComponent.entries
+        ItemPowersComponent::entries
+    );
+
+    public static final PacketCodec<ByteBuf, ItemPowersComponent> PACKET_CODEC = PacketCodecs.collection(ObjectLinkedOpenHashSet::new, Entry.PACKET_CODEC).xmap(
+        ItemPowersComponent::new,
+        ItemPowersComponent::entries
     );
 
     final ObjectLinkedOpenHashSet<Entry> entries;
 
-    ItemPowersComponent(ObjectLinkedOpenHashSet<Entry> entries) {
-        this.entries = entries;
+    ItemPowersComponent(Set<Entry> entries) {
+        this.entries = new ObjectLinkedOpenHashSet<>(entries);
+    }
+
+    @Override
+    public String toString() {
+        return "ItemPowersComponent{entries=" + entries + "}";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj
+            || (obj instanceof ItemPowersComponent other
+            && this.entries.equals(other.entries));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(entries);
+    }
+
+    private ObjectLinkedOpenHashSet<Entry> entries() {
+        return entries;
     }
 
     public void appendTooltip(AttributeModifierSlot modifierSlot, Item.TooltipContext context, Consumer<Text> tooltip, TooltipType type) {
 
         for (Entry entry : entries) {
 
-            PowerType<?> power = entry.power();
-            if (entry.hidden() || !entry.slots().contains(modifierSlot)) {
+            PowerType<?> power = PowerTypeRegistry.getNullable(entry.powerId());
+            if (power == null || entry.hidden() || !entry.slot().equals(modifierSlot)) {
                 continue;
             }
 
@@ -75,70 +101,65 @@ public class ItemPowersComponent {
     public boolean containsSlot(AttributeModifierSlot modifierSlot) {
         return entries
             .stream()
-            .anyMatch(entry -> entry.slots().contains(modifierSlot));
+            .map(Entry::slot)
+            .anyMatch(modifierSlot::equals);
     }
 
-    public static void onChangeEquipment(LivingEntity entity, EquipmentSlot slot, ItemStack previousStack, ItemStack currentStack) {
+    public boolean isEmpty() {
+        return entries.isEmpty();
+    }
+
+    public static void onChangeEquipment(LivingEntity entity, EquipmentSlot equipmentSlot, ItemStack previousStack, ItemStack currentStack) {
 
         if (ItemStack.areEqual(previousStack, currentStack) || !PowerHolderComponent.KEY.isProvidedBy(entity)) {
             return;
         }
 
         PowerHolderComponent powerComponent = PowerHolderComponent.KEY.get(entity);
-        Identifier sourceId = Apoli.identifier("item/" + slot.getName());
+        Identifier sourceId = Apoli.identifier("item/" + equipmentSlot.getName());
 
-        ItemPowersComponent prevStackPowers = previousStack.get(ApoliDataComponentTypes.POWERS);
-        if (prevStackPowers != null) {
+        boolean shouldSync = false;
 
-            boolean revoked = false;
-            for (Entry prevEntry : prevStackPowers.entries) {
+        ItemPowersComponent prevStackPowers = previousStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
+        for (Entry prevEntry : prevStackPowers.entries) {
 
-                if (prevEntry.matchesSlot(slot) && powerComponent.removePower(prevEntry.power(), sourceId)) {
-                    revoked = true;
-                }
-
-            }
-
-            if (revoked) {
-                powerComponent.sync();
+            PowerType<?> power = PowerTypeRegistry.getNullable(prevEntry.powerId());
+            if (power != null && prevEntry.slot().matches(equipmentSlot) && powerComponent.removePower(power, sourceId)) {
+                shouldSync = true;
+                break;
             }
 
         }
 
-        ItemPowersComponent currStackPowers = currentStack.get(ApoliDataComponentTypes.POWERS);
-        if (currStackPowers != null) {
+        ItemPowersComponent currStackPowers = currentStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
+        for (Entry currEntry : currStackPowers.entries) {
 
-            boolean granted = false;
-            for (Entry currEntry : currStackPowers.entries) {
-
-                if (currEntry.matchesSlot(slot) && powerComponent.addPower(currEntry.power(), sourceId)) {
-                    granted = true;
-                }
-
+            PowerType<?> power = PowerTypeRegistry.getNullable(currEntry.powerId());
+            if (power != null && currEntry.slot().matches(equipmentSlot) && powerComponent.addPower(power, sourceId)) {
+                shouldSync = true;
+                break;
             }
 
-            if (granted) {
-                powerComponent.sync();
-            }
+        }
 
+        if (shouldSync) {
+            powerComponent.sync();
         }
 
     }
 
-    public record Entry(PowerType<?> power, Set<AttributeModifierSlot> slots, NbtCompound data, boolean hidden, boolean negative) {
+    public record Entry(Identifier powerId, AttributeModifierSlot slot, boolean hidden, boolean negative) {
 
-        public static final Codec<Entry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            PowerTypeRegistry.DISPATCH_CODEC.fieldOf("power").forGetter(Entry::power),
-            ApoliCodecs.ATTRIBUTE_MODIFIER_SLOT_SET.fieldOf("slots").forGetter(Entry::slots),
-            NbtCompound.CODEC.optionalFieldOf("data", new NbtCompound()).forGetter(Entry::data),
+        public static final MapCodec<Entry> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            PowerTypeRegistry.VALIDATING_CODEC.fieldOf("power").forGetter(Entry::powerId),
+            AttributeModifierSlot.CODEC.fieldOf("slot").forGetter(Entry::slot),
             Codec.BOOL.optionalFieldOf("hidden", false).forGetter(Entry::hidden),
             Codec.BOOL.optionalFieldOf("negative", false).forGetter(Entry::negative)
         ).apply(instance, Entry::new));
 
-        public static final PacketCodec<PacketByteBuf, Entry> PACKET_CODEC = PacketCodec.tuple(
-            PowerTypeRegistry.DISPATCH_PACKET_CODEC, Entry::power,
-            ApoliPacketCodecs.ATTRIBUTE_MODIFIER_SLOT_SET, Entry::slots,
-            PacketCodecs.UNLIMITED_NBT_COMPOUND, Entry::data,
+        public static final PacketCodec<ByteBuf, Entry> PACKET_CODEC = PacketCodec.tuple(
+            Identifier.PACKET_CODEC, Entry::powerId,
+            AttributeModifierSlot.PACKET_CODEC, Entry::slot,
             PacketCodecs.BOOL, Entry::hidden,
             PacketCodecs.BOOL, Entry::negative,
             Entry::new
@@ -146,15 +167,102 @@ public class ItemPowersComponent {
 
         @Override
         public boolean equals(Object obj) {
-            return this == obj
-                || (obj instanceof Entry other
-                && this.power().equals(other.power()));
+
+            if (this == obj) {
+                return true;
+            }
+
+            else if (obj instanceof Entry other) {
+                return this.powerId().equals(other.powerId())
+                    && this.slot().equals(other.slot());
+            }
+
+            else {
+                return false;
+            }
+
         }
 
-        public boolean matchesSlot(EquipmentSlot equipmentSlot) {
-            return slots
-                .stream()
-                .anyMatch(modifierSlot -> modifierSlot.matches(equipmentSlot));
+        @Override
+        public int hashCode() {
+            return Objects.hash(powerId, slot);
+        }
+
+    }
+
+    public static Builder builder() {
+        return builder(DEFAULT);
+    }
+
+    public static Builder builder(ItemPowersComponent baseItemPowers) {
+        return new Builder(baseItemPowers);
+    }
+
+    public static class Builder {
+
+        private final ObjectLinkedOpenHashSet<Entry> entries = new ObjectLinkedOpenHashSet<>();
+
+        private Builder(ItemPowersComponent baseItemPowers) {
+            this.entries.addAll(baseItemPowers.entries);
+        }
+
+        public Builder add(EnumSet<AttributeModifierSlot> slots, Identifier powerId, boolean hidden, boolean negative) {
+
+            NbtCompound entryNbt = new NbtCompound();
+            for (AttributeModifierSlot slot : slots) {
+
+                entryNbt.putString("slot", slot.asString());
+                entryNbt.putString("power", powerId.toString());
+                entryNbt.putBoolean("hidden", hidden);
+                entryNbt.putBoolean("negative", negative);
+
+                Entry.MAP_CODEC.codec().parse(NbtOps.INSTANCE, entryNbt)
+                    .resultOrPartial(err -> Apoli.LOGGER.warn("Cannot add element ({}) as an item power entry: {}", entryNbt, err))
+                    .ifPresent(entries::add);
+
+            }
+
+            return this;
+
+        }
+
+        public Builder remove(EnumSet<AttributeModifierSlot> slots, Identifier powerId) {
+            return remove(slots, powerId, modifierSlot -> {});
+        }
+
+        public Builder remove(EnumSet<AttributeModifierSlot> slots, Identifier powerId, Consumer<Collection<Entry>> removalCallback) {
+
+            ObjectListIterator<Entry> entryIterator = entries.iterator();
+            ObjectLinkedOpenHashSet<Entry> removedEntries = new ObjectLinkedOpenHashSet<>();
+
+            while (entryIterator.hasNext()) {
+
+                Entry entry = entryIterator.next();
+
+                if (entry.powerId().equals(powerId) && slots.contains(entry.slot())) {
+                    removedEntries.add(entry);
+                    entryIterator.remove();
+                }
+
+            }
+
+            if (!removedEntries.isEmpty()) {
+                removalCallback.accept(removedEntries);
+            }
+
+            return this;
+
+        }
+
+        public Builder remove(Predicate<Entry> entryPredicate) {
+            entries.removeIf(entryPredicate);
+            return this;
+        }
+
+        public ItemPowersComponent build() {
+            return !entries.isEmpty()
+                ? new ItemPowersComponent(entries)
+                : DEFAULT;
         }
 
     }

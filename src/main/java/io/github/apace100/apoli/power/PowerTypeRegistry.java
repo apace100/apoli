@@ -14,10 +14,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class PowerTypeRegistry {
 
+    public static final Codec<Identifier> VALIDATING_CODEC = Identifier.CODEC.comapFlatMap(
+        id -> contains(id)
+            ? DataResult.success(id)
+            : DataResult.error(() -> "Couldn't get power type from id '" + id + "', as it was not registered!"),
+        Function.identity()
+    );
     public static final Codec<PowerType<?>> DISPATCH_CODEC = Identifier.CODEC.comapFlatMap(
         PowerTypeRegistry::getResult,
         PowerType::getIdentifier
