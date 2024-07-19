@@ -16,6 +16,7 @@ public class ItemConditions {
     public static void register() {
         MetaConditions.register(ApoliDataTypes.ITEM_CONDITION, ItemConditions::register);
         register(FoodCondition.getFactory());
+        register(BlockCondition.getFactory());
         register(SmeltableCondition.getFactory());
         register(IngredientCondition.getFactory());
         register(ArmorValueCondition.getFactory());
