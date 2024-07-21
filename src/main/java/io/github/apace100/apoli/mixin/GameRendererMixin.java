@@ -1,7 +1,8 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.*;
 import net.fabricmc.api.EnvType;
@@ -141,13 +142,13 @@ public abstract class GameRendererMixin {
     }
 
     // NightVisionPower
-    @ModifyReturnValue(method = "getNightVisionStrength", at = @At("RETURN"))
-    private static float apoli$modifyNightVisionStrength(float original, LivingEntity entity) {
+    @WrapMethod(method = "getNightVisionStrength")
+    private static float apoli$modifyNightVisionStrength(LivingEntity entity, float tickDelta, Operation<Float> original) {
         return PowerHolderComponent.getPowers(entity, NightVisionPower.class)
             .stream()
             .map(NightVisionPower::getStrength)
             .max(Float::compareTo)
-            .orElse(original);
+            .orElseGet(() -> original.call(entity, tickDelta));
     }
 
     @ModifyExpressionValue(method = "getFov", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getSubmersionType()Lnet/minecraft/block/enums/CameraSubmersionType;"))
