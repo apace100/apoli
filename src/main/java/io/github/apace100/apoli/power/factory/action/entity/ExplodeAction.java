@@ -2,7 +2,6 @@ package io.github.apace100.apoli.power.factory.action.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.mixin.ExplosionAccessor;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -34,7 +33,7 @@ public class ExplodeAction {
         MiscUtil.createExplosion(
             world,
             data.getBoolean("damage_self") ? null : entity,
-            entity.getDamageSources().explosion(entity, ExplosionAccessor.callGetCausingEntity(entity)),
+            Explosion.createDamageSource(world, entity),
             pos.getX(),
             pos.getY(),
             pos.getZ(),

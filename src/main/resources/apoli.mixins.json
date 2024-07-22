@@ -31,7 +31,6 @@
         "EntityMixin",
         "EquipmentMixin",
         "ExperienceOrbEntityMixin",
-        "ExplosionAccessor",
         "GrindstoneScreenHandlerBottomInputSlotMixin",
         "GrindstoneScreenHandlerMixin",
         "GrindstoneScreenHandlerOutputSlotMixin",
