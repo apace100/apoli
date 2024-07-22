@@ -5,7 +5,6 @@ import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.condition.entity.*;
@@ -18,12 +17,10 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.IdentifierAlias;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.registry.Registry;
@@ -250,46 +247,7 @@ public class EntityConditions {
         register(TamedCondition.getFactory());
         register(UsingItemCondition.getFactory());
         register(MovingCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("enchantment"), new SerializableData()
-            .add("enchantment", SerializableDataTypes.ENCHANTMENT)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT)
-            .add("calculation", SerializableDataTypes.STRING, "sum")
-            .add("use_modifications", SerializableDataTypes.BOOLEAN, true),
-            (data, entity) -> {
-                int value = 0;
-                if(entity instanceof LivingEntity le) {
-
-                    Registry<Enchantment> enchantmentRegistry = entity.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
-
-                    RegistryKey<Enchantment> enchantmentKey = data.get("enchantment");
-                    Enchantment enchantment = enchantmentRegistry.getOrThrow(enchantmentKey);
-
-                    RegistryEntry<Enchantment> enchantmentEntry = enchantmentRegistry.getEntry(enchantment);
-
-                    String calculation = data.getString("calculation");
-
-                    switch(calculation) {
-                        case "sum":
-                            for(ItemStack stack : enchantment.getEquipment(le).values()) {
-                                value += ModifyEnchantmentLevelPower.getEnchantments(stack, stack.getEnchantments(), data.getBoolean("use_modifications")).getLevel(enchantmentEntry);
-                            }
-                            break;
-                        case "max":
-                            for(ItemStack stack : enchantment.getEquipment(le).values()) {
-                                int potential = ModifyEnchantmentLevelPower.getEnchantments(stack, stack.getEnchantments(), data.getBoolean("use_modifications")).getLevel(enchantmentEntry);
-                                if (potential > value) {
-                                    value = potential;
-                                }
-                            }
-                            break;
-                        default:
-                            Apoli.LOGGER.error("Error in \"enchantment\" entity condition, undefined calculation type: \"" + calculation + "\".");
-                            break;
-                    }
-                }
-                return ((Comparison)data.get("comparison")).compare(value, data.getInt("compare_to"));
-            }));
+        register(EnchantmentCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("riding"), new SerializableData()
             .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
             (data, entity) -> {
