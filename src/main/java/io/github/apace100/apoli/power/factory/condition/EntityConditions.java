@@ -19,10 +19,8 @@ import io.github.apace100.calio.util.IdentifierAlias;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
@@ -101,20 +99,7 @@ public class EntityConditions {
                 (!data.isPresent("block_condition") || ((ConditionFactory<CachedBlockPosition>.Instance)data.get("block_condition")).test(
                     new CachedBlockPosition(entity.getWorld(), BlockPos.ofFloored(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ()), true)))));
         register(EquippedCondition.getFactory());
-        register(new ConditionFactory<>(Apoli.identifier("attribute"), new SerializableData()
-            .add("attribute", SerializableDataTypes.ATTRIBUTE)
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.DOUBLE),
-            (data, entity) -> {
-                double attrValue = 0F;
-                if(entity instanceof LivingEntity living) {
-                    EntityAttributeInstance attributeInstance = living.getAttributeInstance(data.get("attribute"));
-                    if(attributeInstance != null) {
-                        attrValue = attributeInstance.getValue();
-                    }
-                }
-                return ((Comparison)data.get("comparison")).compare(attrValue, data.getDouble("compare_to"));
-            }));
+        register(AttributeCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("swimming"), new SerializableData(), (data, entity) -> entity.isSwimming()));
         register(ResourceCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("air"), new SerializableData()
