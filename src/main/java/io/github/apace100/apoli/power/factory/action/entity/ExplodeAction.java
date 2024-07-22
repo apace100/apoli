@@ -2,12 +2,14 @@ package io.github.apace100.apoli.power.factory.action.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.mixin.ExplosionAccessor;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 
@@ -28,10 +30,14 @@ public class ExplodeAction {
             indestructibleCondition = MiscUtil.combineOr(destructibleCondition.negate(), indestructibleCondition);
         }
 
+        Vec3d pos = entity.getPos();
         MiscUtil.createExplosion(
             world,
-            entity,
-            entity.getPos(),
+            data.getBoolean("damage_self") ? null : entity,
+            entity.getDamageSources().explosion(entity, ExplosionAccessor.callGetCausingEntity(entity)),
+            pos.getX(),
+            pos.getY(),
+            pos.getZ(),
             data.getFloat("power"),
             data.getBoolean("create_fire"),
             data.get("destruction_type"),
