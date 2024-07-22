@@ -21,6 +21,21 @@ public class ConditionedAttributePower extends AttributePower {
     }
 
     @Override
+    public void onAdded() {
+
+    }
+
+    @Override
+    public void onRemoved() {
+
+    }
+
+    @Override
+    public void onLost() {
+        this.removeTempMods();
+    }
+
+    @Override
     public void tick() {
 
         if (entity.age % tickRate != 0) {
