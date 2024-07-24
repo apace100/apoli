@@ -15,12 +15,16 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.*;
+import net.minecraft.client.resource.metadata.AnimationResourceMetadata;
+import net.minecraft.client.resource.metadata.TextureResourceMetadata;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasHolder;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+
+import java.util.Set;
 
 public class OverlayPower extends Power {
 
@@ -194,7 +198,7 @@ public class OverlayPower extends Power {
     public static final class SpriteHolder extends SpriteAtlasHolder {
 
         public SpriteHolder(TextureManager manager) {
-            super(manager, ATLAS_TEXTURE, Apoli.identifier("overlay"));
+            super(manager, ATLAS_TEXTURE, Apoli.identifier("overlay"), Set.of(AnimationResourceMetadata.READER, TextureResourceMetadata.READER));
         }
 
         @Override
