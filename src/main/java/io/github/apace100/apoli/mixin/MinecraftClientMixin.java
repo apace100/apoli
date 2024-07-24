@@ -29,11 +29,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin implements OverlaySpriteHolder {
 
-    @Shadow public ClientPlayerEntity player;
+    @Shadow
+    public ClientPlayerEntity player;
 
-    @Shadow @Final private TextureManager textureManager;
+    @Shadow
+    @Final
+    private ReloadableResourceManagerImpl resourceManager;
 
-    @Shadow @Final private ReloadableResourceManagerImpl resourceManager;
+    @Shadow
+    public abstract boolean isFinishedLoading();
+
+    @Shadow
+    public abstract TextureManager getTextureManager();
 
     @ModifyReturnValue(method = "hasOutline", at = @At("RETURN"))
     private boolean apoli$makeEntitiesGlow(boolean original, Entity entity) {
@@ -50,15 +57,15 @@ public abstract class MinecraftClientMixin implements OverlaySpriteHolder {
         return apoli$overlaySpriteHolder.getSprite(id);
     }
 
-    @Inject(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/render/item/ItemRenderer;)Lnet/minecraft/client/gui/hud/InGameHud;"))
+    @Inject(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/client/MinecraftClient;)Lnet/minecraft/client/gui/hud/InGameHud;"))
     private void apoli$registerCustomAtlases(RunArgs args, CallbackInfo ci) {
-        this.apoli$overlaySpriteHolder = new OverlayPower.SpriteHolder(this.textureManager);
+        this.apoli$overlaySpriteHolder = new OverlayPower.SpriteHolder(this.getTextureManager());
         this.resourceManager.registerReloader(apoli$overlaySpriteHolder);
     }
 
     @Inject(method = "onFinishedLoading", at = @At("HEAD"))
     private void apoli$postReloadTextures(MinecraftClient.LoadingContext loadingContext, CallbackInfo ci) {
-        PostLoadTexturesCallback.EVENT.invoker().onPostLoad((MinecraftClient) (Object) this);
+        PostLoadTexturesCallback.EVENT.invoker().onPostLoad((MinecraftClient) (Object) this, this.isFinishedLoading());
     }
 
 }

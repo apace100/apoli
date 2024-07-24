@@ -42,29 +42,20 @@ public class OverlayPower extends Power {
     private final int priority;
 
     private boolean initRender = true;
-    private boolean legacyTexture;
     private boolean invalidTexture;
 
-    public enum DrawMode {
-        NAUSEA, TEXTURE
-    }
-
-    public enum DrawPhase {
-        BELOW_HUD, ABOVE_HUD
-    }
-
-    public OverlayPower(PowerType<?> powerType, LivingEntity entity, Identifier spriteId, float red, float green, float blue, float strength, int priority, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson) {
+    public OverlayPower(PowerType<?> powerType, LivingEntity entity, Identifier spriteId, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson, float strength, float red, float green, float blue, int priority) {
         super(powerType, entity);
         this.spriteId = spriteId;
+        this.drawMode = drawMode;
+        this.drawPhase = drawPhase;
+        this.hideWithHud = hideWithHud;
+        this.visibleInThirdPerson = visibleInThirdPerson;
         this.red = red;
         this.green = green;
         this.blue = blue;
         this.strength = strength;
         this.priority = priority;
-        this.drawMode = drawMode;
-        this.drawPhase = drawPhase;
-        this.hideWithHud = hideWithHud;
-        this.visibleInThirdPerson = visibleInThirdPerson;
     }
 
     public DrawPhase getDrawPhase() {
@@ -105,16 +96,13 @@ public class OverlayPower extends Power {
 
         if (initRender) {
 
-            this.legacyTexture = TextureUtil.tryLoadingTexture(spriteId)
-                .result()
-                .isPresent();
-            this.invalidTexture = !legacyTexture && TextureUtil.tryLoadingSprite(spriteId, ATLAS_TEXTURE)
+            this.invalidTexture = TextureUtil.tryLoadingSprite(spriteId, ATLAS_TEXTURE)
                 .result()
                 .isEmpty();
             this.initRender = false;
 
             if (invalidTexture) {
-                Apoli.LOGGER.warn("Power \"{}\" references texture \"{}\", which doesn't exist!", type.getIdentifier(), spriteId);
+                Apoli.LOGGER.warn("Power \"{}\" references texture sprite \"{}\", which doesn't exist!", type.getIdentifier(), spriteId);
                 return;
             }
 
@@ -123,8 +111,7 @@ public class OverlayPower extends Power {
         int scaledWidth = client.getWindow().getScaledWidth();
         int scaledHeight = client.getWindow().getScaledHeight();
 
-        double width, height, x1, y1, x2, y2;
-        float r, g, b, a, minU, maxU, minV, maxV;
+        float width, height, x1, y1, x2, y2, red, green, blue, alpha;
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
@@ -134,28 +121,28 @@ public class OverlayPower extends Power {
             case NAUSEA -> {
 
                 RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE, GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE);
-                double stretch = MathHelper.lerp(strength, 2.0D, 1.0D);
+                float stretch = MathHelper.lerp(strength, 2.0F, 1.0F);
 
-                r = red * strength;
-                g = green * strength;
-                b = blue * strength;
+                red = this.red * strength;
+                green = this.green * strength;
+                blue = this.blue * strength;
 
                 width = scaledWidth * stretch;
                 height = scaledHeight * stretch;
 
-                x1 = (scaledWidth - width) / 2.0D;
-                y1 = (scaledHeight - height) / 2.0D;
+                x1 = (scaledWidth - width) / 2.0F;
+                y1 = (scaledHeight - height) / 2.0F;
 
-                a = 1.0F;
+                alpha = 1.0F;
 
             }
             default -> {
 
                 RenderSystem.defaultBlendFunc();
 
-                r = red;
-                g = green;
-                b = blue;
+                red = this.red;
+                green = this.green;
+                blue = this.blue;
 
                 width = scaledWidth;
                 height = scaledHeight;
@@ -163,56 +150,37 @@ public class OverlayPower extends Power {
                 x1 = 0;
                 y1 = 0;
 
-                a = strength;
+                alpha = strength;
 
             }
         }
 
-        RenderSystem.setShaderColor(r, g, b, a);
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+        Sprite sprite = overlaySpriteHolder.apoli$getSprite(spriteId);
+        Identifier textureToDraw = sprite.getAtlasId();
 
-        Identifier textureToDraw;
+        float minU = sprite.getMinU();
+        float maxU = sprite.getMaxU();
+
+        float minV = sprite.getMinV();
+        float maxV = sprite.getMaxV();
+
+        RenderSystem.setShaderColor(red, green, blue, alpha);
+        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
 
         x2 = x1 + width;
         y2 = y1 + height;
 
-        if (legacyTexture) {
-
-            textureToDraw = spriteId;
-
-            minU = 0.0F;
-            maxU = 1.0F;
-
-            minV = 1.0F;
-            maxV = 0.0f;
-
-        }
-
-        else {
-
-            Sprite sprite = overlaySpriteHolder.apoli$getSprite(spriteId);
-            textureToDraw = sprite.getAtlasId();
-
-            minU = sprite.getMinU();
-            maxU = sprite.getMaxU();
-
-            minV = sprite.getMinV();
-            maxV = sprite.getMaxV();
-
-        }
-
         RenderSystem.setShaderTexture(0, textureToDraw);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.getBuffer();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        bufferBuilder.vertex(x1, y1, -1.0D).texture(minU, minV).next();
-        bufferBuilder.vertex(x1, y2, -1.0D).texture(minU, maxV).next();
-        bufferBuilder.vertex(x2, y2, -1.0D).texture(maxU, maxV).next();
-        bufferBuilder.vertex(x2, y1, -1.0D).texture(maxU, minV).next();
+        bufferBuilder.vertex(x1, y1, -1.0F).texture(minU, minV);
+        bufferBuilder.vertex(x1, y2, -1.0F).texture(minU, maxV);
+        bufferBuilder.vertex(x2, y2, -1.0F).texture(maxU, maxV);
+        bufferBuilder.vertex(x2, y1, -1.0F).texture(maxU, minV);
 
-        tessellator.draw();
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.defaultBlendFunc();
@@ -237,8 +205,16 @@ public class OverlayPower extends Power {
     }
 
     @Environment(EnvType.CLIENT)
-    public static void integrateCallback(MinecraftClient client) {
+    public static void integrateCallback(MinecraftClient client, boolean initialized) {
         PowerHolderComponent.getPowers(client.player, OverlayPower.class, true).forEach(p -> p.initRender = true);
+    }
+
+    public enum DrawMode {
+        NAUSEA, TEXTURE
+    }
+
+    public enum DrawPhase {
+        BELOW_HUD, ABOVE_HUD
     }
 
     public static PowerFactory createFactory() {
@@ -260,15 +236,15 @@ public class OverlayPower extends Power {
                 powerType,
                 entity,
                 data.get("sprite"),
-                data.get("red"),
-                data.get("green"),
-                data.get("blue"),
-                data.get("strength"),
-                data.get("priority"),
                 data.get("draw_mode"),
                 data.get("draw_phase"),
                 data.get("hide_with_hud"),
-                data.get("visible_in_third_person")
+                data.get("visible_in_third_person"),
+                data.get("strength"),
+                data.get("red"),
+                data.get("green"),
+                data.get("blue"),
+                data.get("priority")
             )
         ).allowCondition();
     }

@@ -11,15 +11,15 @@ public interface PostLoadTexturesCallback {
 
     Event<PostLoadTexturesCallback> EVENT = EventFactory.createArrayBacked(
         PostLoadTexturesCallback.class,
-        callbacks -> client -> {
+        callbacks -> (client, initialized) -> {
 
             for (PostLoadTexturesCallback callback : callbacks) {
-                callback.onPostLoad(client);
+                callback.onPostLoad(client, initialized);
             }
 
         }
     );
 
-    void onPostLoad(MinecraftClient client);
+    void onPostLoad(MinecraftClient client, boolean initialized);
 
 }
