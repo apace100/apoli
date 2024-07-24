@@ -238,10 +238,6 @@ public class EntityConditions {
                     }
                 }
                 return comparison.compare(count, compareTo);}));
-        //  TODO: This is deprecated, remove it! -eggohito
-//        register(new ConditionFactory<>(Apoli.identifier("entity_group"), new SerializableData()
-//            .add("group", SerializableDataTypes.ENTITY_GROUP),
-//            (data, entity) -> entity instanceof LivingEntity && ((LivingEntity) entity).getGroup() == data.get("group")));
         register(InTagCondition.getFactory());
         register(ClimbingCondition.getFactory());
         register(TamedCondition.getFactory());

@@ -19,9 +19,7 @@ public class ItemConditions {
         register(SmeltableCondition.getFactory());
         register(IngredientCondition.getFactory());
         register(ArmorValueCondition.getFactory());
-        register(HarvestLevelCondition.getFactory());
         register(EnchantmentCondition.getFactory());
-        register(MeatCondition.getFactory());
         register(CustomDataCondition.getFactory());
         register(FireResistantCondition.getFactory());
         register(EnchantableCondition.getFactory());
