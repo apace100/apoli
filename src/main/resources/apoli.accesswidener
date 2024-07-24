@@ -21,3 +21,4 @@ accessible field net/minecraft/entity/player/ItemCooldownManager$Entry endTick I
 accessible class net/minecraft/client/toast/ToastManager$Entry
 accessible class net/minecraft/server/network/ServerPlayerEntity$RespawnPos
 accessible class net/minecraft/screen/slot/ArmorSlot
+accessible class net/minecraft/client/MinecraftClient$LoadingContext
