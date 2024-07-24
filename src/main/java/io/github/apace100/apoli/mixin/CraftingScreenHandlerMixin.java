@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
@@ -9,6 +10,7 @@ import io.github.apace100.apoli.power.ModifyCraftingPower;
 import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.CraftingResultInventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.inventory.StackReference;
@@ -54,12 +56,14 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
         super(screenHandlerType, i);
     }
 
-    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At("TAIL"))
-    private void apoli$cachePlayerToCraftingInventory(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, CallbackInfo ci) {
+    @ModifyExpressionValue(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/screen/ScreenHandler;II)Lnet/minecraft/inventory/CraftingInventory;"))
+    private CraftingInventory apoli$cachePlayerToCraftingInventory(CraftingInventory original, int syncId, PlayerInventory playerInventory) {
 
-        if (this.input instanceof PowerCraftingInventory pci) {
+        if (original instanceof PowerCraftingInventory pci) {
             pci.apoli$setPlayer(playerInventory.player);
         }
+
+        return original;
 
     }
 

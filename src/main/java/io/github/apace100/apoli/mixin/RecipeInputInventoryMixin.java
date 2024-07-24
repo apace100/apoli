@@ -10,10 +10,10 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(RecipeInputInventory.class)
 public interface RecipeInputInventoryMixin {
 
-    @ModifyReturnValue(method = "createRecipeInput", at = @At("RETURN"))
-    private CraftingRecipeInput apoli$passCache(CraftingRecipeInput original) {
+    @ModifyReturnValue(method = "createPositionedRecipeInput", at = @At("RETURN"))
+    private CraftingRecipeInput.Positioned apoli$passCacheToPositionedInput(CraftingRecipeInput.Positioned original) {
 
-        if ((RecipeInputInventory) this instanceof PowerCraftingInventory sourcePci && original instanceof PowerCraftingInventory targetPci) {
+        if ((RecipeInputInventory) this instanceof PowerCraftingInventory sourcePci && original.input() instanceof PowerCraftingInventory targetPci) {
             targetPci.apoli$setPower(sourcePci.apoli$getPower());
             targetPci.apoli$setPlayer(sourcePci.apoli$getPlayer());
         }
