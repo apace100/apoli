@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class PowerCountCondition {
 
-    public static boolean condition(World world, ItemStack stack, @Nullable AttributeModifierSlot slot, Comparison comparison, int compareTo) {
+    public static boolean condition(ItemStack stack, @Nullable AttributeModifierSlot slot, Comparison comparison, int compareTo) {
 
         ItemPowersComponent itemPowers = stack.getOrDefault(ApoliDataComponentTypes.POWERS, ItemPowersComponent.DEFAULT);
         int powers;
@@ -44,7 +44,6 @@ public class PowerCountCondition {
                 .add("comparison", ApoliDataTypes.COMPARISON)
                 .add("compare_to", SerializableDataTypes.INT),
             (data, worldAndStack) -> condition(
-                worldAndStack.getLeft(),
                 worldAndStack.getRight(),
                 data.get("slot"),
                 data.get("comparison"),
