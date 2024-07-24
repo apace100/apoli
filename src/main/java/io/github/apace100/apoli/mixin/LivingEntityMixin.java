@@ -299,17 +299,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
     }
 
-    //  TODO: This is deprecated. Remove this! -eggohito
-    // SetEntityGroupPower
-//    @ModifyReturnValue(method = "getGroup", at = @At("RETURN"))
-//    private EntityGroup apoli$replaceGroup(EntityGroup original) {
-//        return PowerHolderComponent.getPowers(this, SetEntityGroupPower.class)
-//            .stream()
-//            .max(Comparator.comparing(SetEntityGroupPower::getPriority))
-//            .map(SetEntityGroupPower::getGroup)
-//            .orElse(original);
-//    }
-
     @Unique
     private boolean apoli$applySprintJumpingEffects;
 
@@ -319,7 +308,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // SPRINT_JUMP
-    @ModifyReturnValue(method = "getJumpVelocity", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getJumpVelocity()F", at = @At("RETURN"))
     private float apoli$modifyJumpVelocity(float original) {
 
         float modified = PowerHolderComponent.modify(this, ModifyJumpPower.class, original, p -> true, ModifyJumpPower::executeAction);
@@ -335,14 +324,10 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // HOTBLOODED
-    @Inject(at = @At("HEAD"), method= "canHaveStatusEffect", cancellable = true)
-    private void preventStatusEffects(StatusEffectInstance effect, CallbackInfoReturnable<Boolean> info) {
-        for (EffectImmunityPower power : PowerHolderComponent.getPowers(this, EffectImmunityPower.class)) {
-            if(power.doesApply(effect)) {
-                info.setReturnValue(false);
-                return;
-            }
-        }
+    @ModifyReturnValue(method = "canHaveStatusEffect", at = @At("RETURN"))
+    private boolean apoli$effectImmunity(boolean original, StatusEffectInstance effectInstance) {
+        return original
+            && !PowerHolderComponent.hasPower(this, EffectImmunityPower.class, p -> p.doesApply(effectInstance));
     }
 
     // CLIMBING
