@@ -12,6 +12,7 @@ import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.apoli.util.StackClickPhase;
 import net.fabricmc.fabric.api.item.v1.FabricItemStack;
+import net.minecraft.component.ComponentHolder;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -33,17 +34,21 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ItemStack.class)
-public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricItemStack {
+public abstract class ItemStackMixin implements ComponentHolder, EntityLinkedItemStack, FabricItemStack {
 
-    @Shadow public abstract @Nullable Entity getHolder();
+    @Nullable
+    @Shadow
+    public abstract Entity getHolder();
 
-    @Shadow public abstract Item getItem();
+    @Shadow
+    public abstract Item getItem();
 
-    @Shadow public abstract boolean isEmpty();
+    @Shadow
+    public abstract boolean isEmpty();
 
-    @Shadow public abstract ItemStack copy();
+    @Shadow
+    public abstract ItemStack copy();
 
-    @Shadow private @Nullable Entity holder;
     @Unique
     private Entity apoli$holdingEntity;
 
@@ -215,9 +220,9 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
     }
 
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
-    private int apoli$modifyMaxConsumingTime(int original) {
-        return EdibleItemPower.get((ItemStack) (Object) this)
-            .map(EdibleItemPower::getConsumingTime)
+    private int apoli$modifyMaxUseTicks(int original) {
+        return ModifyFoodPower
+            .modifyEatTicks(this.apoli$getEntity(), (ItemStack) (Object) this)
             .orElse(original);
     }
 

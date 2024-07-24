@@ -1,49 +1,78 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.util.modifier.Modifier;
+import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class ModifyFoodPower extends Power {
 
-    private final Predicate<Pair<World, ItemStack>> applicableFood;
+    private final Predicate<Pair<World, ItemStack>> itemCondition;
     private final ItemStack replaceStack;
-    private final Consumer<Pair<World, StackReference>> consumableAction;
+    private final Consumer<Pair<World, StackReference>> itemAction;
     private final List<Modifier> foodModifiers;
     private final List<Modifier> saturationModifiers;
+    private final List<Modifier> eatTicksModifiers;
     private final Consumer<Entity> entityActionWhenEaten;
     private final boolean preventFoodEffects;
     private final boolean makeAlwaysEdible;
 
-    public ModifyFoodPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> applicableFood, ItemStack replaceStack, Consumer<Pair<World, StackReference>> consumableAction, Modifier foodModifier, List<Modifier> foodModifiers, Modifier saturationModifier, List<Modifier> saturationModifiers, Consumer<Entity> entityActionWhenEaten, boolean makeAlwaysEdible, boolean preventFoodEffects) {
+    public ModifyFoodPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack replaceStack, Consumer<Pair<World, StackReference>> itemAction, Modifier foodModifier, List<Modifier> foodModifiers, Modifier saturationModifier, List<Modifier> saturationModifiers, Modifier eatSecondsModifier, List<Modifier> eatTicksModifiers, Consumer<Entity> entityActionWhenEaten, boolean makeAlwaysEdible, boolean preventFoodEffects) {
 
         super(type, entity);
 
-        this.applicableFood = applicableFood;
+        this.itemCondition = itemCondition;
         this.replaceStack = replaceStack;
-        this.consumableAction = consumableAction;
+        this.itemAction = itemAction;
 
         this.foodModifiers = new LinkedList<>();
-        if (foodModifier != null) this.foodModifiers.add(foodModifier);
-        if (foodModifiers != null) this.foodModifiers.addAll(foodModifiers);
+
+        if (foodModifier != null) {
+            this.foodModifiers.add(foodModifier);
+        }
+
+        if (foodModifiers != null) {
+            this.foodModifiers.addAll(foodModifiers);
+        }
 
         this.saturationModifiers = new LinkedList<>();
-        if (saturationModifier != null) this.saturationModifiers.add(saturationModifier);
-        if (saturationModifiers != null) this.saturationModifiers.addAll(saturationModifiers);
+
+        if (saturationModifier != null) {
+            this.saturationModifiers.add(saturationModifier);
+        }
+
+        if (saturationModifiers != null) {
+            this.saturationModifiers.addAll(saturationModifiers);
+        }
+
+        this.eatTicksModifiers = new LinkedList<>();
+
+        if (eatSecondsModifier != null) {
+            this.eatTicksModifiers.add(eatSecondsModifier);
+        }
+
+        if (eatTicksModifiers != null) {
+            this.eatTicksModifiers.addAll(eatTicksModifiers);
+        }
 
         this.entityActionWhenEaten = entityActionWhenEaten;
         this.makeAlwaysEdible = makeAlwaysEdible;
@@ -52,7 +81,7 @@ public class ModifyFoodPower extends Power {
     }
 
     public boolean doesApply(ItemStack stack) {
-        return applicableFood == null || applicableFood.test(new Pair<>(entity.getWorld(), stack));
+        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
     public void setConsumedItemStackReference(StackReference stack) {
@@ -61,8 +90,8 @@ public class ModifyFoodPower extends Power {
             stack.set(this.replaceStack);
         }
 
-        if(consumableAction != null) {
-            consumableAction.accept(new Pair<>(entity.getWorld(), stack));
+        if(itemAction != null) {
+            itemAction.accept(new Pair<>(entity.getWorld(), stack));
         }
 
     }
@@ -79,12 +108,36 @@ public class ModifyFoodPower extends Power {
         return saturationModifiers;
     }
 
+    public List<Modifier> getEatTicksModifiers() {
+        return eatTicksModifiers;
+    }
+
     public boolean doesMakeAlwaysEdible() {
         return makeAlwaysEdible;
     }
 
     public boolean doesPreventEffects() {
         return preventFoodEffects;
+    }
+
+    public static OptionalInt modifyEatTicks(@Nullable Entity entity, ItemStack stack) {
+
+        FoodComponent foodComponent = EdibleItemPower.get(stack)
+            .map(EdibleItemPower::getFoodComponent)
+            .orElseGet(() -> stack.get(DataComponentTypes.FOOD));
+
+        if (foodComponent == null) {
+            return OptionalInt.empty();
+        }
+
+        List<Modifier> modifiers = PowerHolderComponent.getPowers(entity, ModifyFoodPower.class)
+            .stream()
+            .filter(p -> p.doesApply(stack))
+            .flatMap(p -> p.getEatTicksModifiers().stream())
+            .toList();
+
+        return OptionalInt.of((int) ModifierUtil.applyModifiers(entity, modifiers, foodComponent.getEatTicks()));
+
     }
 
     public static PowerFactory createFactory() {
@@ -97,6 +150,8 @@ public class ModifyFoodPower extends Power {
                 .add("food_modifiers", Modifier.LIST_TYPE, null)
                 .add("saturation_modifier", Modifier.DATA_TYPE, null)
                 .add("saturation_modifiers", Modifier.LIST_TYPE, null)
+                .add("eat_ticks_modifier", Modifier.DATA_TYPE, null)
+                .add("eat_ticks_modifiers", Modifier.LIST_TYPE, null)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("always_edible", SerializableDataTypes.BOOLEAN, false)
                 .add("prevent_effects", SerializableDataTypes.BOOLEAN, false),
@@ -110,6 +165,8 @@ public class ModifyFoodPower extends Power {
                 data.get("food_modifiers"),
                 data.get("saturation_modifier"),
                 data.get("saturation_modifiers"),
+                data.get("eat_ticks_modifier"),
+                data.get("eat_ticks_modifiers"),
                 data.get("entity_action"),
                 data.get("always_edible"),
                 data.get("prevent_effects")
