@@ -55,9 +55,7 @@ public class FireProjectileAction {
             if (entityToSpawn instanceof ProjectileEntity projectileToSpawn) {
 
                 if (projectileToSpawn instanceof ExplosiveProjectileEntity explosiveProjectileToSpawn) {
-                    explosiveProjectileToSpawn.powerX = rotationVector.x * speed;
-                    explosiveProjectileToSpawn.powerY = rotationVector.y * speed;
-                    explosiveProjectileToSpawn.powerZ = rotationVector.z * speed;
+                    explosiveProjectileToSpawn.accelerationPower = speed;
                 }
 
                 projectileToSpawn.setOwner(entity);

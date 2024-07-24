@@ -164,9 +164,7 @@ public class FireProjectilePower extends ActiveCooldownPower {
         if (entityToSpawn instanceof ProjectileEntity projectileToSpawn) {
 
             if (projectileToSpawn instanceof ExplosiveProjectileEntity explosiveProjectileToSpawn) {
-                explosiveProjectileToSpawn.powerX = rotationVector.x * speed;
-                explosiveProjectileToSpawn.powerY = rotationVector.y * speed;
-                explosiveProjectileToSpawn.powerZ = rotationVector.z * speed;
+                explosiveProjectileToSpawn.accelerationPower = speed;
             }
 
             projectileToSpawn.setOwner(entity);

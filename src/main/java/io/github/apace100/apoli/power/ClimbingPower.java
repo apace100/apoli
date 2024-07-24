@@ -17,12 +17,18 @@ public class ClimbingPower extends Power {
 
     public ClimbingPower(PowerType<?> type, LivingEntity entity, Predicate<Entity> holdingCondition, boolean allowHolding) {
         super(type, entity);
-        this.holdingCondition = holdingCondition != null ? holdingCondition : Entity::isSneaking;
+        this.holdingCondition = holdingCondition;
         this.allowHolding = allowHolding;
     }
 
     public boolean canHold() {
-        return allowHolding && holdingCondition.test(entity);
+        return allowHolding && this.shouldHold();
+    }
+
+    public boolean shouldHold() {
+        return holdingCondition != null
+            ? holdingCondition.test(entity)
+            : entity.isSneaking();
     }
 
     public static PowerFactory createFactory() {

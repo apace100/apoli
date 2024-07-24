@@ -17,8 +17,10 @@ import net.minecraft.entity.damage.DamageType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.Difficulty;
 
 import java.util.Map;
@@ -33,7 +35,7 @@ public class DamageOverTimePower extends Power {
     private final float damageAmount;
     private final DamageSourceDescription damageSourceDescription;
     private final RegistryKey<DamageType> damageType;
-    private final Enchantment protectingEnchantment;
+    private final RegistryKey<Enchantment> protectingEnchantmentKey;
     private final float protectionEffectiveness;
 
     private int outOfDamageTicks;
@@ -41,7 +43,7 @@ public class DamageOverTimePower extends Power {
 
     private DamageSource damageSource;
 
-    public DamageOverTimePower(PowerType<?> type, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, DamageSourceDescription damageSourceDescription, RegistryKey<DamageType> damageType, Enchantment protectingEnchantment, float protectionEffectiveness) {
+    public DamageOverTimePower(PowerType<?> type, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, DamageSourceDescription damageSourceDescription, RegistryKey<DamageType> damageType, RegistryKey<Enchantment> protectingEnchantmentKey, float protectionEffectiveness) {
         super(type, entity);
         this.damageSourceDescription = damageSourceDescription;
         this.damageType = damageType;
@@ -49,7 +51,7 @@ public class DamageOverTimePower extends Power {
         this.damageAmount = damageAmount;
         this.damageAmountEasy = damageAmountEasy;
         this.damageTickInterval = damageInterval;
-        this.protectingEnchantment = protectingEnchantment;
+        this.protectingEnchantmentKey = protectingEnchantmentKey;
         this.protectionEffectiveness = protectionEffectiveness;
         this.setTicking(true);
     }
@@ -102,21 +104,49 @@ public class DamageOverTimePower extends Power {
     }
 
     private int getProtection() {
-        if(protectingEnchantment == null) {
+//        if(protectingEnchantment == null) {
+//            return 0;
+//        } else {
+//            Map<EquipmentSlot, ItemStack> enchantedItems = protectingEnchantment.getEquipment(entity);
+//            Iterable<ItemStack> iterable = enchantedItems.values();
+//            int i = 0;
+//            int items = 0;
+//            for (ItemStack itemStack : iterable) {
+//                int enchLevel = EnchantmentHelper.getLevel(protectingEnchantment, itemStack);
+//                i += enchLevel;
+//                if(enchLevel > 0)
+//                    items++;
+//            }
+//            return i + items;
+//        }
+
+        if (protectingEnchantmentKey == null) {
             return 0;
-        } else {
-            Map<EquipmentSlot, ItemStack> enchantedItems = protectingEnchantment.getEquipment(entity);
-            Iterable<ItemStack> iterable = enchantedItems.values();
-            int i = 0;
-            int items = 0;
-            for (ItemStack itemStack : iterable) {
-                int enchLevel = EnchantmentHelper.getLevel(protectingEnchantment, itemStack);
-                i += enchLevel;
-                if(enchLevel > 0)
-                    items++;
-            }
-            return i + items;
         }
+
+        Registry<Enchantment> enchantmentRegistry = entity.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+
+        Enchantment protectingEnchantment = enchantmentRegistry.getOrThrow(protectingEnchantmentKey);
+        RegistryEntry<Enchantment> protectingEnchantmentEntry = enchantmentRegistry.getEntry(protectingEnchantment);
+
+        Map<EquipmentSlot, ItemStack> potentialItems = protectingEnchantment.getEquipment(entity);
+
+        int accumLevel = 0;
+        int items = 0;
+
+        for (ItemStack potentialItem : potentialItems.values()) {
+
+            int level = EnchantmentHelper.getLevel(protectingEnchantmentEntry, potentialItem);
+            accumLevel += level;
+
+            if (level > 0) {
+                items++;
+            }
+
+        }
+
+        return accumLevel + items;
+
     }
 
     @Override

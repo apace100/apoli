@@ -1,28 +1,19 @@
 package io.github.apace100.apoli.networking.packet.s2c;
 
 import io.github.apace100.apoli.Apoli;
-import net.fabricmc.fabric.api.networking.v1.FabricPacket;
-import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.network.packet.CustomPayload;
 
-public record DismountPlayerS2CPacket(int id) implements FabricPacket {
+public record DismountPlayerS2CPacket(int id) implements CustomPayload {
 
-    public static final PacketType<DismountPlayerS2CPacket> TYPE = PacketType.create(
-        Apoli.identifier("s2c/dismount_player"), DismountPlayerS2CPacket::read
-    );
-
-    private static DismountPlayerS2CPacket read(PacketByteBuf buffer) {
-        return new DismountPlayerS2CPacket(buffer.readVarInt());
-    }
+    public static final Id<DismountPlayerS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/dismount_player"));
+    public static final PacketCodec<PacketByteBuf, DismountPlayerS2CPacket> PACKET_CODEC = PacketCodecs.VAR_INT.xmap(DismountPlayerS2CPacket::new, DismountPlayerS2CPacket::id).cast();
 
     @Override
-    public void write(PacketByteBuf buffer) {
-        buffer.writeVarInt(id);
-    }
-
-    @Override
-    public PacketType<?> getType() {
-        return TYPE;
+    public Id<? extends CustomPayload> getId() {
+        return PACKET_ID;
     }
 
 }

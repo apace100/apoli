@@ -4,21 +4,21 @@ import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.CraftingInventoryAccessor;
 import io.github.apace100.apoli.mixin.CraftingScreenHandlerAccessor;
-import io.github.apace100.apoli.mixin.PlayerScreenHandlerAccessor;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
-import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.recipe.input.CraftingRecipeInput;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.CraftingScreenHandler;
-import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.apache.commons.compress.utils.Lists;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.List;
@@ -33,50 +33,45 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
     }
 
     @Override
-    public boolean matches(RecipeInputInventory inventory, World world) {
+    public boolean matches(CraftingRecipeInput input, World world) {
 
-        if (!(inventory instanceof CraftingInventory craftingInventory)) {
-            return false;
-        }
-
-        RecipeEntry<CraftingRecipe> originalRecipe = getOriginalRecipe(craftingInventory)
-            .orElse(null);
+        RecipeEntry<CraftingRecipe> originalRecipe = getOriginalRecipe(input);
         if (originalRecipe == null) {
             return false;
         }
 
         Identifier id = originalRecipe.id();
-        ItemStack resultStack = originalRecipe.value().craft(craftingInventory, world.getRegistryManager());
+        ItemStack resultStack = originalRecipe.value().craft(input, world.getRegistryManager());
 
-        return getModifyCraftingPowers(craftingInventory)
+        return getModifyCraftingPowers(input)
             .stream()
             .anyMatch(mcp -> mcp.doesApply(id, resultStack));
 
     }
 
     @Override
-    public ItemStack craft(RecipeInputInventory inventory, DynamicRegistryManager registryManager) {
+    public ItemStack craft(CraftingRecipeInput input, RegistryWrapper.WrapperLookup lookup) {
 
-        ItemStack newResultStack = ItemStack.EMPTY;
-        if (!(inventory instanceof CraftingInventory craftingInventory)) {
-            return newResultStack;
+        if (!(input instanceof PowerCraftingInventory pci)) {
+            return ItemStack.EMPTY;
         }
 
-        PlayerEntity playerEntity = getPlayerFromInventory(craftingInventory);
+        ItemStack newResultStack = ItemStack.EMPTY;
+        PlayerEntity playerEntity = pci.apoli$getPlayer();
+        
         if (playerEntity == null) {
             return newResultStack;
         }
 
-        RecipeEntry<CraftingRecipe> originalRecipe = getOriginalRecipe(craftingInventory)
-            .orElse(null);
+        RecipeEntry<CraftingRecipe> originalRecipe = getOriginalRecipe(input);
         if (originalRecipe == null) {
             return newResultStack;
         }
 
         Identifier recipeId = originalRecipe.id();
-        ItemStack resultStack = originalRecipe.value().craft(craftingInventory, registryManager);
+        ItemStack resultStack = originalRecipe.value().craft(input, lookup);
 
-        Optional<ModifyCraftingPower> modifyCraftingPower = getModifyCraftingPowers(craftingInventory)
+        Optional<ModifyCraftingPower> modifyCraftingPower = getModifyCraftingPowers(input)
             .stream()
             .filter(mcp -> mcp.doesApply(recipeId, resultStack))
             .max(Comparator.comparing(ModifyCraftingPower::getPriority));
@@ -86,7 +81,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
         }
 
         newResultStack = modifyCraftingPower.get().getNewResult(InventoryUtil.createStackReference(resultStack)).get();
-        ((PowerCraftingInventory) craftingInventory).apoli$setPower(modifyCraftingPower.get());
+        pci.apoli$setPower(modifyCraftingPower.get());
 
         return newResultStack;
 
@@ -102,11 +97,6 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
         return SERIALIZER;
     }
 
-    public static PlayerEntity getPlayerFromInventory(CraftingInventory craftingInventory) {
-        ScreenHandler handler = ((CraftingInventoryAccessor) craftingInventory).getHandler();
-        return getPlayerFromHandler(handler);
-    }
-
     public static Optional<BlockPos> getBlockFromInventory(CraftingInventory craftingInventory) {
 
         ScreenHandler handler = ((CraftingInventoryAccessor) craftingInventory).getHandler();
@@ -118,43 +108,30 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
     }
 
-    private List<ModifyCraftingPower> getModifyCraftingPowers(CraftingInventory craftingInventory) {
-
-        ScreenHandler handler = ((CraftingInventoryAccessor)craftingInventory).getHandler();
-        PlayerEntity player = getPlayerFromHandler(handler);
-
-        return PowerHolderComponent.getPowers(player, ModifyCraftingPower.class);
-
+    private static List<ModifyCraftingPower> getModifyCraftingPowers(CraftingRecipeInput input) {
+        return input instanceof PowerCraftingInventory pci
+            ? PowerHolderComponent.getPowers(pci.apoli$getPlayer(), ModifyCraftingPower.class)
+            : Lists.newArrayList();
     }
 
-    private Optional<RecipeEntry<CraftingRecipe>> getOriginalRecipe(CraftingInventory craftingInventory) {
+    @Nullable
+    private static RecipeEntry<CraftingRecipe> getOriginalRecipe(CraftingRecipeInput input) {
 
-        ScreenHandler screenHandler = ((CraftingInventoryAccessor) craftingInventory).getHandler();
-        PlayerEntity playerEntity = getPlayerFromHandler(screenHandler);
+        if (!(input instanceof PowerCraftingInventory pci)) {
+            return null;
+        }
 
+        PlayerEntity playerEntity = pci.apoli$getPlayer();
         if (playerEntity == null || playerEntity.getServer() == null) {
-            return Optional.empty();
+            return null;
         }
 
         return playerEntity.getServer().getRecipeManager().listAllOfType(RecipeType.CRAFTING)
             .stream()
             .filter(entry -> !(entry.value() instanceof ModifiedCraftingRecipe)
-                          && entry.value().matches(craftingInventory, playerEntity.getWorld()))
-            .findFirst();
-
-    }
-
-    private static PlayerEntity getPlayerFromHandler(ScreenHandler screenHandler) {
-
-        if(screenHandler instanceof CraftingScreenHandler) {
-            return ((CraftingScreenHandlerAccessor) screenHandler).getPlayer();
-        }
-
-        if(screenHandler instanceof PlayerScreenHandler) {
-            return ((PlayerScreenHandlerAccessor) screenHandler).getOwner();
-        }
-
-        return null;
+                && entry.value().matches(input, playerEntity.getWorld()))
+            .findFirst()
+            .orElse(null);
 
     }
 

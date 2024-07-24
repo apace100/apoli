@@ -1,9 +1,9 @@
 package io.github.apace100.apoli.power;
 
-import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
 import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.SlotRanges;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
@@ -57,7 +57,7 @@ public class InteractionPower extends Power {
     }
 
     protected void performActorItemStuff(InteractionPower power, PlayerEntity actor, Hand hand) {
-        StackReference heldStack = actor.getStackReference(hand == Hand.OFF_HAND ? ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.offhand") : ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand"));
+        StackReference heldStack = actor.getStackReference(hand == Hand.OFF_HAND ? SlotRanges.fromName("weapon.offhand").getSlotIds().getFirst() : SlotRanges.fromName("weapon.mainhand").getSlotIds().getFirst());
         if(power.heldItemAction != null) {
             heldItemAction.accept(new Pair<>(actor.getWorld(), heldStack));
         }

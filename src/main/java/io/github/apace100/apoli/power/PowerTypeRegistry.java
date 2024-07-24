@@ -1,6 +1,11 @@
 package io.github.apace100.apoli.power;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.integration.PowerClearCallback;
+import io.github.apace100.apoli.integration.PowerOverrideCallback;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,74 +14,108 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class PowerTypeRegistry {
 
-    private static final HashMap<Identifier, PowerType> idToPower = new HashMap<>();
-    private static final Set<Identifier> disabledPowers = new HashSet<>();
+    public static final Codec<Identifier> VALIDATING_CODEC = Identifier.CODEC.comapFlatMap(
+        id -> contains(id)
+            ? DataResult.success(id)
+            : DataResult.error(() -> "Couldn't get power type from id '" + id + "', as it was not registered!"),
+        Function.identity()
+    );
+    public static final Codec<PowerType<?>> DISPATCH_CODEC = Identifier.CODEC.comapFlatMap(
+        PowerTypeRegistry::getResult,
+        PowerType::getIdentifier
+    );
+    public static final PacketCodec<ByteBuf, PowerType<?>> DISPATCH_PACKET_CODEC = Identifier.PACKET_CODEC.xmap(
+        PowerTypeRegistry::get,
+        PowerType::getIdentifier
+    );
 
-    public static PowerType register(Identifier id, PowerType powerType) {
-        if(idToPower.containsKey(id)) {
+    private static final Map<Identifier, PowerType<?>> ID_TO_POWER = new HashMap<>();
+    private static final Set<Identifier> DISABLED = new HashSet<>();
+
+    public static PowerType<?> register(Identifier id, PowerType<?> powerType) {
+
+        if(ID_TO_POWER.containsKey(id)) {
             throw new IllegalArgumentException("Duplicate power type id tried to register: '" + id.toString() + "'");
         }
-        disabledPowers.remove(id);
-        idToPower.put(id, powerType);
+
+        DISABLED.remove(id);
+        ID_TO_POWER.put(id, powerType);
+
         return powerType;
+
     }
 
-    protected static PowerType update(Identifier id, PowerType powerType) {
-        if(idToPower.containsKey(id)) {
-            PowerType old = idToPower.get(id);
-            idToPower.remove(id);
+    protected static PowerType<?> update(Identifier id, PowerType<?> powerType) {
+
+        PowerType<?> oldPower = ID_TO_POWER.remove(id);
+        if (oldPower instanceof MultiplePowerType<?> oldMultiple) {
+            oldMultiple.getSubPowers().forEach(PowerTypeRegistry::remove);
         }
+
+        PowerOverrideCallback.EVENT.invoker().onPowerOverride(id);
         return register(id, powerType);
+
     }
 
     protected static void disable(Identifier id) {
         remove(id);
-        disabledPowers.add(id);
+        DISABLED.add(id);
     }
 
     protected static void remove(Identifier id) {
-        idToPower.remove(id);
+        ID_TO_POWER.remove(id);
     }
 
     public static boolean isDisabled(Identifier id) {
-        return disabledPowers.contains(id);
+        return DISABLED.contains(id);
     }
 
     public static int size() {
-        return idToPower.size();
+        return ID_TO_POWER.size();
     }
 
     public static Stream<Identifier> identifiers() {
-        return idToPower.keySet().stream();
+        return ID_TO_POWER.keySet().stream();
     }
 
-    public static Iterable<Map.Entry<Identifier, PowerType>> entries() {
-        return idToPower.entrySet();
+    public static Iterable<Map.Entry<Identifier, PowerType<?>>> entries() {
+        return ID_TO_POWER.entrySet();
     }
 
     public static void forEach(BiConsumer<Identifier, PowerType<?>> powerTypeBiConsumer) {
-        idToPower.forEach(powerTypeBiConsumer::accept);
+        ID_TO_POWER.forEach(powerTypeBiConsumer);
     }
 
-    public static Iterable<PowerType> values() {
-        return idToPower.values();
+    public static Iterable<PowerType<?>> values() {
+        return ID_TO_POWER.values();
+    }
+
+    public static DataResult<PowerType<?>> getResult(Identifier id) {
+        return contains(id)
+            ? DataResult.success(get(id))
+            : DataResult.error(() -> "Could not get power type from id '" + id + "', as it was not registered!");
     }
 
     @Nullable
-    public static PowerType getNullable(Identifier id) {
-        return idToPower.get(id);
+    public static PowerType<?> getNullable(Identifier id) {
+        return ID_TO_POWER.get(id);
     }
 
-    public static PowerType get(Identifier id) {
-        if(!idToPower.containsKey(id)) {
+    public static PowerType<?> get(Identifier id) {
+
+        if (!ID_TO_POWER.containsKey(id)) {
             throw new IllegalArgumentException("Could not get power type from id '" + id.toString() + "', as it was not registered!");
         }
-        PowerType powerType = idToPower.get(id);
-        return powerType;
+
+        else {
+            return ID_TO_POWER.get(id);
+        }
+
     }
 
     public static Identifier getId(PowerType<?> powerType) {
@@ -84,16 +123,16 @@ public class PowerTypeRegistry {
     }
 
     public static boolean contains(Identifier id) {
-        return idToPower.containsKey(id);
+        return ID_TO_POWER.containsKey(id);
     }
 
     public static void clear() {
         PowerClearCallback.EVENT.invoker().onPowerClear();
-        idToPower.clear();
+        ID_TO_POWER.clear();
     }
 
     public static void clearDisabledPowers() {
-        disabledPowers.clear();
+        DISABLED.clear();
     }
 
     public static void reset() {

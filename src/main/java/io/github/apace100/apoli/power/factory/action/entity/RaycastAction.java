@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.power.factory.action.entity;
 
-import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -9,10 +8,9 @@ import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
@@ -23,7 +21,10 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
@@ -118,22 +119,35 @@ public class RaycastAction {
     }
 
     private static double getEntityReach(SerializableData.Instance data, Entity entity) {
+
         if (!data.isPresent("entity_distance") && !data.isPresent("distance")) {
-            double base = (entity instanceof PlayerEntity player && player.getAbilities().creativeMode) ? 6 : 3;
-            return (entity instanceof LivingEntity living && FabricLoader.getInstance().isModLoaded("reach-entity-attributes")) ?
-                    ReachEntityAttributes.getAttackRange(living, base) : base;
+            return entity instanceof LivingEntity livingEntity && livingEntity.getAttributes().hasAttribute(EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE)
+                ? livingEntity.getAttributeValue(EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE)
+                : 3;
         }
-        return data.isPresent("entity_distance") ? data.getDouble("entity_distance") : data.getDouble("distance");
+
+        else {
+            return data.isPresent("entity_distance")
+                ? data.getDouble("entity_distance")
+                : data.getDouble("distance");
+        }
+
     }
 
-
     private static double getBlockReach(SerializableData.Instance data, Entity entity) {
+
         if (!data.isPresent("block_distance") && !data.isPresent("distance")) {
-            double base = (entity instanceof PlayerEntity player && player.getAbilities().creativeMode) ? 5.0 : 4.5;
-            return (entity instanceof LivingEntity living && FabricLoader.getInstance().isModLoaded("reach-entity-attributes")) ?
-                    ReachEntityAttributes.getReachDistance(living, base) : base;
+            return entity instanceof LivingEntity livingEntity && livingEntity.getAttributes().hasAttribute(EntityAttributes.PLAYER_BLOCK_INTERACTION_RANGE)
+                ? livingEntity.getAttributeValue(EntityAttributes.PLAYER_BLOCK_INTERACTION_RANGE)
+                : 4.5;
         }
-         return data.isPresent("block_distance") ? data.getDouble("block_distance") : data.getDouble("distance");
+
+        else {
+            return data.isPresent("block_distance")
+                ? data.getDouble("block_distance")
+                : data.getDouble("distance");
+        }
+
     }
 
     private static void executeStepCommands(Entity entity, Vec3d origin, Vec3d target, String command, double step) {

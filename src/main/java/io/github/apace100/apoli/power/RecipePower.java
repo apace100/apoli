@@ -5,16 +5,16 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeEntry;
+import net.minecraft.recipe.input.RecipeInput;
 
 public class RecipePower extends Power implements Prioritized<RecipePower> {
 
-    private final RecipeEntry<Recipe<CraftingInventory>> recipe;
+    private final RecipeEntry<Recipe<? extends RecipeInput>> recipe;
     private final int priority;
 
-    public RecipePower(PowerType<?> type, LivingEntity entity, RecipeEntry<Recipe<CraftingInventory>> recipe, int priority) {
+    public RecipePower(PowerType<?> type, LivingEntity entity, RecipeEntry<Recipe<? extends RecipeInput>> recipe, int priority) {
         super(type, entity);
         this.recipe = recipe;
         this.priority = priority;
@@ -25,7 +25,7 @@ public class RecipePower extends Power implements Prioritized<RecipePower> {
         return priority;
     }
 
-    public RecipeEntry<Recipe<CraftingInventory>> getRecipe() {
+    public RecipeEntry<Recipe<? extends RecipeInput>> getRecipe() {
         return recipe;
     }
 

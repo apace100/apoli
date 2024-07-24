@@ -1,10 +1,12 @@
 plugins {
-	id 'fabric-loom' version '1.5-SNAPSHOT'
+	id 'fabric-loom' version '1.7-SNAPSHOT'
 	id 'maven-publish'
 }
 
 version = project.mod_version
 group = project.maven_group
+
+def ENV = System.getenv()
 
 base {
 	archivesName = project.archives_base_name
@@ -36,8 +38,8 @@ repositories {
 		url = 'https://maven.ladysnake.org/releases'
 	}
 	maven {
-		name = "JitPack"
-		url = 'https://jitpack.io'
+		name = 'Ladysnake Mods (snapshots)'
+		url = 'https://maven.ladysnake.org/snapshots'
 	}
 	maven {
 		url = 'https://maven.cafeteria.dev'
@@ -56,6 +58,9 @@ repositories {
 	}
 	maven {
 		url "https://maven.terraformersmc.com/"
+	}
+	maven {
+		url "https://maven.ryanliptak.com/"
 	}
 }
 
@@ -84,6 +89,7 @@ loom {
 dependencies {
 
 	implementation 'com.demonwav.mcdev:annotations:1.0'
+	include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.4.0")))
 
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -93,35 +99,36 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}") {
+	//	Cardinal Components
+	include(modApi("org.ladysnake.cardinal-components-api:cardinal-components-base:${project.cca_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
-	}
-	include "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}"
-
-	modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}") {
+	})
+	include(modApi("org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cca_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
-	}
-	include "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
+	})
 
-	modApi "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
-	include "io.github.ladysnake:PlayerAbilityLib:${pal_version}"
+	//	PlayerAbilityLib
+	include(modApi("io.github.ladysnake:PlayerAbilityLib:${project.pal_version}"))
+	
+	//	Calio
+	include(modApi("io.github.apace100:calio:${project.calio_version}"))
 
-	modApi "com.github.apace100:calio:${project.calio_version}"
-	include "com.github.apace100:calio:${project.calio_version}"
-
-	modCompileOnlyApi "com.jamieswhiteshirt:reach-entity-attributes:${rea_version}"
-
-	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") {
+	//	Cloth Config
+	include(modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
+	})
+
+	//	Modmenu
+	include(modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}"))
+
+	//	AdditionalEntityAttributes
+	include(modApi("maven.modrinth:additionalentityattributes:${project.aea_version}"))
+
+	//	Appleskin
+	modCompileOnly("squeek.appleskin:appleskin-fabric:${appleskin_version}:api") {
+		transitive = false
 	}
-	include "me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}"
-
-	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-
-	modApi "maven.modrinth:additionalentityattributes:${project.aea_version}"
-	include "maven.modrinth:additionalentityattributes:${project.aea_version}"
-//	modApi "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
-//	include "com.github.eggohito:AdditionalEntityAttributes:${project.aea_version}"
+	modCompileOnly "squeek.appleskin:appleskin-fabric:${appleskin_version}"
 
 }
 
@@ -140,7 +147,7 @@ tasks.withType(JavaCompile).configureEach {
 	// If Javadoc is generated, this must be specified in that task too.
 	it.options.encoding = "UTF-8"
 
-	it.options.release = 17
+	it.options.release = 21
 }
 
 java {
@@ -149,8 +156,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
@@ -162,7 +169,7 @@ jar {
 // configure the maven publication
 publishing {
 	publications {
-		mavenJava(MavenPublication) {
+		create("mavenJava", MavenPublication) {
 			from components.java
 		}
 	}
@@ -174,5 +181,14 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 		mavenLocal()
+		if (ENV.MAVEN_URL && ENV.MAVEN_USERNAME && ENV.MAVEN_PASSWORD) {
+			maven {
+				url = ENV.MAVEN_URL
+				credentials {
+					username = ENV.MAVEN_USERNAME
+					password = ENV.MAVEN_PASSWORD
+				}
+			}
+		}
 	}
 }

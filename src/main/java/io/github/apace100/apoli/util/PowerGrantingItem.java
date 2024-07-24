@@ -1,11 +1,10 @@
 package io.github.apace100.apoli.util;
 
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
-
-import java.util.Collection;
-
+//  TODO: Now that item powers are now an item component, this is probably not necessary anymore.
+//        Remove this! -eggohito
+@Deprecated(forRemoval = true)
 public interface PowerGrantingItem {
 
-    Collection<StackPowerUtil.StackPower> getPowers(ItemStack stack, EquipmentSlot slot);
+//    Collection<StackPowerUtil.StackPower> getPowers(ItemStack stack, EquipmentSlot slot);
+
 }

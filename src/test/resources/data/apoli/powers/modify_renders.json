@@ -1,62 +1,62 @@
 {
-  "type": "apoli:multiple",
-  "bushes_are_corals": {
-    "type": "apoli:modify_block_render",
-    "block_condition": {
-      "type": "apoli:or",
-      "conditions": [
-        {
-          "type": "apoli:block",
-          "block": "minecraft:grass"
+    "type": "apoli:multiple",
+    "bushes_are_corals": {
+        "type": "apoli:modify_block_render",
+        "block_condition": {
+            "type": "apoli:or",
+            "conditions": [
+                {
+                    "type": "apoli:block",
+                    "block": "minecraft:short_grass"
+                },
+                {
+                    "type": "apoli:block",
+                    "block": "minecraft:tall_grass"
+                }
+            ]
         },
-        {
-          "type": "apoli:block",
-          "block": "minecraft:tall_grass"
-        }
-      ]
+        "block": "minecraft:tube_coral"
     },
-    "block": "minecraft:tube_coral"
-  },
-  "grass_is_sand": {
-    "type": "apoli:modify_block_render",
-    "block_condition": {
-      "type": "apoli:or",
-      "conditions": [
-        {
-          "type": "apoli:block",
-          "block": "minecraft:grass_block"
+    "grass_is_sand": {
+        "type": "apoli:modify_block_render",
+        "block_condition": {
+            "type": "apoli:or",
+            "conditions": [
+                {
+                    "type": "apoli:block",
+                    "block": "minecraft:grass_block"
+                },
+                {
+                    "type": "apoli:block",
+                    "block": "minecraft:dirt"
+                },
+                {
+                    "type": "apoli:block",
+                    "block": "minecraft:stone"
+                }
+            ]
         },
-        {
-          "type": "apoli:block",
-          "block": "minecraft:dirt"
+        "block": "minecraft:sand"
+    },
+    "fluid": {
+        "type": "apoli:modify_camera_submersion",
+        "from": "none",
+        "to": "water"
+    },
+    "logs_are_sponges": {
+        "type": "apoli:modify_block_render",
+        "block_condition": {
+            "type": "apoli:in_tag",
+            "tag": "minecraft:logs"
         },
-        {
-          "type": "apoli:block",
-          "block": "minecraft:stone"
-        }
-      ]
+        "block": "minecraft:sponge"
     },
-    "block": "minecraft:sand"
-  },
-  "fluid": {
-    "type": "apoli:modify_camera_submersion",
-    "from": "none",
-    "to": "water"
-  },
-  "logs_are_sponges": {
-    "type": "apoli:modify_block_render",
-    "block_condition": {
-      "type": "apoli:in_tag",
-      "tag": "minecraft:logs"
-    },
-    "block": "minecraft:sponge"
-  },
-  "leaves_are_wet": {
-    "type": "apoli:modify_block_render",
-    "block_condition": {
-      "type": "apoli:in_tag",
-      "tag": "minecraft:leaves"
-    },
-    "block": "minecraft:wet_sponge"
-  }
+    "leaves_are_wet": {
+        "type": "apoli:modify_block_render",
+        "block_condition": {
+            "type": "apoli:in_tag",
+            "tag": "minecraft:leaves"
+        },
+        "block": "minecraft:wet_sponge"
+    }
 }

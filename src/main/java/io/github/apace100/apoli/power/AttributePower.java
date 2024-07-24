@@ -10,6 +10,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.registry.entry.RegistryEntry;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,12 +25,12 @@ public class AttributePower extends Power {
         this.updateHealth = updateHealth;
     }
 
-    public AttributePower(PowerType<?> type, LivingEntity entity, boolean updateHealth, EntityAttribute attribute, EntityAttributeModifier modifier) {
+    public AttributePower(PowerType<?> type, LivingEntity entity, boolean updateHealth, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier) {
         this(type, entity, updateHealth);
         addModifier(attribute, modifier);
     }
 
-    public AttributePower addModifier(EntityAttribute attribute, EntityAttributeModifier modifier) {
+    public AttributePower addModifier(RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier) {
         AttributedEntityAttributeModifier mod = new AttributedEntityAttributeModifier(attribute, modifier);
         this.modifiers.add(mod);
         return this;
@@ -60,10 +61,10 @@ public class AttributePower extends Power {
         float previousHealthPercent = entity.getHealth() / previousMaxHealth;
 
         modifiers.stream()
-            .filter(mod -> entity.getAttributes().hasAttribute(mod.getAttribute()))
-            .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.getAttribute())))
-            .filter(pair -> pair.getSecond() != null && !pair.getSecond().hasModifier(pair.getFirst().getModifier()))
-            .forEach(pair -> pair.getSecond().addTemporaryModifier(pair.getFirst().getModifier()));
+            .filter(mod -> entity.getAttributes().hasAttribute(mod.attribute()))
+            .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.attribute())))
+            .filter(pair -> pair.getSecond() != null && !pair.getSecond().hasModifier(pair.getFirst().modifier().id()))
+            .forEach(pair -> pair.getSecond().addTemporaryModifier(pair.getFirst().modifier()));
 
         float currentMaxHealth = entity.getMaxHealth();
         if (updateHealth && currentMaxHealth != previousMaxHealth) {
@@ -82,10 +83,10 @@ public class AttributePower extends Power {
         float previousHealthPercent = entity.getHealth() / previousMaxHealth;
 
         modifiers.stream()
-            .filter(mod -> entity.getAttributes().hasAttribute(mod.getAttribute()))
-            .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.getAttribute())))
-            .filter(pair -> pair.getSecond() != null && pair.getSecond().hasModifier(pair.getFirst().getModifier()))
-            .forEach(pair -> pair.getSecond().removeModifier(pair.getFirst().getModifier().getId()));
+            .filter(mod -> entity.getAttributes().hasAttribute(mod.attribute()))
+            .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.attribute())))
+            .filter(pair -> pair.getSecond() != null && pair.getSecond().hasModifier(pair.getFirst().modifier().id()))
+            .forEach(pair -> pair.getSecond().removeModifier(pair.getFirst().modifier().id()));
 
         float currentMaxHealth = entity.getMaxHealth();
         if (updateHealth && currentMaxHealth != previousMaxHealth) {

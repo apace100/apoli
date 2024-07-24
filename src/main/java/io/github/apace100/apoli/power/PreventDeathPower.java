@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
@@ -33,6 +34,24 @@ public class PreventDeathPower extends Power {
         if(entityAction != null) {
             entityAction.accept(entity);
         }
+    }
+
+    public static boolean doesPrevent(Entity entity, DamageSource source, float amount) {
+
+        boolean prevented = false;
+        for (PreventDeathPower preventDeathPower : PowerHolderComponent.getPowers(entity, PreventDeathPower.class)) {
+
+            if (!preventDeathPower.doesApply(source, amount)) {
+                continue;
+            }
+
+            preventDeathPower.executeAction();
+            prevented = true;
+
+        }
+
+        return prevented;
+
     }
 
     public static PowerFactory createFactory() {

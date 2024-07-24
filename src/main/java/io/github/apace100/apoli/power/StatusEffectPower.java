@@ -3,7 +3,7 @@ package io.github.apace100.apoli.power;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.entry.RegistryEntry;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,15 +20,15 @@ public class StatusEffectPower extends Power {
         addEffect(effectInstance);
     }
 
-    public StatusEffectPower addEffect(StatusEffect effect) {
+    public StatusEffectPower addEffect(RegistryEntry<StatusEffect> effect) {
         return addEffect(effect, 80);
     }
 
-    public StatusEffectPower addEffect(StatusEffect effect, int lingerDuration) {
+    public StatusEffectPower addEffect(RegistryEntry<StatusEffect> effect, int lingerDuration) {
         return addEffect(effect, lingerDuration, 0);
     }
 
-    public StatusEffectPower addEffect(StatusEffect effect, int lingerDuration, int amplifier) {
+    public StatusEffectPower addEffect(RegistryEntry<StatusEffect> effect, int lingerDuration, int amplifier) {
         return addEffect(new StatusEffectInstance(effect, lingerDuration, amplifier));
     }
 

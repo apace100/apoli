@@ -28,7 +28,7 @@ public abstract class DefaultAttributeContainerMixin implements OwnableAttribute
         this.apoli$owner = owner;
     }
 
-    @ModifyExpressionValue(method = "getValue", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/DefaultAttributeContainer;require(Lnet/minecraft/entity/attribute/EntityAttribute;)Lnet/minecraft/entity/attribute/EntityAttributeInstance;"))
+    @ModifyExpressionValue(method = "getValue", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/DefaultAttributeContainer;require(Lnet/minecraft/registry/entry/RegistryEntry;)Lnet/minecraft/entity/attribute/EntityAttributeInstance;"))
     private EntityAttributeInstance apoli$setAttributeInstanceOwner(EntityAttributeInstance original) {
 
         if (original instanceof OwnableAttributeInstance ownableAttributeInstance) {

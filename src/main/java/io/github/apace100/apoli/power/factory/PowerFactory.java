@@ -6,7 +6,7 @@ import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.util.function.BiFunction;
@@ -23,7 +23,7 @@ public class PowerFactory<P extends Power> implements Factory {
 
     public PowerFactory(Identifier id, SerializableData data, Function<SerializableData.Instance, BiFunction<PowerType<P>, LivingEntity, P>> factoryConstructor) {
         this.id = id;
-        this.data = data;
+        this.data = data.copy();
         this.factoryConstructor = factoryConstructor;
     }
 
@@ -69,7 +69,7 @@ public class PowerFactory<P extends Power> implements Factory {
 
         }
 
-        public void write(PacketByteBuf buf) {
+        public void write(RegistryByteBuf buf) {
             buf.writeIdentifier(id);
             data.write(buf, dataInstance);
         }
@@ -97,7 +97,7 @@ public class PowerFactory<P extends Power> implements Factory {
         return new Instance(data.read(json));
     }
 
-    public Instance read(PacketByteBuf buffer) {
+    public Instance read(RegistryByteBuf buffer) {
         return new Instance(data.read(buffer));
     }
 

@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.util;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
@@ -17,7 +17,7 @@ import java.util.Optional;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class PowerLootCondition implements LootCondition {
 
-    public static final Codec<PowerLootCondition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+    public static final MapCodec<PowerLootCondition> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
         Identifier.CODEC.fieldOf("power").forGetter(PowerLootCondition::getPowerId),
         Identifier.CODEC.optionalFieldOf("source").forGetter(PowerLootCondition::getPowerSourceId)
     ).apply(instance, PowerLootCondition::new));

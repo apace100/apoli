@@ -14,7 +14,7 @@ public class ApoliClassDataClient {
     public static void registerAll() {
         
         FEATURE_RENDERERS.addMapping("slime_overlay", SlimeOverlayFeatureRenderer.class);
-        FEATURE_RENDERERS.addMapping("snowman_pumpkin", SnowmanPumpkinFeatureRenderer.class);
+        FEATURE_RENDERERS.addMapping("snowman_pumpkin", SnowGolemPumpkinFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("fox_held_item", FoxHeldItemFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("llama_decor", LlamaDecorFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("elytra", ElytraFeatureRenderer.class);
@@ -35,7 +35,8 @@ public class ApoliClassDataClient {
         FEATURE_RENDERERS.addMapping("horse_marking", HorseMarkingFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("deadmau5", Deadmau5FeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("armor", ArmorFeatureRenderer.class);
-        FEATURE_RENDERERS.addMapping("stray_overlay", StrayOverlayFeatureRenderer.class);
+        //  TODO: Remove this non-existent feature renderer -eggohito
+//        FEATURE_RENDERERS.addMapping("stray_overlay", StrayOverlayFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("enderman_block", EndermanBlockFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("mooshroom_mushroom", MooshroomMushroomFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("iron_golem_crack", IronGolemCrackFeatureRenderer.class);

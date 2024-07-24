@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.PowerModifiedGrindstone;
 import io.github.apace100.apoli.power.ModifyGrindstonePower;
 import io.github.apace100.apoli.util.modifier.Modifier;
@@ -10,8 +11,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,17 +22,21 @@ public class GrindstoneScreenHandlerOutputSlotMixin {
     @Shadow
     GrindstoneScreenHandler field_16780;
 
-    @Inject(method = "getExperience(Lnet/minecraft/world/World;)I", at = @At("RETURN"), cancellable = true)
-    private void modifyExperience(World world, CallbackInfoReturnable<Integer> cir) {
-        PowerModifiedGrindstone pmg = (PowerModifiedGrindstone) field_16780;
-        if(pmg.apoli$getAppliedPowers().size() == 0) {
-            return;
+    @ModifyReturnValue(method = "getExperience(Lnet/minecraft/world/World;)I", at = @At("RETURN"))
+    private int apoli$modifyExperience(int original, World world) {
+
+        if (!(field_16780 instanceof PowerModifiedGrindstone powerModifiedGrindstone)) {
+            return original;
         }
-        List<Modifier> modifiers = pmg.apoli$getAppliedPowers().stream().map(ModifyGrindstonePower::getExperienceModifier).filter(Objects::nonNull).toList();
-        if(modifiers.size() == 0) {
-            return;
-        }
-        int xp = (int)ModifierUtil.applyModifiers(pmg.apoli$getPlayer(), modifiers, cir.getReturnValue());
-        cir.setReturnValue(xp);
+
+        List<Modifier> modifiers = powerModifiedGrindstone.apoli$getAppliedPowers()
+            .stream()
+            .map(ModifyGrindstonePower::getExperienceModifier)
+            .filter(Objects::nonNull)
+            .toList();
+
+        return (int) ModifierUtil.applyModifiers(powerModifiedGrindstone.apoli$getPlayer(), modifiers, original);
+
     }
+
 }

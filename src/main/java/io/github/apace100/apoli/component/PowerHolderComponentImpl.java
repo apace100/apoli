@@ -8,7 +8,8 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -90,11 +91,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void removePower(PowerType<?> powerType, Identifier source) {
-        this.removePower(powerType, source, true);
+    public boolean removePower(PowerType<?> powerType, Identifier source) {
+        return this.removePower(powerType, source, true);
     }
 
-    private void removePower(PowerType<?> powerType, Identifier source, boolean root) {
+    protected boolean removePower(PowerType<?> powerType, Identifier source, boolean root) {
 
         StringBuilder errorMessage= new StringBuilder("Cannot remove a non-existing power");
         if (powerType instanceof PowerTypeReference<?> powerTypeReference) {
@@ -104,11 +105,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
         if (powerType == null) {
             Apoli.LOGGER.error(errorMessage.append(" from entity ").append(owner.getName().getString()));
-            return;
+            return false;
         }
 
         if (!powerSources.containsKey(powerType)) {
-            return;
+            return false;
         }
 
         List<Identifier> sources = powerSources.get(powerType);
@@ -135,13 +136,15 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         }
 
         if (!root) {
-            return;
+            return true;
         }
 
         powers.keySet().removeIf(powersToRemove::containsKey);
         powerSources.keySet().removeIf(powersToRemove::containsKey);
 
         powersToRemove.clear();
+
+        return true;
 
     }
 
@@ -171,7 +174,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         return this.addPower(powerType, source, true);
     }
 
-    private boolean addPower(PowerType<?> powerType, Identifier source, boolean root) {
+    protected boolean addPower(PowerType<?> powerType, Identifier source, boolean root) {
 
         StringBuilder errorMessage = new StringBuilder("Cannot add a non-existing power");
         if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
@@ -213,7 +216,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         while (addedIterator.hasNext()) {
 
             Map.Entry<PowerType<?>, Power> addedEntry = addedIterator.next();
+
             Power addedPower = addedEntry.getValue();
+            addedIterator.remove();
 
             addedPower.onGained();
 
@@ -223,8 +228,6 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             if (owner instanceof ServerPlayerEntity player) {
                 GainedPowerCriterion.INSTANCE.trigger(player, addedEntry.getKey());
             }
-
-            addedIterator.remove();
 
         }
 
@@ -238,11 +241,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void readFromNbt(@NotNull NbtCompound compoundTag) {
+    public void readFromNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup lookup) {
         this.fromTag(compoundTag, true);
     }
 
-    private void fromTag(NbtCompound compoundTag, boolean callPowerOnAdd) {
+    protected void fromTag(NbtCompound compoundTag, boolean callPowerOnAdd) {
 
         if (owner == null) {
             Apoli.LOGGER.error("Owner was null in PowerHolderComponent#fromTag! This is not supposed to happen :(");
@@ -345,7 +348,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void writeToNbt(@NotNull NbtCompound compoundTag) {
+    public void writeToNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup wrapperLookup) {
         this.toTag(compoundTag, false);
     }
 
@@ -381,7 +384,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void writeSyncPacket(PacketByteBuf buf, ServerPlayerEntity recipient) {
+    public void writeSyncPacket(RegistryByteBuf buf, ServerPlayerEntity recipient) {
 
         NbtCompound compoundTag = new NbtCompound();
         this.toTag(compoundTag, true);
@@ -391,7 +394,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void applySyncPacket(PacketByteBuf buf) {
+    public void applySyncPacket(RegistryByteBuf buf) {
 
         NbtCompound compoundTag = buf.readNbt();
 

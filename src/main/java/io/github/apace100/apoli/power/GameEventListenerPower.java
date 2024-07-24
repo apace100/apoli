@@ -13,6 +13,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.GameEventTags;
 import net.minecraft.registry.tag.TagKey;
@@ -44,7 +45,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
     private final Predicate<CachedBlockPosition> blockCondition;
     private final Predicate<Pair<Entity, Entity>> biEntityCondition;
 
-    private final List<GameEvent> acceptedGameEvents;
+    private final List<RegistryEntry<GameEvent>> acceptedGameEvents;
     private final TagKey<GameEvent> acceptedGameEventTag;
 
     private EntityGameEventHandler<VibrationListener> gameEventHandler;
@@ -58,7 +59,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
     private final boolean showParticle;
     private final int range;
 
-    public GameEventListenerPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, int cooldownDuration, HudRender hudRender, int range, GameEvent acceptedGameEvent, List<GameEvent> acceptedGameEvents, TagKey<GameEvent> acceptedGameEventTag, boolean showParticle, boolean listenToEntityEvents, boolean listenToBlockEvents, GameEventListener.TriggerOrder triggerOrder) {
+    public GameEventListenerPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, int cooldownDuration, HudRender hudRender, int range, RegistryEntry<GameEvent> acceptedGameEvent, List<RegistryEntry<GameEvent>> acceptedGameEvents, TagKey<GameEvent> acceptedGameEventTag, boolean showParticle, boolean listenToEntityEvents, boolean listenToBlockEvents, GameEventListener.TriggerOrder triggerOrder) {
         super(powerType, livingEntity, Math.max(cooldownDuration, 1), hudRender);
 
         this.blockAction = blockAction;
@@ -179,14 +180,14 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         }
 
         @Override
-        public boolean accepts(ServerWorld world, BlockPos pos, GameEvent event, GameEvent.Emitter emitter) {
+        public boolean accepts(ServerWorld world, BlockPos pos, RegistryEntry<GameEvent> event, GameEvent.Emitter emitter) {
             return entity.getWorld() == world
                 && (shouldListenToBlockEvents(emitter, new CachedBlockPosition(world, pos, true))
                 || shouldListenToEntityEvents(emitter));
         }
 
         @Override
-        public void accept(ServerWorld world, BlockPos pos, GameEvent event, @Nullable Entity sourceEntity, @Nullable Entity projectileOwner, float distance) {
+        public void accept(ServerWorld world, BlockPos pos, RegistryEntry<GameEvent> event, @Nullable Entity sourceEntity, @Nullable Entity entity, float distance) {
 
             use();
             if (blockAction != null) {
@@ -200,7 +201,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         }
 
         @Override
-        public boolean canAccept(GameEvent gameEvent, GameEvent.Emitter emitter) {
+        public boolean canAccept(RegistryEntry<GameEvent> gameEvent, GameEvent.Emitter emitter) {
 
             if (!GameEventListenerPower.this.canUse() || !this.isAccepted(gameEvent)) {
                 return false;
@@ -218,7 +219,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
                 }
 
                 //  TODO: Add a bi-entity condition field to determine whether the source entity should avoid vibrations
-                //        and a tag field for overriding the game event tag that determines whether a game event can be avoided
+                //        and a tag field for overriding the game event tag that determines whether a game event can be avoided -eggohito
                 if (sourceEntity.bypassesSteppingEffects() && gameEvent.isIn(GameEventTags.IGNORE_VIBRATIONS_SNEAKING)) {
 
                     if (this.triggersAvoidCriterion() && sourceEntity instanceof ServerPlayerEntity sourcePlayer) {
@@ -261,7 +262,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
                 : Vibrations.Callback.super.getTag();
         }
 
-        public boolean isAccepted(GameEvent gameEvent) {
+        public boolean isAccepted(RegistryEntry<GameEvent> gameEvent) {
             return (acceptedGameEventTag == null || gameEvent.isIn(acceptedGameEventTag))
                  | (acceptedGameEvents.isEmpty() || acceptedGameEvents.contains(gameEvent));
         }
@@ -279,8 +280,8 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("range", SerializableDataTypes.INT, 16)
-                .add("event", SerializableDataTypes.GAME_EVENT, null)
-                .add("events", SerializableDataTypes.GAME_EVENTS, null)
+                .add("event", SerializableDataTypes.GAME_EVENT_ENTRY, null)
+                .add("events", SerializableDataTypes.GAME_EVENT_ENTRIES, null)
                 .add("tag", SerializableDataTypes.GAME_EVENT_TAG, null)
                 .addFunctionedDefault("event_tag", SerializableDataTypes.GAME_EVENT_TAG, data -> data.get("tag"))
                 .add("show_particle", SerializableDataTypes.BOOLEAN, true)

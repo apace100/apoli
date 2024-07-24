@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import io.github.apace100.apoli.power.ActionOnItemPickupPower;
 import io.github.apace100.apoli.power.PreventItemPickupPower;
 import net.minecraft.entity.EntityType;

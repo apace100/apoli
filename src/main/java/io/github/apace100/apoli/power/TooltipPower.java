@@ -25,6 +25,7 @@ import net.minecraft.world.World;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class TooltipPower extends Power {
@@ -92,7 +93,7 @@ public class TooltipPower extends Power {
         NbtList tooltipTextsNbt = new NbtList();
 
         for (Text tooltipText : tooltipTexts) {
-            NbtString tooltipTextNbt = NbtString.of(Text.Serializer.toJson(tooltipText));
+            NbtString tooltipTextNbt = NbtString.of(Text.Serialization.toJsonString(tooltipText, entity.getRegistryManager()));
             tooltipTextsNbt.add(tooltipTextNbt);
         }
 
@@ -110,7 +111,7 @@ public class TooltipPower extends Power {
         NbtList tooltipTextsNbt = rootNbt.getList("Tooltips", NbtElement.STRING_TYPE);
 
         for (int i = 0; i < tooltipTextsNbt.size(); i++) {
-            Text tooltipText = Text.Serializer.fromJson(tooltipTextsNbt.getString(i));
+            Text tooltipText = Text.Serialization.fromJson(tooltipTextsNbt.getString(i), entity.getRegistryManager());
             tooltipTexts.add(tooltipText);
         }
 
@@ -122,8 +123,16 @@ public class TooltipPower extends Power {
         return order;
     }
 
-    public void addToTooltip(List<Text> tooltip) {
-        tooltip.addAll(shouldResolve ? tooltipTexts : texts);
+    public void addToTooltip(Consumer<Text> tooltipConsumer) {
+
+        if (shouldResolve) {
+            tooltipTexts.forEach(tooltipConsumer);
+        }
+
+        else {
+            texts.forEach(tooltipConsumer);
+        }
+
     }
 
     public boolean doesApply(ItemStack stack) {
@@ -143,7 +152,7 @@ public class TooltipPower extends Power {
             entity.getRotationClient(),
             (ServerWorld) entity.getWorld(),
             Apoli.config.executeCommand.permissionLevel,
-            entity.getEntityName(),
+            entity.getNameForScoreboard(),
             entity.getName(),
             entity.getWorld().getServer(),
             entity

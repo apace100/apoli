@@ -12,17 +12,22 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-import java.util.Optional;
-
 @Mixin(LightmapTextureManager.class)
 @Environment(EnvType.CLIENT)
 public abstract class LightmapTextureManagerMixin implements AutoCloseable {
 
-    @Shadow @Final private MinecraftClient client;
+    @Shadow
+    @Final
+    private MinecraftClient client;
 
-    @ModifyVariable(method = "update", at = @At(value = "STORE"), ordinal = 6)
-    private float nightVisionPowerEffect(float value) {
-        Optional<Float> nightVisionStrength = PowerHolderComponent.KEY.get(client.player).getPowers(NightVisionPower.class).stream().filter(NightVisionPower::isActive).map(NightVisionPower::getStrength).max(Float::compareTo);
-        return nightVisionStrength.map(aFloat -> Math.max(aFloat, value)).orElse(value);
+    @ModifyVariable(method = "update", at = @At("STORE"), ordinal = 6)
+    private float apoli$modifyNightVisionStrength(float original) {
+        return PowerHolderComponent.getPowers(this.client.player, NightVisionPower.class)
+            .stream()
+            .map(NightVisionPower::getStrength)
+            .max(Float::compareTo)
+            .map(newValue -> Math.max(newValue, original))
+            .orElse(original);
     }
+
 }

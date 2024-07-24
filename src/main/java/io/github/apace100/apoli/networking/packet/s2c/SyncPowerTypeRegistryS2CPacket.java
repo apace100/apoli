@@ -6,48 +6,48 @@ import io.github.apace100.apoli.power.MultiplePowerType;
 import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import net.fabricmc.fabric.api.networking.v1.FabricPacket;
-import net.fabricmc.fabric.api.networking.v1.PacketType;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.text.TextCodecs;
 import net.minecraft.util.Identifier;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> powers) implements FabricPacket {
+public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> powers) implements CustomPayload {
 
-    public static final PacketType<SyncPowerTypeRegistryS2CPacket> TYPE = PacketType.create(
-        Apoli.identifier("s2c/sync_power_type_registry"), SyncPowerTypeRegistryS2CPacket::read
-    );
+    public static final Id<SyncPowerTypeRegistryS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/sync_power_type_registry"));
+    public static final PacketCodec<RegistryByteBuf, SyncPowerTypeRegistryS2CPacket> PACKET_CODEC = PacketCodec.of(SyncPowerTypeRegistryS2CPacket::write, SyncPowerTypeRegistryS2CPacket::read);
 
-    public static SyncPowerTypeRegistryS2CPacket read(PacketByteBuf buffer) {
+    public static SyncPowerTypeRegistryS2CPacket read(RegistryByteBuf buf) {
 
-        int powerSize = buffer.readVarInt();
+        int powerSize = buf.readVarInt();
         Map<Identifier, PowerType<?>> powers = new HashMap<>(powerSize);
 
         for (int i = 0; i < powerSize; i++) {
 
-            Identifier powerTypeId = buffer.readIdentifier();
-            Identifier powerFactoryId = buffer.readIdentifier();
+            Identifier powerTypeId = buf.readIdentifier();
+            Identifier powerFactoryId = buf.readIdentifier();
 
             try {
 
                 PowerFactory<?>.Instance powerFactory = ApoliRegistries.POWER_FACTORY
                     .getOrEmpty(powerFactoryId)
                     .orElseThrow(() -> new JsonSyntaxException("Power type \"" + powerFactoryId + "\" was not registered."))
-                    .read(buffer);
+                    .read(buf);
 
                 PowerType<?> powerType;
-                if (!buffer.readBoolean()) {
+                if (!buf.readBoolean()) {
                     powerType = new PowerType<>(powerTypeId, powerFactory);
                 } else {
 
                     powerType = new MultiplePowerType<>(powerTypeId, powerFactory);
                     List<Identifier> subPowers = new LinkedList<>();
 
-                    int subPowersSize = buffer.readVarInt();
+                    int subPowersSize = buf.readVarInt();
                     for (int j = 0; j < subPowersSize; j++) {
-                        subPowers.add(buffer.readIdentifier());
+                        subPowers.add(buf.readIdentifier());
                     }
 
                     ((MultiplePowerType<?>) powerType).setSubPowers(subPowers);
@@ -55,8 +55,9 @@ public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> power
                 }
 
                 powerType
-                    .setDisplayTexts(buffer.readText(), buffer.readText())
-                    .setHidden(buffer.readBoolean());
+                    .setDisplayTexts(TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC.decode(buf), TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC.decode(buf))
+                    .setSubPower(buf.readBoolean())
+                    .setHidden(buf.readBoolean());
 
                 powers.put(powerTypeId, powerType);
 
@@ -70,45 +71,45 @@ public record SyncPowerTypeRegistryS2CPacket(Map<Identifier, PowerType<?>> power
 
     }
 
-    @Override
-    public void write(PacketByteBuf buffer) {
+    public void write(RegistryByteBuf buf) {
 
         Map<Identifier, PowerType<?>> filteredPowers = powers.entrySet()
             .stream()
             .filter(entry -> entry.getValue().getFactory() != null)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (o, o2) -> o2, LinkedHashMap::new));
 
-        buffer.writeVarInt(filteredPowers.size());
+        buf.writeVarInt(filteredPowers.size());
         filteredPowers.forEach((id, powerType) -> {
 
-            buffer.writeIdentifier(id);
-            powerType.getFactory().write(buffer);
+            buf.writeIdentifier(id);
+            powerType.getFactory().write(buf);
 
             if (!(powerType instanceof MultiplePowerType<?> multiplePowerType)) {
-                buffer.writeBoolean(false);
+                buf.writeBoolean(false);
             } else {
 
                 List<Identifier> subPowerIds = multiplePowerType.getSubPowers();
 
-                buffer.writeBoolean(true);
-                buffer.writeVarInt(subPowerIds.size());
+                buf.writeBoolean(true);
+                buf.writeVarInt(subPowerIds.size());
 
-                subPowerIds.forEach(buffer::writeIdentifier);
+                subPowerIds.forEach(buf::writeIdentifier);
 
             }
 
-            buffer.writeText(powerType.getName());
-            buffer.writeText(powerType.getDescription());
+            TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC.encode(buf, powerType.getName());
+            TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC.encode(buf, powerType.getDescription());
 
-            buffer.writeBoolean(powerType.isHidden());
+            buf.writeBoolean(powerType.isSubPower());
+            buf.writeBoolean(powerType.isHidden());
 
         });
 
     }
 
     @Override
-    public PacketType<?> getType() {
-        return TYPE;
+    public Id<? extends CustomPayload> getId() {
+        return PACKET_ID;
     }
 
 }

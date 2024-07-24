@@ -7,37 +7,47 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.registry.entry.RegistryEntry;
 
 import java.util.List;
 
 public class ModifyAttributePower extends ValueModifyingPower {
 
-    private final EntityAttribute attribute;
+    private final RegistryEntry<EntityAttribute> attribute;
 
-    public ModifyAttributePower(PowerType<?> type, LivingEntity entity, EntityAttribute attribute) {
+    public ModifyAttributePower(PowerType<?> type, LivingEntity entity, RegistryEntry<EntityAttribute> attribute, Modifier modifier, List<Modifier> modifiers) {
         super(type, entity);
+
         this.attribute = attribute;
+        if (modifier != null) {
+            this.addModifier(modifier);
+        }
+
+        if (modifiers != null) {
+            modifiers.forEach(this::addModifier);
+        }
+
     }
 
-    public EntityAttribute getAttribute() {
+    public RegistryEntry<EntityAttribute> getAttribute() {
         return attribute;
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("modify_attribute"),
+        return new PowerFactory<>(
+            Apoli.identifier("modify_attribute"),
             new SerializableData()
-                .add("attribute", SerializableDataTypes.ATTRIBUTE)
+                .add("attribute", SerializableDataTypes.ATTRIBUTE_ENTRY)
                 .add("modifier", Modifier.DATA_TYPE, null)
                 .add("modifiers", Modifier.LIST_TYPE, null),
-            data ->
-                (type, player) -> {
-                    ModifyAttributePower power = new ModifyAttributePower(type, player, data.get("attribute"));
-                    data.ifPresent("modifier", power::addModifier);
-                    data.<List<Modifier>>ifPresent("modifiers",
-                        mods -> mods.forEach(power::addModifier)
-                    );
-                    return power;
-                })
-            .allowCondition();
+            data -> (powerType, entity) -> new ModifyAttributePower(
+                powerType,
+                entity,
+                data.get("attribute"),
+                data.get("modifier"),
+                data.get("modifiers")
+            )
+        ).allowCondition();
     }
+
 }

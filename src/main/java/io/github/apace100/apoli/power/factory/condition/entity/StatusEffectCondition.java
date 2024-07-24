@@ -33,7 +33,7 @@ public class StatusEffectCondition {
         return new ConditionFactory<>(
             Apoli.identifier("status_effect"),
             new SerializableData()
-                .add("effect", SerializableDataTypes.STATUS_EFFECT)
+                .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY)
                 .add("min_amplifier", SerializableDataTypes.INT, 0)
                 .add("max_amplifier", SerializableDataTypes.INT, Integer.MAX_VALUE)
                 .add("min_duration", SerializableDataTypes.INT, -1)

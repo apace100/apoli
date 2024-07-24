@@ -3,7 +3,7 @@ package io.github.apace100.apoli.util;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,12 +80,12 @@ public class HudRender implements Comparable<HudRender> {
         this.order = order;
     }
 
-    public void send(PacketByteBuf buffer) {
+    public void send(RegistryByteBuf buffer) {
         ApoliDataTypes.SINGLE_HUD_RENDER.send(buffer, this);
         ApoliDataTypes.MULTIPLE_HUD_RENDERS.send(buffer, children);
     }
 
-    public static HudRender receive(PacketByteBuf buffer) {
+    public static HudRender receive(RegistryByteBuf buffer) {
 
         HudRender parentHudRender = ApoliDataTypes.SINGLE_HUD_RENDER.receive(buffer);
         ApoliDataTypes.MULTIPLE_HUD_RENDERS.receive(buffer).forEach(parentHudRender::addChild);

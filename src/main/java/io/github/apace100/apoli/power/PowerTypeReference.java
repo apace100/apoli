@@ -4,9 +4,10 @@ import io.github.apace100.apoli.power.factory.PowerFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 
+@SuppressWarnings("unchecked")
 public class PowerTypeReference<T extends Power> extends PowerType<T> {
 
-    private PowerType<T> referencedPowerType;
+    private PowerType<?> referencedPowerType;
 
     public PowerTypeReference(Identifier id) {
         super(id, null);
@@ -18,7 +19,7 @@ public class PowerTypeReference<T extends Power> extends PowerType<T> {
         if(referencedPowerType == null) {
             return null;
         }
-        return referencedPowerType.getFactory();
+        return ((PowerType<T>) referencedPowerType).getFactory();
     }
 
     @Override
@@ -36,7 +37,7 @@ public class PowerTypeReference<T extends Power> extends PowerType<T> {
         if(referencedPowerType == null) {
             return null;
         }
-        return referencedPowerType.get(entity);
+        return ((PowerType<T>) referencedPowerType).get(entity);
     }
 
     public PowerType<T> getReferencedPowerType() {
@@ -49,13 +50,13 @@ public class PowerTypeReference<T extends Power> extends PowerType<T> {
                 //Apoli.LOGGER.warn("Invalid PowerTypeReference: no power type exists with id \"" + getIdentifier() + "\"");
             }
         }
-        return referencedPowerType;
+        return (PowerType<T>) referencedPowerType;
     }
 
     private boolean isReferenceInvalid() {
         if(referencedPowerType != null) {
             if(PowerTypeRegistry.contains(referencedPowerType.getIdentifier())) {
-                PowerType<T> type = PowerTypeRegistry.get(referencedPowerType.getIdentifier());
+                PowerType<T> type = (PowerType<T>) PowerTypeRegistry.get(referencedPowerType.getIdentifier());
                 return type != referencedPowerType;
             }
         }

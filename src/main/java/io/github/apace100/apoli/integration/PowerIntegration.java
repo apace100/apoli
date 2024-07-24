@@ -8,7 +8,8 @@ public class PowerIntegration {
 
     public static void register() {
         ServerEntityEvents.ENTITY_UNLOAD.register(ModifyEnchantmentLevelPower::integrateCallback);
-        ServerEntityEvents.ENTITY_UNLOAD.register(EntitySetPower::integrateCallback);
+        ServerEntityEvents.ENTITY_UNLOAD.register(EntitySetPower::integrateUnloadCallback);
+        ServerEntityEvents.ENTITY_LOAD.register(EntitySetPower::integrateLoadCallback);
     }
 
 }

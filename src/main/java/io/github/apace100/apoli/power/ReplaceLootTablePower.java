@@ -14,6 +14,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootTable;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
@@ -26,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class ReplaceLootTablePower extends Power {
 
-    public static final Identifier REPLACED_TABLE_UTIL_ID = new Identifier(Apoli.MODID, "replaced_loot_table");
+    public static final RegistryKey<LootTable> REPLACED_TABLE_KEY = RegistryKey.of(RegistryKeys.LOOT_TABLE, Apoli.identifier("replaced_loot_table"));
     public static Identifier LAST_REPLACED_TABLE_ID;
 
     private static final Stack<LootTable> REPLACEMENT_STACK = new Stack<>();
@@ -49,9 +51,9 @@ public class ReplaceLootTablePower extends Power {
         this.blockCondition = blockCondition;
     }
 
-    public boolean hasReplacement(Identifier id) {
+    public boolean hasReplacement(RegistryKey<LootTable> lootTableKey) {
 
-        String idString = id.toString();
+        String idString = lootTableKey.getValue().toString();
 
         return replacements.keySet()
             .stream()
@@ -76,19 +78,14 @@ public class ReplaceLootTablePower extends Power {
     }
 
     @Nullable
-    public Identifier getReplacement(Identifier id) {
-
-        String idString = id.toString();
-        for (Pattern regex : replacements.keySet()) {
-
-            if (regex.pattern().equals(idString) || regex.matcher(idString).matches()) {
-                return replacements.get(regex);
-            }
-
-        }
-
-        return null;
-
+    public RegistryKey<LootTable> getReplacement(RegistryKey<LootTable> lootTableKey) {
+        String lootTableId = lootTableKey.getValue().toString();
+        return replacements.entrySet()
+            .stream()
+            .filter(entry -> entry.getKey().pattern().equals(lootTableId) || entry.getKey().matcher(lootTableId).matches())
+            .findFirst()
+            .map(entry -> RegistryKey.of(RegistryKeys.LOOT_TABLE, entry.getValue()))
+            .orElse(null);
     }
 
     public int getPriority() {
@@ -146,7 +143,7 @@ public class ReplaceLootTablePower extends Power {
         int count = 0;
         while(!REPLACEMENT_STACK.isEmpty()) {
             LootTable t = pop();
-            stringBuilder.append(t == null ? "null" : ((IdentifiedLootTable)t).apoli$getId());
+            stringBuilder.append(t == null ? "null" : ((IdentifiedLootTable)t).apoli$getLootTableKey());
             if(!REPLACEMENT_STACK.isEmpty()) {
                 stringBuilder.append(", ");
             }
@@ -159,7 +156,7 @@ public class ReplaceLootTablePower extends Power {
         }
         while(!BACKTRACK_STACK.isEmpty()) {
             LootTable t = restore();
-            stringBuilder.append(t == null ? "null" : ((IdentifiedLootTable)t).apoli$getId());
+            stringBuilder.append(t == null ? "null" : ((IdentifiedLootTable)t).apoli$getLootTableKey());
             if(!BACKTRACK_STACK.isEmpty()) {
                 stringBuilder.append(", ");
             }
