@@ -30,6 +30,7 @@ import net.minecraft.command.EntitySelector;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.ItemSlotArgumentType;
 import net.minecraft.component.ComponentChanges;
+import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -477,6 +478,12 @@ public class ApoliDataTypes {
     public static final SerializableDataType<EntityPose> ENTITY_POSE = SerializableDataType.enumValue(EntityPose.class);
 
     public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
+
+    //  TODO: Move to Calio -eggohito
+    public static final SerializableDataType<AttributeModifierSlot> ATTRIBUTE_MODIFIER_SLOT = SerializableDataType.enumValue(AttributeModifierSlot.class);
+
+    //  TODO: Move to Calio -eggohito
+    public static final SerializableDataType<EnumSet<AttributeModifierSlot>> ATTRIBUTE_MODIFIER_SLOT_SET = SerializableDataType.enumSet(AttributeModifierSlot.class, ATTRIBUTE_MODIFIER_SLOT);
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return condition(registry, IdentifierAlias.GLOBAL, name);

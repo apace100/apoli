@@ -28,6 +28,7 @@ import net.minecraft.util.Identifier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 //  TODO: Make the data of stack powers persist in the item stack
 public class ItemPowersComponent {
@@ -71,6 +72,10 @@ public class ItemPowersComponent {
         return entries;
     }
 
+    public Stream<Entry> stream() {
+        return entries.stream();
+    }
+
     public void appendTooltip(AttributeModifierSlot modifierSlot, Item.TooltipContext context, Consumer<Text> tooltip, TooltipType type) {
 
         for (Entry entry : entries) {
@@ -107,6 +112,10 @@ public class ItemPowersComponent {
 
     public boolean isEmpty() {
         return entries.isEmpty();
+    }
+
+    public int size() {
+        return entries.size();
     }
 
     public static void onChangeEquipment(LivingEntity entity, EquipmentSlot equipmentSlot, ItemStack previousStack, ItemStack currentStack) {
