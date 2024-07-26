@@ -42,7 +42,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.CraftingRecipe;
-import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -518,38 +517,22 @@ public class ApoliDataTypes {
         }
     );
 
-    public static final SerializableDataType<RecipeEntry<CraftingRecipe>> CRAFTING_RECIPE = new SerializableDataType<>(
+    public static final SerializableDataType<RecipeEntry<CraftingRecipe>> CRAFTING_RECIPE = SerializableDataType.wrap(
         ClassUtil.castClass(RecipeEntry.class),
-        SerializableDataTypes.RECIPE::send,
-        buf -> {
-
-            RecipeEntry<? extends Recipe<?>> recipe = SerializableDataTypes.RECIPE.receive(buf);
-            Identifier id = recipe.id();
+        SerializableDataTypes.RECIPE,
+        recipe ->
+            new RecipeEntry<>(recipe.id(), recipe.value()),
+        recipe -> {
 
             if (recipe.value() instanceof CraftingRecipe craftingRecipe) {
-                return new RecipeEntry<>(id, craftingRecipe);
+                return new RecipeEntry<>(recipe.id(), craftingRecipe);
             }
 
             else {
-                throw new IllegalStateException("Recipe \"" + id + "\" is not a crafting recipe.");
+                throw new IllegalArgumentException("Recipe \"" + recipe.id() + "\" is not a crafting recipe.");
             }
 
-        },
-        jsonElement -> {
-
-            RecipeEntry<? extends Recipe<?>> recipe = SerializableDataTypes.RECIPE.read(jsonElement);
-            Identifier id = recipe.id();
-
-            if (recipe.value() instanceof CraftingRecipe craftingRecipe) {
-                return new RecipeEntry<>(id, craftingRecipe);
-            }
-
-            else {
-                throw new JsonParseException("Recipe \"" + id + "\" is not a crafting recipe.");
-            }
-
-        },
-        SerializableDataTypes.RECIPE::write
+        }
     );
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
