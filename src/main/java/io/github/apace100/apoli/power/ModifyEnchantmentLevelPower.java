@@ -25,11 +25,7 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
@@ -43,13 +39,13 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     private static final ConcurrentHashMap<UUID, ItemStack> MODIFIED_EMPTY_STACKS = new ConcurrentHashMap<>();
     private static final WeakHashMap<Pair<UUID, ItemStack>, ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new WeakHashMap<>(256);
 
-    private final RegistryEntry<Enchantment> enchantment;
+    private final RegistryKey<Enchantment> enchantmentKey;
     private final Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition;
 
-    public ModifyEnchantmentLevelPower(PowerType<?> type, LivingEntity entity, RegistryKey<Enchantment> enchantment, Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition, Modifier modifier, List<Modifier> modifiers) {
+    public ModifyEnchantmentLevelPower(PowerType<?> type, LivingEntity entity, RegistryKey<Enchantment> enchantmentKey, Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition, Modifier modifier, List<Modifier> modifiers) {
         super(type, entity);
 
-        this.enchantment = entity.getRegistryManager().get(RegistryKeys.ENCHANTMENT).entryOf(enchantment);
+        this.enchantmentKey = enchantmentKey;
         this.itemCondition = itemCondition;
 
         if (modifier != null) {
@@ -120,6 +116,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
         }
 
         return original;
+
     }
 
     public static ItemEnchantmentsComponent getAndUpdateModifiedEnchantments(ItemStack stack, ItemEnchantmentsComponent original) {
@@ -137,40 +134,54 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     private static void calculateLevels(LivingEntity entity, ItemStack stack) {
 
         for (ModifyEnchantmentLevelPower power : PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class)) {
+
+            Pair<UUID, ItemStack> uuidAndStack = Pair.of(entity.getUuid(), stack);
             int baseModifiedLevel = (int) ModifierUtil.applyModifiers(entity, power.getModifiers(), 0);
 
-            if (!POWER_MODIFIER_CACHE.containsKey(Pair.of(entity.getUuid(), stack)) || updateIfDifferent(POWER_MODIFIER_CACHE.get(Pair.of(entity.getUuid(), stack)), power, stack, baseModifiedLevel, power.doesApply(power.enchantment, stack))) {
+            if (POWER_MODIFIER_CACHE.containsKey(uuidAndStack) && !updateIfDifferent(POWER_MODIFIER_CACHE.get(uuidAndStack), power, stack, baseModifiedLevel, power.doesApply(power.enchantmentKey, stack))) {
+                continue;
+            }
 
-                // If all enchantment powers are not active...
-                if (ITEM_ENCHANTMENTS.containsKey(entity.getUuid()) && POWER_MODIFIER_CACHE.containsKey(Pair.of(entity.getUuid(), stack)) && POWER_MODIFIER_CACHE.get(Pair.of(entity.getUuid(), stack)).entrySet().stream().filter(entry -> entry.getKey().enchantment.equals(power.enchantment)).noneMatch(entry -> entry.getValue().getSecond())) {
-                    // Remove the Power Enchantments component.
-                    ITEM_ENCHANTMENTS.get(entity.getUuid()).remove(stack);
-                    break;
-                }
-
-                ItemEnchantmentsComponent.Builder enchantments = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
-
-                Set<RegistryEntry<Enchantment>> processedEnchantments = new HashSet<>();
-
-                // Iterate on all powers, because we have found a match, and must set the item enchantments accordingly.
-                for (ModifyEnchantmentLevelPower innerPower : PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class)) {
-                    // If this enchantment has already been processed, continue.
-                    if (processedEnchantments.contains(innerPower.enchantment)) continue;
-
-                    // Set the enchantment level from all MELPs that have this enchantment.
-                    enchantments.set(innerPower.enchantment, (int) PowerHolderComponent.modify(entity, ModifyEnchantmentLevelPower.class, stack.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT).getLevel(innerPower.enchantment), p -> innerPower.doesApply(innerPower.enchantment, stack)));
-
-                    //.Mark the enchantment as processed.
-                    processedEnchantments.add(innerPower.enchantment);
-                }
-
-                power.recalculateCache(entity, stack);
-                ITEM_ENCHANTMENTS.computeIfAbsent(entity.getUuid(), uuid -> new WeakHashMap<>()).put(stack, enchantments.build());
+            //  If all modify enchantment powers are not active...
+            if (ITEM_ENCHANTMENTS.containsKey(entity.getUuid()) && POWER_MODIFIER_CACHE.containsKey(uuidAndStack) && POWER_MODIFIER_CACHE.get(uuidAndStack).entrySet().stream().filter(entry -> entry.getKey().enchantmentKey.equals(power.enchantmentKey)).noneMatch(entry -> entry.getValue().getSecond())) {
+                //  Remove the power's enchantments component
+                ITEM_ENCHANTMENTS.get(entity.getUuid()).remove(stack);
                 break;
+            }
+
+            ItemEnchantmentsComponent.Builder enchantmentsBuilder = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
+            Set<RegistryEntry<Enchantment>> processedEnchantments = new HashSet<>();
+
+            //  Iterate on all powers, because we found a match, and must set the item enchantments accordingly
+            for (ModifyEnchantmentLevelPower innerPower : PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class)) {
+
+                RegistryEntry<Enchantment> innerEnchantment = entity.getRegistryManager()
+                    .get(RegistryKeys.ENCHANTMENT)
+                    .entryOf(innerPower.enchantmentKey);
+
+                //  If this enchantment has already been processed, continue
+                if (processedEnchantments.contains(innerEnchantment)) {
+                    continue;
+                }
+
+                //  Set the enchantment level from all modify enchantment powers that have the enchantment
+                int innerEnchantmentLevel = stack.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT).getLevel(innerEnchantment);
+                enchantmentsBuilder.set(innerEnchantment, (int) PowerHolderComponent.modify(entity, ModifyEnchantmentLevelPower.class, innerEnchantmentLevel, p -> innerPower.doesApply(innerPower.enchantmentKey, stack)));
+
+                //  Mark the enchantment as processed
+                processedEnchantments.add(innerEnchantment);
 
             }
 
+            power.recalculateCache(entity, stack);
+            ITEM_ENCHANTMENTS
+                .computeIfAbsent(entity.getUuid(), uuid -> new WeakHashMap<>())
+                .put(stack, enchantmentsBuilder.build());
+
+            break;
+
         }
+
     }
 
     public static ItemStack getOrCreateWorkableEmptyStack(Entity entity) {
@@ -210,8 +221,10 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
             && stackReference.get() == MODIFIED_EMPTY_STACKS.get(entity.getUuid());
     }
 
-    public boolean doesApply(RegistryEntry<Enchantment> enchantment, ItemStack self) {
-        return isActive() && enchantment.equals(this.enchantment) && checkItemCondition(self);
+    public boolean doesApply(RegistryKey<Enchantment> enchantmentKey, ItemStack stack) {
+        return this.isActive()
+            && this.enchantmentKey.equals(enchantmentKey)
+            && this.checkItemCondition(stack);
     }
 
     private static boolean updateIfDifferent(ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> map, ModifyEnchantmentLevelPower power, ItemStack stack, int modifierValue, boolean conditionValue) {
@@ -234,13 +247,16 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     }
 
     public void recalculateCache(LivingEntity entity, ItemStack stack) {
+
         for (ModifyEnchantmentLevelPower power : PowerHolderComponent.getPowers(entity, ModifyEnchantmentLevelPower.class)) {
 
-            ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> map = new ConcurrentHashMap<>();
-            map.put(power, new Pair<>((int)ModifierUtil.applyModifiers(entity, power.getModifiers(), 0), power.doesApply(power.enchantment, stack)));
+            ConcurrentHashMap<ModifyEnchantmentLevelPower, Pair<Integer, Boolean>> cacheMap = new ConcurrentHashMap<>();
+            cacheMap.put(power, new Pair<>((int) ModifierUtil.applyModifiers(entity, power.getModifiers(), 0), power.doesApply(power.enchantmentKey, stack)));
 
-            POWER_MODIFIER_CACHE.put(Pair.of(entity.getUuid(), stack), map);
+            POWER_MODIFIER_CACHE.put(Pair.of(entity.getUuid(), stack), cacheMap);
+
         }
+
     }
 
     public boolean checkItemCondition(ItemStack self) {
