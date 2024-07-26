@@ -5,6 +5,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.CraftingInventoryAccessor;
 import io.github.apace100.apoli.mixin.CraftingScreenHandlerAccessor;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
+import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
@@ -24,9 +25,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+//  TODO: Move away from the singleton design and delegate the functionality to a recipe instead, and modify its result item -eggohito
 public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
-
-    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(ModifiedCraftingRecipe::new);
 
     public ModifiedCraftingRecipe(CraftingRecipeCategory category) {
         super(category);
@@ -94,7 +94,7 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return SERIALIZER;
+        return ApoliRecipeSerializers.MODIFIED_CRAFTING;
     }
 
     public static Optional<BlockPos> getBlockFromInventory(CraftingInventory craftingInventory) {

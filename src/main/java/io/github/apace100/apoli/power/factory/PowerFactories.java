@@ -75,6 +75,7 @@ public class PowerFactories {
         register(PreventBlockSelectionPower::createFactory);
         register(SelfActionOnKillPower::createFactory);
         register(RecipePower::createFactory);
+        register(NeoRecipePower::createFactory);
         register(() -> Power.createSimpleFactory(IgnoreWaterPower::new, Apoli.identifier("ignore_water")));
         register(ModifyProjectileDamagePower::createFactory);
         register(ActionOnWakeUp::createFactory);

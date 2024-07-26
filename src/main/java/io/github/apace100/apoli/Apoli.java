@@ -8,6 +8,7 @@ import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
+import io.github.apace100.apoli.integration.PostPowerReloadCallback;
 import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
@@ -18,6 +19,8 @@ import io.github.apace100.apoli.power.factory.action.BlockActions;
 import io.github.apace100.apoli.power.factory.action.EntityActions;
 import io.github.apace100.apoli.power.factory.action.ItemActions;
 import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
+import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
@@ -35,14 +38,20 @@ import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.server.DataPackContents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registry;
+import net.minecraft.util.Unit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.ladysnake.cca.api.v3.entity.EntityComponentFactoryRegistry;
 import org.ladysnake.cca.api.v3.entity.EntityComponentInitializer;
 import org.ladysnake.cca.api.v3.entity.RespawnCopyStrategy;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Apoli implements ModInitializer, EntityComponentInitializer {
 
@@ -50,6 +59,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 	public static MinecraftServer server;
 
+	@ApiStatus.Internal
+	public static final Map<Unit, DataPackContents> DATA_PACK_CONTENTS = new ConcurrentHashMap<>();
 	public static final Scheduler SCHEDULER = new Scheduler();
 
 	public static final String MODID = "apoli";
@@ -88,9 +99,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 			ResourceCommand.register(dispatcher);
 		});
 
-		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
-		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("modified"), ModifiedCraftingRecipe.SERIALIZER);
-
 		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("add_power"), AddPowerLootFunction.TYPE);
 		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("remove_power"), RemovePowerLootFunction.TYPE);
 
@@ -100,6 +108,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ModifierOperations.registerAll();
 		ApoliDataComponentTypes.register();
+		ApoliRecipeSerializers.register();
 
 		PowerFactories.register();
 		EntityConditions.register();
@@ -121,6 +130,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
 
 		ServerEntityEvents.EQUIPMENT_CHANGE.register(ItemPowersComponent::onChangeEquipment);
+		PostPowerReloadCallback.EVENT.register(PowerCraftingRecipe::validatePowerRecipesPostReload);
 
 		CalioResourceConditions.ALIASES.addNamespaceAlias(MODID, Calio.MOD_NAMESPACE);
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);

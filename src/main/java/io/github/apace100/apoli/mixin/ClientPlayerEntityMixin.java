@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
 import io.github.apace100.apoli.access.CustomToastViewer;
+import io.github.apace100.apoli.access.PowerCraftingBook;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
@@ -13,10 +14,13 @@ import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.screen.toast.CustomToast;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.player.PlayerAbilities;
+import net.minecraft.stat.StatHandler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -40,6 +44,8 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 
     @Shadow
     protected abstract boolean isWalking();
+
+    @Shadow @Final private ClientRecipeBook recipeBook;
 
     private ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {
         super(world, profile);
@@ -118,6 +124,15 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z"))
     private boolean apoli$forceSneakingPose(boolean original) {
         return original || PosePower.hasEntityPose(this, EntityPose.CROUCHING);
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void apoli$cachePlayerToRecipeBook(MinecraftClient client, ClientWorld world, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook, boolean lastSneaking, boolean lastSprinting, CallbackInfo ci) {
+
+        if (this.recipeBook instanceof PowerCraftingBook pcb) {
+            pcb.apoli$setPlayer(this);
+        }
+
     }
 
 }

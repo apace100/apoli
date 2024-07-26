@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
@@ -7,6 +8,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.access.CustomToastViewer;
+import io.github.apace100.apoli.access.PowerCraftingBook;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
 import io.github.apace100.apoli.networking.packet.s2c.ShowToastS2CPacket;
@@ -26,6 +28,7 @@ import net.minecraft.screen.ScreenHandlerListener;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.network.ServerRecipeBook;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Unit;
@@ -224,6 +227,17 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     @Override
     public void apoli$showToast(CustomToastData toastData) {
         ServerPlayNetworking.send((ServerPlayerEntity) (Object) this, new ShowToastS2CPacket(toastData));
+    }
+
+    @ModifyExpressionValue(method = "<init>", at = @At(value = "NEW", target = "()Lnet/minecraft/server/network/ServerRecipeBook;"))
+    private ServerRecipeBook apoli$cachePlayerToRecipeBook(ServerRecipeBook original) {
+
+        if (original instanceof PowerCraftingBook pcb) {
+            pcb.apoli$setPlayer(this);
+        }
+
+        return original;
+
     }
 
 }

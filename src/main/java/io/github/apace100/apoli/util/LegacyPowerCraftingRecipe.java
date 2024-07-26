@@ -4,12 +4,12 @@ import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.ModifyCraftingPower;
 import io.github.apace100.apoli.power.RecipePower;
+import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.recipe.input.CraftingRecipeInput;
-import net.minecraft.recipe.input.RecipeInput;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
@@ -19,12 +19,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-//  TODO: Move away from using a single recipe instance -eggohito
-public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
+//  TODO: Either remove this completely, or implement a backwards compatibility layer that enables users to either this if a crafting recipe is
+//        defined, or use the new one if a power recipe ID is defined in a power -eggohito
+@Deprecated
+public class LegacyPowerCraftingRecipe extends SpecialCraftingRecipe {
 
-    public static final RecipeSerializer<?> SERIALIZER = new SpecialRecipeSerializer<>(PowerRestrictedCraftingRecipe::new);
-
-    public PowerRestrictedCraftingRecipe(CraftingRecipeCategory category) {
+    public LegacyPowerCraftingRecipe(CraftingRecipeCategory category) {
         super(category);
     }
 
@@ -32,41 +32,34 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
     public boolean matches(CraftingRecipeInput input, World world) {
         return getRecipePowers(input)
             .stream()
-            .anyMatch(rp -> rp.getRecipe().value() instanceof CraftingRecipe craftingRecipe
-                && craftingRecipe.matches(input, world));
+            .map(RecipePower::getRecipe)
+            .map(RecipeEntry::value)
+            .anyMatch(recipe -> recipe.matches(input, world));
     }
 
     @Override
     public ItemStack craft(CraftingRecipeInput input, RegistryWrapper.WrapperLookup lookup) {
 
-        if (!(input instanceof PowerCraftingInventory pci)) {
+        if (!(input instanceof PowerCraftingInventory pci) || pci.apoli$getPlayer() == null) {
             return ItemStack.EMPTY;
         }
 
-        PlayerEntity playerEntity = pci.apoli$getPlayer();
-        if (playerEntity == null) {
-            return ItemStack.EMPTY;
-        }
-
-        Optional<RecipePower> recipePower = getRecipePowers(input)
+        PlayerEntity player = pci.apoli$getPlayer();
+        Optional<RecipeEntry<CraftingRecipe>> matchingRecipe = getRecipePowers(input)
             .stream()
-            .filter(rp -> rp.getRecipe().value() instanceof CraftingRecipe craftingRecipe
-                && craftingRecipe.matches(input, playerEntity.getWorld()))
-            .max(Comparator.comparing(RecipePower::getPriority));
+            .filter(power -> power.getRecipe().value().matches(input, player.getWorld()))
+            .max(Comparator.comparing(RecipePower::getPriority))
+            .map(RecipePower::getRecipe);
 
-        if (recipePower.isEmpty()) {
+        if (matchingRecipe.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        RecipeEntry<Recipe<? extends RecipeInput>> recipe = recipePower.get().getRecipe();
+        RecipeEntry<CraftingRecipe> recipe = matchingRecipe.get();
         Identifier recipeId = recipe.id();
 
-        if (!(recipe.value() instanceof CraftingRecipe craftingRecipe)) {
-            return ItemStack.EMPTY;
-        }
-
-        ItemStack newResultStack = craftingRecipe.craft(input, lookup);
-        Optional<ModifyCraftingPower> modifyCraftingPower = PowerHolderComponent.getPowers(playerEntity, ModifyCraftingPower.class)
+        ItemStack newResultStack = recipe.value().craft(input, lookup);
+        Optional<ModifyCraftingPower> modifyCraftingPower = PowerHolderComponent.getPowers(player, ModifyCraftingPower.class)
             .stream()
             .filter(mcp -> mcp.doesApply(recipeId, newResultStack))
             .max(Comparator.comparing(ModifyCraftingPower::getPriority));
@@ -87,7 +80,7 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return SERIALIZER;
+        return ApoliRecipeSerializers.LEGACY_POWER_CRAFTING;
     }
 
     private static List<RecipePower> getRecipePowers(CraftingRecipeInput input) {

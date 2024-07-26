@@ -13,6 +13,7 @@ import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.PowerTypeReference;
 import io.github.apace100.apoli.power.factory.action.*;
 import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.ClassUtil;
@@ -40,15 +41,16 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.recipe.CraftingRecipe;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.DataPackContents;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
-import net.minecraft.util.ClickType;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
-import net.minecraft.util.Pair;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
@@ -59,6 +61,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
@@ -484,6 +487,70 @@ public class ApoliDataTypes {
 
     //  TODO: Move to Calio -eggohito
     public static final SerializableDataType<EnumSet<AttributeModifierSlot>> ATTRIBUTE_MODIFIER_SLOT_SET = SerializableDataType.enumSet(AttributeModifierSlot.class, ATTRIBUTE_MODIFIER_SLOT);
+
+    public static final SerializableDataType<Identifier> POWER_CRAFTING_RECIPE_ID = SerializableDataType.wrap(
+        ClassUtil.castClass(Identifier.class),
+        SerializableDataTypes.IDENTIFIER,
+        Function.identity(),
+        id -> {
+
+            DataPackContents dataPackContents = Apoli.DATA_PACK_CONTENTS.get(Unit.INSTANCE);
+            if (dataPackContents != null) {
+
+                RecipeEntry<?> recipe = dataPackContents.getRecipeManager()
+                    .get(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Recipe \"" + id + "\" doesn't exist."));
+
+                if (recipe.value() instanceof PowerCraftingRecipe) {
+                    return id;
+                }
+
+                else {
+                    throw new IllegalArgumentException("Recipe \"" + id + "\" is not a power crafting recipe.");
+                }
+
+            }
+
+            else {
+                return id;
+            }
+
+        }
+    );
+
+    public static final SerializableDataType<RecipeEntry<CraftingRecipe>> CRAFTING_RECIPE = new SerializableDataType<>(
+        ClassUtil.castClass(RecipeEntry.class),
+        SerializableDataTypes.RECIPE::send,
+        buf -> {
+
+            RecipeEntry<? extends Recipe<?>> recipe = SerializableDataTypes.RECIPE.receive(buf);
+            Identifier id = recipe.id();
+
+            if (recipe.value() instanceof CraftingRecipe craftingRecipe) {
+                return new RecipeEntry<>(id, craftingRecipe);
+            }
+
+            else {
+                throw new IllegalStateException("Recipe \"" + id + "\" is not a crafting recipe.");
+            }
+
+        },
+        jsonElement -> {
+
+            RecipeEntry<? extends Recipe<?>> recipe = SerializableDataTypes.RECIPE.read(jsonElement);
+            Identifier id = recipe.id();
+
+            if (recipe.value() instanceof CraftingRecipe craftingRecipe) {
+                return new RecipeEntry<>(id, craftingRecipe);
+            }
+
+            else {
+                throw new JsonParseException("Recipe \"" + id + "\" is not a crafting recipe.");
+            }
+
+        },
+        SerializableDataTypes.RECIPE::write
+    );
 
     public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
         return condition(registry, IdentifierAlias.GLOBAL, name);
