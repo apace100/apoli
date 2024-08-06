@@ -39,7 +39,7 @@ public class CustomToast implements PositionAwareToast {
     private int height;
 
     public CustomToast(CustomToastData toastData) {
-        this(toastData.title(), toastData.description(), toastData.texture(), toastData.iconStack(), (toastData.duration() / 20) * 1000);
+        this(toastData.title(), toastData.description(), toastData.texture(), toastData.iconStack(), (int) ((toastData.duration() / 20.0) * 1000.0));
     }
 
     public CustomToast(Text title, Text description, Identifier texture, ItemStack iconStack, int duration) {
