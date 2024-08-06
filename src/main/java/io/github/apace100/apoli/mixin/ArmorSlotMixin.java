@@ -22,7 +22,7 @@ public abstract class ArmorSlotMixin {
     @ModifyReturnValue(method = "canInsert", at = @At("RETURN"))
     private boolean apoli$preventArmorInsertion(boolean original, ItemStack stack) {
         return original
-            && !PowerHolderComponent.hasPower(this.entity, RestrictArmorPower.class, p -> p.canEquip(stack, this.equipmentSlot));
+            && !PowerHolderComponent.hasPower(this.entity, RestrictArmorPower.class, p -> p.doesRestrict(stack, this.equipmentSlot));
     }
 
 }

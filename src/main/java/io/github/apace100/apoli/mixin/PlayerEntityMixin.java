@@ -237,9 +237,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     @ModifyReturnValue(method = "canEquip", at = @At("RETURN"))
     private boolean apoli$preventArmorDispensing(boolean original, ItemStack stack) {
-        EquipmentSlot preferredSlot = this.getPreferredEquipmentSlot(stack);
         return original
-            && !PowerHolderComponent.hasPower(this, RestrictArmorPower.class, p -> !p.canEquip(stack, preferredSlot));
+            && !PowerHolderComponent.hasPower(this, RestrictArmorPower.class, p -> p.doesRestrict(stack, this.getPreferredEquipmentSlot(stack)));
     }
 
     @WrapOperation(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;interact(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
