@@ -263,8 +263,8 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
         }
 
         public boolean isAccepted(RegistryEntry<GameEvent> gameEvent) {
-            return (acceptedGameEventTag == null || gameEvent.isIn(acceptedGameEventTag))
-                 | (acceptedGameEvents.isEmpty() || acceptedGameEvents.contains(gameEvent));
+            return (acceptedGameEventTag != null && gameEvent.isIn(acceptedGameEventTag))
+                || acceptedGameEvents.contains(gameEvent);
         }
 
     }
