@@ -17,7 +17,7 @@ public record CustomToastData(Text title, Text description, Identifier texture, 
         .add("description", SerializableDataTypes.TEXT)
         .add("texture", SerializableDataTypes.IDENTIFIER, DEFAULT_TEXTURE)
         .add("icon", SerializableDataTypes.ITEM_STACK, ItemStack.EMPTY)
-        .add("duration", SerializableDataTypes.POSITIVE_INT, 5000);
+        .add("duration", SerializableDataTypes.POSITIVE_INT, 100);
 
     public static final SerializableDataType<CustomToastData> DATA_TYPE = SerializableDataType.compound(
         CustomToastData.class,

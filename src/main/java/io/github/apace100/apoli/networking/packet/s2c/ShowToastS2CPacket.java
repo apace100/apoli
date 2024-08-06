@@ -9,8 +9,8 @@ import net.minecraft.network.packet.CustomPayload;
 public record ShowToastS2CPacket(CustomToastData toastData) implements CustomPayload {
 
     public static final Id<ShowToastS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/show_toast"));
-    public static final PacketCodec<RegistryByteBuf, ShowToastS2CPacket> PACKET_CODEC = PacketCodec.of(
-        (value, buf) -> CustomToastData.DATA_TYPE.send(buf, value),
+    public static final PacketCodec<RegistryByteBuf, ShowToastS2CPacket> PACKET_CODEC = PacketCodec.ofStatic(
+        (buf, packet) -> CustomToastData.DATA_TYPE.send(buf, packet.toastData()),
         buf -> new ShowToastS2CPacket(CustomToastData.DATA_TYPE.receive(buf))
     );
 
