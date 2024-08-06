@@ -100,7 +100,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
     @Unique
     private boolean apoli$updateStatsManually = false;
 
-    @ModifyVariable(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;eat(Lnet/minecraft/component/type/FoodComponent;)V"), argsOnly = true)
+    @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private FoodComponent apoli$modifyFoodComponent(FoodComponent original, World world, ItemStack stack, @Share("modifyFoodPowers") LocalRef<List<ModifyFoodPower>> sharedModifyFoodPowers) {
 
         List<ModifyFoodPower> modifyFoodPowers = ((ModifiableFoodEntity) this).apoli$getCurrentModifyFoodPowers()
@@ -117,7 +117,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
             .toList();
         List<Modifier> saturationModifiers = modifyFoodPowers
             .stream()
-            .flatMap(p -> p.getFoodModifiers().stream())
+            .flatMap(p -> p.getSaturationModifiers().stream())
             .toList();
 
         int oldNutrition = original.nutrition();
@@ -126,13 +126,13 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
         int newNutrition = (int) ModifierUtil.applyModifiers(this, nutritionModifiers, oldNutrition);
         float newSaturation = (float) ModifierUtil.applyModifiers(this, saturationModifiers, oldSaturation);
 
-        if ((newNutrition != oldNutrition && newNutrition == 0) || (newSaturation != oldSaturation && newSaturation == 0)) {
+        if (newNutrition != oldNutrition || newSaturation != oldSaturation) {
             this.apoli$updateStatsManually = true;
         }
 
         return new FoodComponent(
             newNutrition,
-            oldNutrition,
+            newSaturation,
             original.canAlwaysEat(),
             original.eatSeconds(),
             original.usingConvertsTo(),
@@ -141,7 +141,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     }
 
-    @Inject(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;eat(Lnet/minecraft/component/type/FoodComponent;)V"))
+    @Inject(method = "eatFood", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;eat(Lnet/minecraft/component/type/FoodComponent;)V", shift = At.Shift.AFTER))
     private void apoli$executeActionsAfterEating(World world, ItemStack stack, FoodComponent foodComponent, CallbackInfoReturnable<ItemStack> cir, @Share("modifyFoodPowers") LocalRef<List<ModifyFoodPower>> sharedModifyFoodPowers) {
 
         List<ModifyFoodPower> modifyFoodPowers = sharedModifyFoodPowers.get();
