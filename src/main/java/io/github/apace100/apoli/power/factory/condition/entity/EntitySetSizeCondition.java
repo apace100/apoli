@@ -17,7 +17,7 @@ public class EntitySetSizeCondition {
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        PowerType<?> powerType = data.get("set");
+        PowerType powerType = data.get("set");
 
         if (component == null || powerType == null || !(component.getPower(powerType) instanceof EntitySetPower entitySetPower)) {
             return false;

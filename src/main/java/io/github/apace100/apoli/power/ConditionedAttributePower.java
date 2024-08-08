@@ -14,7 +14,7 @@ public class ConditionedAttributePower extends AttributePower {
 
     private final int tickRate;
 
-    public ConditionedAttributePower(PowerType<?> type, LivingEntity entity, int tickRate, boolean updateHealth) {
+    public ConditionedAttributePower(PowerType type, LivingEntity entity, int tickRate, boolean updateHealth) {
         super(type, entity, updateHealth);
         this.tickRate = tickRate;
         this.setTicking(true);

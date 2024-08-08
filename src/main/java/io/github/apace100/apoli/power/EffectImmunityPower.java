@@ -18,7 +18,7 @@ public class EffectImmunityPower extends Power {
     protected final Set<RegistryEntry<StatusEffect>> effects = new HashSet<>();
     private final boolean inverted;
 
-    public EffectImmunityPower(PowerType<?> type, LivingEntity entity, boolean inverted) {
+    public EffectImmunityPower(PowerType type, LivingEntity entity, boolean inverted) {
         super(type, entity);
         this.inverted = inverted;
     }

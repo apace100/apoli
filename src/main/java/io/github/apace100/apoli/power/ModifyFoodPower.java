@@ -36,7 +36,7 @@ public class ModifyFoodPower extends Power {
     private final boolean preventFoodEffects;
     private final boolean makeAlwaysEdible;
 
-    public ModifyFoodPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack replaceStack, Consumer<Pair<World, StackReference>> itemAction, Modifier foodModifier, List<Modifier> foodModifiers, Modifier saturationModifier, List<Modifier> saturationModifiers, Modifier eatSecondsModifier, List<Modifier> eatTicksModifiers, Consumer<Entity> entityActionWhenEaten, boolean makeAlwaysEdible, boolean preventFoodEffects) {
+    public ModifyFoodPower(PowerType type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack replaceStack, Consumer<Pair<World, StackReference>> itemAction, Modifier foodModifier, List<Modifier> foodModifiers, Modifier saturationModifier, List<Modifier> saturationModifiers, Modifier eatSecondsModifier, List<Modifier> eatTicksModifiers, Consumer<Entity> entityActionWhenEaten, boolean makeAlwaysEdible, boolean preventFoodEffects) {
 
         super(type, entity);
 

@@ -16,7 +16,7 @@ public class InEntitySetCondition {
     public static boolean condition(SerializableData.Instance data, Pair<Entity, Entity> actorAndTarget) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(actorAndTarget.getLeft()).orElse(null);
-        PowerType<?> powerType = data.get("set");
+        PowerType powerType = data.get("set");
 
         if (component == null || powerType == null || !(component.getPower(powerType) instanceof EntitySetPower entitySetPower)) {
             return false;

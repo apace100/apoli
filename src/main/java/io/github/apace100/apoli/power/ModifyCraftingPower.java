@@ -35,7 +35,7 @@ public class ModifyCraftingPower extends ValueModifyingPower implements Prioriti
 
     private final int priority;
 
-    public ModifyCraftingPower(PowerType<?> type, LivingEntity entity, Identifier recipeIdentifier, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack newStack, Consumer<Pair<World, StackReference>> itemAction, Consumer<Pair<World, StackReference>> itemActionAfterCrafting, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
+    public ModifyCraftingPower(PowerType type, LivingEntity entity, Identifier recipeIdentifier, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack newStack, Consumer<Pair<World, StackReference>> itemAction, Consumer<Pair<World, StackReference>> itemActionAfterCrafting, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, int priority) {
         super(type, entity);
         this.recipeIdentifier = recipeIdentifier;
         this.itemCondition = itemCondition;

@@ -93,9 +93,16 @@ public enum ModifierOperation implements IModifierOperation {
     });
 
     public static final SerializableData DATA = new SerializableData()
-        .add("value", SerializableDataTypes.DOUBLE)
+        .add("amount", SerializableDataTypes.DOUBLE, null)
         .add("resource", ApoliDataTypes.POWER_TYPE, null)
-        .add("modifier", Modifier.LIST_TYPE, null);
+        .add("modifier", Modifier.LIST_TYPE, null)
+        .postProcessor(data -> {
+
+            if (!data.isPresent("amount") && !data.isPresent("resource")) {
+                throw new IllegalStateException("Either 'amount' or 'resource' fields must be defined!");
+            }
+
+        });
 
     private final Phase phase;
     private final int order;
@@ -118,7 +125,7 @@ public enum ModifierOperation implements IModifierOperation {
     }
 
     @Override
-    public SerializableData getData() {
+    public SerializableData getSerializableData() {
         return DATA;
     }
 
@@ -130,7 +137,7 @@ public enum ModifierOperation implements IModifierOperation {
                     double value = 0;
                     if(instance.isPresent("resource")) {
                         PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                        PowerType<?> powerType = instance.get("resource");
+                        PowerType powerType = instance.get("resource");
                         if(!component.hasPower(powerType)) {
                             value = instance.get("value");
                         } else {

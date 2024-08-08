@@ -59,7 +59,7 @@ public class GlobalPowerSetUtil {
 
     private static boolean removeExcessPowers(PowerHolderComponent phc, Set<Identifier> expected) {
 
-        List<PowerType<?>> powersToRemove = phc.getPowersFromSource(POWER_SOURCE)
+        List<PowerType> powersToRemove = phc.getPowersFromSource(POWER_SOURCE)
             .stream()
             .filter(p -> !expected.contains(p.getIdentifier()))
             .toList();
@@ -72,7 +72,7 @@ public class GlobalPowerSetUtil {
     private static boolean addMissingPowers(PowerHolderComponent phc, GlobalPowerSet powerSet) {
 
         boolean added = false;
-        for(PowerType<?> power : powerSet.getPowerTypes()) {
+        for(PowerType power : powerSet.getPowerTypes()) {
             if(!phc.hasPower(power, POWER_SOURCE)) {
                 phc.addPower(power, POWER_SOURCE);
                 added = true;

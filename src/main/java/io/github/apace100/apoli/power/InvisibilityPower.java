@@ -18,7 +18,7 @@ public class InvisibilityPower extends Power {
     private final boolean renderArmor;
     private final boolean renderOutline;
 
-    public InvisibilityPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<Entity, Entity>> biEntityCondition, boolean renderArmor, boolean renderOutline) {
+    public InvisibilityPower(PowerType type, LivingEntity entity, Predicate<Pair<Entity, Entity>> biEntityCondition, boolean renderArmor, boolean renderOutline) {
         super(type, entity);
         this.biEntityCondition = biEntityCondition;
         this.renderArmor = renderArmor;

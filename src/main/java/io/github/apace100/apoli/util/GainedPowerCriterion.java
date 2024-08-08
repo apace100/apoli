@@ -22,7 +22,7 @@ public class GainedPowerCriterion extends AbstractCriterion<GainedPowerCriterion
         return Conditions.CODEC;
     }
 
-    public void trigger(ServerPlayerEntity player, PowerType<?> powerType) {
+    public void trigger(ServerPlayerEntity player, PowerType powerType) {
         this.trigger(player, conditions -> conditions.matches(powerType));
     }
 
@@ -38,7 +38,7 @@ public class GainedPowerCriterion extends AbstractCriterion<GainedPowerCriterion
             return player;
         }
 
-        public boolean matches(PowerType<?> powerType) {
+        public boolean matches(PowerType powerType) {
             return powerType.getIdentifier().equals(powerId);
         }
 

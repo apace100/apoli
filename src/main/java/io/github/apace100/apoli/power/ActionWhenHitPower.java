@@ -21,7 +21,7 @@ public class ActionWhenHitPower extends CooldownPower {
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
     private final Consumer<Pair<Entity, Entity>> bientityAction;
 
-    public ActionWhenHitPower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Pair<Entity, Entity>> bientityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
+    public ActionWhenHitPower(PowerType type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Pair<Entity, Entity>> bientityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
         super(type, entity, cooldownDuration, hudRender);
         this.damageCondition = damageCondition;
         this.bientityAction = bientityAction;

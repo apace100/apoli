@@ -19,7 +19,7 @@ public class PlayerAbilityPower extends Power {
 
     private boolean shouldRefresh;
 
-    public PlayerAbilityPower(PowerType<?> type, LivingEntity entity, PlayerAbility playerAbility) {
+    public PlayerAbilityPower(PowerType type, LivingEntity entity, PlayerAbility playerAbility) {
         super(type, entity);
         this.ability = playerAbility;
         this.source = Pal.getAbilitySource(type.getIdentifier());

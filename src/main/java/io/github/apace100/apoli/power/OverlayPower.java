@@ -48,7 +48,7 @@ public class OverlayPower extends Power {
     private boolean initRender = true;
     private boolean invalidTexture;
 
-    public OverlayPower(PowerType<?> powerType, LivingEntity entity, Identifier spriteId, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson, float strength, float red, float green, float blue, int priority) {
+    public OverlayPower(PowerType powerType, LivingEntity entity, Identifier spriteId, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson, float strength, float red, float green, float blue, int priority) {
         super(powerType, entity);
         this.spriteId = spriteId;
         this.drawMode = drawMode;

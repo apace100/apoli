@@ -42,7 +42,7 @@ public class ReplaceLootTablePower extends Power {
     private final Predicate<Pair<Entity, Entity>> biEntityCondition;
     private final Predicate<CachedBlockPosition> blockCondition;
 
-    public ReplaceLootTablePower(PowerType<?> type, LivingEntity entity, Map<Pattern, Identifier> replacements, int priority, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<CachedBlockPosition> blockCondition) {
+    public ReplaceLootTablePower(PowerType type, LivingEntity entity, Map<Pattern, Identifier> replacements, int priority, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<CachedBlockPosition> blockCondition) {
         super(type, entity);
         this.replacements = replacements;
         this.priority = priority;

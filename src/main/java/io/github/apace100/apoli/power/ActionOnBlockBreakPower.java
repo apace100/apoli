@@ -24,7 +24,7 @@ public class ActionOnBlockBreakPower extends Power {
     private final Predicate<CachedBlockPosition> blockCondition;
     private final boolean onlyWhenHarvested;
 
-    public ActionOnBlockBreakPower(PowerType<?> type, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, Predicate<CachedBlockPosition> blockCondition, boolean onlyWhenHarvested) {
+    public ActionOnBlockBreakPower(PowerType type, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, Predicate<CachedBlockPosition> blockCondition, boolean onlyWhenHarvested) {
         super(type, entity);
         this.blockCondition = blockCondition;
         this.entityAction = entityAction;

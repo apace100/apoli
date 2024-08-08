@@ -14,7 +14,7 @@ public class ModifyCameraSubmersionTypePower extends Power {
     private final Optional<CameraSubmersionType> from;
     private final CameraSubmersionType to;
 
-    public ModifyCameraSubmersionTypePower(PowerType<?> type, LivingEntity entity, Optional<CameraSubmersionType> from, CameraSubmersionType to) {
+    public ModifyCameraSubmersionTypePower(PowerType type, LivingEntity entity, Optional<CameraSubmersionType> from, CameraSubmersionType to) {
         super(type, entity);
         this.from = from;
         this.to = to;

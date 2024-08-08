@@ -21,7 +21,7 @@ public class ModifyBlockRenderPower extends Power {
     private final Predicate<CachedBlockPosition> predicate;
     private final BlockState blockState;
 
-    public ModifyBlockRenderPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> predicate, BlockState state) {
+    public ModifyBlockRenderPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> predicate, BlockState state) {
         super(type, entity);
         this.predicate = predicate;
         this.blockState = state;

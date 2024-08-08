@@ -8,7 +8,7 @@
         {
           "type": "apoli:give",
           "stack": {
-            "item": "minecraft:chicken_spawn_egg"
+            "id": "minecraft:chicken_spawn_egg"
           }
         }
       ]

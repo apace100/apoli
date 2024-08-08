@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.data;
 
-import com.google.common.collect.*;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.NameMutableDamageSource;
 import io.github.apace100.calio.data.SerializableData;
@@ -154,16 +155,20 @@ public class DamageSourceDescription {
         return damageSourceDescription;
     }
 
-    public static SerializableData.Instance toData(SerializableData data, DamageSourceDescription damageSourceDescription) {
-        SerializableData.Instance instance = data.new Instance();
-        instance.set("name", damageSourceDescription.getName());
+    public static void toData(DamageSourceDescription damageSourceDescription, SerializableData.Instance data) {
+
+        data.set("name", damageSourceDescription.getName());
         Set<TagKey<DamageType>> tags = damageSourceDescription.getDamageTypeTags();
+
         for(Map.Entry<TagKey<DamageType>, String> damageTagPair : TAG_TO_STRING.entrySet()) {
+
             TagKey<DamageType> tag = damageTagPair.getKey();
             String jsonKey = damageTagPair.getValue();
-            boolean isTrueAlready = instance.isPresent(jsonKey) && instance.getBoolean(jsonKey);
-            instance.set(jsonKey, isTrueAlready || tags.contains(tag));
+
+            boolean isTrueAlready = data.isPresent(jsonKey) && data.getBoolean(jsonKey);
+            data.set(jsonKey, isTrueAlready || tags.contains(tag));
+
         }
-        return instance;
+
     }
 }

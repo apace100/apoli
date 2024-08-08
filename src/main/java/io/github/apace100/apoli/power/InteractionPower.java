@@ -24,7 +24,7 @@ public class InteractionPower extends Power {
     protected final ItemStack itemResult;
     protected final Consumer<Pair<World, StackReference>> resultItemAction;
 
-    public InteractionPower(PowerType<?> type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Pair<World, StackReference>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, StackReference>> resultItemAction) {
+    public InteractionPower(PowerType type, LivingEntity entity, EnumSet<Hand> hands, ActionResult actionResult, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Pair<World, StackReference>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, StackReference>> resultItemAction) {
         super(type, entity);
         this.hands = hands;
         this.actionResult = actionResult;

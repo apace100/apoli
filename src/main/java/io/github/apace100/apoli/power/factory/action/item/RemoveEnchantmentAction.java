@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power.factory.action.item;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
@@ -80,7 +79,7 @@ public class RemoveEnchantmentAction {
             Apoli.identifier("remove_enchantment"),
             new SerializableData()
                 .add("enchantment", SerializableDataTypes.ENCHANTMENT, null)
-                .add("enchantments", SerializableDataType.list(SerializableDataTypes.ENCHANTMENT), null)
+                .add("enchantments", SerializableDataTypes.ENCHANTMENT.listOf(), null)
                 .add("levels", SerializableDataTypes.INT, null)
                 .add("reset_repair_cost", SerializableDataTypes.BOOLEAN, false),
             RemoveEnchantmentAction::action

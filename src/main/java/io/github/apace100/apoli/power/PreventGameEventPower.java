@@ -22,7 +22,7 @@ public class PreventGameEventPower extends Power {
 
     private final Consumer<Entity> entityAction;
 
-    public PreventGameEventPower(PowerType<?> type, LivingEntity entity, RegistryEntry<GameEvent> event, List<RegistryEntry<GameEvent>> events, TagKey<GameEvent> eventTag, Consumer<Entity> entityAction) {
+    public PreventGameEventPower(PowerType type, LivingEntity entity, RegistryEntry<GameEvent> event, List<RegistryEntry<GameEvent>> events, TagKey<GameEvent> eventTag, Consumer<Entity> entityAction) {
         super(type, entity);
 
         this.events = new LinkedList<>();

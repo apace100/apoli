@@ -23,7 +23,7 @@ public class ActionOnWakeUp extends Power {
     private final Consumer<Entity> entityAction;
     private final Consumer<Triple<World, BlockPos, Direction>> blockAction;
 
-    public ActionOnWakeUp(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
+    public ActionOnWakeUp(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction) {
         super(type, entity);
         this.blockCondition = blockCondition;
         this.entityAction = entityAction;

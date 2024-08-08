@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.power.factory.action.item;
 
-import com.google.gson.JsonObject;
 import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.calio.data.SerializableData;
@@ -22,6 +21,16 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
 
     public static ItemActionFactory createItemStackBased(Identifier identifier, SerializableData data, @NotNull BiConsumer<SerializableData.Instance, Pair<World, ItemStack>> legacyEffect) {
         return new ItemActionFactory(identifier, data, (data1, worldAndStackRef) -> legacyEffect.accept(data1, new Pair<>(worldAndStackRef.getLeft(), worldAndStackRef.getRight().get())));
+    }
+
+    @Override
+    public Instance receive(RegistryByteBuf buffer) {
+        return new Instance(this.getSerializableData().receive(buffer));
+    }
+
+    @Override
+    public Instance fromData(SerializableData.Instance data) {
+        return new Instance(data);
     }
 
     public class Instance extends ActionFactory<Pair<World, StackReference>>.Instance {
@@ -46,7 +55,7 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
             }
 
             //  Execute the specified effect of the item action
-            ItemActionFactory.this.effect.accept(this.dataInstance, worldAndStackReference);
+            this.effect.accept(worldAndStackReference);
 
             //  Replace the stack of the stack reference with ItemStack#EMPTY if the said stack is NOT
             //  "workable", and if the said stack is empty
@@ -56,14 +65,6 @@ public class ItemActionFactory extends ActionFactory<Pair<World, StackReference>
 
         }
 
-    }
-
-    public ItemActionFactory.Instance read(JsonObject json) {
-        return new ItemActionFactory.Instance(data.read(json));
-    }
-
-    public ItemActionFactory.Instance read(RegistryByteBuf buffer) {
-        return new ItemActionFactory.Instance(data.read(buffer));
     }
 
 }

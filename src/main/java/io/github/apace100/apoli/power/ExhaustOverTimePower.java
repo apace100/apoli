@@ -12,7 +12,7 @@ public class ExhaustOverTimePower extends Power {
     private final int exhaustInterval;
     private final float exhaustion;
 
-    public ExhaustOverTimePower(PowerType<?> type, LivingEntity entity, int exhaustInterval, float exhaustion) {
+    public ExhaustOverTimePower(PowerType type, LivingEntity entity, int exhaustInterval, float exhaustion) {
         super(type, entity);
         this.exhaustInterval = exhaustInterval;
         this.exhaustion = exhaustion;

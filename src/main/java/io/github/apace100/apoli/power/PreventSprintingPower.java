@@ -4,7 +4,7 @@ import net.minecraft.entity.LivingEntity;
 
 public class PreventSprintingPower extends Power {
 
-    public PreventSprintingPower(PowerType<?> type, LivingEntity entity) {
+    public PreventSprintingPower(PowerType type, LivingEntity entity) {
         super(type, entity);
     }
 }

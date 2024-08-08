@@ -16,7 +16,7 @@ public class PreventEntityRenderPower extends Power {
     private final Predicate<Entity> entityCondition;
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
-    public PreventEntityRenderPower(PowerType<?> type, LivingEntity entity, Predicate<Entity> entityCondition, Predicate<Pair<Entity, Entity>> bientityCondition) {
+    public PreventEntityRenderPower(PowerType type, LivingEntity entity, Predicate<Entity> entityCondition, Predicate<Pair<Entity, Entity>> bientityCondition) {
         super(type, entity);
         this.entityCondition = entityCondition;
         this.bientityCondition = bientityCondition;

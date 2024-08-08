@@ -40,7 +40,7 @@ public class PowerCountCondition {
         return new ConditionFactory<>(
             Apoli.identifier("power_count"),
             new SerializableData()
-                .add("slot", ApoliDataTypes.ATTRIBUTE_MODIFIER_SLOT, null)
+                .add("slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT)
                 .add("comparison", ApoliDataTypes.COMPARISON)
                 .add("compare_to", SerializableDataTypes.INT),
             (data, worldAndStack) -> condition(

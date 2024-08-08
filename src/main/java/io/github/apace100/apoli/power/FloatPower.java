@@ -6,7 +6,7 @@ public class FloatPower extends Power {
 
     public final float value;
 
-    public FloatPower(PowerType<?> type, LivingEntity entity, float value) {
+    public FloatPower(PowerType type, LivingEntity entity, float value) {
         super(type, entity);
         this.value = value;
     }

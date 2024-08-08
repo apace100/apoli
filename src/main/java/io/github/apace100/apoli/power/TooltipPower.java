@@ -39,7 +39,7 @@ public class TooltipPower extends Power {
     private Integer initialTicks;
     private boolean shouldResolve;
 
-    public TooltipPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Text text, List<Text> texts, boolean shouldResolve, int tickRate, int order) {
+    public TooltipPower(PowerType type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Text text, List<Text> texts, boolean shouldResolve, int tickRate, int order) {
         super(type, entity);
         this.texts = new LinkedList<>();
         this.tooltipTexts = new LinkedList<>();

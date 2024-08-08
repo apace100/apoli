@@ -42,7 +42,7 @@ public class EdibleItemPower extends Power implements Prioritized<EdibleItemPowe
 
     private final int priority;
 
-    public EdibleItemPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> consumedItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
+    public EdibleItemPower(PowerType powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> consumedItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
         super(powerType, livingEntity);
         this.entityAction = entityAction;
         this.consumedItemAction = consumedItemAction;

@@ -14,7 +14,7 @@ public class ActionOnLandPower extends Power {
 
     private final Consumer<Entity> entityAction;
 
-    public ActionOnLandPower(PowerType<?> type, LivingEntity entity, Consumer<Entity> entityAction) {
+    public ActionOnLandPower(PowerType type, LivingEntity entity, Consumer<Entity> entityAction) {
         super(type, entity);
         this.entityAction = entityAction;
     }

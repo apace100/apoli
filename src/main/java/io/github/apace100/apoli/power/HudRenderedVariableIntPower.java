@@ -7,7 +7,7 @@ public class HudRenderedVariableIntPower extends VariableIntPower implements Hud
 
     private final HudRender hudRender;
 
-    public HudRenderedVariableIntPower(PowerType<?> type, LivingEntity entity, HudRender hudRender, int startValue, int min, int max) {
+    public HudRenderedVariableIntPower(PowerType type, LivingEntity entity, HudRender hudRender, int startValue, int min, int max) {
         super(type, entity, startValue, min, max);
         this.hudRender = hudRender;
     }

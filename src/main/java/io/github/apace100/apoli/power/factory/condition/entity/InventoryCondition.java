@@ -39,7 +39,7 @@ public class InventoryCondition {
                 break powerTest;
             }
 
-            PowerType<?> targetPowerType = data.get("power");
+            PowerType targetPowerType = data.get("power");
             if (targetPowerType == null) {
                 break powerTest;
             }

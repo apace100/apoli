@@ -15,13 +15,13 @@ public class ModifyFallingPower extends ValueModifyingPower {
 
     public final boolean takeFallDamage;
 
-    public ModifyFallingPower(PowerType<?> type, LivingEntity entity, double velocity, boolean takeFallDamage) {
+    public ModifyFallingPower(PowerType type, LivingEntity entity, double velocity, boolean takeFallDamage) {
         super(type, entity);
         this.takeFallDamage = takeFallDamage;
         this.addModifier(ModifierUtil.createSimpleModifier(ModifierOperation.SET_TOTAL, velocity));
     }
 
-    public ModifyFallingPower(PowerType<?> type, LivingEntity entity, boolean takeFallDamage) {
+    public ModifyFallingPower(PowerType type, LivingEntity entity, boolean takeFallDamage) {
         super(type, entity);
         this.takeFallDamage = takeFallDamage;
     }

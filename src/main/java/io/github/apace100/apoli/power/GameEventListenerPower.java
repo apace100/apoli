@@ -59,7 +59,7 @@ public class GameEventListenerPower extends CooldownPower implements Vibrations 
     private final boolean showParticle;
     private final int range;
 
-    public GameEventListenerPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, int cooldownDuration, HudRender hudRender, int range, RegistryEntry<GameEvent> acceptedGameEvent, List<RegistryEntry<GameEvent>> acceptedGameEvents, TagKey<GameEvent> acceptedGameEventTag, boolean showParticle, boolean listenToEntityEvents, boolean listenToBlockEvents, GameEventListener.TriggerOrder triggerOrder) {
+    public GameEventListenerPower(PowerType powerType, LivingEntity livingEntity, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, int cooldownDuration, HudRender hudRender, int range, RegistryEntry<GameEvent> acceptedGameEvent, List<RegistryEntry<GameEvent>> acceptedGameEvents, TagKey<GameEvent> acceptedGameEventTag, boolean showParticle, boolean listenToEntityEvents, boolean listenToBlockEvents, GameEventListener.TriggerOrder triggerOrder) {
         super(powerType, livingEntity, Math.max(cooldownDuration, 1), hudRender);
 
         this.blockAction = blockAction;

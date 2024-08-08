@@ -15,7 +15,7 @@ public class PreventElytraFlightPower extends Power {
 
     private final Consumer<Entity> entityAction;
 
-    public PreventElytraFlightPower(PowerType<?> type, LivingEntity entity, Consumer<Entity> entityAction) {
+    public PreventElytraFlightPower(PowerType type, LivingEntity entity, Consumer<Entity> entityAction) {
         super(type, entity);
         this.entityAction = entityAction;
     }

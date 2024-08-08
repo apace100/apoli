@@ -22,7 +22,7 @@ public class PosePower extends Power implements Prioritized<PosePower> {
 
     private final int priority;
 
-    public PosePower(PowerType<?> type, LivingEntity entity, @Nullable EntityPose entityPose, @Nullable ArmPoseReference armPose, int priority) {
+    public PosePower(PowerType type, LivingEntity entity, @Nullable EntityPose entityPose, @Nullable ArmPoseReference armPose, int priority) {
         super(type, entity);
         this.entityPose = entityPose;
         this.armPose = armPose;

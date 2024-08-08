@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power.factory.condition.item;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -27,7 +26,7 @@ public class HasPowerCondition {
         return new ConditionFactory<>(
             Apoli.identifier("has_power"),
             new SerializableData()
-                .add("slot", ApoliDataTypes.ATTRIBUTE_MODIFIER_SLOT, null)
+                .add("slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT)
                 .add("power", SerializableDataTypes.IDENTIFIER),
             (data, worldAndStack) -> condition(
                 worldAndStack.getRight(),

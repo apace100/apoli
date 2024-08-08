@@ -25,7 +25,7 @@ public class ActionOnItemUsePower extends Power implements Prioritized<ActionOnI
     private final TriggerType triggerType;
     private final int priority;
 
-    public ActionOnItemUsePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> itemAction, TriggerType triggerType, int priority) {
+    public ActionOnItemUsePower(PowerType type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> itemAction, TriggerType triggerType, int priority) {
         super(type, entity);
         this.itemCondition = itemCondition;
         this.entityAction = entityAction;

@@ -32,29 +32,29 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     ComponentKey<PowerHolderComponent> KEY = ComponentRegistry.getOrCreate(Apoli.identifier("powers"), PowerHolderComponent.class);
 
-    boolean removePower(PowerType<?> powerType, Identifier source);
+    boolean removePower(PowerType powerType, Identifier source);
 
     int removeAllPowersFromSource(Identifier source);
 
-    List<PowerType<?>> getPowersFromSource(Identifier source);
+    List<PowerType> getPowersFromSource(Identifier source);
 
-    boolean addPower(PowerType<?> powerType, Identifier source);
+    boolean addPower(PowerType powerType, Identifier source);
 
-    boolean hasPower(PowerType<?> powerType);
+    boolean hasPower(PowerType powerType);
 
-    boolean hasPower(PowerType<?> powerType, Identifier source);
+    boolean hasPower(PowerType powerType, Identifier source);
 
-    <T extends Power> T getPower(PowerType<T> powerType);
+    <T extends Power> T getPower(PowerType powerType);
 
     List<Power> getPowers();
 
-    Set<PowerType<?>> getPowerTypes(boolean getSubPowerTypes);
+    Set<PowerType> getPowerTypes(boolean getSubPowerTypes);
 
     <T extends Power> List<T> getPowers(Class<T> powerClass);
 
     <T extends Power> List<T> getPowers(Class<T> powerClass, boolean includeInactive);
 
-    List<Identifier> getSources(PowerType<?> powerType);
+    List<Identifier> getSources(PowerType powerType);
 
     void sync();
 
@@ -62,14 +62,14 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         KEY.sync(entity);
     }
 
-    static void syncPower(Entity entity, PowerType<?> powerType) {
+    static void syncPower(Entity entity, PowerType powerType) {
 
         if (entity == null || entity.getWorld().isClient) {
             return;
         }
 
-        if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
-            powerType = powerTypeRef.getReferencedPowerType();
+        if (powerType instanceof PowerTypeReference powerTypeRef) {
+            powerType = powerTypeRef.getReference();
         }
 
         if (powerType == null) {
@@ -89,7 +89,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         }
 
         powerData.put("Data", power.toTag(true));
-        SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), powerType.getIdentifier(), powerData);
+        SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), powerType.getId(), powerData);
 
         for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
             ServerPlayNetworking.send(otherPlayer, syncPowerPacket);
@@ -101,7 +101,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     }
 
-    static void syncPowers(Entity entity, Collection<? extends PowerType<?>> powerTypes) {
+    static void syncPowers(Entity entity, Collection<? extends PowerType> powerTypes) {
 
         if (entity == null || entity.getWorld().isClient || powerTypes.isEmpty()) {
             return;
@@ -114,10 +114,10 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             return;
         }
 
-        for (PowerType<?> powerType : powerTypes) {
+        for (PowerType powerType : powerTypes) {
 
-            if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
-                powerType = powerTypeRef.getReferencedPowerType();
+            if (powerType instanceof PowerTypeReference powerTypeRef) {
+                powerType = powerTypeRef.getReference();
             }
 
             if (powerType == null) {
@@ -126,7 +126,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
             Power power = component.getPower(powerType);
             if (power != null) {
-                powersToSync.put(powerType.getIdentifier(), power.toTag(true));
+                powersToSync.put(powerType.getId(), power.toTag(true));
             }
 
         }

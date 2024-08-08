@@ -18,7 +18,7 @@ public class ActionOnDeathPower extends Power {
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
     private final Consumer<Pair<Entity, Entity>> bientityAction;
 
-    public ActionOnDeathPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Pair<Entity, Entity>> bientityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
+    public ActionOnDeathPower(PowerType type, LivingEntity entity, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Pair<Entity, Entity>> bientityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
         super(type, entity);
         this.damageCondition = damageCondition;
         this.bientityAction = bientityAction;

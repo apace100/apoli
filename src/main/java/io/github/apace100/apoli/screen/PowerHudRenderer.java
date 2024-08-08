@@ -16,7 +16,9 @@ import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Environment(EnvType.CLIENT)
@@ -60,7 +62,7 @@ public class PowerHudRenderer implements GameHudRender {
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)
             .filter(HudRendered::shouldRender)
-            .map(h -> Map.entry(h, h.getRenderSettings().getChildOrSelf(player)))
+            .map(h -> Map.entry(h, h.getRenderSettings().getActive(player)))
             .filter(entry -> entry.getValue().isPresent())
             .sorted(Map.Entry.comparingByValue(Comparator.comparing(Optional::get)))
             .forEach(entry -> {

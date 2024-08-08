@@ -16,7 +16,7 @@ public class ModifyStatusEffectAmplifierPower extends ValueModifyingPower {
 
     private final List<RegistryEntry<StatusEffect>> statusEffects;
 
-    public ModifyStatusEffectAmplifierPower(PowerType<?> type, LivingEntity player, List<RegistryEntry<StatusEffect>> statusEffects) {
+    public ModifyStatusEffectAmplifierPower(PowerType type, LivingEntity player, List<RegistryEntry<StatusEffect>> statusEffects) {
         super(type, player);
         this.statusEffects = statusEffects;
     }

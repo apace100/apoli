@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ModifyLavaSpeedPower extends ConditionedAttributePower {
 
-    public ModifyLavaSpeedPower(PowerType<?> type, LivingEntity entity) {
+    public ModifyLavaSpeedPower(PowerType type, LivingEntity entity) {
         super(type, entity, 10,false);
     }
 

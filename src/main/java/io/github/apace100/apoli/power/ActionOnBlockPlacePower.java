@@ -34,7 +34,7 @@ public class ActionOnBlockPlacePower extends ActiveInteractionPower {
 
     private final EnumSet<Direction> directions;
 
-    public ActionOnBlockPlacePower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> placeToAction, Consumer<Triple<World, BlockPos, Direction>> placeOnAction, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<CachedBlockPosition> placeToCondition, Predicate<CachedBlockPosition> placeOnCondition, EnumSet<Direction> directions, EnumSet<Hand> hands, ItemStack resultStack, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> heldItemAction, int priority) {
+    public ActionOnBlockPlacePower(PowerType powerType, LivingEntity livingEntity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> placeToAction, Consumer<Triple<World, BlockPos, Direction>> placeOnAction, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<CachedBlockPosition> placeToCondition, Predicate<CachedBlockPosition> placeOnCondition, EnumSet<Direction> directions, EnumSet<Hand> hands, ItemStack resultStack, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> heldItemAction, int priority) {
         super(powerType, livingEntity, hands, ActionResult.SUCCESS, itemCondition, heldItemAction, resultStack, resultItemAction, priority);
         this.entityAction = entityAction;
         this.placeToAction = placeToAction;

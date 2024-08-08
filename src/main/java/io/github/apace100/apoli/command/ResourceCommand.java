@@ -70,7 +70,7 @@ public class ResourceCommand {
         LivingEntity target = PowerHolderArgumentType.getHolder(context, "target");
         PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 
-        PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+        PowerType powerType = PowerTypeArgumentType.getPower(context, "power");
         Power power = component.getPower(powerType);
 
         return switch (subCommand) {

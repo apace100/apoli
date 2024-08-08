@@ -21,7 +21,7 @@ public class SelfGlowPower extends Power {
     private final float green;
     private final float blue;
 
-    public SelfGlowPower(PowerType<?> type, LivingEntity entity, Predicate<Entity> entityCondition, Predicate<Pair<Entity, Entity>> bientityCondition, boolean useTeams, float red, float green, float blue) {
+    public SelfGlowPower(PowerType type, LivingEntity entity, Predicate<Entity> entityCondition, Predicate<Pair<Entity, Entity>> bientityCondition, boolean useTeams, float red, float green, float blue) {
         super(type, entity);
         this.entityCondition = entityCondition;
         this.bientityCondition = bientityCondition;

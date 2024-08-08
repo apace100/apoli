@@ -14,7 +14,7 @@ public class RecipePower extends Power implements Prioritized<RecipePower> {
     private final RecipeEntry<Recipe<? extends RecipeInput>> recipe;
     private final int priority;
 
-    public RecipePower(PowerType<?> type, LivingEntity entity, RecipeEntry<Recipe<? extends RecipeInput>> recipe, int priority) {
+    public RecipePower(PowerType type, LivingEntity entity, RecipeEntry<Recipe<? extends RecipeInput>> recipe, int priority) {
         super(type, entity);
         this.recipe = recipe;
         this.priority = priority;

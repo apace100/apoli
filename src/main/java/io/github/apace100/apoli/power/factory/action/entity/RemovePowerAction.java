@@ -16,7 +16,7 @@ public class RemovePowerAction {
     public static void action(SerializableData.Instance data, Entity entity) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        PowerType<?> powerType = data.get("power");
+        PowerType powerType = data.get("power");
 
         if (component == null || powerType == null) {
             return;

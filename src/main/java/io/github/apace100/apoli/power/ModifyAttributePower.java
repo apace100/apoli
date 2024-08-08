@@ -15,7 +15,7 @@ public class ModifyAttributePower extends ValueModifyingPower {
 
     private final RegistryEntry<EntityAttribute> attribute;
 
-    public ModifyAttributePower(PowerType<?> type, LivingEntity entity, RegistryEntry<EntityAttribute> attribute, Modifier modifier, List<Modifier> modifiers) {
+    public ModifyAttributePower(PowerType type, LivingEntity entity, RegistryEntry<EntityAttribute> attribute, Modifier modifier, List<Modifier> modifiers) {
         super(type, entity);
 
         this.attribute = attribute;

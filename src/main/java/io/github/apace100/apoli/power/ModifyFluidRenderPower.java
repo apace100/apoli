@@ -24,7 +24,7 @@ public class ModifyFluidRenderPower extends Power {
     private final Predicate<FluidState> fluidCondition;
     private final FluidState fluidState;
 
-    public ModifyFluidRenderPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Predicate<FluidState> fluidCondition, FluidState state) {
+    public ModifyFluidRenderPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Predicate<FluidState> fluidCondition, FluidState state) {
         super(type, entity);
         this.blockCondition = blockCondition;
         this.fluidCondition = fluidCondition;

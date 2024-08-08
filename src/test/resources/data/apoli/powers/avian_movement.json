@@ -5,7 +5,7 @@
         "modifier": {
             "id": "*:*",
             "attribute": "minecraft:generic.movement_speed",
-            "value": 0.2,
+            "amount": 0.2,
             "operation": "add_multiplied_base"
         }
     },

@@ -19,7 +19,7 @@ public class ModifyHarvestPower extends Power implements Prioritized<ModifyHarve
     private final boolean allow;
     private final int priority;
 
-    public ModifyHarvestPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> predicate, boolean allow, int priority) {
+    public ModifyHarvestPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> predicate, boolean allow, int priority) {
         super(type, entity);
         this.blockCondition = predicate;
         this.allow = allow;

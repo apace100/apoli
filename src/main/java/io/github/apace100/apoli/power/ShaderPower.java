@@ -14,7 +14,7 @@ public class ShaderPower extends Power implements Prioritized<ShaderPower> {
     private final boolean toggleable;
     private final int priority;
 
-    public ShaderPower(PowerType<?> type, LivingEntity entity, Identifier shaderLocation, boolean toggleable, int priority) {
+    public ShaderPower(PowerType type, LivingEntity entity, Identifier shaderLocation, boolean toggleable, int priority) {
         super(type, entity);
         this.shaderLocation = shaderLocation;
         this.toggleable = toggleable;

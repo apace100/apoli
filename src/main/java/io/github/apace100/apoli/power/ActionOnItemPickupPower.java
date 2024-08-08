@@ -30,7 +30,7 @@ public class ActionOnItemPickupPower extends Power implements Prioritized<Action
 
     private final int priority;
 
-    public ActionOnItemPickupPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Pair<Entity, Entity>> biEntityAction, Consumer<Pair<World, StackReference>> itemAction, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<Pair<World, ItemStack>> itemCondition, int priority) {
+    public ActionOnItemPickupPower(PowerType powerType, LivingEntity livingEntity, Consumer<Pair<Entity, Entity>> biEntityAction, Consumer<Pair<World, StackReference>> itemAction, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<Pair<World, ItemStack>> itemCondition, int priority) {
         super(powerType, livingEntity);
         this.biEntityAction = biEntityAction;
         this.itemAction = itemAction;

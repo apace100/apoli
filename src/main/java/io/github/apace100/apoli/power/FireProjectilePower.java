@@ -41,7 +41,7 @@ public class FireProjectilePower extends ActiveCooldownPower {
     private boolean finishedStartDelay;
     private int shotProjectiles;
 
-    public FireProjectilePower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType<?> entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag, Consumer<Entity> projectileAction, Consumer<Entity> shooterAction) {
+    public FireProjectilePower(PowerType type, LivingEntity entity, int cooldownDuration, HudRender hudRender, EntityType<?> entityType, int projectileCount, int interval, int startDelay, float speed, float divergence, SoundEvent soundEvent, NbtCompound tag, Consumer<Entity> projectileAction, Consumer<Entity> shooterAction) {
         super(type, entity, cooldownDuration, hudRender, null);
         this.entityType = entityType;
         this.projectileCount = projectileCount;
@@ -217,8 +217,8 @@ public class FireProjectilePower extends ActiveCooldownPower {
             new SerializableData()
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("count", SerializableDataTypes.INT, 1)
-                .add("interval", ApoliDataTypes.NON_NEGATIVE_INT, 0)
-                .add("start_delay", ApoliDataTypes.NON_NEGATIVE_INT, 0)
+                .add("interval", SerializableDataTypes.NON_NEGATIVE_INT, 0)
+                .add("start_delay", SerializableDataTypes.NON_NEGATIVE_INT, 0)
                 .add("speed", SerializableDataTypes.FLOAT, 1.5F)
                 .add("divergence", SerializableDataTypes.FLOAT, 1F)
                 .add("sound", SerializableDataTypes.SOUND_EVENT, null)

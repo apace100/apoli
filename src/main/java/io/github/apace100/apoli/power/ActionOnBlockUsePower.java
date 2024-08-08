@@ -36,7 +36,7 @@ public class ActionOnBlockUsePower extends ActiveInteractionPower {
     private final EnumSet<Direction> directions;
     private final EnumSet<BlockUsagePhase> usePhases;
 
-    public ActionOnBlockUsePower(PowerType<?> type, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<World, StackReference>> heldItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack itemResult, EnumSet<Direction> directions, EnumSet<Hand> hands, EnumSet<BlockUsagePhase> usePhases, ActionResult actionResult, int priority) {
+    public ActionOnBlockUsePower(PowerType type, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<World, StackReference>> heldItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack itemResult, EnumSet<Direction> directions, EnumSet<Hand> hands, EnumSet<BlockUsagePhase> usePhases, ActionResult actionResult, int priority) {
         super(type, entity, hands, actionResult, itemCondition, heldItemAction, itemResult, resultItemAction, priority);
         this.entityAction = entityAction;
         this.blockCondition = blockCondition;

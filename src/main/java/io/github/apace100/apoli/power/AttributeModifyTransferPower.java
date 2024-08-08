@@ -23,7 +23,7 @@ public class AttributeModifyTransferPower extends Power {
 
     private final double valueMultiplier;
 
-    public AttributeModifyTransferPower(PowerType<?> type, LivingEntity entity, Class<?> modifyClass, RegistryEntry<EntityAttribute> attribute, double valueMultiplier) {
+    public AttributeModifyTransferPower(PowerType type, LivingEntity entity, Class<?> modifyClass, RegistryEntry<EntityAttribute> attribute, double valueMultiplier) {
         super(type, entity);
         this.modifyClass = modifyClass;
         this.attribute = attribute;

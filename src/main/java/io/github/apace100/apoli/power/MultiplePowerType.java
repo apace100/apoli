@@ -1,44 +1,52 @@
 package io.github.apace100.apoli.power;
 
-import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonObject;
-import io.github.apace100.apoli.power.factory.PowerFactory;
+import com.google.common.collect.ImmutableSet;
+import io.github.apace100.apoli.util.PowerPayloadType;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public class MultiplePowerType<T extends Power> extends PowerType<T> {
+public class MultiplePowerType extends PowerType {
 
-    private ImmutableList<Identifier> subPowers;
+    private final ImmutableSet<SubPowerType> subPowers;
+    private final ImmutableSet<Identifier> subPowerIds;
 
-    public MultiplePowerType(Identifier id, PowerFactory<T>.Instance factory) {
-        super(id, factory);
+    public MultiplePowerType(PowerType basePower, Set<Identifier> subPowerIds) {
+        super(basePower.getFactoryInstance(), basePower.getData());
+        this.subPowers = ImmutableSet.of();
+        this.subPowerIds = ImmutableSet.copyOf(subPowerIds);
     }
 
-    public void setSubPowers(List<Identifier> subPowers) {
-        this.subPowers = ImmutableList.copyOf(subPowers);
-    }
-
-    public ImmutableList<Identifier> getSubPowers() {
-        return subPowers;
+    public MultiplePowerType(Set<SubPowerType> subPowers, PowerType basePower) {
+        super(basePower.getFactoryInstance(), basePower.getData());
+        this.subPowers = ImmutableSet.copyOf(subPowers);
+        this.subPowerIds = ImmutableSet.copyOf(this.subPowers
+            .stream()
+            .map(PowerType::getId)
+            .collect(Collectors.toSet()));
     }
 
     @Override
-    public JsonObject toJson() {
+    public void send(RegistryByteBuf buf) {
 
-        JsonObject jsonObject = super.toJson();
-        for (Identifier subPower : subPowers) {
+        buf.writeEnumConstant(PowerPayloadType.MULTIPLE_POWER);
 
-            PowerType<?> subPowerType = PowerTypeRegistry.getNullable(subPower);
+        super.sendInternal(buf);
+        buf.writeCollection(this.getSubPowers(), PacketByteBuf::writeIdentifier);
 
-            if (subPowerType != null) {
-                jsonObject.add(subPower.toString(), subPowerType.toJson());
-            }
+    }
 
-        }
+    public ImmutableSet<Identifier> getSubPowers() {
+        return subPowerIds;
+    }
 
-        return jsonObject;
-
+    @ApiStatus.Internal
+    public ImmutableSet<SubPowerType> getSubPowersInternal() {
+        return subPowers;
     }
 
 }

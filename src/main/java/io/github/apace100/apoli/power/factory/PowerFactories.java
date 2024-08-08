@@ -12,15 +12,24 @@ public class PowerFactories {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
+    public static final PowerFactory<?> SIMPLE = register(new PowerFactory<>(
+        Apoli.identifier("simple"),
+        new SerializableData(),
+        data -> Power::new
+    ).allowCondition());
+    public static final PowerFactory<?> MULTIPLE = register(new PowerFactory<>(
+        Apoli.identifier("multiple"),
+        new SerializableData(),
+        data -> Power::new
+    ));
+
     @SuppressWarnings("unchecked")
     public static void register() {
-        register(new PowerFactory<>(Apoli.identifier("simple"), new SerializableData(), data -> Power::new).allowCondition());
         register(TogglePower::createFactory);
         register(AttributePower::createFactory);
         register(CooldownPower::createFactory);
         register(EffectImmunityPower::createFactory);
         register(ElytraFlightPower::createFactory);
-//        register(SetEntityGroupPower::createFactory);
         register(FireProjectilePower::createFactory);
         register(InventoryPower::createFactory);
         register(InvisibilityPower::createFactory);
@@ -30,8 +39,7 @@ public class PowerFactories {
         register(ModifyBreakSpeedPower::createFactory);
         register(ModifyDamageDealtPower::createFactory);
         register(ModifyDamageTakenPower::createFactory);
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyExhaustionPower::new, Apoli.identifier("modify_exhaustion")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(Apoli.identifier("modify_exhaustion"), ModifyExhaustionPower::new));
         register(ModifyHarvestPower::createFactory);
         register(ModifyJumpPower::createFactory);
         register(ModifyPlayerSpawnPower::createFactory);
@@ -45,8 +53,8 @@ public class PowerFactories {
         register(StackingStatusEffectPower::createFactory);
         register(ModifySwimSpeedPower::createFactory);
         register(DamageOverTimePower::createFactory);
-        register(() -> Power.createSimpleFactory(SwimmingPower::new, Apoli.identifier("swimming")));
-        register(() -> Power.createSimpleFactory(FireImmunityPower::new, Apoli.identifier("fire_immunity")));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("swimming"), SwimmingPower::new));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("fire_immunity"), FireImmunityPower::new));
         register(ModifyLavaSpeedPower::createFactory);
         register(LavaVisionPower::createFactory);
         register(ConditionedAttributePower::createFactory);
@@ -60,12 +68,11 @@ public class PowerFactories {
         register(ActionOnCallbackPower::createFactory);
         register(WalkOnFluidPower::createFactory);
         register(ShaderPower::createFactory);
-        register(() -> Power.createSimpleFactory(ShakingPower::new, Apoli.identifier("shaking")));
-        register(() -> Power.createSimpleFactory(DisableRegenPower::new, Apoli.identifier("disable_regen")));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("shaking"), ShakingPower::new));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("disable_regen"), DisableRegenPower::new));
         register(ResourcePower::createFactory);
         register(ModifyFoodPower::createFactory);
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyExperiencePower::new, Apoli.identifier("modify_xp_gain")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(Apoli.identifier("modify_xp_gain"), ModifyExperiencePower::new));
         register(ActionOnBlockBreakPower::createFactory);
         register(ActionOnLandPower::createFactory);
         register(PreventEntityRenderPower::createFactory);
@@ -75,7 +82,7 @@ public class PowerFactories {
         register(PreventBlockSelectionPower::createFactory);
         register(SelfActionOnKillPower::createFactory);
         register(RecipePower::createFactory);
-        register(() -> Power.createSimpleFactory(IgnoreWaterPower::new, Apoli.identifier("ignore_water")));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("ignore_water"), IgnoreWaterPower::new));
         register(ModifyProjectileDamagePower::createFactory);
         register(ActionOnWakeUp::createFactory);
         register(PreventBlockUsePower::createFactory);
@@ -93,7 +100,7 @@ public class PowerFactories {
         register(ExhaustOverTimePower::createFactory);
         register(PreventGameEventPower::createFactory);
         register(ModifyCraftingPower::createFactory);
-        register(() -> Power.createSimpleFactory(FreezePower::new, Apoli.identifier("freeze")));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("freeze"), FreezePower::new));
         register(ModifyBlockRenderPower::createFactory);
         register(ModifyFluidRenderPower::createFactory);
         register(ModifyCameraSubmersionTypePower::createFactory);
@@ -104,8 +111,7 @@ public class PowerFactories {
         register(ActionOnHitPower::createFactory);
         register(ActionWhenHitPower::createFactory);
         register(() -> SelfActionWhenHitPower.createFactory(Apoli.identifier("action_when_damage_taken")));
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyAirSpeedPower::new, Apoli.identifier("modify_air_speed")));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(Apoli.identifier("modify_air_speed"), ModifyAirSpeedPower::new));
         register(AttributeModifyTransferPower::createFactory);
         register(PreventFeatureRenderPower::createFactory);
         register(ModifySlipperinessPower::createFactory);
@@ -116,15 +122,13 @@ public class PowerFactories {
         register(ModifyStatusEffectDurationPower::createFactory);
         register(ModifyStatusEffectAmplifierPower::createFactory);
         register(ModifyAttributePower::createFactory);
-        register(() -> Power.createSimpleFactory(PreventSprintingPower::new, Apoli.identifier("prevent_sprinting")));
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyHealingPower::new, Apoli.identifier("modify_healing")));
-        register(() -> ValueModifyingPower.createValueModifyingFactory(
-            ModifyInsomniaTicksPower::new, Apoli.identifier("modify_insomnia_ticks")));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("prevent_sprinting"), PreventSprintingPower::new));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(Apoli.identifier("modify_healing"), ModifyHealingPower::new));
+        register(() -> ValueModifyingPower.createValueModifyingFactory(Apoli.identifier("modify_insomnia_ticks"), ModifyInsomniaTicksPower::new));
         register(ModifyGrindstonePower::createFactory);
         register(ReplaceLootTablePower::createFactory);
         register(ModifyVelocityPower::createFactory);
-        register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
+        register(() -> Power.createSimpleFactory(Apoli.identifier("grounded"), GroundedPower::new));
         register(ModifyEnchantmentLevelPower::createFactory);
         register(ActionOnDeathPower::createFactory);
         register(ActionOnItemPickupPower::createFactory);
@@ -140,11 +144,12 @@ public class PowerFactories {
         register(PosePower::createFactory);
     }
 
-    private static void register(PowerFactory<?> powerFactory) {
-        Registry.register(ApoliRegistries.POWER_FACTORY, powerFactory.getSerializerId(), powerFactory);
+    private static PowerFactory<?> register(PowerFactory<?> powerFactory) {
+        return Registry.register(ApoliRegistries.POWER_FACTORY, powerFactory.getSerializerId(), powerFactory);
     }
 
-    private static void register(PowerFactorySupplier<?> factorySupplier) {
-        register(factorySupplier.createFactory());
+    private static PowerFactory<?> register(PowerFactorySupplier<?> factorySupplier) {
+        return register(factorySupplier.createFactory());
     }
+
 }

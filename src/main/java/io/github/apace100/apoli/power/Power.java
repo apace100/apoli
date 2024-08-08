@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.power;
 
-import com.google.gson.JsonObject;
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
@@ -17,17 +16,14 @@ import java.util.function.Predicate;
 public class Power {
 
     protected LivingEntity entity;
-    protected PowerType<?> type;
-
-    protected SerializableData.Instance dataInstance;
-    protected SerializableData serializableData;
+    protected PowerType type;
 
     private boolean shouldTick = false;
     private boolean shouldTickWhenInactive = false;
 
     protected List<Predicate<Entity>> conditions;
 
-    public Power(PowerType<?> type, LivingEntity entity) {
+    public Power(PowerType type, LivingEntity entity) {
         this.type = type;
         this.entity = entity;
         this.conditions = new LinkedList<>();
@@ -45,14 +41,6 @@ public class Power {
     protected void setTicking(boolean evenWhenInactive) {
         this.shouldTick = true;
         this.shouldTickWhenInactive = evenWhenInactive;
-    }
-
-    protected final void setDataInstance(SerializableData.Instance dataInstance) {
-        this.dataInstance = dataInstance;
-    }
-
-    protected final void setSerializableData(SerializableData serializableData) {
-        this.serializableData = serializableData;
     }
 
     public boolean shouldTick() {
@@ -115,17 +103,21 @@ public class Power {
 
     }
 
-    public JsonObject toJson() {
-        return serializableData.write(dataInstance);
-    }
-
-    public PowerType<?> getType() {
+    public PowerType getType() {
         return type;
     }
 
-    public static PowerFactory createSimpleFactory(BiFunction<PowerType, LivingEntity, Power> powerConstructor, Identifier identifier) {
-        return new PowerFactory<>(identifier,
-            new SerializableData(), data -> powerConstructor::apply).allowCondition();
+    public Identifier getId() {
+        return this.getType().getId();
+    }
+
+    @Deprecated(forRemoval = true)
+    public static PowerFactory createSimpleFactory(BiFunction<PowerType, LivingEntity, Power> powerConstructor, Identifier id) {
+        return createSimpleFactory(id, powerConstructor);
+    }
+
+    public static PowerFactory createSimpleFactory(Identifier id, BiFunction<PowerType, LivingEntity, Power> powerConstructor) {
+        return new PowerFactory<>(id, new SerializableData(), data -> powerConstructor).allowCondition();
     }
 
 }

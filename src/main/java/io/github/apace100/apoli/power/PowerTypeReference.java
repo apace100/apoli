@@ -2,64 +2,48 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.power.factory.PowerFactory;
 import net.minecraft.entity.Entity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("unchecked")
-public class PowerTypeReference<T extends Power> extends PowerType<T> {
-
-    private PowerType<?> referencedPowerType;
+public class PowerTypeReference extends PowerType {
 
     public PowerTypeReference(Identifier id) {
-        super(id, null);
+        super(null, DATA.instance()
+            .set("id", id)
+            .set("name", Text.empty())
+            .set("description", Text.empty())
+            .set("hidden", true));
+    }
+
+    @Nullable
+    @Override
+    public PowerFactory<? extends Power>.Instance getFactoryInstance() {
+        PowerType powerType = this.getReference();
+        return powerType != null
+            ? powerType.getFactoryInstance()
+            : null;
+    }
+
+    @Nullable
+    @Override
+    public Power get(Entity entity) {
+        PowerType powerType = this.getReference();
+        return powerType != null
+            ? powerType.get(entity)
+            : null;
+    }
+
+    @Nullable
+    public PowerType getReference() {
+        return PowerTypeManager
+            .getOptional(this.getId())
+            .orElse(null);
     }
 
     @Override
-    public PowerFactory<T>.Instance getFactory() {
-        getReferencedPowerType();
-        if(referencedPowerType == null) {
-            return null;
-        }
-        return ((PowerType<T>) referencedPowerType).getFactory();
+    public void validate() throws Exception {
+        PowerTypeManager.get(this.getId());
     }
 
-    @Override
-    public boolean isActive(Entity entity) {
-        getReferencedPowerType();
-        if(referencedPowerType == null) {
-            return false;
-        }
-        return referencedPowerType.isActive(entity);
-    }
-
-    @Override
-    public T get(Entity entity) {
-        getReferencedPowerType();
-        if(referencedPowerType == null) {
-            return null;
-        }
-        return ((PowerType<T>) referencedPowerType).get(entity);
-    }
-
-    public PowerType<T> getReferencedPowerType() {
-        if(isReferenceInvalid()) {
-            try {
-                referencedPowerType = null;
-                referencedPowerType = PowerTypeRegistry.get(getIdentifier());
-            } catch(IllegalArgumentException e) {
-                //cooldown = 600;
-                //Apoli.LOGGER.warn("Invalid PowerTypeReference: no power type exists with id \"" + getIdentifier() + "\"");
-            }
-        }
-        return (PowerType<T>) referencedPowerType;
-    }
-
-    private boolean isReferenceInvalid() {
-        if(referencedPowerType != null) {
-            if(PowerTypeRegistry.contains(referencedPowerType.getIdentifier())) {
-                PowerType<T> type = (PowerType<T>) PowerTypeRegistry.get(referencedPowerType.getIdentifier());
-                return type != referencedPowerType;
-            }
-        }
-        return true;
-    }
 }

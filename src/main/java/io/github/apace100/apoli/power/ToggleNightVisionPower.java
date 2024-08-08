@@ -14,11 +14,11 @@ import net.minecraft.nbt.NbtElement;
 public class ToggleNightVisionPower extends NightVisionPower implements Active {
     private boolean isActive;
 
-    public ToggleNightVisionPower(PowerType<?> type, LivingEntity entity) {
+    public ToggleNightVisionPower(PowerType type, LivingEntity entity) {
         this(type, entity, 1.0F, true);
     }
 
-    public ToggleNightVisionPower(PowerType<?> type, LivingEntity entity, float strength, boolean activeByDefault) {
+    public ToggleNightVisionPower(PowerType type, LivingEntity entity, float strength, boolean activeByDefault) {
         super(type, entity, strength);
         this.isActive = activeByDefault;
     }

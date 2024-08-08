@@ -14,7 +14,7 @@ public class ModelColorPower extends Power {
     private final float alpha;
     private final boolean isTranslucent;
 
-    public ModelColorPower(PowerType<?> type, LivingEntity entity, float red, float green, float blue, float alpha) {
+    public ModelColorPower(PowerType type, LivingEntity entity, float red, float green, float blue, float alpha) {
         super(type, entity);
         this.red = red;
         this.green = green;

@@ -15,7 +15,7 @@ public class InvulnerablePower extends Power {
 
     private final Predicate<DamageSource> damageSources;
 
-    public InvulnerablePower(PowerType<?> type, LivingEntity entity, Predicate<DamageSource> damageSourcePredicate) {
+    public InvulnerablePower(PowerType type, LivingEntity entity, Predicate<DamageSource> damageSourcePredicate) {
         super(type, entity);
         this.damageSources = damageSourcePredicate;
     }

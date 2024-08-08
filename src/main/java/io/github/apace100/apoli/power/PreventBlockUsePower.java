@@ -35,7 +35,7 @@ public class PreventBlockUsePower extends ActiveInteractionPower {
     private final EnumSet<Direction> directions;
     private final EnumSet<BlockUsagePhase> usePhases;
 
-    public PreventBlockUsePower(PowerType<?> type, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> heldItemAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack resultStack, EnumSet<Direction> directions, EnumSet<Hand> hands, EnumSet<BlockUsagePhase> usePhases, int priority) {
+    public PreventBlockUsePower(PowerType type, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> heldItemAction, Predicate<CachedBlockPosition> blockCondition, Predicate<Pair<World, ItemStack>> itemCondition, ItemStack resultStack, EnumSet<Direction> directions, EnumSet<Hand> hands, EnumSet<BlockUsagePhase> usePhases, int priority) {
         super(type, entity, hands, ActionResult.FAIL, itemCondition, heldItemAction, resultStack, resultItemAction, priority);
         this.blockCondition = blockCondition;
         this.entityAction = entityAction;

@@ -20,12 +20,12 @@ public class AttributePower extends Power {
     protected final List<AttributedEntityAttributeModifier> modifiers = new LinkedList<>();
     protected final boolean updateHealth;
 
-    public AttributePower(PowerType<?> type, LivingEntity entity, boolean updateHealth) {
+    public AttributePower(PowerType type, LivingEntity entity, boolean updateHealth) {
         super(type, entity);
         this.updateHealth = updateHealth;
     }
 
-    public AttributePower(PowerType<?> type, LivingEntity entity, boolean updateHealth, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier) {
+    public AttributePower(PowerType type, LivingEntity entity, boolean updateHealth, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier) {
         this(type, entity, updateHealth);
         addModifier(attribute, modifier);
     }

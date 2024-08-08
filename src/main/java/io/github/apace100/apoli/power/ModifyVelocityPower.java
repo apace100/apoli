@@ -15,7 +15,7 @@ public class ModifyVelocityPower extends ValueModifyingPower {
 
     public final EnumSet<Direction.Axis> axes;
 
-    public ModifyVelocityPower(PowerType<?> type, LivingEntity entity, EnumSet<Direction.Axis> axes) {
+    public ModifyVelocityPower(PowerType type, LivingEntity entity, EnumSet<Direction.Axis> axes) {
         super(type, entity);
         this.axes = axes;
     }

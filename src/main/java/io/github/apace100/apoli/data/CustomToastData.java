@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.data;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -12,42 +13,26 @@ public record CustomToastData(Text title, Text description, Identifier texture, 
 
     public static final Identifier DEFAULT_TEXTURE = Apoli.identifier("toast/custom");
 
-    public static final SerializableData DATA = new SerializableData()
-        .add("title", SerializableDataTypes.TEXT)
-        .add("description", SerializableDataTypes.TEXT)
-        .add("texture", SerializableDataTypes.IDENTIFIER, DEFAULT_TEXTURE)
-        .add("icon", SerializableDataTypes.ITEM_STACK, ItemStack.EMPTY)
-        .add("duration", SerializableDataTypes.POSITIVE_INT, 100);
-
-    public static final SerializableDataType<CustomToastData> DATA_TYPE = SerializableDataType.compound(
-        CustomToastData.class,
-        DATA,
-        CustomToastData::fromData,
-        (serializableData, toastData) -> toastData.toData()
-    );
-
-    public static CustomToastData fromData(SerializableData.Instance data) {
-        return new CustomToastData(
+    public static final CompoundSerializableDataType<CustomToastData> DATA_TYPE = SerializableDataType.compound(
+        new SerializableData()
+            .add("title", SerializableDataTypes.TEXT)
+            .add("description", SerializableDataTypes.TEXT)
+            .add("texture", SerializableDataTypes.IDENTIFIER, DEFAULT_TEXTURE)
+            .add("icon", SerializableDataTypes.ITEM_STACK, ItemStack.EMPTY)
+            .add("duration", SerializableDataTypes.POSITIVE_INT, 100),
+        data -> new CustomToastData(
             data.get("title"),
             data.get("description"),
             data.get("texture"),
             data.get("icon"),
             data.get("duration")
-        );
-    }
-
-    public SerializableData.Instance toData() {
-
-        SerializableData.Instance data = DATA.new Instance();
-
-        data.set("title", this.title());
-        data.set("description", this.description());
-        data.set("texture", this.texture());
-        data.set("icon", this.iconStack());
-        data.set("duration", this.duration());
-
-        return data;
-
-    }
+        ),
+        (customToastData, data) -> data
+            .set("title", customToastData.title())
+            .set("description", customToastData.description())
+            .set("texture", customToastData.texture())
+            .set("icon", customToastData.iconStack())
+            .set("duration", customToastData.duration())
+    );
 
 }

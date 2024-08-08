@@ -18,7 +18,7 @@ public class ModifyBreakSpeedPower extends ValueModifyingPower {
     private final Predicate<CachedBlockPosition> blockCondition;
     private final List<Modifier> hardnessModifiers;
 
-    public ModifyBreakSpeedPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Modifier deltaModifier, List<Modifier> deltaModifiers, Modifier hardnessModifier, List<Modifier> hardnessModifiers) {
+    public ModifyBreakSpeedPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Modifier deltaModifier, List<Modifier> deltaModifiers, Modifier hardnessModifier, List<Modifier> hardnessModifiers) {
         super(type, entity);
 
         if (deltaModifier != null) {

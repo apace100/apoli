@@ -10,11 +10,11 @@ public class VariableIntPower extends Power {
     protected final int min, max;
     protected int currentValue;
 
-    public VariableIntPower(PowerType<?> type, LivingEntity entity, int startValue) {
+    public VariableIntPower(PowerType type, LivingEntity entity, int startValue) {
         this(type, entity, startValue, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
-    public VariableIntPower(PowerType<?> type, LivingEntity entity, int startValue, int min, int max) {
+    public VariableIntPower(PowerType type, LivingEntity entity, int startValue, int min, int max) {
         super(type, entity);
         this.currentValue = startValue;
         this.min = min;

@@ -15,15 +15,15 @@ public class TogglePower extends Power implements Active {
     private boolean isActive;
     private final boolean shouldRetainState;
 
-    public TogglePower(PowerType<?> type, LivingEntity entity) {
+    public TogglePower(PowerType type, LivingEntity entity) {
         this(type, entity, false, true);
     }
 
-    public TogglePower(PowerType<?> type, LivingEntity entity, boolean activeByDefault) {
+    public TogglePower(PowerType type, LivingEntity entity, boolean activeByDefault) {
         this(type, entity, activeByDefault, true);
     }
 
-    public TogglePower(PowerType<?> type, LivingEntity entity, boolean activeByDefault, boolean shouldRetainState) {
+    public TogglePower(PowerType type, LivingEntity entity, boolean activeByDefault, boolean shouldRetainState) {
         super(type, entity);
         this.shouldRetainState = shouldRetainState;
         this.isActive = activeByDefault;

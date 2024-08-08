@@ -18,7 +18,7 @@ public class PreventFeatureRenderPower extends Power {
 
     private final List<String> classStrings = new LinkedList<>();
 
-    public PreventFeatureRenderPower(PowerType<?> type, LivingEntity entity) {
+    public PreventFeatureRenderPower(PowerType type, LivingEntity entity) {
         super(type, entity);
     }
 

@@ -17,7 +17,7 @@ public class ResourcePower extends HudRenderedVariableIntPower {
     private final Consumer<Entity> actionOnMin;
     private final Consumer<Entity> actionOnMax;
 
-    public ResourcePower(PowerType<?> type, LivingEntity entity, HudRender hudRender, int startValue, int min, int max, Consumer<Entity> actionOnMin, Consumer<Entity> actionOnMax) {
+    public ResourcePower(PowerType type, LivingEntity entity, HudRender hudRender, int startValue, int min, int max, Consumer<Entity> actionOnMin, Consumer<Entity> actionOnMax) {
         super(type, entity, hudRender, startValue, min, max);
         this.actionOnMin = actionOnMin;
         this.actionOnMax = actionOnMax;

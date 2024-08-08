@@ -20,7 +20,7 @@ public class PreventDeathPower extends Power {
     private final Consumer<Entity> entityAction;
     private final Predicate<Pair<DamageSource, Float>> condition;
 
-    public PreventDeathPower(PowerType<?> type, LivingEntity entity, Consumer<Entity> entityAction, Predicate<Pair<DamageSource, Float>> condition) {
+    public PreventDeathPower(PowerType type, LivingEntity entity, Consumer<Entity> entityAction, Predicate<Pair<DamageSource, Float>> condition) {
         super(type, entity);
         this.entityAction = entityAction;
         this.condition = condition;

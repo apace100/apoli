@@ -4,7 +4,7 @@ import net.minecraft.entity.LivingEntity;
 
 public class DisableRegenPower extends Power {
     
-    public DisableRegenPower(PowerType<?> type, LivingEntity entity) {
+    public DisableRegenPower(PowerType type, LivingEntity entity) {
         super(type, entity);
     }
 

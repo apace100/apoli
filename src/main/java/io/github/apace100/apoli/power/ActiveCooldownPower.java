@@ -21,7 +21,7 @@ public class ActiveCooldownPower extends CooldownPower implements Active {
 
     private final Consumer<Entity> activeFunction;
 
-    public ActiveCooldownPower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Consumer<Entity> activeFunction) {
+    public ActiveCooldownPower(PowerType type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Consumer<Entity> activeFunction) {
         super(type, entity, cooldownDuration, hudRender);
         this.activeFunction = activeFunction;
     }

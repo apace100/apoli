@@ -23,7 +23,7 @@ public class KeepInventoryPower extends Power {
 
     private ItemStack[] savedStacks;
 
-    public KeepInventoryPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> keepItemCondition, Collection<Integer> slots) {
+    public KeepInventoryPower(PowerType type, LivingEntity entity, Predicate<Pair<World, ItemStack>> keepItemCondition, Collection<Integer> slots) {
         super(type, entity);
         this.keepItemCondition = keepItemCondition;
         if(slots == null) {

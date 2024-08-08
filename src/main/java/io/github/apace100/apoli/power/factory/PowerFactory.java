@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.power.factory;
 
-import com.google.gson.JsonObject;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
@@ -14,28 +13,17 @@ import java.util.function.Function;
 
 public class PowerFactory<P extends Power> implements Factory {
 
-    private final Identifier id;
+    protected final Identifier id;
 
-    protected SerializableData data;
-    protected Function<SerializableData.Instance, BiFunction<PowerType<P>, LivingEntity, P>> factoryConstructor;
+    protected SerializableData serializableData;
+    protected Function<SerializableData.Instance, BiFunction<PowerType, LivingEntity, P>> constructorFactory;
 
     private boolean hasConditions = false;
 
-    public PowerFactory(Identifier id, SerializableData data, Function<SerializableData.Instance, BiFunction<PowerType<P>, LivingEntity, P>> factoryConstructor) {
+    public PowerFactory(Identifier id, SerializableData serializableData, Function<SerializableData.Instance, BiFunction<PowerType, LivingEntity, P>> constructorFactory) {
         this.id = id;
-        this.data = data.copy();
-        this.factoryConstructor = factoryConstructor;
-    }
-
-    public PowerFactory<P> allowCondition() {
-
-        if(!hasConditions) {
-            hasConditions = true;
-            data.add("condition", ApoliDataTypes.ENTITY_CONDITION, null);
-        }
-
-        return this;
-
+        this.serializableData = serializableData.copy();
+        this.constructorFactory = constructorFactory;
     }
 
     @Override
@@ -45,60 +33,81 @@ public class PowerFactory<P extends Power> implements Factory {
 
     @Override
     public SerializableData getSerializableData() {
-        return data;
+        return serializableData;
     }
 
-    public class Instance implements BiFunction<PowerType<P>, LivingEntity, P> {
+    public PowerFactory<P> allowCondition() {
 
-        private final SerializableData.Instance dataInstance;
-        private Instance(SerializableData.Instance data) {
-            this.dataInstance = data;
+        if (!hasConditions) {
+            hasConditions = true;
+            serializableData.add("condition", ApoliDataTypes.ENTITY_CONDITION, null);
+        }
+
+        return this;
+
+    }
+
+    @Override
+    public Instance receive(RegistryByteBuf buffer) {
+        return new Instance(serializableData.receive(buffer));
+    }
+
+    @Override
+    public Instance fromData(SerializableData.Instance data) {
+        return new Instance(data);
+    }
+
+    public class Instance implements Factory.Instance, BiFunction<PowerType, LivingEntity, P> {
+
+        protected final SerializableData.Instance data;
+        protected final BiFunction<PowerType, LivingEntity, P> constructor;
+
+        protected Instance(SerializableData.Instance data) {
+            this.constructor = constructorFactory.apply(data);
+            this.data = data;
         }
 
         @Override
-        public P apply(PowerType<P> pPowerType, LivingEntity livingEntity) {
+        public SerializableData.Instance getData() {
+            return data;
+        }
 
-            BiFunction<PowerType<P>, LivingEntity, P> powerFactory = factoryConstructor.apply(dataInstance);
-            P power = powerFactory.apply(pPowerType, livingEntity);
+        @Override
+        public PowerFactory<P> getFactory() {
+            return PowerFactory.this;
+        }
 
-            if (hasConditions && dataInstance.isPresent("condition")) {
-                power.addCondition(dataInstance.get("condition"));
+        @Override
+        public P apply(PowerType pPowerType, LivingEntity livingEntity) {
+
+            P power = constructor.apply(pPowerType, livingEntity);
+
+            if (hasConditions && data.isPresent("condition")) {
+                power.addCondition(data.get("condition"));
             }
 
             return power;
 
         }
 
-        public void write(RegistryByteBuf buf) {
-            buf.writeIdentifier(id);
-            data.write(buf, dataInstance);
-        }
+        @Override
+        public boolean equals(Object obj) {
 
-        public SerializableData.Instance getDataInstance() {
-            return dataInstance;
-        }
+            if (this == obj) {
+                return true;
+            }
 
-        public PowerFactory<?> getFactory() {
-            return PowerFactory.this;
-        }
+            else if (obj instanceof PowerFactory<?>.Instance other) {
+                return this.getFactory().equals(other.getFactory())
+                    && this.getData().equals(other.getData());
+            }
 
-        public JsonObject toJson() {
-
-            JsonObject jsonObject = data.write(dataInstance);
-            jsonObject.addProperty("type", id.toString());
-
-            return jsonObject;
+            else {
+                return false;
+            }
 
         }
 
-    }
-
-    public Instance read(JsonObject json) {
-        return new Instance(data.read(json));
-    }
-
-    public Instance read(RegistryByteBuf buffer) {
-        return new Instance(data.read(buffer));
     }
 
 }

@@ -21,7 +21,7 @@ public class StartingEquipmentPower extends Power {
     private final HashMap<Integer, ItemStack> slottedStacks = new HashMap<>();
     private boolean recurrent;
 
-    public StartingEquipmentPower(PowerType<?> type, LivingEntity entity) {
+    public StartingEquipmentPower(PowerType type, LivingEntity entity) {
         super(type, entity);
     }
 

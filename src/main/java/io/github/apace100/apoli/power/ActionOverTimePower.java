@@ -25,7 +25,7 @@ public class ActionOverTimePower extends Power {
 
     private boolean wasActive = false;
 
-    public ActionOverTimePower(PowerType<?> type, LivingEntity entity, int interval, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction) {
+    public ActionOverTimePower(PowerType type, LivingEntity entity, int interval, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction) {
         super(type, entity);
         this.interval = interval;
         this.entityAction = entityAction;

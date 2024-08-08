@@ -11,7 +11,7 @@ public class BurnPower extends Power {
     private final int refreshInterval;
     private final int burnDuration;
 
-    public BurnPower(PowerType<?> type, LivingEntity entity, int refreshInterval, int burnDuration) {
+    public BurnPower(PowerType type, LivingEntity entity, int refreshInterval, int burnDuration) {
         super(type, entity);
         this.refreshInterval = refreshInterval;
         this.burnDuration = burnDuration;

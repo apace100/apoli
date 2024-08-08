@@ -10,11 +10,11 @@ public class NightVisionPower extends Power {
 
     private final float strength;
 
-    public NightVisionPower(PowerType<?> type, LivingEntity entity) {
+    public NightVisionPower(PowerType type, LivingEntity entity) {
         this(type, entity, 1.0F);
     }
 
-    public NightVisionPower(PowerType<?> type, LivingEntity entity, float strength) {
+    public NightVisionPower(PowerType type, LivingEntity entity, float strength) {
         super(type, entity);
         this.strength = strength;
     }

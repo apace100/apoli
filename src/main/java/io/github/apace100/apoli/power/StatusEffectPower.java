@@ -12,10 +12,10 @@ public class StatusEffectPower extends Power {
 
     protected final List<StatusEffectInstance> effects = new LinkedList<>();
 
-    public StatusEffectPower(PowerType<?> type, LivingEntity entity) {
+    public StatusEffectPower(PowerType type, LivingEntity entity) {
         super(type, entity);
     }
-    public StatusEffectPower(PowerType<?> type, LivingEntity entity, StatusEffectInstance effectInstance) {
+    public StatusEffectPower(PowerType type, LivingEntity entity, StatusEffectInstance effectInstance) {
         super(type, entity);
         addEffect(effectInstance);
     }

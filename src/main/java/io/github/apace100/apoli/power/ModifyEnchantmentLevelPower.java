@@ -42,7 +42,7 @@ public class ModifyEnchantmentLevelPower extends ValueModifyingPower {
     private final RegistryKey<Enchantment> enchantmentKey;
     private final Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition;
 
-    public ModifyEnchantmentLevelPower(PowerType<?> type, LivingEntity entity, RegistryKey<Enchantment> enchantmentKey, Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition, Modifier modifier, List<Modifier> modifiers) {
+    public ModifyEnchantmentLevelPower(PowerType type, LivingEntity entity, RegistryKey<Enchantment> enchantmentKey, Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition, Modifier modifier, List<Modifier> modifiers) {
         super(type, entity);
 
         this.enchantmentKey = enchantmentKey;

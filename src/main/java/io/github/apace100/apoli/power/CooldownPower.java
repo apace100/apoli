@@ -18,7 +18,7 @@ public class CooldownPower extends Power implements HudRendered {
     public final int cooldownDuration;
     private final HudRender hudRender;
 
-    public CooldownPower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender) {
+    public CooldownPower(PowerType type, LivingEntity entity, int cooldownDuration, HudRender hudRender) {
         super(type, entity);
         this.cooldownDuration = cooldownDuration;
         this.hudRender = hudRender;

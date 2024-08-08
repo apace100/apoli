@@ -17,7 +17,7 @@ public class PreventBlockSelectionPower extends Power {
 
     private final Predicate<CachedBlockPosition> blockCondition;
 
-    public PreventBlockSelectionPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition) {
+    public PreventBlockSelectionPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition) {
         super(type, entity);
         this.blockCondition = blockCondition;
     }

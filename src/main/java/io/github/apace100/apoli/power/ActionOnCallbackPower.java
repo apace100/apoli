@@ -17,7 +17,7 @@ public class ActionOnCallbackPower extends Power {
     private final Consumer<Entity> entityActionLost;
     private final Consumer<Entity> entityActionAdded;
 
-    public ActionOnCallbackPower(PowerType<?> type, LivingEntity entity, Consumer<Entity> entityActionRespawned, Consumer<Entity> entityActionRemoved, Consumer<Entity> entityActionGained, Consumer<Entity> entityActionLost, Consumer<Entity> entityActionAdded) {
+    public ActionOnCallbackPower(PowerType type, LivingEntity entity, Consumer<Entity> entityActionRespawned, Consumer<Entity> entityActionRemoved, Consumer<Entity> entityActionGained, Consumer<Entity> entityActionLost, Consumer<Entity> entityActionAdded) {
         super(type, entity);
         this.entityActionRespawned = entityActionRespawned;
         this.entityActionRemoved = entityActionRemoved;

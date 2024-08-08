@@ -41,7 +41,7 @@ public class InventoryPower extends Power implements Active, Inventory {
 
     private boolean dirty;
 
-    public InventoryPower(PowerType<?> type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<Pair<World, ItemStack>> dropOnDeathFilter, boolean recoverable) {
+    public InventoryPower(PowerType type, LivingEntity entity, String containerTitle, ContainerType containerType, boolean shouldDropOnDeath, Predicate<Pair<World, ItemStack>> dropOnDeathFilter, boolean recoverable) {
         super(type, entity);
         switch (containerType) {
             case DOUBLE_CHEST:

@@ -3,7 +3,8 @@ package io.github.apace100.apoli.global;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.PowerTypes;
+import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.PowerTypeManager;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
@@ -37,10 +38,10 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
     public GlobalPowerSetLoader() {
         super(GSON, "global_powers", ResourceType.SERVER_DATA);
 
-        ServerEntityEvents.ENTITY_LOAD.addPhaseOrdering(PowerTypes.PHASE, PHASE);
+        ServerEntityEvents.ENTITY_LOAD.addPhaseOrdering(PowerTypeManager.PHASE, PHASE);
         ServerEntityEvents.ENTITY_LOAD.register(PHASE, (entity, world) -> GlobalPowerSetUtil.applyGlobalPowers(entity));
 
-        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(PowerTypes.PHASE, PHASE);
+        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(PowerTypeManager.PHASE, PHASE);
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(PHASE, (player, joined) -> {
             if (!joined) {
                 GlobalPowerSetUtil.applyGlobalPowers(player);
@@ -86,7 +87,8 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
 
                 List<String> invalidPowers = globalPowerSet.validate()
                     .stream()
-                    .map(pt -> pt.getIdentifier().toString())
+                    .map(PowerType::getId)
+                    .map(Identifier::toString)
                     .toList();
 
                 if (!invalidPowers.isEmpty()) {
@@ -122,7 +124,7 @@ public class GlobalPowerSetLoader extends IdentifiableMultiJsonDataLoader implem
                 if (currentSet[0] == null) {
                     currentSet[0] = set;
                 } else {
-                    currentSet[0].merge(set);
+                    currentSet[0] = currentSet[0].merge(set);
                 }
 
             }

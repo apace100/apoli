@@ -15,7 +15,7 @@ public class PreventEntityCollisionPower extends Power {
 
     private final Predicate<Pair<Entity, Entity>> bientityCondition;
 
-    public PreventEntityCollisionPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<Entity, Entity>> bientityCondition) {
+    public PreventEntityCollisionPower(PowerType type, LivingEntity entity, Predicate<Pair<Entity, Entity>> bientityCondition) {
         super(type, entity);
         this.bientityCondition = bientityCondition;
     }

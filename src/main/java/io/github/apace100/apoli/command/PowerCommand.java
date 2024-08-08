@@ -1,10 +1,12 @@
 package io.github.apace100.apoli.command;
 
+import com.google.gson.JsonElement;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
@@ -95,7 +97,7 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		PowerType powerType = PowerTypeArgumentType.getPower(context, "power");
 		Identifier powerSource = isSourceSpecified ? IdentifierArgumentType.getIdentifier(context, "source") : Apoli.identifier("command");
 
 		for (LivingEntity target : targets) {
@@ -154,7 +156,7 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		PowerType powerType = PowerTypeArgumentType.getPower(context, "power");
 		Identifier powerSource = isSourceSpecified ? IdentifierArgumentType.getIdentifier(context, "source") : POWER_SOURCE;
 
 		for (LivingEntity target : targets) {
@@ -271,7 +273,7 @@ public class PowerCommand {
 		int powers = 0;
 
 		PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-		for (PowerType<?> powerType : component.getPowerTypes(includeSubpowers)) {
+		for (PowerType powerType : component.getPowerTypes(includeSubpowers)) {
 
 			List<Text> sourcesTooltip = new LinkedList<>();
 			component.getSources(powerType).forEach(id -> sourcesTooltip.add(Text.of(id.toString())));
@@ -307,7 +309,7 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		PowerType powerType = PowerTypeArgumentType.getPower(context, "power");
 
 		for (LivingEntity target : targets) {
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
@@ -342,7 +344,7 @@ public class PowerCommand {
 		ServerCommandSource source = context.getSource();
 
 		LivingEntity target = PowerHolderArgumentType.getHolder(context, "target");
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		PowerType powerType = PowerTypeArgumentType.getPower(context, "power");
 
 		PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 		StringBuilder powerSources = new StringBuilder();
@@ -376,7 +378,7 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		PowerType powerType = PowerTypeArgumentType.getPower(context, "power");
 
 		for (LivingEntity target : targets) {
 
@@ -445,12 +447,12 @@ public class PowerCommand {
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			Set<PowerType<?>> powerTypes = component.getPowerTypes(false);
+			Set<PowerType> powerTypes = component.getPowerTypes(false);
 			if (powerTypes.isEmpty()) {
 				continue;
 			}
 
-			for (PowerType<?> powerType : powerTypes) {
+			for (PowerType powerType : powerTypes) {
 				List<Identifier> powerSources = component.getSources(powerType);
 				powerSources.forEach(component::removeAllPowersFromSource);
 			}
@@ -492,11 +494,12 @@ public class PowerCommand {
 	private static int dumpPowerJson(CommandContext<ServerCommandSource> context, boolean indentSpecified) throws CommandSyntaxException {
 
 		ServerCommandSource source = context.getSource();
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		PowerType power = PowerTypeArgumentType.getPower(context, "power");
 
 		String indent = Strings.repeat(' ', indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4);
-		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(powerType.toJson()), false);
+		JsonElement powerJson = PowerType.DATA_TYPE.strictEncodeStart(JsonOps.INSTANCE, power);
 
+		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(powerJson), false);
 		return 1;
 
 	}

@@ -43,7 +43,7 @@ public class DamageOverTimePower extends Power {
 
     private DamageSource damageSource;
 
-    public DamageOverTimePower(PowerType<?> type, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, DamageSourceDescription damageSourceDescription, RegistryKey<DamageType> damageType, RegistryKey<Enchantment> protectingEnchantmentKey, float protectionEffectiveness) {
+    public DamageOverTimePower(PowerType type, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, DamageSourceDescription damageSourceDescription, RegistryKey<DamageType> damageType, RegistryKey<Enchantment> protectingEnchantmentKey, float protectionEffectiveness) {
         super(type, entity);
         this.damageSourceDescription = damageSourceDescription;
         this.damageType = damageType;

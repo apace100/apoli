@@ -20,7 +20,7 @@ public class StackingStatusEffectPower extends StatusEffectPower {
 
     private int currentStack;
 
-    public StackingStatusEffectPower(PowerType<?> type, LivingEntity entity, int minStack, int maxStack, int durationPerStack, int tickRate) {
+    public StackingStatusEffectPower(PowerType type, LivingEntity entity, int minStack, int maxStack, int durationPerStack, int tickRate) {
         super(type, entity);
         this.minStack = minStack;
         this.maxStack = maxStack;

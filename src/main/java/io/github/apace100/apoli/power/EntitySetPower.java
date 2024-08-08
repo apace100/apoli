@@ -38,7 +38,7 @@ public class EntitySetPower extends Power {
     private boolean wasActive = false;
     private boolean removedTemps = false;
 
-    public EntitySetPower(PowerType<?> type, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove, int tickRate) {
+    public EntitySetPower(PowerType type, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove, int tickRate) {
         super(type, entity);
         this.actionOnAdd = actionOnAdd;
         this.actionOnRemove = actionOnRemove;

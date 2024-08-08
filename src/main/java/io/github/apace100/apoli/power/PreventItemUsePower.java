@@ -15,7 +15,7 @@ public class PreventItemUsePower extends Power {
 
     private final Predicate<Pair<World, ItemStack>> itemCondition;
 
-    public PreventItemUsePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition) {
+    public PreventItemUsePower(PowerType type, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition) {
         super(type, entity);
         this.itemCondition = itemCondition;
     }

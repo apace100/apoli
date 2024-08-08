@@ -31,7 +31,7 @@ public class PreventItemPickupPower extends Power implements Prioritized<Prevent
 
     private final int priority;
 
-    public PreventItemPickupPower(PowerType<?> powerType, LivingEntity livingEntity, Consumer<Pair<Entity, Entity>> biEntityActionThrower, Consumer<Pair<Entity, Entity>> biEntityActionItem, Consumer<Pair<World, StackReference>> itemAction, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<Pair<World, ItemStack>> itemCondition, int priority) {
+    public PreventItemPickupPower(PowerType powerType, LivingEntity livingEntity, Consumer<Pair<Entity, Entity>> biEntityActionThrower, Consumer<Pair<Entity, Entity>> biEntityActionItem, Consumer<Pair<World, StackReference>> itemAction, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<Pair<World, ItemStack>> itemCondition, int priority) {
         super(powerType, livingEntity);
         this.biEntityActionThrower = biEntityActionThrower;
         this.biEntityActionItem = biEntityActionItem;

@@ -31,7 +31,7 @@ public class ModifyInventoryAction {
             case POWER:
                 if (!data.isPresent("power") || !(entity instanceof LivingEntity livingEntity)) return;
 
-                PowerType<?> targetPowerType = data.get("power");
+                PowerType targetPowerType = data.get("power");
                 Power targetPower = PowerHolderComponent.KEY.get(livingEntity).getPower(targetPowerType);
 
                 if (!(targetPower instanceof InventoryPower inventoryPower)) return;

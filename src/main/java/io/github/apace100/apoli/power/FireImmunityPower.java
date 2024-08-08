@@ -4,7 +4,7 @@ import net.minecraft.entity.LivingEntity;
 
 public class FireImmunityPower extends Power {
 
-    public FireImmunityPower(PowerType<?> type, LivingEntity entity) {
+    public FireImmunityPower(PowerType type, LivingEntity entity) {
         super(type, entity);
     }
 }

@@ -28,7 +28,7 @@ public class PhasingPower extends Power {
     private final RenderType renderType;
     private final float viewDistance;
 
-    public PhasingPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, boolean blacklist, RenderType renderType, float viewDistance, Predicate<Entity> phaseDownCondition) {
+    public PhasingPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, boolean blacklist, RenderType renderType, float viewDistance, Predicate<Entity> phaseDownCondition) {
         super(type, entity);
         this.blockCondition = blockCondition;
         this.blacklist = blacklist;

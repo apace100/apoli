@@ -155,7 +155,7 @@ public class EntityActions {
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    PowerType<?> powerType = data.get("resource");
+                    PowerType powerType = data.get("resource");
                     Power p = component.getPower(powerType);
                     ResourceOperation operation = data.get("operation");
                     int change = data.getInt("change");
@@ -209,7 +209,7 @@ public class EntityActions {
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType<?>)data.get("power"));
+                    Power p = component.getPower((PowerType)data.get("power"));
                     if(p instanceof CooldownPower cp) {
                         cp.use();
                     }
@@ -220,7 +220,7 @@ public class EntityActions {
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType<?>)data.get("power"));
+                    Power p = component.getPower((PowerType)data.get("power"));
                     if(p instanceof TogglePower) {
                         ((TogglePower)p).onUse();
                     }
@@ -235,7 +235,7 @@ public class EntityActions {
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    PowerType<?> powerType = data.get("resource");
+                    PowerType powerType = data.get("resource");
                     Power p = component.getPower(powerType);
                     int value = data.getInt("value");
                     if(p instanceof VariableIntPower vip) {

@@ -3,14 +3,10 @@ package io.github.apace100.apoli.power;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerFactory;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.modifier.Modifier;
-import io.github.apace100.apoli.util.modifier.ModifierOperation;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldView;
 
@@ -21,7 +17,7 @@ public class ModifySlipperinessPower extends ValueModifyingPower {
 
     private final Predicate<CachedBlockPosition> predicate;
 
-    public ModifySlipperinessPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> predicate) {
+    public ModifySlipperinessPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> predicate) {
         super(type, entity);
         this.predicate = predicate;
     }

@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ModifySwimSpeedPower extends ConditionedAttributePower {
 
-    public ModifySwimSpeedPower(PowerType<?> type, LivingEntity entity) {
+    public ModifySwimSpeedPower(PowerType type, LivingEntity entity) {
         super(type, entity, 10,false);
     }
 

@@ -62,7 +62,7 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("sneaking"), new SerializableData(), (data, entity) -> entity.isSneaking()));
         register(new ConditionFactory<>(Apoli.identifier("sprinting"), new SerializableData(), (data, entity) -> entity.isSprinting()));
         register(new ConditionFactory<>(Apoli.identifier("power_active"), new SerializableData().add("power", ApoliDataTypes.POWER_TYPE),
-            (data, entity) -> ((PowerTypeReference<?>)data.get("power")).isActive(entity)));
+            (data, entity) -> ((PowerTypeReference)data.get("power")).isActive(entity)));
         register(StatusEffectCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("submerged_in"), new SerializableData().add("fluid", SerializableDataTypes.FLUID_TAG),
             (data, entity) -> ((SubmergableEntity)entity).apoli$isSubmergedInLoosely(data.get("fluid"))));
@@ -335,8 +335,8 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("power_type"), new SerializableData()
             .add("power_type", ApoliDataTypes.POWER_TYPE),
             (data, entity) -> {
-                PowerTypeReference<?> powerTypeReference = data.get("power_type");
-                PowerType<?> powerType = powerTypeReference.getReferencedPowerType();
+                PowerTypeReference powerTypeReference = data.get("power_type");
+                PowerType powerType = powerTypeReference.getReference();
                 return PowerHolderComponent.KEY.maybeGet(entity).map(phc -> phc.getPowerTypes(true).contains(powerType)).orElse(false);
             }));
         register(new ConditionFactory<>(Apoli.identifier("ability"), new SerializableData()

@@ -4,7 +4,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.PowerTypeManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.loot.condition.LootCondition;
 import net.minecraft.loot.condition.LootConditionType;
@@ -47,7 +47,7 @@ public class PowerLootCondition implements LootCondition {
             return false;
         }
 
-        PowerType<?> powerType = PowerTypeRegistry.getNullable(powerId);
+        PowerType powerType = PowerTypeManager.getOptional(powerId).orElse(null);
         return powerType != null && powerSourceId
             .map(id -> component.hasPower(powerType, id))
             .orElse(component.hasPower(powerType));

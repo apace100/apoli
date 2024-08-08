@@ -22,7 +22,7 @@ public class PreventSleepPower extends Power implements Prioritized<PreventSleep
     private final boolean allowSpawnPoint;
     private final int priority;
 
-    public PreventSleepPower(PowerType<?> type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Text message, boolean allowSpawnPoint, int priority) {
+    public PreventSleepPower(PowerType type, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, Text message, boolean allowSpawnPoint, int priority) {
         super(type, entity);
         this.blockCondition = blockCondition;
         this.message = message;

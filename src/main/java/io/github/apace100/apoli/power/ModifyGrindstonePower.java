@@ -42,7 +42,7 @@ public class ModifyGrindstonePower extends Power {
 
     private final Modifier experienceModifier;
 
-    public ModifyGrindstonePower(PowerType<?> type, LivingEntity entity, Predicate<Pair<World, ItemStack>> topItemCondition, Predicate<Pair<World, ItemStack>> bottomItemCondition, Predicate<Pair<World, ItemStack>> outputItemCondition, Predicate<CachedBlockPosition> blockCondition, ItemStack newResultStack, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> lateItemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, ResultType resultType, Modifier experienceModifier) {
+    public ModifyGrindstonePower(PowerType type, LivingEntity entity, Predicate<Pair<World, ItemStack>> topItemCondition, Predicate<Pair<World, ItemStack>> bottomItemCondition, Predicate<Pair<World, ItemStack>> outputItemCondition, Predicate<CachedBlockPosition> blockCondition, ItemStack newResultStack, Consumer<Pair<World, StackReference>> resultItemAction, Consumer<Pair<World, StackReference>> lateItemAction, Consumer<Entity> entityAction, Consumer<Triple<World, BlockPos, Direction>> blockAction, ResultType resultType, Modifier experienceModifier) {
         super(type, entity);
         this.topItemCondition = topItemCondition;
         this.bottomItemCondition = bottomItemCondition;

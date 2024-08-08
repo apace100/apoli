@@ -22,7 +22,7 @@ public class SelfActionOnKillPower extends CooldownPower {
     private final Predicate<Entity> targetCondition;
     private final Consumer<Entity> entityAction;
 
-    public SelfActionOnKillPower(PowerType<?> type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Entity> entityAction, Predicate<Entity> targetCondition) {
+    public SelfActionOnKillPower(PowerType type, LivingEntity entity, int cooldownDuration, HudRender hudRender, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Entity> entityAction, Predicate<Entity> targetCondition) {
         super(type, entity, cooldownDuration, hudRender);
         this.damageCondition = damageCondition;
         this.entityAction = entityAction;

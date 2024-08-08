@@ -12,7 +12,7 @@ public class WalkOnFluidPower extends Power {
 
     private final TagKey<Fluid> fluidTag;
 
-    public WalkOnFluidPower(PowerType<?> type, LivingEntity entity, TagKey<Fluid> fluidTag) {
+    public WalkOnFluidPower(PowerType type, LivingEntity entity, TagKey<Fluid> fluidTag) {
         super(type, entity);
         this.fluidTag = fluidTag;
     }

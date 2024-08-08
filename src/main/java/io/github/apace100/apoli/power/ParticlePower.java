@@ -34,7 +34,7 @@ public class ParticlePower extends Power {
     private final boolean visibleWhileInvisible;
     private final boolean force;
 
-    public ParticlePower(PowerType<?> powerType, LivingEntity livingEntity, ParticleEffect particleEffect, Predicate<Pair<Entity, Entity>> biEntityCondition, int count, float speed, boolean force, Vec3d spread, double offsetX, double offsetY, double offsetZ, int frequency, boolean visibleInFirstPerson, boolean visibleWhileInvisible) {
+    public ParticlePower(PowerType powerType, LivingEntity livingEntity, ParticleEffect particleEffect, Predicate<Pair<Entity, Entity>> biEntityCondition, int count, float speed, boolean force, Vec3d spread, double offsetX, double offsetY, double offsetZ, int frequency, boolean visibleInFirstPerson, boolean visibleWhileInvisible) {
         super(powerType, livingEntity);
         this.particleEffect = particleEffect;
         this.biEntityCondition = biEntityCondition;

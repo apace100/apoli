@@ -6,7 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.PowerTypeManager;
 import io.github.apace100.apoli.util.codec.SetCodec;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
@@ -25,7 +25,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -80,8 +83,8 @@ public class ItemPowersComponent {
 
         for (Entry entry : entries) {
 
-            PowerType<?> power = PowerTypeRegistry.getNullable(entry.powerId());
-            if (power == null || entry.hidden() || !entry.slot().equals(modifierSlot)) {
+            PowerType power = PowerTypeManager.get(entry.powerId());
+            if (entry.hidden() || !entry.slot().equals(modifierSlot)) {
                 continue;
             }
 
@@ -132,8 +135,8 @@ public class ItemPowersComponent {
         ItemPowersComponent prevStackPowers = previousStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
         for (Entry prevEntry : prevStackPowers.entries) {
 
-            PowerType<?> power = PowerTypeRegistry.getNullable(prevEntry.powerId());
-            if (power != null && prevEntry.slot().matches(equipmentSlot) && powerComponent.removePower(power, sourceId)) {
+            PowerType power = PowerTypeManager.get(prevEntry.powerId());
+            if (prevEntry.slot().matches(equipmentSlot) && powerComponent.removePower(power, sourceId)) {
                 shouldSync = true;
             }
 
@@ -142,8 +145,8 @@ public class ItemPowersComponent {
         ItemPowersComponent currStackPowers = currentStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
         for (Entry currEntry : currStackPowers.entries) {
 
-            PowerType<?> power = PowerTypeRegistry.getNullable(currEntry.powerId());
-            if (power != null && currEntry.slot().matches(equipmentSlot) && powerComponent.addPower(power, sourceId)) {
+            PowerType power = PowerTypeManager.get(currEntry.powerId());
+            if (currEntry.slot().matches(equipmentSlot) && powerComponent.addPower(power, sourceId)) {
                 shouldSync = true;
             }
 
@@ -158,7 +161,7 @@ public class ItemPowersComponent {
     public record Entry(Identifier powerId, AttributeModifierSlot slot, boolean hidden, boolean negative) {
 
         public static final MapCodec<Entry> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            PowerTypeRegistry.VALIDATING_CODEC.fieldOf("power").forGetter(Entry::powerId),
+            PowerTypeManager.VALIDATING_CODEC.fieldOf("power").forGetter(Entry::powerId),
             AttributeModifierSlot.CODEC.fieldOf("slot").forGetter(Entry::slot),
             Codec.BOOL.optionalFieldOf("hidden", false).forGetter(Entry::hidden),
             Codec.BOOL.optionalFieldOf("negative", false).forGetter(Entry::negative)

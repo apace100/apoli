@@ -1,7 +1,11 @@
 package io.github.apace100.apoli.util.modifier;
 
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
@@ -11,30 +15,54 @@ import java.util.Locale;
 
 public interface IModifierOperation {
 
-    SerializableDataType<IModifierOperation> STRICT_DATA_TYPE =
-        SerializableDataType.registry(IModifierOperation.class, ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID, true);
+    /**
+     *  The strict data type for operations. Doesn't allow for
+     */
+    SerializableDataType<IModifierOperation> STRICT_DATA_TYPE = SerializableDataType.registry(ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID, true);
 
-    SerializableDataType<IModifierOperation> DATA_TYPE = new SerializableDataType<>(
-        IModifierOperation.class,
-        STRICT_DATA_TYPE::send,
-        STRICT_DATA_TYPE::receive,
-        jsonElement -> {
+    SerializableDataType<IModifierOperation> DATA_TYPE = SerializableDataType.of(
+        new StrictCodec<>() {
 
-            if (!jsonElement.isJsonPrimitive()) {
-                return STRICT_DATA_TYPE.read(jsonElement);
+            @Override
+            public <T> Pair<IModifierOperation, T> strictDecode(DynamicOps<T> ops, T input) {
+
+                DataResult<String> inputString = ops.getStringValue(input);
+                if (inputString.isSuccess()) {
+
+                    IModifierOperation operation = switch (inputString.getOrThrow().toLowerCase(Locale.ROOT)) {
+                        case "addition", "add_value" ->
+                            ModifierOperation.ADD_BASE_EARLY;
+                        case "multiply_base", "add_multiplied_base" ->
+                            ModifierOperation.MULTIPLY_BASE_ADDITIVE;
+                        case "multiply_total", "add_multiplied_total" ->
+                            ModifierOperation.MULTIPLY_TOTAL_MULTIPLICATIVE;
+                        default ->
+                            STRICT_DATA_TYPE.strictParse(ops, input);
+                    };
+
+                    return Pair.of(operation, input);
+
+                }
+
+                else {
+                    return STRICT_DATA_TYPE.strictDecode(ops, input);
+                }
+
             }
 
-            String operation = jsonElement.getAsString().toLowerCase(Locale.ROOT);
-            return switch (operation) {
-                case "addition" -> ModifierOperation.ADD_BASE_EARLY;
-                case "multiply_base" -> ModifierOperation.MULTIPLY_BASE_ADDITIVE;
-                case "multiply_total" -> ModifierOperation.MULTIPLY_TOTAL_MULTIPLICATIVE;
-                default -> STRICT_DATA_TYPE.read(jsonElement);
-            };
+            @Override
+            public <T> T strictEncode(IModifierOperation input, DynamicOps<T> ops, T prefix) {
+                return STRICT_DATA_TYPE.strictEncode(input, ops, prefix);
+            }
 
         },
-        STRICT_DATA_TYPE::write
+        STRICT_DATA_TYPE.packetCodec()
     );
+
+    /**
+     *  @return the serializable data of the modifier instance that this operation needs to operate.
+     */
+    SerializableData getSerializableData();
 
     /**
      *  Specifies which value is modified by this modifier, which can either be the base value or the total value.
@@ -51,11 +79,6 @@ public interface IModifierOperation {
      *  @return the order of this modifier.
      */
     int getOrder();
-
-    /**
-     *  @return the serializable data of the modifier instance that this operation needs to operate.
-     */
-    SerializableData getData();
 
     /**
      *  Applies all instances of this modifier operation to the specified value.

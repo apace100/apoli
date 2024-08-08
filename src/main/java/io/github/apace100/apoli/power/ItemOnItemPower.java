@@ -40,7 +40,7 @@ public class ItemOnItemPower extends Power implements Prioritized<ItemOnItemPowe
     private final int resultFromOnStack;
     private final int priority;
 
-    public ItemOnItemPower(PowerType<?> type, LivingEntity entity, EnumSet<ClickType> clickTypes, EnumSet<StackClickPhase> clickPhases, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> usingItemAction, Consumer<Pair<World, StackReference>> onItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<Pair<World, ItemStack>> usingItemCondition, Predicate<Pair<World, ItemStack>> onItemCondition, ItemStack resultStack, int resultFromOnStack, int priority) {
+    public ItemOnItemPower(PowerType type, LivingEntity entity, EnumSet<ClickType> clickTypes, EnumSet<StackClickPhase> clickPhases, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> usingItemAction, Consumer<Pair<World, StackReference>> onItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<Pair<World, ItemStack>> usingItemCondition, Predicate<Pair<World, ItemStack>> onItemCondition, ItemStack resultStack, int resultFromOnStack, int priority) {
         super(type, entity);
         this.usingItemCondition = usingItemCondition;
         this.onItemCondition = onItemCondition;

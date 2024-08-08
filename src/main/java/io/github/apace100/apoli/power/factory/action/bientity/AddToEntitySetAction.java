@@ -17,7 +17,7 @@ public class AddToEntitySetAction {
     public static void action(SerializableData.Instance data, Pair<Entity, Entity> actorAndTarget) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(actorAndTarget.getLeft());
-        PowerType<?> powerType = data.get("set");
+        PowerType powerType = data.get("set");
 
         if (component == null || powerType == null || !(component.getPower(powerType) instanceof EntitySetPower entitySetPower)) {
             return;

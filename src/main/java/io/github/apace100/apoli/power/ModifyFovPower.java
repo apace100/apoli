@@ -13,7 +13,7 @@ public class ModifyFovPower extends ValueModifyingPower {
 
     private final boolean affectedByFovEffectScale;
 
-    public ModifyFovPower(PowerType<?> type, LivingEntity entity, Modifier modifier, List<Modifier> modifiers, boolean affectedByFovEffectScale) {
+    public ModifyFovPower(PowerType type, LivingEntity entity, Modifier modifier, List<Modifier> modifiers, boolean affectedByFovEffectScale) {
         super(type, entity);
         this.affectedByFovEffectScale = affectedByFovEffectScale;
 

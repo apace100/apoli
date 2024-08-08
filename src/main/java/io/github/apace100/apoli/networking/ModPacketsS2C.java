@@ -7,7 +7,7 @@ import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.networking.packet.s2c.*;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.PowerTypeManager;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -35,7 +35,7 @@ public class ModPacketsS2C {
         ClientConfigurationNetworking.registerGlobalReceiver(VersionHandshakePacket.PACKET_ID, ModPacketsS2C::sendHandshakeReply);
 
         ClientPlayConnectionEvents.INIT.register(((handler, client) -> {
-            ClientPlayNetworking.registerReceiver(SyncPowerTypeRegistryS2CPacket.PACKET_ID, ModPacketsS2C::onPowerTypeRegistrySync);
+            ClientPlayNetworking.registerReceiver(SyncPowerTypesS2CPacket.PACKET_ID, PowerTypeManager::receive);
             ClientPlayNetworking.registerReceiver(SyncPowerS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSync);
             ClientPlayNetworking.registerReceiver(SyncPowersInBulkS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSyncInBulk);
             ClientPlayNetworking.registerReceiver(MountPlayerS2CPacket.PACKET_ID, ModPacketsS2C::onPlayerMount);
@@ -98,11 +98,6 @@ public class ModPacketsS2C {
 
     }
 
-    private static void onPowerTypeRegistrySync(SyncPowerTypeRegistryS2CPacket packet, ClientPlayNetworking.Context context) {
-        PowerTypeRegistry.clear();
-        packet.powers().forEach(PowerTypeRegistry::register);
-    }
-
     private static void onPlayerMount(MountPlayerS2CPacket packet, ClientPlayNetworking.Context context) {
 
         ClientPlayNetworkHandler handler = context.player().networkHandler;
@@ -149,7 +144,7 @@ public class ModPacketsS2C {
         ClientPlayerEntity player = context.player();
         Identifier powerTypeId = payload.powerTypeId();
 
-        if (!PowerTypeRegistry.contains(powerTypeId)) {
+        if (!PowerTypeManager.contains(powerTypeId)) {
             Apoli.LOGGER.warn("Received packet for syncing unknown power \"{}\"!", powerTypeId);
             return;
         }
@@ -169,7 +164,7 @@ public class ModPacketsS2C {
             return;
         }
 
-        PowerType<?> powerType = PowerTypeRegistry.get(powerTypeId);
+        PowerType powerType = PowerTypeManager.get(powerTypeId);
         Power power = component.getPower(powerType);
 
         if (power != null) {
@@ -200,12 +195,12 @@ public class ModPacketsS2C {
             Identifier powerTypeId = entry.getKey();
             NbtElement powerTypeData = entry.getValue();
 
-            if (!PowerTypeRegistry.contains(powerTypeId)) {
+            if (!PowerTypeManager.contains(powerTypeId)) {
                 ++invalidPowers;
                 continue;
             }
 
-            PowerType<?> powerType = PowerTypeRegistry.get(powerTypeId);
+            PowerType powerType = PowerTypeManager.get(powerTypeId);
             Power power = component.getPower(powerType);
 
             if (power != null) {

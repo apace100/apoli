@@ -18,7 +18,7 @@ public class RestrictArmorPower extends Power {
 
     protected final Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions;
 
-    public RestrictArmorPower(PowerType<?> type, LivingEntity entity, HashMap<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions) {
+    public RestrictArmorPower(PowerType type, LivingEntity entity, Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions) {
         super(type, entity);
         this.armorConditions = armorConditions;
     }

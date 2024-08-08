@@ -14,7 +14,7 @@ public class PreventEntitySelectionPower extends Power {
 
     private final Predicate<Pair<Entity, Entity>> biEntityCondition;
 
-    public PreventEntitySelectionPower(PowerType<?> type, LivingEntity entity, Predicate<Pair<Entity, Entity>> biEntityCondition) {
+    public PreventEntitySelectionPower(PowerType type, LivingEntity entity, Predicate<Pair<Entity, Entity>> biEntityCondition) {
         super(type, entity);
         this.biEntityCondition = biEntityCondition;
     }

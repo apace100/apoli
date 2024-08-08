@@ -17,7 +17,7 @@ public class ResourceCondition {
 
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
-        PowerType<?> powerType = data.get("resource");
+        PowerType powerType = data.get("resource");
         Comparison comparison = data.get("comparison");
         int compareTo = data.get("compare_to");
 
@@ -27,7 +27,7 @@ public class ResourceCondition {
 
     }
 
-    private static boolean comparePowerValue(PowerHolderComponent component, PowerType<?> powerType, Comparison comparison, int compareTo) {
+    private static boolean comparePowerValue(PowerHolderComponent component, PowerType powerType, Comparison comparison, int compareTo) {
 
         Integer powerValue = null;
         Power power = component.getPower(powerType);

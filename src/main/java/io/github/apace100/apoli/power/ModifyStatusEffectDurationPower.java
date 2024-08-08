@@ -15,7 +15,7 @@ import java.util.List;
 public class ModifyStatusEffectDurationPower extends ValueModifyingPower {
     private final List<RegistryEntry<StatusEffect>> statusEffects;
 
-    public ModifyStatusEffectDurationPower(PowerType<?> type, LivingEntity entity, List<RegistryEntry<StatusEffect>> statusEffects) {
+    public ModifyStatusEffectDurationPower(PowerType type, LivingEntity entity, List<RegistryEntry<StatusEffect>> statusEffects) {
         super(type, entity);
         this.statusEffects = statusEffects;
     }

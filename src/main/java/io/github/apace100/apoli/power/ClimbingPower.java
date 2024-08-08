@@ -15,7 +15,7 @@ public class ClimbingPower extends Power {
     private final Predicate<Entity> holdingCondition;
     private final boolean allowHolding;
 
-    public ClimbingPower(PowerType<?> type, LivingEntity entity, Predicate<Entity> holdingCondition, boolean allowHolding) {
+    public ClimbingPower(PowerType type, LivingEntity entity, Predicate<Entity> holdingCondition, boolean allowHolding) {
         super(type, entity);
         this.holdingCondition = holdingCondition;
         this.allowHolding = allowHolding;

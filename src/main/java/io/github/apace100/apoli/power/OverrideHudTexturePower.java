@@ -22,7 +22,7 @@ public class OverrideHudTexturePower extends Power implements Prioritized<Overri
 
     private final int priority;
 
-    public OverrideHudTexturePower(PowerType<?> type, LivingEntity entity, Identifier statusBarTexture, Map<Identifier, Identifier> textureMapping, int priority) {
+    public OverrideHudTexturePower(PowerType type, LivingEntity entity, Identifier statusBarTexture, Map<Identifier, Identifier> textureMapping, int priority) {
         super(type, entity);
         this.textureMapping = textureMapping;
         this.statusBarTexture = statusBarTexture;

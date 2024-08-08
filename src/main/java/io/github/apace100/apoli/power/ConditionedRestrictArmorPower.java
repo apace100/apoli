@@ -24,10 +24,8 @@ public class ConditionedRestrictArmorPower extends RestrictArmorPower {
 
     private boolean wasActive;
 
-    public ConditionedRestrictArmorPower(PowerType<?> type, LivingEntity entity, HashMap<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions, int tickRate) {
-        super(type, entity);
-        this.armorConditions = armorConditions;
-        this.setTicking(true);
+    public ConditionedRestrictArmorPower(PowerType type, LivingEntity entity, Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions, int tickRate) {
+        super(type, entity, armorConditions);
         this.tickRate = tickRate;
         this.setTicking();
     }

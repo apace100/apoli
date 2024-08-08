@@ -15,7 +15,7 @@ public class PowerCondition {
 
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
-        PowerType<?> powerType = data.get("power");
+        PowerType powerType = data.get("power");
         Identifier powerSource = data.get("source");
 
         return PowerHolderComponent.KEY.maybeGet(entity)
@@ -24,7 +24,7 @@ public class PowerCondition {
 
     }
 
-    private static boolean hasPower(PowerHolderComponent component, PowerType<?> powerType, @Nullable Identifier powerSource) {
+    private static boolean hasPower(PowerHolderComponent component, PowerType powerType, @Nullable Identifier powerSource) {
         return powerSource != null ? component.hasPower(powerType, powerSource) : component.hasPower(powerType);
     }
 
