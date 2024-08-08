@@ -47,7 +47,7 @@ public class ActiveCooldownPowerType extends CooldownPowerType implements Active
             Apoli.identifier("active_self"),
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION)
-                .add("hud_render", ApoliDataTypes.HUD_RENDER)
+                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
                 .add("cooldown", SerializableDataTypes.INT, 1)
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Key()),
             data -> (power, entity) -> new ActiveCooldownPowerType(power, entity,
