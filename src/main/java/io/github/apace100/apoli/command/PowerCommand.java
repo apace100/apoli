@@ -8,6 +8,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
+import io.github.apace100.apoli.command.argument.PowerTypeArgumentType;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.util.JsonTextFormatter;
@@ -50,11 +52,15 @@ public class PowerCommand {
 							.then(argument("source", IdentifierArgumentType.identifier())
 								.executes(context -> revokePower(context, true)))))
 				)
-				.then(literal("revokeall")
+				.then(literal("revokeall")	//	TODO: Remove this! -eggohito
 					.then(argument("targets", PowerHolderArgumentType.holders())
 						.then(argument("source", IdentifierArgumentType.identifier())
 							.executes(PowerCommand::revokeAllPowers)))
 				)
+				.then(literal("revoke_all")
+					.then(argument("targets", PowerHolderArgumentType.holders())
+						.then(argument("source", IdentifierArgumentType.identifier())
+							.executes(PowerCommand::revokeAllPowers))))
 				.then(literal("list")
 					.then(argument("target", PowerHolderArgumentType.holder())
 						.executes(context -> listPowers(context, false))
@@ -113,7 +119,7 @@ public class PowerCommand {
 		}
 
 		Text powerTypeName = power.getName();
-		Text targetName = targets.get(0).getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -130,7 +136,7 @@ public class PowerCommand {
 
 		}
 
-		Text processedTargetName = processedTargets.get(0).getName();
+		Text processedTargetName = processedTargets.getFirst().getName();
 		if (isSourceSpecified) {
 			if (processedTargetsSize == 1) {
 				source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.single", processedTargetName, powerTypeName, powerSource.toString()), true);
@@ -174,7 +180,7 @@ public class PowerCommand {
 		}
 
 		Text powerTypeName = power.getName();
-		Text targetName = targets.get(0).getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -191,7 +197,7 @@ public class PowerCommand {
 
 		}
 
-		Text processedTargetName = processedTargets.get(0).getName();
+		Text processedTargetName = processedTargets.getFirst().getName();
 		if (isSourceSpecified) {
 			if (processedTargetsSize == 1) {
 				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.single", processedTargetName, powerTypeName, powerSource.toString()), true);
@@ -236,7 +242,7 @@ public class PowerCommand {
 
 		}
 
-		Text targetName = targets.get(0).getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -249,7 +255,7 @@ public class PowerCommand {
 			}
 		} else {
 
-			Text processedTargetName = processedTargets.get(0).getName();
+			Text processedTargetName = processedTargets.getFirst().getName();
 			int finalRevokedPowers = revokedPowers;
 
 			if (processedTargetsSize == 1) {
@@ -397,7 +403,7 @@ public class PowerCommand {
 
 		}
 
-		Text targetName = targets.get(0).getName();
+		Text targetName = targets.getFirst().getName();
 		Text powerTypeName = power.getName();
 
 		int targetsSize = targets.size();
@@ -410,7 +416,7 @@ public class PowerCommand {
 				source.sendError(Text.translatable("commands.apoli.remove.fail.multiple", powerTypeName));
 			}
 		} else {
-			Text processedTargetName = processedTargets.get(0).getName();
+			Text processedTargetName = processedTargets.getFirst().getName();
 			if (processedTargetsSize == 1) {
 				source.sendFeedback(() -> Text.translatable("commands.apoli.remove.success.single", processedTargetName, powerTypeName), true);
 			} else {
@@ -463,7 +469,7 @@ public class PowerCommand {
 
 		}
 
-		Text targetName = targets.get(0).getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -476,7 +482,7 @@ public class PowerCommand {
 			}
 		} else {
 
-			Text processedTargetName = processedTargets.get(0).getName();
+			Text processedTargetName = processedTargets.getFirst().getName();
 			int finalClearedPowers = clearedPowers;
 
 			if (processedTargetsSize == 1) {

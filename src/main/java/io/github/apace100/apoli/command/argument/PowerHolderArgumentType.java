@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.command;
+package io.github.apace100.apoli.command.argument;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -54,10 +54,15 @@ public class PowerHolderArgumentType extends EntityArgumentType {
             .toList();
 
         if (holders.isEmpty()) {
+
             if (entities.size() == 1) {
-                throw HOLDER_NOT_FOUND.create(entities.get(0).getName());
+                throw HOLDER_NOT_FOUND.create(entities.getFirst().getName());
             }
-            throw HOLDERS_NOT_FOUND.create();
+
+            else {
+                throw HOLDERS_NOT_FOUND.create();
+            }
+
         }
 
         return holders;

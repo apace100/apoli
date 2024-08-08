@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.command;
+package io.github.apace100.apoli.command.argument;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;

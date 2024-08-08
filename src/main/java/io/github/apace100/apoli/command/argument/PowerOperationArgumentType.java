@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.command;
+package io.github.apace100.apoli.command.argument;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -17,19 +17,20 @@ import net.minecraft.text.Text;
 import java.util.concurrent.CompletableFuture;
 
 // Very similar to OperationArgumentType, but modified to make it work with resources.
-public class PowerOperation implements ArgumentType<PowerOperation.Operation> {
+public class PowerOperationArgumentType implements ArgumentType<PowerOperationArgumentType.Operation> {
+
     public static final SimpleCommandExceptionType INVALID_OPERATION = new SimpleCommandExceptionType(Text.translatable("arguments.operation.invalid"));
     public static final SimpleCommandExceptionType DIVISION_ZERO_EXCEPTION = new SimpleCommandExceptionType(Text.translatable("arguments.operation.div0"));
 
-    public static PowerOperation operation() {
-        return new PowerOperation();
+    public static PowerOperationArgumentType operation() {
+        return new PowerOperationArgumentType();
     }
 
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         return CommandSource.suggestMatching(new String[]{"=", "+=", "-=", "*=", "/=", "%=", "<", ">", "><"}, builder);
     }
 
-    public PowerOperation.Operation parse(StringReader stringReader) throws CommandSyntaxException {
+    public PowerOperationArgumentType.Operation parse(StringReader stringReader) throws CommandSyntaxException {
         if (!stringReader.canRead()) throw INVALID_OPERATION.create();
 
         int i = stringReader.getCursor();

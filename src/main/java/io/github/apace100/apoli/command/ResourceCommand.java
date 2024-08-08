@@ -4,6 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
+import io.github.apace100.apoli.command.argument.PowerOperationArgumentType;
+import io.github.apace100.apoli.command.argument.PowerTypeArgumentType;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.type.CooldownPowerType;
@@ -51,7 +54,7 @@ public class ResourceCommand {
                 .then(literal("operation")
                     .then(argument("target", PowerHolderArgumentType.holder())
                         .then(argument("power", PowerTypeArgumentType.power())
-                            .then(argument("operation", PowerOperation.operation())
+                            .then(argument("operation", PowerOperationArgumentType.operation())
                                 .then(argument("entity", ScoreHolderArgumentType.scoreHolder())
                                     .then(argument("objective", ScoreboardObjectiveArgumentType.scoreboardObjective())
                                         .executes((command) -> resource(command, SubCommand.OPERATION)))))))
@@ -142,7 +145,7 @@ public class ResourceCommand {
                 ScoreboardObjective scoreboardObjective = ScoreboardObjectiveArgumentType.getObjective(context, "objective");
 
                 ScoreAccess scoreAccess = source.getServer().getScoreboard().getOrCreateScore(scoreHolder, scoreboardObjective);
-                context.getArgument("operation", PowerOperation.Operation.class).apply(powerType, scoreAccess);
+                context.getArgument("operation", PowerOperationArgumentType.Operation.class).apply(powerType, scoreAccess);
 
                 int value = getValue(powerType);
                 source.sendFeedback(() -> Text.stringifiedTranslatable("commands.scoreboard.players.operation.success.single", power.getId(), target.getName().getString(), value), true);
