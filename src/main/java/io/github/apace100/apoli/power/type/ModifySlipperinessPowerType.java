@@ -36,7 +36,7 @@ public class ModifySlipperinessPowerType extends ValueModifyingPowerType {
         return blockCondition == null || blockCondition.test(new CachedBlockPosition(world, pos, true));
     }
 
-    public static PowerTypeFactory<ModifySlipperinessPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_slipperiness"),
             new SerializableData()

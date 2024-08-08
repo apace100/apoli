@@ -72,7 +72,7 @@ public class ActionOnCallbackPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<ActionOnCallbackPowerType> createFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_callback"),
             new SerializableData()

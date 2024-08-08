@@ -8,7 +8,7 @@ import com.mojang.serialization.MapLike;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.PowerTypeFactories;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -45,7 +45,7 @@ public class Power implements Validatable {
         .add("hidden", SerializableDataTypes.BOOLEAN, false);
 
     /**
-     *  <p>A data type for parsing {@linkplain Power powers}. It can decode and encode normal powers and powers that use the {@link PowerTypeFactories#MULTIPLE multiple} power type (and its sub-powers.)</p>
+     *  <p>A data type for parsing {@linkplain Power powers}. It can decode and encode normal powers and powers that use the {@link PowerTypes#MULTIPLE multiple} power type (and its sub-powers.)</p>
      *  <p>However, evaluation of the powers' loading priority and resource condition must be handled <b>manually</b> (like in {@link PowerManager}.)</p>
      */
     public static final SerializableDataType<Power> DATA_TYPE = SerializableDataType.of(
@@ -57,7 +57,7 @@ public class Power implements Validatable {
                 Power power = StrictPowerDataType.INSTANCE.strictParse(ops, input);
                 MapLike<I> mapInput = ops.getMap(input).getOrThrow();
 
-                if (power.getFactoryInstance().getFactory() == PowerTypeFactories.MULTIPLE) {
+                if (power.isMultiple()) {
 
                     Set<SubPower> subPowers = new LinkedHashSet<>();
                     mapInput.entries().forEach(keyAndValue -> {
@@ -79,7 +79,7 @@ public class Power implements Validatable {
                             Power baseSubPower = StrictPowerDataType.INSTANCE.strictParse(ops, ops.createMap(subMap));
                             SubPower subPower = new SubPower(power.getId(), subPowerName, baseSubPower);
 
-                            if (baseSubPower.getFactoryInstance().getFactory() == PowerTypeFactories.MULTIPLE) {
+                            if (baseSubPower.isMultiple()) {
                                 throw new IllegalArgumentException("Using the 'multiple' power type in sub-powers is not allowed!");
                             }
 
@@ -190,7 +190,12 @@ public class Power implements Validatable {
             || this.hidden;
     }
 
-    public final boolean isSubPower() {
+    public boolean isMultiple() {
+        return this.getFactoryInstance().getFactory() == PowerTypes.MULTIPLE
+            || this instanceof MultiplePower;
+    }
+
+    public boolean isSubPower() {
         return this instanceof SubPower;
     }
 

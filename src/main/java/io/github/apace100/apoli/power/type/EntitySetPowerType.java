@@ -346,7 +346,7 @@ public class EntitySetPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<EntitySetPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("entity_set"),
             new SerializableData()

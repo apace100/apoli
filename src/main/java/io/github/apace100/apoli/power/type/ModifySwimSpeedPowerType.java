@@ -17,7 +17,7 @@ public class ModifySwimSpeedPowerType extends ConditionedAttributePowerType {
         super(power, entity, 10,false);
     }
 
-    public static PowerTypeFactory<ModifySwimSpeedPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_swim_speed"),
             new SerializableData()

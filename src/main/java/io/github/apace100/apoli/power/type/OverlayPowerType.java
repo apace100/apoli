@@ -222,7 +222,7 @@ public class OverlayPowerType extends PowerType {
         BELOW_HUD, ABOVE_HUD
     }
 
-    public static PowerTypeFactory<OverlayPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("overlay"),
             new SerializableData()

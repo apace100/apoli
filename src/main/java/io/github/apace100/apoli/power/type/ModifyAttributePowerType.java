@@ -34,7 +34,7 @@ public class ModifyAttributePowerType extends ValueModifyingPowerType {
         return attribute;
     }
 
-    public static PowerTypeFactory<ModifyAttributePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_attribute"),
             new SerializableData()

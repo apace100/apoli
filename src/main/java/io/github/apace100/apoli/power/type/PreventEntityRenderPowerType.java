@@ -27,7 +27,7 @@ public class PreventEntityRenderPowerType extends PowerType {
             && (bientityCondition == null || bientityCondition.test(new Pair<>(entity, e)));
     }
 
-    public static PowerTypeFactory<PreventEntityRenderPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_entity_render"),
             new SerializableData()

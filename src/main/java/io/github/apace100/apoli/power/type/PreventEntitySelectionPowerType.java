@@ -25,7 +25,7 @@ public class PreventEntitySelectionPowerType extends PowerType {
             || biEntityCondition.test(new Pair<>(entity, target));
     }
 
-    public static PowerTypeFactory<PreventEntitySelectionPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_entity_selection"),
             new SerializableData()

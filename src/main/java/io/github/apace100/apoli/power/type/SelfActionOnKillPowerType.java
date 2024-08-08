@@ -39,7 +39,7 @@ public class SelfActionOnKillPowerType extends CooldownPowerType {
         entityAction.accept(entity);
     }
 
-    public static PowerTypeFactory<SelfActionOnKillPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("self_action_on_kill"),
             new SerializableData()

@@ -29,7 +29,7 @@ public class PreventElytraFlightPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<PreventElytraFlightPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
 
         //  FIXME: Fix the entity action not being executed when preventing elytra flight -eggohito
         EntityElytraEvents.ALLOW.register(entity -> !PowerHolderComponent.hasPowerType(entity, PreventElytraFlightPowerType.class));

@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;
@@ -12,6 +13,7 @@ public class PowerReference extends Power {
     public PowerReference(Identifier id) {
         super(null, DATA.instance()
             .set("id", id)
+            .set(TYPE_KEY, PowerTypes.SIMPLE)
             .set("name", Text.empty())
             .set("description", Text.empty())
             .set("hidden", true));
@@ -33,6 +35,16 @@ public class PowerReference extends Power {
         return power != null
             ? power.get(entity)
             : null;
+    }
+
+    @Override
+    public boolean isMultiple() {
+        return false;
+    }
+
+    @Override
+    public boolean isSubPower() {
+        return false;
     }
 
     @Nullable

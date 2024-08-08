@@ -7,7 +7,7 @@ import com.mojang.serialization.MapLike;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.factory.PowerTypeFactories;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.factory.action.*;
 import io.github.apace100.apoli.power.factory.condition.*;
@@ -66,7 +66,7 @@ public class ApoliDataTypes {
     public static final SerializableDataType<PowerTypeFactory<? extends PowerType>> POWER_TYPE_FACTORY = SerializableDataType.lazy(() -> SerializableDataType.registry(
         ApoliRegistries.POWER_FACTORY,
         Apoli.MODID,
-        PowerTypeFactories.ALIASES,
+        PowerTypes.ALIASES,
         (registry, id) -> new IllegalArgumentException("Power type \"" + id + "\" is not registered")
     ));
 

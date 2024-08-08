@@ -41,7 +41,7 @@ public class ActionWhenHitPowerType extends CooldownPowerType {
         this.bientityAction.accept(new Pair<>(attacker, entity));
     }
 
-    public static PowerTypeFactory<ActionWhenHitPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_when_hit"),
             new SerializableData()

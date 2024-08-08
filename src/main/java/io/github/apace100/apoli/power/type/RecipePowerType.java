@@ -30,7 +30,7 @@ public class RecipePowerType extends PowerType implements Prioritized<RecipePowe
         return recipe;
     }
 
-    public static PowerTypeFactory<RecipePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("recipe"),
             new SerializableData()

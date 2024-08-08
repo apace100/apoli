@@ -55,7 +55,7 @@ public class RestrictArmorPowerType extends PowerType {
         return armorCondition != null && armorCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
-    public static PowerTypeFactory<RestrictArmorPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("restrict_armor"),
             new SerializableData()

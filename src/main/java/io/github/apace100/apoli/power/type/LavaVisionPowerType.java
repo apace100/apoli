@@ -16,7 +16,7 @@ public class LavaVisionPowerType extends AttributePowerType {
         this.addModifier(AdditionalEntityAttributes.LAVA_VISIBILITY, new EntityAttributeModifier(this.getId(), v - 1, EntityAttributeModifier.Operation.ADD_VALUE));
     }
 
-    public static PowerTypeFactory<LavaVisionPowerType> createFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("lava_vision"),
             new SerializableData()

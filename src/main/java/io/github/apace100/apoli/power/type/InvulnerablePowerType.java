@@ -24,7 +24,7 @@ public class InvulnerablePowerType extends PowerType {
         return damageCondition.test(new Pair<>(source, 0.0F));
     }
 
-    public static PowerTypeFactory<InvulnerablePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("invulnerability"),
             new SerializableData()

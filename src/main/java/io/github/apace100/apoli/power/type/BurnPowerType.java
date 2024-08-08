@@ -27,7 +27,7 @@ public class BurnPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<BurnPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("burn"),
             new SerializableData()

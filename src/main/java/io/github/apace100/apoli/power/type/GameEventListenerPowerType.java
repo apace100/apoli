@@ -270,7 +270,7 @@ public class GameEventListenerPowerType extends CooldownPowerType implements Vib
 
     }
 
-    public static PowerTypeFactory<GameEventListenerPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("game_event_listener"),
             new SerializableData()

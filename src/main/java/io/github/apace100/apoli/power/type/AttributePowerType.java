@@ -96,7 +96,7 @@ public class AttributePowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<? extends AttributePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("attribute"),
             new SerializableData()

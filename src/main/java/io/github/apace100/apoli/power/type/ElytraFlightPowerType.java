@@ -29,7 +29,7 @@ public class ElytraFlightPowerType extends PowerType {
         return textureLocation;
     }
 
-    public static PowerTypeFactory<ElytraFlightPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
 
         //  TODO: Manually do vanilla elytra flight stuff using the API -eggohito
         EntityElytraEvents.CUSTOM.register((entity, tickElytra) -> PowerHolderComponent.hasPowerType(entity, ElytraFlightPowerType.class));

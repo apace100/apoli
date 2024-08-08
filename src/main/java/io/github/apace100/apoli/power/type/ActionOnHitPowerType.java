@@ -39,7 +39,7 @@ public class ActionOnHitPowerType extends CooldownPowerType {
         this.bientityAction.accept(new Pair<>(entity, target));
     }
 
-    public static PowerTypeFactory<ActionOnHitPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_hit"),
             new SerializableData()

@@ -27,7 +27,7 @@ public class ModifyCameraSubmersionTypePowerType extends PowerType {
         return to;
     }
 
-    public static PowerTypeFactory<ModifyCameraSubmersionTypePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_camera_submersion"),
             new SerializableData()

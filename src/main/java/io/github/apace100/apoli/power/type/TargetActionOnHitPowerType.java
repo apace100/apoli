@@ -39,19 +39,7 @@ public class TargetActionOnHitPowerType extends CooldownPowerType {
         this.use();
     }
 
-    @Deprecated(forRemoval = true)
-    public void onHit(Entity target, DamageSource damageSource, float damageAmount) {
-        if(targetCondition == null || targetCondition.test(target)) {
-            if(damageCondition == null || damageCondition.test(new Pair<>(damageSource, damageAmount))) {
-                if(canUse()) {
-                    this.entityAction.accept(target);
-                    use();
-                }
-            }
-        }
-    }
-
-    public static PowerTypeFactory<TargetActionOnHitPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("target_action_on_hit"),
             new SerializableData()

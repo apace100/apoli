@@ -37,7 +37,7 @@ public class EffectImmunityPowerType extends PowerType {
         return inverted ^ effects.contains(effect);
     }
 
-    public static PowerTypeFactory<EffectImmunityPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(Apoli.identifier("effect_immunity"),
             new SerializableData()
                 .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY, null)

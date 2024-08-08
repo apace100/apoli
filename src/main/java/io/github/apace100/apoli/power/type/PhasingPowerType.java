@@ -72,7 +72,7 @@ public class PhasingPowerType extends PowerType {
             && PowerHolderComponent.hasPowerType(entityContext.getEntity(), PhasingPowerType.class, p -> p.shouldPhase(shape, pos));
     }
 
-    public static PowerTypeFactory<PhasingPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(Apoli.identifier("phasing"),
             new SerializableData()
                 .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)

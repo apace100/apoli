@@ -51,7 +51,7 @@ public class ModifyBreakSpeedPowerType extends ValueModifyingPowerType {
         return blockCondition == null || blockCondition.test(new CachedBlockPosition(entity.getWorld(), pos, true));
     }
 
-    public static PowerTypeFactory<ModifyBreakSpeedPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_break_speed"),
             new SerializableData()

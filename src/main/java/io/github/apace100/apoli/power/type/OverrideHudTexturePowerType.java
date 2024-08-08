@@ -102,7 +102,7 @@ public class OverrideHudTexturePowerType extends PowerType implements Prioritize
 
     }
 
-    public static PowerTypeFactory createFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(Apoli.identifier("status_bar_texture"),
             new SerializableData()
                 .add("texture", SerializableDataTypes.IDENTIFIER, null)
@@ -117,4 +117,5 @@ public class OverrideHudTexturePowerType extends PowerType implements Prioritize
             )
         ).allowCondition();
     }
+
 }

@@ -70,7 +70,7 @@ public class KeepInventoryPowerType extends PowerType {
         savedStacks = null;
     }
 
-    public static PowerTypeFactory<KeepInventoryPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("keep_inventory"),
             new SerializableData()

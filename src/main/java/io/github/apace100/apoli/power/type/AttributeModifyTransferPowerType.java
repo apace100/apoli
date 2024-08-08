@@ -71,7 +71,7 @@ public class AttributeModifyTransferPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<AttributeModifyTransferPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("attribute_modify_transfer"),
             new SerializableData()

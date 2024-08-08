@@ -38,7 +38,7 @@ public class ModifyJumpPowerType extends ValueModifyingPowerType {
 
     }
 
-    public static PowerTypeFactory<ModifyJumpPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_jump"),
             new SerializableData()

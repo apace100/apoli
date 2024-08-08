@@ -35,7 +35,7 @@ public class ShaderPowerType extends PowerType implements Prioritized<ShaderPowe
         return toggleable;
     }
 
-    public static PowerTypeFactory<ShaderPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("shader"),
             new SerializableData()

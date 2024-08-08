@@ -98,7 +98,7 @@ public class ActionOverTimePowerType extends PowerType {
         wasActive = tag.equals(NbtByte.ONE);
     }
 
-    public static PowerTypeFactory<ActionOverTimePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_over_time"),
             new SerializableData()

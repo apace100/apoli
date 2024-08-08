@@ -171,7 +171,7 @@ public class ReplaceLootTablePowerType extends PowerType {
         Apoli.LOGGER.info(stringBuilder.toString());
     }
 
-    public static PowerTypeFactory<ReplaceLootTablePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("replace_loot_table"),
             new SerializableData()

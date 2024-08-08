@@ -277,7 +277,7 @@ public class InventoryPowerType extends PowerType implements Active, Inventory {
     }
 
 
-    public static PowerTypeFactory<InventoryPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("inventory"),
             new SerializableData()

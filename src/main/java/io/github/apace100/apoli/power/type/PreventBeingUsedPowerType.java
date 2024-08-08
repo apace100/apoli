@@ -49,7 +49,7 @@ public class PreventBeingUsedPowerType extends InteractionPowerType {
 
     }
 
-    public static PowerTypeFactory<PreventBeingUsedPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_being_used"),
             new SerializableData()

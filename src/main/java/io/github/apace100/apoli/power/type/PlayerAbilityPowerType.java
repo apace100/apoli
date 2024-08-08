@@ -119,7 +119,7 @@ public class PlayerAbilityPowerType extends PowerType {
         }
     }
 
-    public static PowerTypeFactory<PlayerAbilityPowerType> createAbilityFactory(Identifier id, PlayerAbility ability) {
+    public static PowerTypeFactory<?> createAbilityFactory(Identifier id, PlayerAbility ability) {
         return new PowerTypeFactory<>(
             id,
             new SerializableData(),

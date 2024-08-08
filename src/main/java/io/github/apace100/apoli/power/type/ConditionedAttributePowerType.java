@@ -53,7 +53,7 @@ public class ConditionedAttributePowerType extends AttributePowerType {
 
     }
 
-    public static PowerTypeFactory<ConditionedAttributePowerType> getConditionedFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("conditioned_attribute"),
             new SerializableData()

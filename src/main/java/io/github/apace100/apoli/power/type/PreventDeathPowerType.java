@@ -53,7 +53,7 @@ public class PreventDeathPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<PreventDeathPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_death"),
             new SerializableData()

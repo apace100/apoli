@@ -125,7 +125,7 @@ public class ModifyGrindstonePowerType extends PowerType {
             && PowerHolderComponent.hasPowerType(powerModifiedGrindstone.apoli$getPlayer(), ModifyGrindstonePowerType.class, p -> p.allowsInBottom(stack));
     }
 
-    public static PowerTypeFactory<ModifyGrindstonePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_grindstone"),
             new SerializableData()
@@ -156,7 +156,8 @@ public class ModifyGrindstonePowerType extends PowerType {
         ).allowCondition();
     }
 
-    private enum ResultType {
+    public enum ResultType {
         UNCHANGED, SPECIFIED, FROM_TOP, FROM_BOTTOM
     }
+
 }

@@ -42,7 +42,7 @@ public class ActiveCooldownPowerType extends CooldownPowerType implements Active
         return key;
     }
 
-    public static PowerTypeFactory<ActiveCooldownPowerType> getActiveSelfFactory() {
+    public static PowerTypeFactory<?> getActiveSelfFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("active_self"),
             new SerializableData()
@@ -59,7 +59,7 @@ public class ActiveCooldownPowerType extends CooldownPowerType implements Active
         ).allowCondition();
     }
 
-    public static PowerTypeFactory<ActiveCooldownPowerType> getLaunchFactory() {
+    public static PowerTypeFactory<?> getLaunchFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("launch"),
             new SerializableData()

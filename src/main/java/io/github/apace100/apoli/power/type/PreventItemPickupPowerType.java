@@ -94,7 +94,7 @@ public class PreventItemPickupPowerType extends PowerType implements Prioritized
 
     }
 
-    public static PowerTypeFactory<PreventItemPickupPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_item_pickup"),
             new SerializableData()

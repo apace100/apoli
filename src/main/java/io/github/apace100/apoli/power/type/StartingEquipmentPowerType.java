@@ -73,7 +73,7 @@ public class StartingEquipmentPowerType extends PowerType {
         });
     }
 
-    public static PowerTypeFactory<StartingEquipmentPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("starting_equipment"),
             new SerializableData()

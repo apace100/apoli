@@ -49,7 +49,7 @@ public class AttackerActionWhenHitPowerType extends CooldownPowerType {
         }
     }
 
-    public static PowerTypeFactory<AttackerActionWhenHitPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("attacker_action_when_hit"),
             new SerializableData()

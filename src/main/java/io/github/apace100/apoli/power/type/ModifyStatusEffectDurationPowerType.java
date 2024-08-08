@@ -44,7 +44,7 @@ public class ModifyStatusEffectDurationPowerType extends ValueModifyingPowerType
         return statusEffects.contains(statusEffect);
     }
 
-    public static PowerTypeFactory<ModifyStatusEffectDurationPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_status_effect_amplifier"),
             new SerializableData()

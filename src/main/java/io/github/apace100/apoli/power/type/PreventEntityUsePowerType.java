@@ -52,7 +52,7 @@ public class PreventEntityUsePowerType extends InteractionPowerType {
 
     }
 
-    public static PowerTypeFactory<PreventEntityUsePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_entity_use"),
             new SerializableData()

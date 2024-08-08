@@ -30,7 +30,7 @@ public class PreventEntityCollisionPowerType extends PowerType {
             || PowerHolderComponent.hasPowerType(collidingEntity, PreventEntityCollisionPowerType.class, p -> p.doesApply(fromEntity));
     }
 
-    public static PowerTypeFactory<PreventEntityCollisionPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_entity_collision"),
             new SerializableData()

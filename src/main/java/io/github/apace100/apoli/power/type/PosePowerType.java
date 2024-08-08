@@ -61,7 +61,7 @@ public class PosePowerType extends PowerType implements Prioritized<PosePowerTyp
             && poseHolder.apoli$getModifiedEntityPose() == entityPose;
     }
 
-    public static PowerTypeFactory<PosePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("pose"),
             new SerializableData()

@@ -78,7 +78,7 @@ public class ConditionedRestrictArmorPowerType extends RestrictArmorPowerType {
         return false;
     }
 
-    public static PowerTypeFactory<ConditionedRestrictArmorPowerType> getConditionedFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("conditioned_restrict_armor"),
             new SerializableData()

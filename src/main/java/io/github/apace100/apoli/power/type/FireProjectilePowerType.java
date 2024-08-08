@@ -212,7 +212,7 @@ public class FireProjectilePowerType extends ActiveCooldownPowerType {
 
     }
 
-    public static PowerTypeFactory<FireProjectilePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("fire_projectile"),
             new SerializableData()

@@ -55,7 +55,7 @@ public class PreventSleepPowerType extends PowerType implements Prioritized<Prev
         return allowSpawnPoint;
     }
 
-    public static PowerTypeFactory<PreventSleepPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_sleep"),
             new SerializableData()

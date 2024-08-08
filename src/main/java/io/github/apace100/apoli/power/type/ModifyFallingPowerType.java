@@ -50,7 +50,7 @@ public class ModifyFallingPowerType extends ValueModifyingPowerType {
         return PowerHolderComponent.hasPowerType(entity, ModifyFallingPowerType.class, Predicate.not(ModifyFallingPowerType::shouldTakeFallDamage));
     }
 
-    public static PowerTypeFactory<ModifyFallingPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_falling"),
             new SerializableData()

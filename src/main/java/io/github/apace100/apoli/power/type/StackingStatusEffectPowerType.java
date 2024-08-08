@@ -70,7 +70,7 @@ public class StackingStatusEffectPowerType extends StatusEffectPowerType {
         currentStack = ((NbtInt)tag).intValue();
     }
 
-    public static PowerTypeFactory<StackingStatusEffectPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("stacking_status_effect"),
             new SerializableData()

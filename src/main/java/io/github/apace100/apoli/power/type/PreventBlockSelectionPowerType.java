@@ -33,7 +33,7 @@ public class PreventBlockSelectionPowerType extends PowerType {
             && PowerHolderComponent.hasPowerType(entityContext.getEntity(), PreventBlockSelectionPowerType.class, p -> p.doesPrevent(pos));
     }
 
-    public static PowerTypeFactory<PreventBlockSelectionPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_block_selection"),
             new SerializableData()

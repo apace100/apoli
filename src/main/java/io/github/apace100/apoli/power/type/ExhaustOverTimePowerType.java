@@ -28,7 +28,7 @@ public class ExhaustOverTimePowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<ExhaustOverTimePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("exhaust"),
             new SerializableData()

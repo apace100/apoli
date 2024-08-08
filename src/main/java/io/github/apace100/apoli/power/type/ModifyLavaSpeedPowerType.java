@@ -17,7 +17,7 @@ public class ModifyLavaSpeedPowerType extends ConditionedAttributePowerType {
         super(power, entity, 10,false);
     }
 
-    public static PowerTypeFactory<ModifyLavaSpeedPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_lava_speed"),
             new SerializableData()

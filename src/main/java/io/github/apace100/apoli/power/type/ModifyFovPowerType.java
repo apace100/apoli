@@ -32,7 +32,7 @@ public class ModifyFovPowerType extends ValueModifyingPowerType {
         return affectedByFovEffectScale;
     }
 
-    public static PowerTypeFactory<ModifyFovPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_fov"),
             new SerializableData()

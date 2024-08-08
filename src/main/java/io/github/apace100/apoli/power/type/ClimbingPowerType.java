@@ -32,7 +32,7 @@ public class ClimbingPowerType extends PowerType {
             : entity.isSneaking();
     }
 
-    public static PowerTypeFactory<ClimbingPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("climbing"),
             new SerializableData()

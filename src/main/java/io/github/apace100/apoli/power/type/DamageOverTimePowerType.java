@@ -168,7 +168,7 @@ public class DamageOverTimePowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<DamageOverTimePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("damage_over_time"),
             new SerializableData()

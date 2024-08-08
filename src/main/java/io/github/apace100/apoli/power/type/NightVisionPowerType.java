@@ -20,7 +20,7 @@ public class NightVisionPowerType extends PowerType {
         return strength;
     }
 
-    public static PowerTypeFactory<? extends NightVisionPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("night_vision"),
             new SerializableData()

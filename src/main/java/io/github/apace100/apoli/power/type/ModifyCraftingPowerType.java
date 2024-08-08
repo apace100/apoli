@@ -90,7 +90,7 @@ public class ModifyCraftingPowerType extends ValueModifyingPowerType implements 
 
     }
 
-    public static PowerTypeFactory<ModifyCraftingPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_crafting"),
             new SerializableData()

@@ -77,7 +77,7 @@ public class ActionOnItemUsePowerType extends PowerType implements Prioritized<A
 
     }
 
-    public static PowerTypeFactory<ActionOnItemUsePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_item_use"),
             new SerializableData()

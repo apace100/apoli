@@ -52,7 +52,7 @@ public class ToggleNightVisionPowerType extends NightVisionPowerType implements 
         return key;
     }
 
-    public static PowerTypeFactory<ToggleNightVisionPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("toggle_night_vision"),
             new SerializableData()

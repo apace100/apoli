@@ -42,7 +42,7 @@ public class ModelColorPowerType extends PowerType {
         return alpha < 1.0F;
     }
 
-    public static PowerTypeFactory<ModelColorPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("model_color"),
             new SerializableData()

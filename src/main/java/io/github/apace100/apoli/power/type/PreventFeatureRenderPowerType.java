@@ -44,7 +44,7 @@ public class PreventFeatureRenderPowerType extends PowerType {
             .anyMatch(cls -> cls.isAssignableFrom(featureRenderer.getClass()));
     }
 
-    public static PowerTypeFactory<PreventFeatureRenderPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_feature_render"),
             new SerializableData()

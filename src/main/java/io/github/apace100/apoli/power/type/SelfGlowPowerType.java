@@ -54,7 +54,7 @@ public class SelfGlowPowerType extends PowerType {
         return blue;
     }
 
-    public static PowerTypeFactory<SelfGlowPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("self_glow"),
             new SerializableData()

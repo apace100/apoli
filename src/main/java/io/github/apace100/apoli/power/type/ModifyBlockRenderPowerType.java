@@ -51,7 +51,7 @@ public class ModifyBlockRenderPowerType extends PowerType {
         ApoliClient.shouldReloadWorldRenderer = true;
     }
 
-    public static PowerTypeFactory<ModifyBlockRenderPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_block_render"),
             new SerializableData()

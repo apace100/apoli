@@ -264,7 +264,7 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
         return itemCondition == null || itemCondition.test(new net.minecraft.util.Pair<>(entity.getWorld(), self));
     }
 
-    public static PowerTypeFactory<ModifyEnchantmentLevelPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_enchantment_level"),
             new SerializableData()

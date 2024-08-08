@@ -39,7 +39,7 @@ public class SelfActionOnHitPowerType extends CooldownPowerType {
         this.entityAction.accept(entity);
     }
 
-    public static PowerTypeFactory<SelfActionOnHitPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(Apoli.identifier("self_action_on_hit"),
             new SerializableData()
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION)

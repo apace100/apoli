@@ -38,7 +38,7 @@ public class InvisibilityPowerType extends PowerType {
         return renderOutline;
     }
 
-    public static PowerTypeFactory<InvisibilityPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("invisibility"),
             new SerializableData()

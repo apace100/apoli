@@ -22,7 +22,7 @@ public class WalkOnFluidPowerType extends PowerType {
         return fluidTag;
     }
 
-    public static PowerTypeFactory<WalkOnFluidPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("walk_on_fluid"),
             new SerializableData()

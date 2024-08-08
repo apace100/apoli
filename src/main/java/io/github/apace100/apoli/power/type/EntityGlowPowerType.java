@@ -54,7 +54,7 @@ public class EntityGlowPowerType extends PowerType {
         return blue;
     }
 
-    public static PowerTypeFactory<EntityGlowPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("entity_glow"),
             new SerializableData()

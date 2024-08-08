@@ -46,7 +46,7 @@ public class ActionOnBeingUsedPowerType extends ActiveInteractionPowerType {
         return getActionResult();
     }
 
-    public static PowerTypeFactory<ActionOnBeingUsedPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_being_used"),
             new SerializableData()

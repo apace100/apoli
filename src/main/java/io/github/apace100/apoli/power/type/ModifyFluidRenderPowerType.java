@@ -53,7 +53,7 @@ public class ModifyFluidRenderPowerType extends PowerType {
         return fluidState;
     }
 
-    public static PowerTypeFactory<ModifyFluidRenderPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_fluid_render"),
             new SerializableData()

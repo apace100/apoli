@@ -49,7 +49,7 @@ public class ActionOnEntityUsePowerType extends ActiveInteractionPowerType {
 
     }
 
-    public static PowerTypeFactory<ActionOnEntityUsePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_entity_use"),
             new SerializableData()

@@ -70,7 +70,7 @@ public class ModifyDamageDealtPowerType extends ValueModifyingPowerType {
 
     }
 
-    public static PowerTypeFactory<ModifyDamageDealtPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_damage_dealt"),
             new SerializableData()

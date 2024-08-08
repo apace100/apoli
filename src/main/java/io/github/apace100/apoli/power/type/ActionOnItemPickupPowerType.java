@@ -73,7 +73,7 @@ public class ActionOnItemPickupPowerType extends PowerType implements Prioritize
 
     }
 
-    public static PowerTypeFactory<ActionOnItemPickupPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_item_pickup"),
             new SerializableData()

@@ -50,7 +50,7 @@ public class ActionOnWakeUpPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<ActionOnWakeUpPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_wake_up"),
             new SerializableData()

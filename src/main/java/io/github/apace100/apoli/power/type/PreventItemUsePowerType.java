@@ -25,7 +25,7 @@ public class PreventItemUsePowerType extends PowerType {
         return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
-    public static PowerTypeFactory<PreventItemUsePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_item_use"),
             new SerializableData()

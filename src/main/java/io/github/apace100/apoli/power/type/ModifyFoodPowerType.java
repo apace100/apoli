@@ -141,7 +141,7 @@ public class ModifyFoodPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<ModifyFoodPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(Apoli.identifier("modify_food"),
             new SerializableData()
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)

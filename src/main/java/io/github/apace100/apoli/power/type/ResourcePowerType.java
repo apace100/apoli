@@ -38,7 +38,7 @@ public class ResourcePowerType extends HudRenderedVariableIntPowerType {
         return actualNewValue;
     }
 
-    public static PowerTypeFactory<ResourcePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("resource"),
             new SerializableData()

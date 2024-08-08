@@ -35,7 +35,7 @@ public class ActionOnDeathPowerType extends PowerType {
         bientityAction.accept(new Pair<>(actor, entity));
     }
 
-    public static PowerTypeFactory<ActionOnDeathPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_death"),
             new SerializableData()

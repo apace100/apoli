@@ -34,7 +34,7 @@ public class ModifyVelocityPowerType extends ValueModifyingPowerType {
         return axes.contains(axis);
     }
 
-    public static PowerTypeFactory<ModifyVelocityPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_velocity"),
             new SerializableData()

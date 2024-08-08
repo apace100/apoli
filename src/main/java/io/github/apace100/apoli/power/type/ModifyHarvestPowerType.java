@@ -50,7 +50,7 @@ public class ModifyHarvestPowerType extends PowerType implements Prioritized<Mod
         return allow;
     }
 
-    public static PowerTypeFactory<ModifyHarvestPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_harvest"),
             new SerializableData()

@@ -72,7 +72,7 @@ public class ActionOnBlockUsePowerType extends ActiveInteractionPowerType {
 
     }
 
-    public static PowerTypeFactory<ActionOnBlockUsePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_block_use"),
             new SerializableData()

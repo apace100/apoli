@@ -23,7 +23,7 @@ public class ActionOnLandPowerType extends PowerType {
         entityAction.accept(entity);
     }
 
-    public static PowerTypeFactory<ActionOnLandPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_land"),
             new SerializableData()

@@ -74,7 +74,7 @@ public class TogglePowerType extends PowerType implements Active {
         return key;
     }
 
-    public static PowerTypeFactory<TogglePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("toggle"),
             new SerializableData()

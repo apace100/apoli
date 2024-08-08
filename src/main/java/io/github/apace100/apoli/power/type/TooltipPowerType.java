@@ -176,7 +176,7 @@ public class TooltipPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<TooltipPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("tooltip"),
             new SerializableData()

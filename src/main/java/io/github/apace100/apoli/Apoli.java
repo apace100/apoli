@@ -12,7 +12,7 @@ import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
-import io.github.apace100.apoli.power.factory.PowerTypeFactories;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.factory.action.BiEntityActions;
 import io.github.apace100.apoli.power.factory.action.BlockActions;
 import io.github.apace100.apoli.power.factory.action.EntityActions;
@@ -101,7 +101,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ModifierOperations.registerAll();
 		ApoliDataComponentTypes.register();
 
-		PowerTypeFactories.register();
+		PowerTypes.register();
 		EntityConditions.register();
 		BiEntityConditions.register();
 		ItemConditions.register();

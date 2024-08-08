@@ -81,7 +81,7 @@ public class CooldownPowerType extends PowerType implements HudRendered {
         return (entity.getEntityWorld().getTime() - lastUseTime) <= cooldownDuration;
     }
 
-    public static PowerTypeFactory<? extends CooldownPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("cooldown"),
             new SerializableData()

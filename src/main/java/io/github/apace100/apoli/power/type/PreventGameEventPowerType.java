@@ -51,7 +51,7 @@ public class PreventGameEventPowerType extends PowerType {
             || (events != null && events.contains(event));
     }
 
-    public static PowerTypeFactory<PreventGameEventPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_game_event"),
             new SerializableData()

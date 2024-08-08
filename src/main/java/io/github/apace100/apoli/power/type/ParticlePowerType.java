@@ -103,7 +103,7 @@ public class ParticlePowerType extends PowerType {
         return visibleWhileInvisible;
     }
 
-    public static PowerTypeFactory<ParticlePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("particle"),
             new SerializableData()

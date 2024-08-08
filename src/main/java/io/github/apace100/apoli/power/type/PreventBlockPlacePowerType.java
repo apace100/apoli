@@ -71,7 +71,7 @@ public class PreventBlockPlacePowerType extends ActiveInteractionPowerType {
 
     }
 
-    public static PowerTypeFactory<PreventBlockPlacePowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("prevent_block_place"),
             new SerializableData()

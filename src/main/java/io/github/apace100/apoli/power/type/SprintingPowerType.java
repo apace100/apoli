@@ -20,7 +20,7 @@ public class SprintingPowerType extends PowerType {
         return requiresInput;
     }
 
-    public static PowerTypeFactory<SprintingPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("sprinting"),
             new SerializableData()

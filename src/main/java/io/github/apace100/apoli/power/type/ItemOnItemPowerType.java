@@ -120,7 +120,7 @@ public class ItemOnItemPowerType extends PowerType implements Prioritized<ItemOn
 
     }
 
-    public static PowerTypeFactory<ItemOnItemPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("item_on_item"),
             new SerializableData()

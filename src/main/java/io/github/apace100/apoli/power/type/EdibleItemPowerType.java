@@ -111,7 +111,7 @@ public class EdibleItemPowerType extends PowerType implements Prioritized<Edible
         return get(stack, stackHolder);
     }
 
-    public static PowerTypeFactory<EdibleItemPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("edible_item"),
             new SerializableData()

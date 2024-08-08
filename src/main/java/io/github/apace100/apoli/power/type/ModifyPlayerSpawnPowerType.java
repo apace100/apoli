@@ -349,7 +349,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<ModifyPlayerSpawnPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("modify_player_spawn"),
             new SerializableData()

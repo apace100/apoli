@@ -53,7 +53,7 @@ public class ActionOnBlockBreakPowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<ActionOnBlockBreakPowerType> getFactory() {
+    public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
             Apoli.identifier("action_on_block_break"),
             new SerializableData()
