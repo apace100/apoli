@@ -189,30 +189,23 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static <T extends PowerType> boolean hasPowerType(Entity entity, Class<T> powerClass, @NotNull Predicate<T> powerFilter) {
-
-        if (KEY.isProvidedBy(entity)) {
-            return KEY.get(entity).getPowerTypes()
-                .stream()
-                .filter(p -> powerClass.isAssignableFrom(p.getClass()))
-                .anyMatch(p -> p.isActive() && powerFilter.test(powerClass.cast(p)));
-        }
-
-        else {
-            return false;
-        }
-
+        return KEY.maybeGet(entity)
+            .stream()
+            .flatMap(pc -> pc.getPowerTypes().stream())
+            .filter(p -> powerClass.isAssignableFrom(p.getClass()))
+            .anyMatch(p -> p.isActive() && powerFilter.test(powerClass.cast(p)));
     }
 
     static <T extends ValueModifyingPowerType> float modify(Entity entity, Class<T> powerClass, float baseValue) {
-        return (float) modify(entity, powerClass, (double)baseValue, p -> true, p -> {});
+        return (float) modify(entity, powerClass, (double) baseValue, p -> true, p -> {});
     }
 
     static <T extends ValueModifyingPowerType> float modify(Entity entity, Class<T> powerClass, float baseValue, Predicate<T> powerFilter) {
-        return (float) modify(entity, powerClass, (double)baseValue, powerFilter, p -> {});
+        return (float) modify(entity, powerClass, (double) baseValue, powerFilter, p -> {});
     }
 
     static <T extends ValueModifyingPowerType> float modify(Entity entity, Class<T> powerClass, float baseValue, Predicate<T> powerFilter, Consumer<T> powerAction) {
-        return (float) modify(entity, powerClass, (double)baseValue, powerFilter, powerAction);
+        return (float) modify(entity, powerClass, (double) baseValue, powerFilter, powerAction);
     }
 
     static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue) {
@@ -221,7 +214,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue, @NotNull Predicate<T> powerFilter, @NotNull Consumer<T> powerAction) {
 
-        if (KEY.isProvidedBy(entity)) {
+        if (entity != null && KEY.isProvidedBy(entity)) {
 
             PowerHolderComponent component = KEY.get(entity);
             List<Modifier> modifiers = component.getPowerTypes(powerClass)
