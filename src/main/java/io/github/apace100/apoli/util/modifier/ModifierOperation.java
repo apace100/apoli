@@ -2,10 +2,10 @@ package io.github.apace100.apoli.util.modifier;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.CooldownPower;
 import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.VariableIntPower;
+import io.github.apace100.apoli.power.type.CooldownPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.power.type.VariableIntPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.data.client.BlockStateVariantMap;
@@ -94,7 +94,7 @@ public enum ModifierOperation implements IModifierOperation {
 
     public static final SerializableData DATA = new SerializableData()
         .add("amount", SerializableDataTypes.DOUBLE, null)
-        .add("resource", ApoliDataTypes.POWER_TYPE, null)
+        .add("resource", ApoliDataTypes.POWER_REFERENCE, null)
         .add("modifier", Modifier.LIST_TYPE, null)
         .postProcessor(data -> {
 
@@ -137,14 +137,14 @@ public enum ModifierOperation implements IModifierOperation {
                     double value = 0;
                     if(instance.isPresent("resource")) {
                         PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                        PowerType powerType = instance.get("resource");
-                        if(!component.hasPower(powerType)) {
+                        Power power = instance.get("resource");
+                        if(!component.hasPower(power)) {
                             value = instance.get("value");
                         } else {
-                            Power p = component.getPower(powerType);
-                            if(p instanceof VariableIntPower vip) {
+                            PowerType p = component.getPowerType(power);
+                            if(p instanceof VariableIntPowerType vip) {
                                 value = vip.getValue();
-                            } else if(p instanceof CooldownPower cp) {
+                            } else if(p instanceof CooldownPowerType cp) {
                                 value = cp.getRemainingTicks();
                             }
                         }

@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import io.github.apace100.apoli.power.EdibleItemPower;
+import io.github.apace100.apoli.power.type.EdibleItemPowerType;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.item.ItemStack;
@@ -14,8 +14,8 @@ public abstract class HeldItemRendererMixin {
 
     @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isOf(Lnet/minecraft/item/Item;)Z"))
     private boolean apoli$overrideSpecialTransforms(boolean original, AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack stack) {
-        return original && EdibleItemPower.get(stack)
-            .map(EdibleItemPower::getFoodComponent)
+        return original && EdibleItemPowerType.get(stack)
+            .map(EdibleItemPowerType::getFoodComponent)
             .map(fc -> player.canConsume(fc.canAlwaysEat()))
             .orElse(true);
     }

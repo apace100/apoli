@@ -9,7 +9,7 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.util.ActionResultUtil;
 import io.github.apace100.apoli.util.BlockUsagePhase;
 import io.github.apace100.apoli.util.PriorityPhase;
@@ -60,11 +60,11 @@ public class ServerPlayerInteractionManagerMixin {
     @ModifyExpressionValue(method = "tryBreakBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;canHarvest(Lnet/minecraft/block/BlockState;)Z"))
     private boolean apoli$modifyEffectiveTool(boolean original, @Share("cachedMinedBlock") LocalRef<SavedBlockPosition> cachedMinedBlockRef, @Share("modifiedCanHarvest") LocalBooleanRef modifiedCanHarvestRef) {
 
-        boolean result = PowerHolderComponent.getPowers(this.player, ModifyHarvestPower.class)
+        boolean result = PowerHolderComponent.getPowerTypes(this.player, ModifyHarvestPowerType.class)
             .stream()
             .filter(mhp -> mhp.doesApply(cachedMinedBlockRef.get()))
-            .max(ModifyHarvestPower::compareTo)
-            .map(ModifyHarvestPower::isHarvestAllowed)
+            .max(ModifyHarvestPowerType::compareTo)
+            .map(ModifyHarvestPowerType::isHarvestAllowed)
             .orElse(original);
 
         modifiedCanHarvestRef.set(result);
@@ -83,7 +83,7 @@ public class ServerPlayerInteractionManagerMixin {
     @Inject(method = "tryBreakBlock", at = {@At(value = "RETURN", ordinal = 3), @At(value = "RETURN", ordinal = 4, shift = At.Shift.BEFORE)})
     private void apoli$actionOnBlockBreak(BlockPos pos, CallbackInfoReturnable<Boolean> cir, @Local(ordinal = 0) boolean blockRemoved, @Share("cachedMinedBlock") LocalRef<SavedBlockPosition> cachedMinedBlockRef, @Share("modifiedCanHarvest") LocalBooleanRef modifiedCanHarvestRef) {
         boolean harvestedSuccessfully = blockRemoved && modifiedCanHarvestRef.get();
-        PowerHolderComponent.withPowers(this.player, ActionOnBlockBreakPower.class,
+        PowerHolderComponent.withPowerTypes(this.player, ActionOnBlockBreakPowerType.class,
             aobbp -> aobbp.doesApply(cachedMinedBlockRef.get()),
             aobbp -> aobbp.executeActions(harvestedSuccessfully, pos, apoli$blockBreakDirection));
     }
@@ -94,12 +94,12 @@ public class ServerPlayerInteractionManagerMixin {
         ItemStack stackInHand = player.getStackInHand(mHand);
         BlockUsagePhase usePhase = BlockUsagePhase.BLOCK;
 
-        if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, mHand)) {
+        if (PreventBlockUsePowerType.doesPrevent(player, usePhase, hitResult, stackInHand, mHand)) {
             return ActionResult.FAIL;
         }
 
-        Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, mHand, stackInHand));
+        Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+        aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, mHand, stackInHand));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -107,12 +107,12 @@ public class ServerPlayerInteractionManagerMixin {
                 continue;
             }
 
-            List<ActiveInteractionPower> aips = aipci.getPowers(i);
+            List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
             ActionResult previousResult = ActionResult.PASS;
 
-            for (ActiveInteractionPower aip : aips) {
+            for (ActiveInteractionPowerType aip : aips) {
 
-                ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
+                ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
                     ? aobup.executeAction(hitResult, mHand)
                     : ActionResult.PASS;
 
@@ -155,8 +155,8 @@ public class ServerPlayerInteractionManagerMixin {
 
         else if (original == ActionResult.PASS) {
 
-            Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-            aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(BlockUsagePhase.BLOCK, PriorityPhase.AFTER, hitResult, hand, stack));
+            Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+            aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(BlockUsagePhase.BLOCK, PriorityPhase.AFTER, hitResult, hand, stack));
 
             for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -164,12 +164,12 @@ public class ServerPlayerInteractionManagerMixin {
                     continue;
                 }
 
-                List<ActiveInteractionPower> aips = aipci.getPowers(i);
+                List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
                 ActionResult previousResult = ActionResult.PASS;
 
-                for (ActiveInteractionPower aip : aips) {
+                for (ActiveInteractionPowerType aip : aips) {
 
-                    ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
+                    ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
                         ? aobup.executeAction(hitResult, hand)
                         : ActionResult.PASS;
 
@@ -202,12 +202,12 @@ public class ServerPlayerInteractionManagerMixin {
     private ItemActionResult apoli$beforeItemUseOnBlock(BlockState state, ItemStack stack, World world, PlayerEntity player, Hand hand, BlockHitResult hitResult, Operation<ItemActionResult> original, @Share("zeroPriority$itemOnBlock") LocalRef<ActionResult> zeroPriority$itemOnBlockRef) {
 
         BlockUsagePhase usePhase = BlockUsagePhase.ITEM;
-        if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stack, hand)) {
+        if (PreventBlockUsePowerType.doesPrevent(player, usePhase, hitResult, stack, hand)) {
             return ItemActionResult.FAIL;
         }
 
-        Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, hand, stack));
+        Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+        aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, hand, stack));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -215,12 +215,12 @@ public class ServerPlayerInteractionManagerMixin {
                 continue;
             }
 
-            List<ActiveInteractionPower> aips = aipci.getPowers(i);
+            List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
             ActionResult previousResult = ActionResult.PASS;
 
-            for (ActiveInteractionPower aip : aips) {
+            for (ActiveInteractionPowerType aip : aips) {
 
-                ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
+                ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
                     ? aobup.executeAction(hitResult, hand)
                     : ActionResult.PASS;
 
@@ -274,8 +274,8 @@ public class ServerPlayerInteractionManagerMixin {
 
         else if (original == ActionResult.PASS) {
 
-            Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-            aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(BlockUsagePhase.ITEM, PriorityPhase.AFTER, hitResult, hand, stack));
+            Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+            aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(BlockUsagePhase.ITEM, PriorityPhase.AFTER, hitResult, hand, stack));
 
             for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -283,12 +283,12 @@ public class ServerPlayerInteractionManagerMixin {
                     continue;
                 }
 
-                List<ActiveInteractionPower> aips = aipci.getPowers(i);
+                List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
                 ActionResult previousResult = ActionResult.PASS;
 
-                for (ActiveInteractionPower aip : aips) {
+                for (ActiveInteractionPowerType aip : aips) {
 
-                    ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
+                    ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
                         ? aobup.executeAction(hitResult, hand)
                         : ActionResult.PASS;
 
@@ -319,14 +319,14 @@ public class ServerPlayerInteractionManagerMixin {
 
     @Inject(method = "tryBreakBlock", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;", shift = At.Shift.AFTER))
     private void apoli$cacheCopyAndOriginalStacks(BlockPos pos, CallbackInfoReturnable<Boolean> cir, @Local(ordinal = 0) ItemStack originalStack, @Local(ordinal = 1) ItemStack copyStack) {
-        ModifyEnchantmentLevelPower.COPY_TO_ORIGINAL_STACK
+        ModifyEnchantmentLevelPowerType.COPY_TO_ORIGINAL_STACK
             .computeIfAbsent(player.getUuid(), k -> new WeakHashMap<>())
             .put(copyStack, originalStack);
     }
 
     @Inject(method = "tryBreakBlock", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;")))
     private void apoli$clearCachedCopyAndOriginalStacks(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        ModifyEnchantmentLevelPower.COPY_TO_ORIGINAL_STACK.remove(player.getUuid());
+        ModifyEnchantmentLevelPowerType.COPY_TO_ORIGINAL_STACK.remove(player.getUuid());
     }
 
 }

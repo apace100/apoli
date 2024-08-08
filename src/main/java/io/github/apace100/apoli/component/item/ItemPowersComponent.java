@@ -5,8 +5,8 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeManager;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.util.codec.SetCodec;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
@@ -83,7 +83,7 @@ public class ItemPowersComponent {
 
         for (Entry entry : entries) {
 
-            PowerType power = PowerTypeManager.get(entry.powerId());
+            Power power = PowerManager.get(entry.powerId());
             if (entry.hidden() || !entry.slot().equals(modifierSlot)) {
                 continue;
             }
@@ -135,7 +135,7 @@ public class ItemPowersComponent {
         ItemPowersComponent prevStackPowers = previousStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
         for (Entry prevEntry : prevStackPowers.entries) {
 
-            PowerType power = PowerTypeManager.get(prevEntry.powerId());
+            Power power = PowerManager.get(prevEntry.powerId());
             if (prevEntry.slot().matches(equipmentSlot) && powerComponent.removePower(power, sourceId)) {
                 shouldSync = true;
             }
@@ -145,7 +145,7 @@ public class ItemPowersComponent {
         ItemPowersComponent currStackPowers = currentStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
         for (Entry currEntry : currStackPowers.entries) {
 
-            PowerType power = PowerTypeManager.get(currEntry.powerId());
+            Power power = PowerManager.get(currEntry.powerId());
             if (currEntry.slot().matches(equipmentSlot) && powerComponent.addPower(power, sourceId)) {
                 shouldSync = true;
             }
@@ -161,7 +161,7 @@ public class ItemPowersComponent {
     public record Entry(Identifier powerId, AttributeModifierSlot slot, boolean hidden, boolean negative) {
 
         public static final MapCodec<Entry> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            PowerTypeManager.VALIDATING_CODEC.fieldOf("power").forGetter(Entry::powerId),
+            PowerManager.VALIDATING_CODEC.fieldOf("power").forGetter(Entry::powerId),
             AttributeModifierSlot.CODEC.fieldOf("slot").forGetter(Entry::slot),
             Codec.BOOL.optionalFieldOf("hidden", false).forGetter(Entry::hidden),
             Codec.BOOL.optionalFieldOf("negative", false).forGetter(Entry::negative)

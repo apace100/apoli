@@ -3,9 +3,13 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.action.entity.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
+import io.github.apace100.apoli.power.type.CooldownPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.power.type.TogglePowerType;
+import io.github.apace100.apoli.power.type.VariableIntPowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Space;
@@ -149,31 +153,31 @@ public class EntityActions {
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("change_resource"), new SerializableData()
-            .add("resource", ApoliDataTypes.POWER_TYPE)
+            .add("resource", ApoliDataTypes.POWER_REFERENCE)
             .add("change", SerializableDataTypes.INT)
             .add("operation", ApoliDataTypes.RESOURCE_OPERATION, ResourceOperation.ADD),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    PowerType powerType = data.get("resource");
-                    Power p = component.getPower(powerType);
+                    Power power = data.get("resource");
+                    PowerType p = component.getPowerType(power);
                     ResourceOperation operation = data.get("operation");
                     int change = data.getInt("change");
-                    if(p instanceof VariableIntPower vip) {
+                    if(p instanceof VariableIntPowerType vip) {
                         if (operation == ResourceOperation.ADD) {
                             int newValue = vip.getValue() + change;
                             vip.setValue(newValue);
                         } else if (operation == ResourceOperation.SET) {
                             vip.setValue(change);
                         }
-                        PowerHolderComponent.syncPower(entity, powerType);
-                    } else if(p instanceof CooldownPower cp) {
+                        PowerHolderComponent.syncPower(entity, power);
+                    } else if(p instanceof CooldownPowerType cp) {
                         if (operation == ResourceOperation.ADD) {
                             cp.modify(change);
                         } else if (operation == ResourceOperation.SET) {
                             cp.setCooldown(change);
                         }
-                        PowerHolderComponent.syncPower(entity, powerType);
+                        PowerHolderComponent.syncPower(entity, power);
                     }
                 }
             }));
@@ -205,24 +209,24 @@ public class EntityActions {
         register(GiveAction.getFactory());
         register(EquippedItemAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("trigger_cooldown"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE),
+            .add("power", ApoliDataTypes.POWER_REFERENCE),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType)data.get("power"));
-                    if(p instanceof CooldownPower cp) {
+                    PowerType p = component.getPowerType(data.get("power"));
+                    if(p instanceof CooldownPowerType cp) {
                         cp.use();
                     }
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("toggle"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE),
+            .add("power", ApoliDataTypes.POWER_REFERENCE),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType)data.get("power"));
-                    if(p instanceof TogglePower) {
-                        ((TogglePower)p).onUse();
+                    PowerType p = component.getPowerType(data.get("power"));
+                    if(p instanceof TogglePowerType) {
+                        ((TogglePowerType)p).onUse();
                     }
                 }
             }));
@@ -230,32 +234,32 @@ public class EntityActions {
             .add("event", SerializableDataTypes.GAME_EVENT),
             (data, entity) -> entity.emitGameEvent(data.get("event"))));
         register(new ActionFactory<>(Apoli.identifier("set_resource"), new SerializableData()
-            .add("resource", ApoliDataTypes.POWER_TYPE)
+            .add("resource", ApoliDataTypes.POWER_REFERENCE)
             .add("value", SerializableDataTypes.INT),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    PowerType powerType = data.get("resource");
-                    Power p = component.getPower(powerType);
+                    Power power = data.get("resource");
+                    PowerType p = component.getPowerType(power);
                     int value = data.getInt("value");
-                    if(p instanceof VariableIntPower vip) {
+                    if(p instanceof VariableIntPowerType vip) {
                         vip.setValue(value);
-                        PowerHolderComponent.syncPower(entity, powerType);
-                    } else if(p instanceof CooldownPower cp) {
+                        PowerHolderComponent.syncPower(entity, power);
+                    } else if(p instanceof CooldownPowerType cp) {
                         cp.setCooldown(value);
-                        PowerHolderComponent.syncPower(entity, powerType);
+                        PowerHolderComponent.syncPower(entity, power);
                     }
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("grant_power"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("power", ApoliDataTypes.POWER_REFERENCE)
             .add("source", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
                 component.addPower(data.get("power"), data.getId("source"));
                 component.sync();
             })));
         register(new ActionFactory<>(Apoli.identifier("revoke_power"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("power", ApoliDataTypes.POWER_REFERENCE)
             .add("source", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
                 component.removePower(data.get("power"), data.getId("source"));

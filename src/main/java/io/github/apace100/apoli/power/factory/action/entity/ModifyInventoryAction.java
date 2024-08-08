@@ -3,10 +3,10 @@ package io.github.apace100.apoli.power.factory.action.entity;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.type.InventoryPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import io.github.apace100.apoli.util.InventoryUtil.ProcessMode;
 import io.github.apace100.calio.data.SerializableData;
@@ -31,10 +31,10 @@ public class ModifyInventoryAction {
             case POWER:
                 if (!data.isPresent("power") || !(entity instanceof LivingEntity livingEntity)) return;
 
-                PowerType targetPowerType = data.get("power");
-                Power targetPower = PowerHolderComponent.KEY.get(livingEntity).getPower(targetPowerType);
+                Power targetPower = data.get("power");
+                PowerType targetPowerType = PowerHolderComponent.KEY.get(livingEntity).getPowerType(targetPower);
 
-                if (!(targetPower instanceof InventoryPower inventoryPower)) return;
+                if (!(targetPowerType instanceof InventoryPowerType inventoryPower)) return;
                 modifyInventory(data, livingEntity, inventoryPower, processMode.getProcessor(), limit);
                 break;
         }
@@ -50,7 +50,7 @@ public class ModifyInventoryAction {
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("slots", ApoliDataTypes.ITEM_SLOTS, null)
                 .add("slot", ApoliDataTypes.ITEM_SLOT, null)
-                .add("power", ApoliDataTypes.POWER_TYPE, null)
+                .add("power", ApoliDataTypes.POWER_REFERENCE, null)
                 .add("limit", SerializableDataTypes.INT, 0),
             ModifyInventoryAction::action
         );

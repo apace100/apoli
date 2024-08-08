@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.power.factory.action;
 
-import io.github.apace100.apoli.power.factory.Factory;
+import io.github.apace100.apoli.factory.Factory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.Identifier;

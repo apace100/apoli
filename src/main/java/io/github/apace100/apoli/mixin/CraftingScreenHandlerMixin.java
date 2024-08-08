@@ -6,7 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.access.ScreenHandlerUsabilityOverride;
 import io.github.apace100.apoli.access.SlotState;
-import io.github.apace100.apoli.power.ModifyCraftingPower;
+import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
 import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -18,7 +18,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.recipe.input.CraftingRecipeInput;
-import net.minecraft.screen.*;
+import net.minecraft.screen.AbstractRecipeScreenHandler;
+import net.minecraft.screen.CraftingScreenHandler;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.CraftingResultSlot;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.World;
@@ -71,7 +74,7 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
     private static void apoli$clearPowerCraftingInventory(ScreenHandler handler, World world, PlayerEntity player, RecipeInputInventory craftingInventory, CraftingResultInventory resultInventory, @Nullable RecipeEntry<CraftingRecipe> recipe, CallbackInfo ci) {
 
         if (craftingInventory instanceof PowerCraftingInventory pci) {
-            pci.apoli$setPower(null);
+            pci.apoli$setPowerType(null);
         }
 
     }
@@ -84,7 +87,7 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
     @ModifyVariable(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;", shift = At.Shift.AFTER), ordinal = 1)
     private ItemStack apoli$modifyResultStackOnQuickMove(ItemStack itemStack2, PlayerEntity player, int slotIndex, @Local Slot slot) {
 
-        if (!(input instanceof PowerCraftingInventory pci && pci.apoli$getPower() instanceof ModifyCraftingPower mcp)) {
+        if (!(input instanceof PowerCraftingInventory pci && pci.apoli$getPowerType() instanceof ModifyCraftingPowerType mcp)) {
             return itemStack2;
         }
 
@@ -102,7 +105,7 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
         //  can be inserted into the player's inventory, execute the item action
         if (availableSlotIndex != -1 && slot instanceof CraftingResultSlot) {
 
-            ((SlotState) slot).apoli$setState(ModifyCraftingPower.MODIFIED_RESULT_STACK);
+            ((SlotState) slot).apoli$setState(ModifyCraftingPowerType.MODIFIED_RESULT_STACK);
             mcp.applyAfterCraftingItemAction(reference);
 
         }

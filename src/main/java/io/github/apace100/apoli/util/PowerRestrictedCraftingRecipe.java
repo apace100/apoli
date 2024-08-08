@@ -2,8 +2,8 @@ package io.github.apace100.apoli.util;
 
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyCraftingPower;
-import io.github.apace100.apoli.power.RecipePower;
+import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
+import io.github.apace100.apoli.power.type.RecipePowerType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
@@ -48,11 +48,11 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
             return ItemStack.EMPTY;
         }
 
-        Optional<RecipePower> recipePower = getRecipePowers(input)
+        Optional<RecipePowerType> recipePower = getRecipePowers(input)
             .stream()
             .filter(rp -> rp.getRecipe().value() instanceof CraftingRecipe craftingRecipe
                 && craftingRecipe.matches(input, playerEntity.getWorld()))
-            .max(Comparator.comparing(RecipePower::getPriority));
+            .max(Comparator.comparing(RecipePowerType::getPriority));
 
         if (recipePower.isEmpty()) {
             return ItemStack.EMPTY;
@@ -66,16 +66,16 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
         }
 
         ItemStack newResultStack = craftingRecipe.craft(input, lookup);
-        Optional<ModifyCraftingPower> modifyCraftingPower = PowerHolderComponent.getPowers(playerEntity, ModifyCraftingPower.class)
+        Optional<ModifyCraftingPowerType> modifyCraftingPower = PowerHolderComponent.getPowerTypes(playerEntity, ModifyCraftingPowerType.class)
             .stream()
             .filter(mcp -> mcp.doesApply(recipeId, newResultStack))
-            .max(Comparator.comparing(ModifyCraftingPower::getPriority));
+            .max(Comparator.comparing(ModifyCraftingPowerType::getPriority));
 
         if (modifyCraftingPower.isEmpty()) {
             return newResultStack;
         }
 
-        pci.apoli$setPower(modifyCraftingPower.get());
+        pci.apoli$setPowerType(modifyCraftingPower.get());
         return modifyCraftingPower.get().getNewResult(InventoryUtil.createStackReference(newResultStack)).get();
 
     }
@@ -90,9 +90,9 @@ public class PowerRestrictedCraftingRecipe extends SpecialCraftingRecipe {
         return SERIALIZER;
     }
 
-    private static List<RecipePower> getRecipePowers(CraftingRecipeInput input) {
+    private static List<RecipePowerType> getRecipePowers(CraftingRecipeInput input) {
         return input instanceof PowerCraftingInventory pci
-            ? PowerHolderComponent.getPowers(pci.apoli$getPlayer(), RecipePower.class)
+            ? PowerHolderComponent.getPowerTypes(pci.apoli$getPlayer(), RecipePowerType.class)
             : Lists.newArrayList();
     }
 

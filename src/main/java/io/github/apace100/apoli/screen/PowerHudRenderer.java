@@ -2,7 +2,7 @@ package io.github.apace100.apoli.screen;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.HudRendered;
+import io.github.apace100.apoli.power.type.HudRendered;
 import io.github.apace100.apoli.util.ApoliConfigClient;
 import io.github.apace100.apoli.util.HudRender;
 import net.fabricmc.api.EnvType;
@@ -57,7 +57,7 @@ public class PowerHudRenderer implements GameHudRender {
         x.set(((context.getScaledWindowWidth() / 2) + 20) + config.resourcesAndCooldowns.hudOffsetX);
         y.set((context.getScaledWindowHeight() - yOffset) + config.resourcesAndCooldowns.hudOffsetY);
 
-        PowerHolderComponent.KEY.get(player).getPowers()
+        PowerHolderComponent.KEY.get(player).getPowerTypes()
             .stream()
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)

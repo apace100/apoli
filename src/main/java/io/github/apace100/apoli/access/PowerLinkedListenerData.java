@@ -1,10 +1,10 @@
 package io.github.apace100.apoli.access;
 
-import io.github.apace100.apoli.power.GameEventListenerPower;
+import io.github.apace100.apoli.power.type.GameEventListenerPowerType;
 
 import java.util.Optional;
 
 public interface PowerLinkedListenerData {
-    Optional<GameEventListenerPower> apoli$getPower();
-    void apoli$setPower(GameEventListenerPower power);
+    Optional<GameEventListenerPowerType> apoli$getPower();
+    void apoli$setPower(GameEventListenerPowerType power);
 }

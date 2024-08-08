@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.OverrideHudTexturePower;
+import io.github.apace100.apoli.power.type.OverrideHudTexturePowerType;
 import io.github.apace100.apoli.screen.GameHudRender;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -46,11 +46,11 @@ public abstract class InGameHudMixin {
     }
 
     @Unique
-    private static Optional<OverrideHudTexturePower> apoli$getOverrideHudTexturePower(PlayerEntity player) {
-        return PowerHolderComponent.getPowers(player, OverrideHudTexturePower.class)
+    private static Optional<OverrideHudTexturePowerType> apoli$getOverrideHudTexturePower(PlayerEntity player) {
+        return PowerHolderComponent.getPowerTypes(player, OverrideHudTexturePowerType.class)
             .stream()
-            .filter(OverrideHudTexturePower::shouldRender)
-            .max(Comparator.comparing(OverrideHudTexturePower::getPriority));
+            .filter(OverrideHudTexturePowerType::shouldRender)
+            .max(Comparator.comparing(OverrideHudTexturePowerType::getPriority));
     }
     
     @WrapOperation(method = "renderArmor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0))

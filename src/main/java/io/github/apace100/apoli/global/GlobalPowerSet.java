@@ -1,10 +1,10 @@
 package io.github.apace100.apoli.global;
 
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.MultiplePowerType;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeManager;
-import io.github.apace100.apoli.power.PowerTypeReference;
+import io.github.apace100.apoli.power.MultiplePower;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -25,30 +25,30 @@ import java.util.stream.Collectors;
 public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<GlobalPowerSet> {
 
     private final TagLike<EntityType<?>> entityTypes;
-    private final List<PowerType> powerTypes;
+    private final List<Power> powers;
 
     private final boolean replace;
     private final int loadingPriority;
     private final int order;
 
-    public GlobalPowerSet(int order, TagLike<EntityType<?>> entityTypes, List<PowerType> powerTypes, boolean replace, int loadingPriority) {
+    public GlobalPowerSet(int order, TagLike<EntityType<?>> entityTypes, List<Power> powers, boolean replace, int loadingPriority) {
         this.entityTypes = entityTypes;
-        this.powerTypes = getSubPowers(powerTypes);
+        this.powers = getSubPowers(powers);
         this.replace = replace;
         this.order = order;
         this.loadingPriority = loadingPriority;
     }
 
-    private List<PowerType> getSubPowers(List<PowerType> powerTypes) {
+    private List<Power> getSubPowers(List<Power> powers) {
 
-        List<PowerType> result = new LinkedList<>();
-        for (PowerType powerType : powerTypes) {
+        List<Power> result = new LinkedList<>();
+        for (Power power : powers) {
 
             //  Add the power to the result list
-            result.add(powerType);
+            result.add(power);
 
             //  Check whether the power is an instance of a multiple power
-            MultiplePowerType multiplePowerType = getMultiplePowerType(powerType);
+            MultiplePower multiplePowerType = getMultiplePowerType(power);
             if (multiplePowerType == null) {
                 continue;
             }
@@ -56,8 +56,8 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
             //  Add the sub-powers of the multiple power to the result list
             multiplePowerType.getSubPowers()
                 .stream()
-                .filter(PowerTypeManager::contains)
-                .map(PowerTypeManager::get)
+                .filter(PowerManager::contains)
+                .map(PowerManager::get)
                 .forEach(result::add);
 
         }
@@ -67,13 +67,13 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
     }
 
     @Nullable
-    private MultiplePowerType getMultiplePowerType(PowerType powerType) {
+    private MultiplePower getMultiplePowerType(Power power) {
 
-        if (powerType instanceof MultiplePowerType multiplePowerType) {
+        if (power instanceof MultiplePower multiplePowerType) {
             return multiplePowerType;
         }
 
-        else if (powerType instanceof PowerTypeReference powerTypeRef && powerTypeRef.getReference() instanceof MultiplePowerType multiplePowerType) {
+        else if (power instanceof PowerReference powerTypeRef && powerTypeRef.getReference() instanceof MultiplePower multiplePowerType) {
             return multiplePowerType;
         }
 
@@ -92,12 +92,12 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
         TagLike.Builder<EntityType<?>> thisBuilder = new TagLike.Builder<>(this.entityTypes);
         TagLike.Builder<EntityType<?>> otherBuilder = new TagLike.Builder<>(otherSet.entityTypes);
 
-        List<PowerType> powerTypes = new LinkedList<>(this.powerTypes);
+        List<Power> powers = new LinkedList<>(this.powers);
         int order = otherSet.order;
 
         if (otherSet.shouldReplace()) {
             thisBuilder.clear();
-            powerTypes.clear();
+            powers.clear();
         }
 
         if (otherSet.getEntityTypes() != null) {
@@ -105,13 +105,13 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
         }
 
         if (otherSet.getPowerTypes() != null) {
-            powerTypes.addAll(otherSet.getPowerTypes());
+            powers.addAll(otherSet.getPowerTypes());
         }
 
         return new GlobalPowerSet(
             order,
             thisBuilder.build(drm.getWrapperOrThrow(RegistryKeys.ENTITY_TYPE)),
-            powerTypes,
+            powers,
             this.shouldReplace(),
             this.getLoadingPriority()
         );
@@ -130,8 +130,8 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
         return entityTypes;
     }
 
-    public List<PowerType> getPowerTypes() {
-        return powerTypes;
+    public List<Power> getPowerTypes() {
+        return powers;
     }
 
     public int getLoadingPriority() {
@@ -157,15 +157,15 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
      * Invalid power types will be removed from this set as a side effect.
      * @return List containing all invalid power types that were removed from the set
      */
-    public List<PowerType> validate() {
+    public List<Power> validate() {
 
-        List<PowerType> invalid = powerTypes
+        List<Power> invalid = powers
             .stream()
-            .filter(pt -> !PowerTypeManager.contains(pt.getId()))
+            .filter(pt -> !PowerManager.contains(pt.getId()))
             .collect(Collectors.toList());
-        powerTypes.removeAll(invalid);
+        powers.removeAll(invalid);
 
-        invalid.removeIf(pt -> PowerTypeManager.isDisabled(pt.getId()));
+        invalid.removeIf(pt -> PowerManager.isDisabled(pt.getId()));
         return invalid;
 
     }
@@ -178,7 +178,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet>, DataObject<Gl
     public static final SerializableData DATA = new SerializableData()
         .add("replace", SerializableDataTypes.BOOLEAN, false)
         .add("entity_types", SerializableDataTypes.ENTITY_TYPE_TAG_LIKE)
-        .add("powers", ApoliDataTypes.POWER_TYPE.listOf())
+        .add("powers", ApoliDataTypes.POWER_REFERENCE.listOf())
         .add("order", SerializableDataTypes.INT, 0)
         .add("loading_priority", SerializableDataTypes.INT, 0);
 

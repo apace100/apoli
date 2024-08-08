@@ -5,15 +5,15 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
-import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.access.CustomToastViewer;
+import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
 import io.github.apace100.apoli.networking.packet.s2c.ShowToastS2CPacket;
-import io.github.apace100.apoli.power.ActionOnItemUsePower;
-import io.github.apace100.apoli.power.KeepInventoryPower;
-import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
-import io.github.apace100.apoli.power.PreventSleepPower;
+import io.github.apace100.apoli.power.type.ActionOnItemUsePowerType;
+import io.github.apace100.apoli.power.type.KeepInventoryPowerType;
+import io.github.apace100.apoli.power.type.ModifyPlayerSpawnPowerType;
+import io.github.apace100.apoli.power.type.PreventSleepPowerType;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.PriorityPhase;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -90,7 +90,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     @Inject(method = "trySleep", at = @At(value = "INVOKE",target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"), cancellable = true)
     public void preventSleep(BlockPos pos, CallbackInfoReturnable<Either<SleepFailureReason, Unit>> info) {
 
-        LinkedList<PreventSleepPower> preventSleepPowers = PowerHolderComponent.getPowers(this, PreventSleepPower.class)
+        LinkedList<PreventSleepPowerType> preventSleepPowers = PowerHolderComponent.getPowerTypes(this, PreventSleepPowerType.class)
             .stream()
             .filter(p -> p.doesPrevent(this.getWorld(), pos))
             .collect(Collectors.toCollection(LinkedList::new));
@@ -99,11 +99,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
             return;
         }
 
-        preventSleepPowers.sort(Collections.reverseOrder(PreventSleepPower::compareTo));
-        PreventSleepPower preventSleepPower = preventSleepPowers
+        preventSleepPowers.sort(Collections.reverseOrder(PreventSleepPowerType::compareTo));
+        PreventSleepPowerType preventSleepPower = preventSleepPowers
             .getFirst();
 
-        if (preventSleepPowers.stream().allMatch(PreventSleepPower::doesAllowSpawnPoint)) {
+        if (preventSleepPowers.stream().allMatch(PreventSleepPowerType::doesAllowSpawnPoint)) {
             this.setSpawnPoint(this.getWorld().getRegistryKey(), pos, this.getYaw(), false, true);
         }
 
@@ -116,7 +116,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     private RegistryKey<World> apoli$modifySpawnPointDimension(RegistryKey<World> original) {
 
         if (!this.apoli$isEndRespawning() && (this.spawnPointPosition == null || this.apoli$hasObstructedOriginalSpawnPoint())) {
-            return PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class)
+            return PowerHolderComponent.getPowerTypes(this, ModifyPlayerSpawnPowerType.class)
                 .stream()
                 .findFirst()
                 .map(p -> p.dimension)
@@ -132,7 +132,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     @ModifyReturnValue(method = "getSpawnPointPosition", at = @At("RETURN"))
     private BlockPos apoli$modifyPlayerSpawnPosition(BlockPos original) {
 
-        if (this.apoli$isEndRespawning() || !PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class)) {
+        if (this.apoli$isEndRespawning() || !PowerHolderComponent.hasPowerType(this, ModifyPlayerSpawnPowerType.class)) {
             return original;
         }
 
@@ -156,12 +156,12 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
         return original
             || (!this.apoli$isEndRespawning()
             && (spawnPointPosition == null || this.apoli$hasObstructedOriginalSpawnPoint())
-            && PowerHolderComponent.hasPower(this, ModifyPlayerSpawnPower.class));
+            && PowerHolderComponent.hasPowerType(this, ModifyPlayerSpawnPowerType.class));
     }
 
     @Inject(method = "copyFrom", at = @At(value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/server/network/ServerPlayerEntity;enchantmentTableSeed:I"))
     private void copyInventoryWhenKeeping(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
-        if(PowerHolderComponent.hasPower(oldPlayer, KeepInventoryPower.class)) {
+        if(PowerHolderComponent.hasPowerType(oldPlayer, KeepInventoryPowerType.class)) {
             this.getInventory().clone(oldPlayer.getInventory());
         }
     }
@@ -176,7 +176,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
 
     @Unique
     private BlockPos apoli$findPowerSpawnPoint() {
-        return PowerHolderComponent.getPowers(this, ModifyPlayerSpawnPower.class)
+        return PowerHolderComponent.getPowerTypes(this, ModifyPlayerSpawnPowerType.class)
             .stream()
             .findFirst()
             .map(p -> p.getSpawn(true).getRight())
@@ -197,7 +197,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
         }
 
         StackReference newSelectedStackRef = InventoryUtil.createStackReference(original);
-        ActionOnItemUsePower.executeActions(this, newSelectedStackRef, prevSelectedStack, ActionOnItemUsePower.TriggerType.STOP, PriorityPhase.ALL);
+        ActionOnItemUsePowerType.executeActions(this, newSelectedStackRef, prevSelectedStack, ActionOnItemUsePowerType.TriggerType.STOP, PriorityPhase.ALL);
 
         return newSelectedStackRef.get();
 

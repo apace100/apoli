@@ -4,7 +4,7 @@ import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.CraftingInventoryAccessor;
 import io.github.apace100.apoli.mixin.CraftingScreenHandlerAccessor;
-import io.github.apace100.apoli.power.ModifyCraftingPower;
+import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
@@ -71,17 +71,17 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
         Identifier recipeId = originalRecipe.id();
         ItemStack resultStack = originalRecipe.value().craft(input, lookup);
 
-        Optional<ModifyCraftingPower> modifyCraftingPower = getModifyCraftingPowers(input)
+        Optional<ModifyCraftingPowerType> modifyCraftingPower = getModifyCraftingPowers(input)
             .stream()
             .filter(mcp -> mcp.doesApply(recipeId, resultStack))
-            .max(Comparator.comparing(ModifyCraftingPower::getPriority));
+            .max(Comparator.comparing(ModifyCraftingPowerType::getPriority));
 
         if (modifyCraftingPower.isEmpty()) {
             return resultStack;
         }
 
         newResultStack = modifyCraftingPower.get().getNewResult(InventoryUtil.createStackReference(resultStack)).get();
-        pci.apoli$setPower(modifyCraftingPower.get());
+        pci.apoli$setPowerType(modifyCraftingPower.get());
 
         return newResultStack;
 
@@ -108,9 +108,9 @@ public class ModifiedCraftingRecipe extends SpecialCraftingRecipe {
 
     }
 
-    private static List<ModifyCraftingPower> getModifyCraftingPowers(CraftingRecipeInput input) {
+    private static List<ModifyCraftingPowerType> getModifyCraftingPowers(CraftingRecipeInput input) {
         return input instanceof PowerCraftingInventory pci
-            ? PowerHolderComponent.getPowers(pci.apoli$getPlayer(), ModifyCraftingPower.class)
+            ? PowerHolderComponent.getPowerTypes(pci.apoli$getPlayer(), ModifyCraftingPowerType.class)
             : Lists.newArrayList();
     }
 

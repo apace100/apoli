@@ -3,10 +3,10 @@ package io.github.apace100.apoli.power.factory.action.bientity;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.EntitySetPower;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.action.BiEntityActions;
+import io.github.apace100.apoli.power.type.EntitySetPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
@@ -16,14 +16,14 @@ public class RemoveFromEntitySetAction {
     public static void action(SerializableData.Instance data, Pair<Entity, Entity> actorAndTarget) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(actorAndTarget.getLeft());
-        PowerType powerType = data.get("set");
+        Power power = data.get("set");
 
-        if (component == null || powerType == null || !(component.getPower(powerType) instanceof EntitySetPower entitySetPower)) {
+        if (component == null || power == null || !(component.getPowerType(power) instanceof EntitySetPowerType entitySetPower)) {
             return;
         }
 
         if (entitySetPower.remove(actorAndTarget.getRight())) {
-            PowerHolderComponent.syncPower(actorAndTarget.getLeft(), powerType);
+            PowerHolderComponent.syncPower(actorAndTarget.getLeft(), power);
         }
 
     }
@@ -33,7 +33,7 @@ public class RemoveFromEntitySetAction {
         ActionFactory<Pair<Entity, Entity>> factory = new ActionFactory<>(
             Apoli.identifier("remove_from_entity_set"),
             new SerializableData()
-                .add("set", ApoliDataTypes.POWER_TYPE),
+                .add("set", ApoliDataTypes.POWER_REFERENCE),
             RemoveFromEntitySetAction::action
         );
 

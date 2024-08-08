@@ -5,13 +5,14 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapLike;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Active;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeReference;
-import io.github.apace100.apoli.power.factory.PowerFactories;
-import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.power.factory.PowerTypeFactories;
+import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.factory.action.*;
 import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.power.type.Active;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.SerializationHelper;
@@ -60,12 +61,12 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public class ApoliDataTypes {
 
-    public static final SerializableDataType<PowerTypeReference> POWER_TYPE = SerializableDataTypes.IDENTIFIER.xmap(PowerTypeReference::new, PowerType::getId);
+    public static final SerializableDataType<PowerReference> POWER_REFERENCE = SerializableDataTypes.IDENTIFIER.xmap(PowerReference::new, Power::getId);
 
-    public static final SerializableDataType<PowerFactory<?>> POWER_FACTORY = SerializableDataType.lazy(() -> SerializableDataType.registry(
+    public static final SerializableDataType<PowerTypeFactory<? extends PowerType>> POWER_TYPE_FACTORY = SerializableDataType.lazy(() -> SerializableDataType.registry(
         ApoliRegistries.POWER_FACTORY,
         Apoli.MODID,
-        PowerFactories.ALIASES,
+        PowerTypeFactories.ALIASES,
         (registry, id) -> new IllegalArgumentException("Power type \"" + id + "\" is not registered")
     ));
 

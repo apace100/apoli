@@ -2,7 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.ApoliClient;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PhasingPower;
+import io.github.apace100.apoli.power.type.PhasingPowerType;
 import io.github.apace100.apoli.util.MiscUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -26,7 +26,7 @@ public abstract class WorldRendererMixin {
 
         Entity cameraFocusedEntity = camera.getFocusedEntity();
 
-        if (PowerHolderComponent.hasPower(cameraFocusedEntity, PhasingPower.class, p -> p.getRenderType() == PhasingPower.RenderType.BLINDNESS) && MiscUtil.getInWallBlockState(cameraFocusedEntity) != null) {
+        if (PowerHolderComponent.hasPowerType(cameraFocusedEntity, PhasingPowerType.class, p -> p.getRenderType() == PhasingPowerType.RenderType.BLINDNESS) && MiscUtil.getInWallBlockState(cameraFocusedEntity) != null) {
             ci.cancel();
         }
 

@@ -14,7 +14,7 @@ public interface RecipeInputInventoryMixin {
     private CraftingRecipeInput.Positioned apoli$passCacheToPositionedInput(CraftingRecipeInput.Positioned original) {
 
         if ((RecipeInputInventory) this instanceof PowerCraftingInventory sourcePci && original.input() instanceof PowerCraftingInventory targetPci) {
-            targetPci.apoli$setPower(sourcePci.apoli$getPower());
+            targetPci.apoli$setPowerType(sourcePci.apoli$getPowerType());
             targetPci.apoli$setPlayer(sourcePci.apoli$getPlayer());
         }
 

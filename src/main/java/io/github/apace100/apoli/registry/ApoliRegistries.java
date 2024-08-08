@@ -1,9 +1,9 @@
 package io.github.apace100.apoli.registry;
 
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerFactory;
+import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.modifier.IModifierOperation;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -24,7 +24,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 public class ApoliRegistries {
 
-    public static final Registry<PowerFactory<? extends Power>> POWER_FACTORY = create(ApoliRegistryKeys.POWER_FACTORY);
+    public static final Registry<PowerTypeFactory<? extends PowerType>> POWER_FACTORY = create(ApoliRegistryKeys.POWER_FACTORY);
 
     public static final Registry<ConditionFactory<Entity>> ENTITY_CONDITION = create(ApoliRegistryKeys.ENTITY_CONDITION);
     public static final Registry<ConditionFactory<Pair<Entity, Entity>>> BIENTITY_CONDITION = create(ApoliRegistryKeys.BIENTITY_CONDITION);

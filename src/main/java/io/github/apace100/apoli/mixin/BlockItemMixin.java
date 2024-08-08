@@ -7,7 +7,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
@@ -44,10 +44,10 @@ public class BlockItemMixin {
         BlockPos toPos = context.getBlockPos();
         BlockPos onPos = ((ItemUsageContextAccessor) context).callGetHitResult().getBlockPos();
 
-        Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
+        Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
         int preventBlockPlacePowers = 0;
 
-        aipci.add(playerEntity, PreventBlockPlacePower.class, pbpp -> pbpp.doesPrevent(stack, hand, toPos, onPos, direction));
+        aipci.add(playerEntity, PreventBlockPlacePowerType.class, pbpp -> pbpp.doesPrevent(stack, hand, toPos, onPos, direction));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -55,10 +55,10 @@ public class BlockItemMixin {
                 continue;
             }
 
-            List<PreventBlockPlacePower> pbpps = aipci.getPowers(i)
+            List<PreventBlockPlacePowerType> pbpps = aipci.getPowers(i)
                 .stream()
-                .filter(p -> p instanceof PreventBlockPlacePower)
-                .map(p -> (PreventBlockPlacePower) p)
+                .filter(p -> p instanceof PreventBlockPlacePowerType)
+                .map(p -> (PreventBlockPlacePowerType) p)
                 .toList();
 
             preventBlockPlacePowers += pbpps.size();
@@ -71,7 +71,7 @@ public class BlockItemMixin {
     }
 
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;)Lnet/minecraft/util/ActionResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;"))
-    private void apoli$actionOnBlockPlace(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir, @Local PlayerEntity user, @Local BlockPos toPos, @Local ItemStack stack, @Share("aipci") LocalRef<Prioritized.CallInstance<ActiveInteractionPower>> aipciRef) {
+    private void apoli$actionOnBlockPlace(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir, @Local PlayerEntity user, @Local BlockPos toPos, @Local ItemStack stack, @Share("aipci") LocalRef<Prioritized.CallInstance<ActiveInteractionPowerType>> aipciRef) {
 
         if (user == null) {
             return;
@@ -81,14 +81,14 @@ public class BlockItemMixin {
         BlockPos onPos = ((ItemUsageContextAccessor) context).callGetHitResult().getBlockPos();
         Hand hand = context.getHand();
 
-        Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-        aipci.add(user, ActionOnBlockPlacePower.class, aobpp -> aobpp.shouldExecute(stack, hand, toPos, onPos, direction));
+        Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+        aipci.add(user, ActionOnBlockPlacePowerType.class, aobpp -> aobpp.shouldExecute(stack, hand, toPos, onPos, direction));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
             aipci.getPowers(i)
                 .stream()
-                .filter(p -> p instanceof ActionOnBlockPlacePower)
-                .forEach(p -> ((ActionOnBlockPlacePower) p).executeOtherActions(toPos, onPos, direction));
+                .filter(p -> p instanceof ActionOnBlockPlacePowerType)
+                .forEach(p -> ((ActionOnBlockPlacePowerType) p).executeOtherActions(toPos, onPos, direction));
         }
 
         aipciRef.set(aipci);
@@ -96,15 +96,15 @@ public class BlockItemMixin {
     }
 
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;)Lnet/minecraft/util/ActionResult;", at = @At("TAIL"))
-    private void apoli$actionOnBlockPlacePost(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir, @Share("aipci") LocalRef<Prioritized.CallInstance<ActiveInteractionPower>> aipciRef) {
+    private void apoli$actionOnBlockPlacePost(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir, @Share("aipci") LocalRef<Prioritized.CallInstance<ActiveInteractionPowerType>> aipciRef) {
 
-        Prioritized.CallInstance<ActiveInteractionPower> aipci = aipciRef.get();
+        Prioritized.CallInstance<ActiveInteractionPowerType> aipci = aipciRef.get();
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
             aipci.getPowers(i)
                 .stream()
-                .filter(p -> p instanceof ActionOnBlockPlacePower)
-                .forEach(p -> ((ActionOnBlockPlacePower) p).executeItemActions(context.getHand()));
+                .filter(p -> p instanceof ActionOnBlockPlacePowerType)
+                .forEach(p -> ((ActionOnBlockPlacePowerType) p).executeItemActions(context.getHand()));
         }
 
     }
@@ -112,7 +112,7 @@ public class BlockItemMixin {
     @WrapOperation(method = "useOnBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;use(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/TypedActionResult;"))
     private TypedActionResult<ItemStack> apoli$preventItemUseIfFoodBlockItem(BlockItem instance, World world, PlayerEntity user, Hand hand, Operation<TypedActionResult<ItemStack>> original) {
         ItemStack handStack = user.getStackInHand(hand);
-        return PowerHolderComponent.hasPower(user, PreventItemUsePower.class, p -> p.doesPrevent(handStack))
+        return PowerHolderComponent.hasPowerType(user, PreventItemUsePowerType.class, p -> p.doesPrevent(handStack))
             ? TypedActionResult.fail(handStack)
             : original.call(instance, world, user, hand);
     }

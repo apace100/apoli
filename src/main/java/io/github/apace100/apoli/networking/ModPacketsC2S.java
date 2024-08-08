@@ -5,9 +5,9 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.networking.packet.c2s.UseActivePowersC2SPacket;
 import io.github.apace100.apoli.networking.task.VersionHandshakeTask;
-import io.github.apace100.apoli.power.Active;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerTypeManager;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.type.Active;
+import io.github.apace100.apoli.power.type.PowerType;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -87,15 +87,15 @@ public class ModPacketsC2S {
 
         for (Identifier powerTypeId : payload.powerTypeIds()) {
 
-            Power power = (Power) PowerTypeManager.getOptional(powerTypeId)
-                .map(component::getPower)
+            PowerType powerType = (PowerType) PowerManager.getOptional(powerTypeId)
+                .map(component::getPowerType)
                 .orElse(null);
 
-            if (power == null) {
+            if (powerType == null) {
                 Apoli.LOGGER.warn("Found unknown power \"{}\" while receiving packet for triggering active powers of player {}!", powerTypeId, player.getName().getString());
             }
 
-            else if (power instanceof Active activePower) {
+            else if (powerType instanceof Active activePower) {
                 activePower.onUse();
             }
 

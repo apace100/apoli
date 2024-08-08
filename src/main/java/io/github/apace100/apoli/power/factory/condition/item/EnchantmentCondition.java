@@ -2,7 +2,7 @@ package io.github.apace100.apoli.power.factory.condition.item;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
+import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
@@ -29,7 +29,7 @@ public class EnchantmentCondition {
         int compareTo = data.get("compare_to");
 
         boolean useModifications = data.get("use_modifications");
-        ItemEnchantmentsComponent component = ModifyEnchantmentLevelPower.getEnchantments(worldAndStack.getRight(), worldAndStack.getRight().getEnchantments(), useModifications);
+        ItemEnchantmentsComponent component = ModifyEnchantmentLevelPowerType.getEnchantments(worldAndStack.getRight(), worldAndStack.getRight().getEnchantments(), useModifications);
         int level = enchantment != null ? component.getLevel(enchantment)
                                         : component.getEnchantments().size();
         return comparison.compare(level, compareTo);

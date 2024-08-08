@@ -1,9 +1,14 @@
 package io.github.apace100.apoli.power.factory;
 
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.type.PowerType;
 
 @FunctionalInterface
-public interface PowerFactorySupplier<T extends Power> {
+public interface PowerFactorySupplier<T extends PowerType> {
 
-    PowerFactory<T> createFactory();
+    default PowerTypeFactory<T> createFactory() {
+        return getFactory();
+    }
+
+    PowerTypeFactory<T> getFactory();
+
 }

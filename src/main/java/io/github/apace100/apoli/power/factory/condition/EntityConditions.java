@@ -5,8 +5,8 @@ import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeReference;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.factory.condition.entity.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
@@ -61,8 +61,8 @@ public class EntityConditions {
         }));
         register(new ConditionFactory<>(Apoli.identifier("sneaking"), new SerializableData(), (data, entity) -> entity.isSneaking()));
         register(new ConditionFactory<>(Apoli.identifier("sprinting"), new SerializableData(), (data, entity) -> entity.isSprinting()));
-        register(new ConditionFactory<>(Apoli.identifier("power_active"), new SerializableData().add("power", ApoliDataTypes.POWER_TYPE),
-            (data, entity) -> ((PowerTypeReference)data.get("power")).isActive(entity)));
+        register(new ConditionFactory<>(Apoli.identifier("power_active"), new SerializableData().add("power", ApoliDataTypes.POWER_REFERENCE),
+            (data, entity) -> ((PowerReference)data.get("power")).isActive(entity)));
         register(StatusEffectCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("submerged_in"), new SerializableData().add("fluid", SerializableDataTypes.FLUID_TAG),
             (data, entity) -> ((SubmergableEntity)entity).apoli$isSubmergedInLoosely(data.get("fluid"))));
@@ -333,11 +333,11 @@ public class EntityConditions {
         register(new ConditionFactory<>(Apoli.identifier("creative_flying"), new SerializableData(),
             (data, entity) -> entity instanceof PlayerEntity && ((PlayerEntity)entity).getAbilities().flying));
         register(new ConditionFactory<>(Apoli.identifier("power_type"), new SerializableData()
-            .add("power_type", ApoliDataTypes.POWER_TYPE),
+            .add("power_type", ApoliDataTypes.POWER_REFERENCE),
             (data, entity) -> {
-                PowerTypeReference powerTypeReference = data.get("power_type");
-                PowerType powerType = powerTypeReference.getReference();
-                return PowerHolderComponent.KEY.maybeGet(entity).map(phc -> phc.getPowerTypes(true).contains(powerType)).orElse(false);
+                PowerReference powerTypeReference = data.get("power_type");
+                Power power = powerTypeReference.getReference();
+                return PowerHolderComponent.KEY.maybeGet(entity).map(phc -> phc.getPowers(true).contains(power)).orElse(false);
             }));
         register(new ConditionFactory<>(Apoli.identifier("ability"), new SerializableData()
             .add("ability", ApoliDataTypes.PLAYER_ABILITY),

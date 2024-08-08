@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.NightVisionPower;
+import io.github.apace100.apoli.power.type.NightVisionPowerType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -22,9 +22,9 @@ public abstract class LightmapTextureManagerMixin implements AutoCloseable {
 
     @ModifyVariable(method = "update", at = @At("STORE"), ordinal = 6)
     private float apoli$modifyNightVisionStrength(float original) {
-        return PowerHolderComponent.getPowers(this.client.player, NightVisionPower.class)
+        return PowerHolderComponent.getPowerTypes(this.client.player, NightVisionPowerType.class)
             .stream()
-            .map(NightVisionPower::getStrength)
+            .map(NightVisionPowerType::getStrength)
             .max(Float::compareTo)
             .map(newValue -> Math.max(newValue, original))
             .orElse(original);

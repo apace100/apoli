@@ -3,7 +3,7 @@ package io.github.apace100.apoli.util;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import net.minecraft.advancement.criterion.AbstractCriterion;
 import net.minecraft.predicate.entity.EntityPredicate;
 import net.minecraft.predicate.entity.LootContextPredicate;
@@ -22,8 +22,8 @@ public class GainedPowerCriterion extends AbstractCriterion<GainedPowerCriterion
         return Conditions.CODEC;
     }
 
-    public void trigger(ServerPlayerEntity player, PowerType powerType) {
-        this.trigger(player, conditions -> conditions.matches(powerType));
+    public void trigger(ServerPlayerEntity player, Power power) {
+        this.trigger(player, conditions -> conditions.matches(power));
     }
 
     public record Conditions(Optional<LootContextPredicate> player, Identifier powerId) implements AbstractCriterion.Conditions {
@@ -38,8 +38,8 @@ public class GainedPowerCriterion extends AbstractCriterion<GainedPowerCriterion
             return player;
         }
 
-        public boolean matches(PowerType powerType) {
-            return powerType.getIdentifier().equals(powerId);
+        public boolean matches(Power power) {
+            return power.getId().equals(powerId);
         }
 
     }

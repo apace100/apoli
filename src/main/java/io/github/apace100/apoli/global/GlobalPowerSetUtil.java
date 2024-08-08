@@ -2,7 +2,7 @@ package io.github.apace100.apoli.global;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
@@ -28,7 +28,7 @@ public class GlobalPowerSetUtil {
     public static Set<Identifier> getPowerTypeIds(List<GlobalPowerSet> powerSets) {
         return powerSets.stream()
             .flatMap(gps -> gps.getPowerTypes().stream())
-            .map(PowerType::getIdentifier)
+            .map(Power::getId)
             .collect(Collectors.toSet());
     }
 
@@ -59,9 +59,9 @@ public class GlobalPowerSetUtil {
 
     private static boolean removeExcessPowers(PowerHolderComponent phc, Set<Identifier> expected) {
 
-        List<PowerType> powersToRemove = phc.getPowersFromSource(POWER_SOURCE)
+        List<Power> powersToRemove = phc.getPowersFromSource(POWER_SOURCE)
             .stream()
-            .filter(p -> !expected.contains(p.getIdentifier()))
+            .filter(p -> !expected.contains(p.getId()))
             .toList();
 
         powersToRemove.forEach(p -> phc.removePower(p, POWER_SOURCE));
@@ -72,7 +72,7 @@ public class GlobalPowerSetUtil {
     private static boolean addMissingPowers(PowerHolderComponent phc, GlobalPowerSet powerSet) {
 
         boolean added = false;
-        for(PowerType power : powerSet.getPowerTypes()) {
+        for(Power power : powerSet.getPowerTypes()) {
             if(!phc.hasPower(power, POWER_SOURCE)) {
                 phc.addPower(power, POWER_SOURCE);
                 added = true;

@@ -2,7 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.PowerModifiedGrindstone;
-import io.github.apace100.apoli.power.ModifyGrindstonePower;
+import io.github.apace100.apoli.power.type.ModifyGrindstonePowerType;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import net.minecraft.screen.GrindstoneScreenHandler;
@@ -31,7 +31,7 @@ public class GrindstoneScreenHandlerOutputSlotMixin {
 
         List<Modifier> modifiers = powerModifiedGrindstone.apoli$getAppliedPowers()
             .stream()
-            .map(ModifyGrindstonePower::getExperienceModifier)
+            .map(ModifyGrindstonePowerType::getExperienceModifier)
             .filter(Objects::nonNull)
             .toList();
 

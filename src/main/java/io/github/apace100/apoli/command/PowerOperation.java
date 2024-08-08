@@ -7,9 +7,9 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import io.github.apace100.apoli.power.CooldownPower;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.VariableIntPower;
+import io.github.apace100.apoli.power.type.CooldownPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.power.type.VariableIntPowerType;
 import net.minecraft.command.CommandSource;
 import net.minecraft.scoreboard.ScoreAccess;
 import net.minecraft.text.Text;
@@ -36,123 +36,103 @@ public class PowerOperation implements ArgumentType<PowerOperation.Operation> {
         while(stringReader.canRead() && stringReader.peek() != ' ') stringReader.skip();
 
         String stringOperator = stringReader.getString().substring(i, stringReader.getCursor());
-        switch (stringOperator) {
-            case "=":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        ((VariableIntPower)power).setValue(score.getScore());
-                    } else if(power instanceof CooldownPower) {
-                        ((CooldownPower)power).setCooldown(score.getScore());
+        return switch (stringOperator) {
+            case "=" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType) {
+                    ((VariableIntPowerType) power).setValue(score.getScore());
+                } else if (power instanceof CooldownPowerType) {
+                    ((CooldownPowerType) power).setCooldown(score.getScore());
+                }
+            };
+            case "+=" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType) {
+                    ((VariableIntPowerType) power).setValue(((VariableIntPowerType) power).getValue() + score.getScore());
+                } else if (power instanceof CooldownPowerType) {
+                    ((CooldownPowerType) power).modify(score.getScore());
+                }
+            };
+            case "-=" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType) {
+                    ((VariableIntPowerType) power).setValue(((VariableIntPowerType) power).getValue() - score.getScore());
+                } else if (power instanceof CooldownPowerType) {
+                    ((CooldownPowerType) power).modify(-score.getScore());
+                }
+            };
+            case "*=" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType) {
+                    ((VariableIntPowerType) power).setValue(((VariableIntPowerType) power).getValue() * score.getScore());
+                } else if (power instanceof CooldownPowerType) {
+                    ((CooldownPowerType) power).setCooldown(((CooldownPowerType) power).getRemainingTicks() * score.getScore());
+                }
+            };
+            case "/=" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType resource) {
+                    int r = resource.getValue();
+                    int s = score.getScore();
+                    if (s == 0) {
+                        throw DIVISION_ZERO_EXCEPTION.create();
+                    } else {
+                        resource.setValue(Math.floorDiv(r, s));
                     }
-                };
-            case "+=":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        ((VariableIntPower) power).setValue(((VariableIntPower) power).getValue() + score.getScore());
-                    } else if(power instanceof CooldownPower) {
-                        ((CooldownPower)power).modify(score.getScore());
+                } else if (power instanceof CooldownPowerType cooldownPower) {
+                    int c = cooldownPower.getRemainingTicks();
+                    int s = score.getScore();
+                    if (s == 0) {
+                        throw DIVISION_ZERO_EXCEPTION.create();
+                    } else {
+                        cooldownPower.setCooldown(Math.floorDiv(c, s));
                     }
-                };
-            case "-=":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        ((VariableIntPower) power).setValue(((VariableIntPower) power).getValue() - score.getScore());
-                    } else if(power instanceof CooldownPower) {
-                        ((CooldownPower)power).modify(-score.getScore());
+                }
+            };
+            case "%=" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType resource) {
+                    int r = resource.getValue();
+                    int s = score.getScore();
+                    if (s == 0) {
+                        throw DIVISION_ZERO_EXCEPTION.create();
+                    } else {
+                        resource.setValue(Math.floorMod(r, s));
                     }
-                };
-            case "*=":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        ((VariableIntPower) power).setValue(((VariableIntPower) power).getValue() * score.getScore());
-                    } else if(power instanceof CooldownPower) {
-                        ((CooldownPower)power).setCooldown(((CooldownPower)power).getRemainingTicks() * score.getScore());
+                } else if (power instanceof CooldownPowerType cooldownPower) {
+                    int c = cooldownPower.getRemainingTicks();
+                    int s = score.getScore();
+                    if (s == 0) {
+                        throw DIVISION_ZERO_EXCEPTION.create();
+                    } else {
+                        cooldownPower.setCooldown(Math.floorMod(c, s));
                     }
-                };
-            case "/=":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        VariableIntPower resource = (VariableIntPower)power;
-                        int r = resource.getValue();
-                        int s = score.getScore();
-                        if (s == 0) {
-                            throw DIVISION_ZERO_EXCEPTION.create();
-                        } else {
-                            resource.setValue(Math.floorDiv(r, s));
-                        }
-                    } else if(power instanceof CooldownPower) {
-                        CooldownPower cooldownPower = (CooldownPower)power;
-                        int c = cooldownPower.getRemainingTicks();
-                        int s = score.getScore();
-                        if (s == 0) {
-                            throw DIVISION_ZERO_EXCEPTION.create();
-                        } else {
-                            cooldownPower.setCooldown(Math.floorDiv(c, s));
-                        }
-                    }
-                };
-            case "%=":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        VariableIntPower resource = (VariableIntPower) power;
-                        int r = resource.getValue();
-                        int s = score.getScore();
-                        if (s == 0) {
-                            throw DIVISION_ZERO_EXCEPTION.create();
-                        } else {
-                            resource.setValue(Math.floorMod(r, s));
-                        }
-                    } else if(power instanceof CooldownPower) {
-                        CooldownPower cooldownPower = (CooldownPower)power;
-                        int c = cooldownPower.getRemainingTicks();
-                        int s = score.getScore();
-                        if (s == 0) {
-                            throw DIVISION_ZERO_EXCEPTION.create();
-                        } else {
-                            cooldownPower.setCooldown(Math.floorMod(c, s));
-                        }
-                    }
-                };
-            case "<":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        VariableIntPower resource = (VariableIntPower) power;
-                        resource.setValue(Math.min(resource.getValue(), score.getScore()));
-                    } else if(power instanceof CooldownPower) {
-                        CooldownPower cooldownPower = (CooldownPower)power;
-                        cooldownPower.setCooldown(Math.min(cooldownPower.getRemainingTicks(), score.getScore()));
-                    }
-                };
-            case ">":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        VariableIntPower resource = (VariableIntPower) power;
-                        resource.setValue(Math.max(resource.getValue(), score.getScore()));
-                    } else if(power instanceof CooldownPower) {
-                        CooldownPower cooldownPower = (CooldownPower)power;
-                        cooldownPower.setCooldown(Math.max(cooldownPower.getRemainingTicks(), score.getScore()));
-                    }
-                };
-            case "><":
-                return (power, score) -> {
-                    if(power instanceof VariableIntPower) {
-                        VariableIntPower resource = (VariableIntPower) power;
-                        int v = score.getScore();
-                        score.setScore(resource.getValue());
-                        resource.setValue(v);
-                    } else if(power instanceof CooldownPower) {
-                        CooldownPower cooldownPower = (CooldownPower)power;
-                        int v = score.getScore();
-                        score.setScore(cooldownPower.getRemainingTicks());
-                        cooldownPower.setCooldown(v);
-                    }
-                };
-            default:
-                throw INVALID_OPERATION.create();
-        }
+                }
+            };
+            case "<" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType resource) {
+                    resource.setValue(Math.min(resource.getValue(), score.getScore()));
+                } else if (power instanceof CooldownPowerType cooldownPower) {
+                    cooldownPower.setCooldown(Math.min(cooldownPower.getRemainingTicks(), score.getScore()));
+                }
+            };
+            case ">" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType resource) {
+                    resource.setValue(Math.max(resource.getValue(), score.getScore()));
+                } else if (power instanceof CooldownPowerType cooldownPower) {
+                    cooldownPower.setCooldown(Math.max(cooldownPower.getRemainingTicks(), score.getScore()));
+                }
+            };
+            case "><" -> (power, score) -> {
+                if (power instanceof VariableIntPowerType resource) {
+                    int v = score.getScore();
+                    score.setScore(resource.getValue());
+                    resource.setValue(v);
+                } else if (power instanceof CooldownPowerType cooldownPower) {
+                    int v = score.getScore();
+                    score.setScore(cooldownPower.getRemainingTicks());
+                    cooldownPower.setCooldown(v);
+                }
+            };
+            default -> throw INVALID_OPERATION.create();
+        };
     }
 
     public interface Operation {
-        void apply(Power power, ScoreAccess score) throws CommandSyntaxException;
+        void apply(PowerType powerType, ScoreAccess score) throws CommandSyntaxException;
     }
 }

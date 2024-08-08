@@ -3,10 +3,10 @@ package io.github.apace100.apoli.power.factory.action.entity;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.EntitySetPower;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.factory.action.EntityActions;
+import io.github.apace100.apoli.power.type.EntitySetPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -24,9 +24,9 @@ public class ActionOnEntitySetAction {
     public static void action(SerializableData.Instance data, Entity entity) {
 
         PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        PowerType powerType = data.get("set");
+        Power power = data.get("set");
 
-        if (component == null || powerType == null || !(component.getPower(powerType) instanceof EntitySetPower entitySetPower)) {
+        if (component == null || power == null || !(component.getPowerType(power) instanceof EntitySetPowerType entitySetPower)) {
             return;
         }
 
@@ -68,7 +68,7 @@ public class ActionOnEntitySetAction {
         ActionFactory<Entity> factory = new ActionFactory<>(
             Apoli.identifier("action_on_entity_set"),
             new SerializableData()
-                .add("set", ApoliDataTypes.POWER_TYPE)
+                .add("set", ApoliDataTypes.POWER_REFERENCE)
                 .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION)
                 .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
                 .add("limit", SerializableDataTypes.INT, 0)

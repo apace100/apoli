@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.integration;
 
 import com.google.gson.JsonElement;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import net.minecraft.util.Identifier;
 
 /**
@@ -9,5 +9,5 @@ import net.minecraft.util.Identifier;
  */
 public interface AdditionalPowerDataCallback {
 
-    void readAdditionalPowerData(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonElement data, PowerType powerType);
+    void readAdditionalPowerData(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonElement data, Power power);
 }

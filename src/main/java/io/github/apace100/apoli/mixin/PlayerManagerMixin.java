@@ -6,8 +6,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.EndRespawningEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyPlayerSpawnPower;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.type.ModifyPlayerSpawnPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -32,7 +32,7 @@ public abstract class PlayerManagerMixin {
 
 	@Inject(method = "remove", at = @At("HEAD"))
 	private void apoli$invokeOnRemovedPowerCallbackOnRemoved(ServerPlayerEntity player, CallbackInfo ci) {
-		PowerHolderComponent.KEY.get(player).getPowers().forEach(power -> {
+		PowerHolderComponent.KEY.get(player).getPowerTypes().forEach(power -> {
 			power.onRemoved();
 			power.onRemoved(false);
 		});
@@ -42,7 +42,7 @@ public abstract class PlayerManagerMixin {
 	private TeleportTarget apoli$retryObstructedSpawnpointIfFailed(ServerPlayerEntity oldPlayer, boolean alive, TeleportTarget.PostDimensionTransition postDimensionTransition, Operation<TeleportTarget> original) {
 
 		TeleportTarget originalSpawnTarget = original.call(oldPlayer, alive, postDimensionTransition);
-		if (!originalSpawnTarget.missingRespawnBlock() || !PowerHolderComponent.hasPower(oldPlayer, ModifyPlayerSpawnPower.class)) {
+		if (!originalSpawnTarget.missingRespawnBlock() || !PowerHolderComponent.hasPowerType(oldPlayer, ModifyPlayerSpawnPowerType.class)) {
 			return originalSpawnTarget;
 		}
 
@@ -59,7 +59,7 @@ public abstract class PlayerManagerMixin {
 
 	@Inject(method = "respawnPlayer", at = @At("HEAD"))
 	private void apoli$invokeOnRemovedPowerCallbackOnRespawn(ServerPlayerEntity player, boolean alive, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayerEntity> cir) {
-		PowerHolderComponent.KEY.get(player).getPowers().forEach(power -> {
+		PowerHolderComponent.KEY.get(player).getPowerTypes().forEach(power -> {
 			power.onRemoved();
 			power.onRemoved(false);
 		});
@@ -68,7 +68,7 @@ public abstract class PlayerManagerMixin {
 	@Inject(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;onSpawn()V"))
 	private void apoli$invokeOnRespawnPowerCallback(ServerPlayerEntity player, boolean alive, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayerEntity> cir, @Local(ordinal = 1) ServerPlayerEntity newPlayer) {
 		if (!alive) {
-			PowerHolderComponent.KEY.get(newPlayer).getPowers().forEach(Power::onRespawn);
+			PowerHolderComponent.KEY.get(newPlayer).getPowerTypes().forEach(PowerType::onRespawn);
 		}
 	}
 

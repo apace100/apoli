@@ -6,8 +6,8 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.networking.packet.s2c.*;
 import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeManager;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -35,7 +35,7 @@ public class ModPacketsS2C {
         ClientConfigurationNetworking.registerGlobalReceiver(VersionHandshakePacket.PACKET_ID, ModPacketsS2C::sendHandshakeReply);
 
         ClientPlayConnectionEvents.INIT.register(((handler, client) -> {
-            ClientPlayNetworking.registerReceiver(SyncPowerTypesS2CPacket.PACKET_ID, PowerTypeManager::receive);
+            ClientPlayNetworking.registerReceiver(SyncPowerTypesS2CPacket.PACKET_ID, PowerManager::receive);
             ClientPlayNetworking.registerReceiver(SyncPowerS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSync);
             ClientPlayNetworking.registerReceiver(SyncPowersInBulkS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSyncInBulk);
             ClientPlayNetworking.registerReceiver(MountPlayerS2CPacket.PACKET_ID, ModPacketsS2C::onPlayerMount);
@@ -144,7 +144,7 @@ public class ModPacketsS2C {
         ClientPlayerEntity player = context.player();
         Identifier powerTypeId = payload.powerTypeId();
 
-        if (!PowerTypeManager.contains(powerTypeId)) {
+        if (!PowerManager.contains(powerTypeId)) {
             Apoli.LOGGER.warn("Received packet for syncing unknown power \"{}\"!", powerTypeId);
             return;
         }
@@ -164,11 +164,11 @@ public class ModPacketsS2C {
             return;
         }
 
-        PowerType powerType = PowerTypeManager.get(powerTypeId);
-        Power power = component.getPower(powerType);
+        Power power = PowerManager.get(powerTypeId);
+        PowerType powerType = component.getPowerType(power);
 
-        if (power != null) {
-            power.fromTag(payload.powerData().get("Data"), true);
+        if (powerType != null) {
+            powerType.fromTag(payload.powerData().get("Data"), true);
         }
 
     }
@@ -195,16 +195,16 @@ public class ModPacketsS2C {
             Identifier powerTypeId = entry.getKey();
             NbtElement powerTypeData = entry.getValue();
 
-            if (!PowerTypeManager.contains(powerTypeId)) {
+            if (!PowerManager.contains(powerTypeId)) {
                 ++invalidPowers;
                 continue;
             }
 
-            PowerType powerType = PowerTypeManager.get(powerTypeId);
-            Power power = component.getPower(powerType);
+            Power power = PowerManager.get(powerTypeId);
+            PowerType powerType = component.getPowerType(power);
 
-            if (power != null) {
-                power.fromTag(powerTypeData, true);
+            if (powerType != null) {
+                powerType.fromTag(powerTypeData, true);
             }
 
         }

@@ -11,8 +11,8 @@ import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
-import io.github.apace100.apoli.power.PowerTypeManager;
-import io.github.apace100.apoli.power.factory.PowerFactories;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.factory.PowerTypeFactories;
 import io.github.apace100.apoli.power.factory.action.BiEntityActions;
 import io.github.apace100.apoli.power.factory.action.BlockActions;
 import io.github.apace100.apoli.power.factory.action.EntityActions;
@@ -101,7 +101,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ModifierOperations.registerAll();
 		ApoliDataComponentTypes.register();
 
-		PowerFactories.register();
+		PowerTypeFactories.register();
 		EntityConditions.register();
 		BiEntityConditions.register();
 		ItemConditions.register();
@@ -117,7 +117,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ApoliDataHandlers.register();
 
-		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new PowerTypeManager());
+		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new PowerManager());
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetLoader());
 
 		ServerEntityEvents.EQUIPMENT_CHANGE.register(ItemPowersComponent::onChangeEquipment);

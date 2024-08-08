@@ -7,8 +7,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeManager;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerManager;
 import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -30,12 +30,12 @@ public class PowerTypeArgumentType implements ArgumentType<Identifier> {
         return Identifier.fromCommandInput(reader);
     }
 
-    public static PowerType getPower(CommandContext<ServerCommandSource> context, String argumentName) throws CommandSyntaxException {
+    public static Power getPower(CommandContext<ServerCommandSource> context, String argumentName) throws CommandSyntaxException {
 
         Identifier id = context.getArgument(argumentName, Identifier.class);
 
         try {
-            return PowerTypeManager.get(id);
+            return PowerManager.get(id);
         }
 
         catch (IllegalArgumentException e) {
@@ -46,7 +46,7 @@ public class PowerTypeArgumentType implements ArgumentType<Identifier> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestIdentifiers(PowerTypeManager.streamIds(), builder);
+        return CommandSource.suggestIdentifiers(PowerManager.streamIds(), builder);
     }
 
 }

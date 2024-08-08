@@ -2,8 +2,8 @@ package io.github.apace100.apoli.power.factory.condition.entity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -38,7 +38,7 @@ public class EnchantmentCondition {
 
             @Override
             public int queryLevel(ItemStack stack, RegistryEntry<Enchantment> enchantmentEntry, boolean useModifications, int totalLevel) {
-                return ModifyEnchantmentLevelPower.getEnchantments(stack, stack.getEnchantments(), useModifications).getLevel(enchantmentEntry);
+                return ModifyEnchantmentLevelPowerType.getEnchantments(stack, stack.getEnchantments(), useModifications).getLevel(enchantmentEntry);
             }
 
         },
@@ -48,7 +48,7 @@ public class EnchantmentCondition {
             @Override
             public int queryLevel(ItemStack stack, RegistryEntry<Enchantment> enchantmentEntry, boolean useModifications, int totalLevel) {
 
-                int potentialLevel = ModifyEnchantmentLevelPower.getEnchantments(stack, stack.getEnchantments(), useModifications).getLevel(enchantmentEntry);
+                int potentialLevel = ModifyEnchantmentLevelPowerType.getEnchantments(stack, stack.getEnchantments(), useModifications).getLevel(enchantmentEntry);
 
                 if (potentialLevel >= totalLevel) {
                     return potentialLevel;
