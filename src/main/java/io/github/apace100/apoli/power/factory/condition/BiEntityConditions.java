@@ -32,6 +32,7 @@ public class BiEntityConditions {
         register(RelativeRotationCondition.getFactory());
         register(EqualCondition.getFactory());
         register(InEntitySetCondition.getFactory());
+        register(TeammatesCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Pair<Entity, Entity>> conditionFactory) {
