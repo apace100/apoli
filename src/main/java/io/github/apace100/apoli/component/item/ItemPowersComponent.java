@@ -83,8 +83,8 @@ public class ItemPowersComponent {
 
         for (Entry entry : entries) {
 
-            Power power = PowerManager.get(entry.powerId());
-            if (entry.hidden() || !entry.slot().equals(modifierSlot)) {
+            Power power = PowerManager.getOptional(entry.powerId()).orElse(null);
+            if (power == null || entry.hidden() || !entry.slot().equals(modifierSlot)) {
                 continue;
             }
 
@@ -135,20 +135,20 @@ public class ItemPowersComponent {
         ItemPowersComponent prevStackPowers = previousStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
         for (Entry prevEntry : prevStackPowers.entries) {
 
-            Power power = PowerManager.get(prevEntry.powerId());
-            if (prevEntry.slot().matches(equipmentSlot) && powerComponent.removePower(power, sourceId)) {
-                shouldSync = true;
-            }
+            shouldSync |= PowerManager.getOptional(prevEntry.powerId())
+                .filter(power -> prevEntry.slot().matches(equipmentSlot))
+                .map(power -> powerComponent.removePower(power, sourceId))
+                .orElse(false);
 
         }
 
         ItemPowersComponent currStackPowers = currentStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
         for (Entry currEntry : currStackPowers.entries) {
 
-            Power power = PowerManager.get(currEntry.powerId());
-            if (currEntry.slot().matches(equipmentSlot) && powerComponent.addPower(power, sourceId)) {
-                shouldSync = true;
-            }
+            shouldSync |= PowerManager.getOptional(currEntry.powerId())
+                .filter(power -> currEntry.slot().matches(equipmentSlot))
+                .map(power -> powerComponent.addPower(power, sourceId))
+                .orElse(false);
 
         }
 
