@@ -9,13 +9,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Objects;
+
 @Mixin(Biome.Builder.class)
 public class BiomeBuilderMixin {
 
-    @Shadow private @Nullable Float downfall;
+    @Nullable
+    @Shadow
+    private Float downfall;
 
     @Inject(method = "build", at = @At("RETURN"))
     private void apoli$storeDownfall(CallbackInfoReturnable<Biome> cir) {
-        ((BiomeWeatherAccess)(Object)cir.getReturnValue()).apoli$setDownfall(downfall.floatValue());
+        ((BiomeWeatherAccess) (Object) cir.getReturnValue()).apoli$setDownfall(Objects.requireNonNull(downfall));
     }
+
 }

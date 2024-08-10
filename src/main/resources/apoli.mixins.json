@@ -85,6 +85,7 @@
         "CapeFeatureRendererMixin",
         "ChunkRendererRegionMixin",
         "ClientAdvancementManagerAccessor",
+        "ClientPlayerEntityAccessor",
         "ClientPlayerEntityMixin",
         "ClientPlayerInteractionManagerAccessor",
         "ClientPlayerInteractionManagerMixin",

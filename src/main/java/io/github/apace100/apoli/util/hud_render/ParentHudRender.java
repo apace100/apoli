@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.util.hud_render;
 
 import com.google.common.collect.ImmutableList;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.util.HudRender;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
@@ -13,7 +13,7 @@ public class ParentHudRender extends HudRender {
 
     private final ImmutableList<HudRender> children;
 
-    protected ParentHudRender(Collection<HudRender> children, ConditionFactory<Entity>.Instance condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
+    protected ParentHudRender(Collection<HudRender> children, ConditionTypeFactory<Entity>.Instance condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
         super(condition, spriteLocation, shouldRender, inverted, barIndex, iconIndex, order);
 
         ImmutableList.Builder<HudRender> childrenBuilder = ImmutableList.builder();

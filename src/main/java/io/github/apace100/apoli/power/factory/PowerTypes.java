@@ -81,7 +81,7 @@ public class PowerTypes {
         register(PreventDeathPowerType::getFactory);
         register(ActionOnItemUsePowerType::getFactory);
         register(ModifyFallingPowerType::getFactory);
-        register(PlayerAbilityPowerType.createAbilityFactory(Apoli.identifier("creative_flight"), VanillaAbilities.ALLOW_FLYING));
+        register(PlayerAbilityPowerType.createFactory(Apoli.identifier("creative_flight"), VanillaAbilities.ALLOW_FLYING));
         register(ActionOnEntityUsePowerType::getFactory);
         register(ActionOnBeingUsedPowerType::getFactory);
         register(PreventEntityUsePowerType::getFactory);

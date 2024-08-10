@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.util;
 
+import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.mixin.SlotRangesAccessor;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
 import io.github.apace100.apoli.power.type.InventoryPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.ArgumentWrapper;
@@ -103,7 +103,7 @@ public class InventoryUtil {
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<Pair<World, ItemStack>> itemCondition = data.get("item_condition");
-        ActionFactory<Pair<World, StackReference>>.Instance itemAction = data.get("item_action");
+        ActionTypeFactory<Pair<World, StackReference>>.Instance itemAction = data.get("item_action");
 
         int processedItems = 0;
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));

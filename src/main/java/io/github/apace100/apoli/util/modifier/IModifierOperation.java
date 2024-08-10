@@ -1,63 +1,33 @@
 package io.github.apace100.apoli.util.modifier;
 
-import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 public interface IModifierOperation {
 
-    /**
-     *  The strict data type for operations. Doesn't allow for
-     */
-    SerializableDataType<IModifierOperation> STRICT_DATA_TYPE = SerializableDataType.registry(ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID, true);
+    Comparator<IModifierOperation> COMPARATOR = (o1, o2) -> {
 
-    SerializableDataType<IModifierOperation> DATA_TYPE = SerializableDataType.of(
-        new StrictCodec<>() {
+        if (o1 == o2) {
+            return 0;
+        }
 
-            @Override
-            public <T> Pair<IModifierOperation, T> strictDecode(DynamicOps<T> ops, T input) {
+        else if (o1.getPhase() == o2.getPhase()) {
+            return Integer.compare(o1.getOrder(), o2.getOrder());
+        }
 
-                DataResult<String> inputString = ops.getStringValue(input);
-                if (inputString.isSuccess()) {
+        else {
+            return o1.getPhase().compareTo(o2.getPhase());
+        }
 
-                    IModifierOperation operation = switch (inputString.getOrThrow().toLowerCase(Locale.ROOT)) {
-                        case "addition", "add_value" ->
-                            ModifierOperation.ADD_BASE_EARLY;
-                        case "multiply_base", "add_multiplied_base" ->
-                            ModifierOperation.MULTIPLY_BASE_ADDITIVE;
-                        case "multiply_total", "add_multiplied_total" ->
-                            ModifierOperation.MULTIPLY_TOTAL_MULTIPLICATIVE;
-                        default ->
-                            STRICT_DATA_TYPE.strictParse(ops, input);
-                    };
+    };
 
-                    return Pair.of(operation, input);
-
-                }
-
-                else {
-                    return STRICT_DATA_TYPE.strictDecode(ops, input);
-                }
-
-            }
-
-            @Override
-            public <T> T strictEncode(IModifierOperation input, DynamicOps<T> ops, T prefix) {
-                return STRICT_DATA_TYPE.strictEncode(input, ops, prefix);
-            }
-
-        },
-        STRICT_DATA_TYPE.packetCodec()
-    );
+    SerializableDataType<IModifierOperation> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID, true);
 
     /**
      *  @return the serializable data of the modifier instance that this operation needs to operate.

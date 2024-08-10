@@ -58,7 +58,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder, LeashableEntity {
+public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder, CustomLeashable {
 
     @Shadow
     private World world;

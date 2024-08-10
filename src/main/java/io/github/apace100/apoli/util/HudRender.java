@@ -3,8 +3,8 @@ package io.github.apace100.apoli.util;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DynamicOps;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.apoli.util.hud_render.ParentHudRender;
 import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
@@ -124,7 +124,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
     );
 
     @Nullable
-    private final ConditionFactory<Entity>.Instance condition;
+    private final ConditionTypeFactory<Entity>.Instance condition;
     private final Identifier spriteLocation;
 
     private final boolean shouldRender;
@@ -134,7 +134,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
     private final int iconIndex;
     private final int order;
 
-    public HudRender(@Nullable ConditionFactory<Entity>.Instance condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
+    public HudRender(@Nullable ConditionTypeFactory<Entity>.Instance condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
         this.condition = condition;
         this.spriteLocation = spriteLocation;
         this.shouldRender = shouldRender;
@@ -158,7 +158,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
     }
 
     @Nullable
-    public ConditionFactory<Entity>.Instance getCondition() {
+    public ConditionTypeFactory<Entity>.Instance getCondition() {
         return this.condition;
     }
 

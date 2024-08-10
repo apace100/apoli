@@ -107,7 +107,7 @@ public class EdibleItemPowerType extends PowerType implements Prioritized<Edible
     }
 
     public static Optional<EdibleItemPowerType> get(ItemStack stack) {
-        Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity();
+        Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity(true);
         return get(stack, stackHolder);
     }
 

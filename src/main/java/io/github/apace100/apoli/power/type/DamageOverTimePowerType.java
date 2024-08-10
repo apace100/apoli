@@ -1,11 +1,8 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.data.DamageSourceDescription;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.Enchantment;
@@ -34,7 +31,6 @@ public class DamageOverTimePowerType extends PowerType {
     private final int beginDamageIn;
     private final float damageAmountEasy;
     private final float damageAmount;
-    private final DamageSourceDescription damageSourceDescription;
     private final RegistryKey<DamageType> damageType;
     private final RegistryKey<Enchantment> protectingEnchantmentKey;
     private final float protectionEffectiveness;
@@ -44,9 +40,8 @@ public class DamageOverTimePowerType extends PowerType {
 
     private DamageSource damageSource;
 
-    public DamageOverTimePowerType(Power power, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, DamageSourceDescription damageSourceDescription, RegistryKey<DamageType> damageType, RegistryKey<Enchantment> protectingEnchantmentKey, float protectionEffectiveness) {
+    public DamageOverTimePowerType(Power power, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, RegistryKey<DamageType> damageType, RegistryKey<Enchantment> protectingEnchantmentKey, float protectionEffectiveness) {
         super(power, entity);
-        this.damageSourceDescription = damageSourceDescription;
         this.damageType = damageType;
         this.beginDamageIn = beginDamageIn;
         this.damageAmount = damageAmount;
@@ -90,7 +85,7 @@ public class DamageOverTimePowerType extends PowerType {
     private DamageSource getDamageSource(DamageSources damageSources) {
 
         if (damageSource == null) {
-            damageSource = MiscUtil.createDamageSource(damageSources, damageSourceDescription, damageType);
+            damageSource = damageSources.create(damageType);
         }
 
         return damageSource;
@@ -176,7 +171,6 @@ public class DamageOverTimePowerType extends PowerType {
                 .addFunctionedDefault("onset_delay", SerializableDataTypes.INT, data -> data.getInt("interval"))
                 .add("damage", SerializableDataTypes.FLOAT)
                 .addFunctionedDefault("damage_easy", SerializableDataTypes.FLOAT, data -> data.getFloat("damage"))
-                .add("damage_source", ApoliDataTypes.DAMAGE_SOURCE_DESCRIPTION, null)
                 .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, GENERIC_DAMAGE)
                 .add("protection_enchantment", SerializableDataTypes.ENCHANTMENT, null)
                 .add("protection_effectiveness", SerializableDataTypes.FLOAT, 1.0F),
@@ -185,7 +179,6 @@ public class DamageOverTimePowerType extends PowerType {
                 data.getInt("interval"),
                 data.getFloat("damage_easy"),
                 data.getFloat("damage"),
-                data.get("damage_source"),
                 data.get("damage_type"),
                 data.get("protection_enchantment"),
                 data.getFloat("protection_effectiveness")

@@ -30,10 +30,10 @@ public class PowerReference extends Power {
 
     @Nullable
     @Override
-    public PowerType get(Entity entity) {
+    public PowerType getType(Entity entity) {
         Power power = this.getReference();
         return power != null
-            ? power.get(entity)
+            ? power.getType(entity)
             : null;
     }
 

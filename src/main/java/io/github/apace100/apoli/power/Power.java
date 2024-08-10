@@ -8,8 +8,8 @@ import com.mojang.serialization.MapLike;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.PowerPayloadType;
@@ -200,15 +200,15 @@ public class Power implements Validatable {
     }
 
     public boolean isActive(Entity entity) {
-        PowerType powerType = this.get(entity);
+        PowerType powerType = this.getType(entity);
         return powerType != null
             && powerType.isActive();
     }
 
     @Nullable
-    public PowerType get(Entity entity) {
+    public PowerType getType(Entity entity) {
 
-        if (PowerHolderComponent.KEY.isProvidedBy(entity)) {
+        if (entity != null && PowerHolderComponent.KEY.isProvidedBy(entity)) {
             return PowerHolderComponent.KEY.get(entity).getPowerType(this);
         }
 

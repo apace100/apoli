@@ -1,11 +1,16 @@
 package io.github.apace100.apoli;
 
+import io.github.apace100.apoli.action.factory.BiEntityActions;
+import io.github.apace100.apoli.action.factory.BlockActions;
+import io.github.apace100.apoli.action.factory.EntityActions;
+import io.github.apace100.apoli.action.factory.ItemActions;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
+import io.github.apace100.apoli.condition.factory.*;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.integration.PowerIntegration;
@@ -13,11 +18,6 @@ import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.factory.PowerTypes;
-import io.github.apace100.apoli.power.factory.action.BiEntityActions;
-import io.github.apace100.apoli.power.factory.action.BlockActions;
-import io.github.apace100.apoli.power.factory.action.EntityActions;
-import io.github.apace100.apoli.power.factory.action.ItemActions;
-import io.github.apace100.apoli.power.factory.condition.*;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
@@ -47,13 +47,11 @@ import org.ladysnake.cca.api.v3.entity.RespawnCopyStrategy;
 public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 	public static ApoliConfig config;
-
 	public static MinecraftServer server;
-
-	public static final Scheduler SCHEDULER = new Scheduler();
 
 	public static final String MODID = "apoli";
 	public static final Logger LOGGER = LogManager.getLogger(Apoli.class);
+
 	public static String VERSION = "";
 	public static int[] SEMVER;
 
@@ -63,7 +61,9 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 	@Override
 	public void onInitialize() {
-		ServerLifecycleEvents.SERVER_STARTED.register(s -> server = s);
+
+		ServerLifecycleEvents.SERVER_STARTING.register(server -> Apoli.server = server);
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> Apoli.server = null);
 
 		FabricLoader.getInstance().getModContainer(MODID).ifPresent(modContainer -> {
 			VERSION = modContainer.getMetadata().getVersion().getFriendlyString();
