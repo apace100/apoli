@@ -2,7 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.EntityLinkedType;
-import io.github.apace100.apoli.power.ModifyTypeTagPower;
+import io.github.apace100.apoli.power.ModifyTypeTagPowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.tag.TagKey;
@@ -28,7 +28,7 @@ public abstract class EntityTypeMixin implements EntityLinkedType {
 
     @ModifyReturnValue(method = "isIn(Lnet/minecraft/registry/tag/TagKey;)Z", at = @At("RETURN"))
     private boolean apoli$modifyTypeTag(boolean original, TagKey<EntityType<?>> tag) {
-        return ModifyTypeTagPower.doesApply(this.apoli$getEntity(), tag, original);
+        return ModifyTypeTagPowerType.doesApply(this.apoli$getEntity(), tag, original);
     }
 
 }
