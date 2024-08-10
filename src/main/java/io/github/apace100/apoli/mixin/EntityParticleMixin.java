@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ParticlePower;
+import io.github.apace100.apoli.power.type.ParticlePowerType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -21,8 +21,6 @@ public abstract class EntityParticleMixin extends Entity {
 
     @Shadow public abstract EntityDimensions getDimensions(EntityPose pose);
 
-    @Shadow protected abstract float getEyeHeight(EntityPose pose, EntityDimensions dimensions);
-
     public EntityParticleMixin(EntityType<?> type, World world) {
         super(type, world);
     }
@@ -41,7 +39,7 @@ public abstract class EntityParticleMixin extends Entity {
         double velocityY;
         double velocityZ;
 
-        for (ParticlePower particlePower : PowerHolderComponent.getPowers(this, ParticlePower.class)) {
+        for (ParticlePowerType particlePower : PowerHolderComponent.getPowerTypes(this, ParticlePowerType.class)) {
 
             if (!particlePower.doesApply(player, inFirstPerson)) {
                 continue;

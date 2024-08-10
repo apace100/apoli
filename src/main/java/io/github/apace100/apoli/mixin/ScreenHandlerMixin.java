@@ -5,8 +5,8 @@ import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.access.PowerModifiedGrindstone;
 import io.github.apace100.apoli.access.SlotState;
-import io.github.apace100.apoli.power.ModifyCraftingPower;
-import io.github.apace100.apoli.power.ModifyGrindstonePower;
+import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
+import io.github.apace100.apoli.power.type.ModifyGrindstonePowerType;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.ModifiedCraftingRecipe;
 import net.minecraft.entity.player.PlayerEntity;
@@ -32,7 +32,7 @@ public class ScreenHandlerMixin {
 
         if ((ScreenHandler) (Object) this instanceof PowerModifiedGrindstone pmg && original.isPresent() && slotIndex == 2) {
 
-            List<ModifyGrindstonePower> applyingPowers = pmg.apoli$getAppliedPowers();
+            List<ModifyGrindstonePowerType> applyingPowers = pmg.apoli$getAppliedPowers();
             if (applyingPowers == null || applyingPowers.isEmpty()) {
                 return original;
             }
@@ -53,14 +53,14 @@ public class ScreenHandlerMixin {
                 return original;
             }
 
-            if (!(craftingInventory instanceof PowerCraftingInventory pci) || !(pci.apoli$getPower() instanceof ModifyCraftingPower modifyCraftingPower)) {
+            if (!(craftingInventory instanceof PowerCraftingInventory pci) || !(pci.apoli$getPowerType() instanceof ModifyCraftingPowerType modifyCraftingPower)) {
                 return original;
             }
 
             modifyCraftingPower.executeActions(ModifiedCraftingRecipe.getBlockFromInventory(craftingInventory));
             StackReference stackReference = InventoryUtil.createStackReference(original.get());
 
-            if (slotState.apoli$getState().map(id -> !ModifyCraftingPower.MODIFIED_RESULT_STACK.equals(id)).orElse(true)) {
+            if (slotState.apoli$getState().map(id -> !ModifyCraftingPowerType.MODIFIED_RESULT_STACK.equals(id)).orElse(true)) {
                 modifyCraftingPower.applyAfterCraftingItemAction(stackReference);
             }
 

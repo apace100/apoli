@@ -3,8 +3,8 @@ package io.github.apace100.apoli;
 import io.github.apace100.apoli.integration.PowerIntegrationClient;
 import io.github.apace100.apoli.networking.ModPacketsS2C;
 import io.github.apace100.apoli.networking.packet.c2s.UseActivePowersC2SPacket;
-import io.github.apace100.apoli.power.Active;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.type.Active;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliClassDataClient;
 import io.github.apace100.apoli.screen.GameHudRender;
 import io.github.apace100.apoli.screen.PowerHudRenderer;
@@ -58,16 +58,16 @@ public class ApoliClient implements ClientModInitializer {
 		Apoli.config = AutoConfig.getConfigHolder(ApoliConfigClient.class).getConfig();
 	}
 
-	public static void performActivePowers(List<Power> powers) {
+	public static void performActivePowers(List<PowerType> powerTypes) {
 
 		List<Identifier> powerTypeIds = new LinkedList<>();
-		for (Power power : powers) {
+		for (PowerType powerType : powerTypes) {
 
-			if (power instanceof Active activePower) {
+			if (powerType instanceof Active activePower) {
 				activePower.onUse();
 			}
 
-			powerTypeIds.add(power.getType().getIdentifier());
+			powerTypeIds.add(powerType.getPower().getId());
 
 		}
 

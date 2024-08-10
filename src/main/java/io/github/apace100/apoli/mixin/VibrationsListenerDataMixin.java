@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.PowerLinkedListenerData;
-import io.github.apace100.apoli.power.GameEventListenerPower;
+import io.github.apace100.apoli.power.type.GameEventListenerPowerType;
 import net.minecraft.world.event.Vibrations;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -12,15 +12,15 @@ import java.util.Optional;
 public abstract class VibrationsListenerDataMixin implements PowerLinkedListenerData {
 
     @Unique
-    private GameEventListenerPower apoli$linkedPower;
+    private GameEventListenerPowerType apoli$linkedPower;
 
     @Override
-    public Optional<GameEventListenerPower> apoli$getPower() {
+    public Optional<GameEventListenerPowerType> apoli$getPower() {
         return Optional.ofNullable(apoli$linkedPower);
     }
 
     @Override
-    public void apoli$setPower(GameEventListenerPower power) {
+    public void apoli$setPower(GameEventListenerPowerType power) {
         apoli$linkedPower = power;
     }
 

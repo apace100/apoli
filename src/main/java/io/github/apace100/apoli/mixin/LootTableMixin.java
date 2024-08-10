@@ -3,20 +3,20 @@ package io.github.apace100.apoli.mixin;
 import io.github.apace100.apoli.access.IdentifiedLootTable;
 import io.github.apace100.apoli.access.ReplacingLootContext;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ReplaceLootTablePower;
+import io.github.apace100.apoli.power.type.ReplaceLootTablePowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.mob.PiglinEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.FishingBobberEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootManager;
 import net.minecraft.loot.LootTable;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextType;
 import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.util.Identifier;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.ReloadableRegistries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,29 +32,29 @@ import java.util.function.Consumer;
 public class LootTableMixin implements IdentifiedLootTable {
 
     @Unique
-    private Identifier apoli$id;
+    private RegistryKey<LootTable> apoli$lootTableKey;
     @Unique
-    private LootManager apoli$lootManager;
+    private ReloadableRegistries.Lookup apoli$registryLookup;
 
     @Override
-    public void apoli$setId(Identifier id, LootManager lootManager) {
-        apoli$id = id;
-        apoli$lootManager = lootManager;
+    public void apoli$setKey(RegistryKey<LootTable> lootTableKey, ReloadableRegistries.Lookup registryLookup) {
+        this.apoli$lootTableKey = lootTableKey;
+        this.apoli$registryLookup = registryLookup;
     }
 
     @Override
-    public Identifier apoli$getId() {
-        return apoli$id;
+    public RegistryKey<LootTable> apoli$getLootTableKey() {
+        return apoli$lootTableKey;
     }
 
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At("HEAD"), cancellable = true)
     private void modifyLootTable(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
 
-        if (((ReplacingLootContext) context).apoli$isReplaced((LootTable) (Object) this) || apoli$id == null) {
+        if (!(context instanceof ReplacingLootContext replacingContext) || replacingContext.apoli$isReplaced((LootTable) (Object) this)) {
             return;
         }
 
-        if (!context.hasParameter(LootContextParameters.THIS_ENTITY)) {
+        if (this.apoli$getLootTableKey() == null || !context.hasParameter(LootContextParameters.THIS_ENTITY)) {
             return;
         }
 
@@ -66,8 +66,8 @@ public class LootTableMixin implements IdentifiedLootTable {
                 powerHolder = fishingBobberEntity.getOwner();
             }
         } else if (lootContextType == LootContextTypes.ENTITY) {
-            if (context.hasParameter(LootContextParameters.KILLER_ENTITY)) {
-                powerHolder = context.get(LootContextParameters.KILLER_ENTITY);
+            if (context.hasParameter(LootContextParameters.ATTACKING_ENTITY)) {
+                powerHolder = context.get(LootContextParameters.ATTACKING_ENTITY);
             }
         } else if (lootContextType == LootContextTypes.BARTER) {
             if (powerHolder instanceof PiglinEntity piglinEntity) {
@@ -81,28 +81,28 @@ public class LootTableMixin implements IdentifiedLootTable {
             }
         }
 
-        List<ReplaceLootTablePower> replaceLootTablePowers = PowerHolderComponent.getPowers(powerHolder, ReplaceLootTablePower.class)
+        List<ReplaceLootTablePowerType> replaceLootTablePowers = PowerHolderComponent.getPowerTypes(powerHolder, ReplaceLootTablePowerType.class)
             .stream()
-            .filter(p -> p.hasReplacement(apoli$id) & p.doesApply(context))
-            .sorted(Comparator.comparing(ReplaceLootTablePower::getPriority))
+            .filter(p -> p.hasReplacement(apoli$lootTableKey) & p.doesApply(context))
+            .sorted(Comparator.comparing(ReplaceLootTablePowerType::getPriority))
             .toList();
 
         if (replaceLootTablePowers.isEmpty()) {
             return;
         }
 
-        ReplaceLootTablePower.addToStack((LootTable) (Object) this);
+        ReplaceLootTablePowerType.addToStack((LootTable) (Object) this);
         LootTable replacement = null;
 
-        for (ReplaceLootTablePower replaceLootTablePower : replaceLootTablePowers) {
+        for (ReplaceLootTablePowerType replaceLootTablePower : replaceLootTablePowers) {
 
-            Identifier replacementId = replaceLootTablePower.getReplacement(apoli$id);
-            if (replacementId == null) {
+            RegistryKey<LootTable> replacementLootTableKey = replaceLootTablePower.getReplacement(apoli$lootTableKey);
+            if (replacementLootTableKey == null) {
                 continue;
             }
 
-            replacement = apoli$lootManager.getLootTable(replacementId);
-            ReplaceLootTablePower.addToStack(replacement);
+            replacement = apoli$registryLookup.getLootTable(replacementLootTableKey);
+            ReplaceLootTablePowerType.addToStack(replacement);
 
         }
 
@@ -111,19 +111,19 @@ public class LootTableMixin implements IdentifiedLootTable {
             replacement.generateUnprocessedLoot(context, lootConsumer);
         }
 
-        ReplaceLootTablePower.clearStack();
+        ReplaceLootTablePowerType.clearStack();
         ci.cancel();
 
     }
 
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markActive(Lnet/minecraft/loot/context/LootContext$Entry;)Z"))
     private void popReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
-        ReplaceLootTablePower.pop();
+        ReplaceLootTablePowerType.pop();
     }
 
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markInactive(Lnet/minecraft/loot/context/LootContext$Entry;)V"))
     private void restoreReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
-        ReplaceLootTablePower.restore();
+        ReplaceLootTablePowerType.restore();
     }
 
 }

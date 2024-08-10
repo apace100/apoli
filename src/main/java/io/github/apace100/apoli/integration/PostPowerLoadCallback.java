@@ -1,9 +1,7 @@
 package io.github.apace100.apoli.integration;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.apoli.power.Power;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.util.Identifier;
@@ -23,5 +21,5 @@ public interface PostPowerLoadCallback {
         }
     );
 
-    void onPostPowerLoad(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonObject json, PowerType<?> powerType);
+    void onPostPowerLoad(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonObject json, Power power);
 }

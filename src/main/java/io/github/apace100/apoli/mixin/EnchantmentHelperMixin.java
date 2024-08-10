@@ -1,42 +1,44 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.sugar.Local;
-import io.github.apace100.apoli.access.EntityLinkedItemStack;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.entry.RegistryEntry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(EnchantmentHelper.class)
 public class EnchantmentHelperMixin {
 
-    @ModifyExpressionValue(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private static boolean apoli$forEachIsEmpty(boolean original, EnchantmentHelper.Consumer consumer, ItemStack stack) {
-        return original && !ModifyEnchantmentLevelPower.isInEnchantmentMap(((EntityLinkedItemStack) stack).apoli$getEntity());
+    @WrapOperation(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/component/type/ItemEnchantmentsComponent;getLevel(Lnet/minecraft/registry/entry/RegistryEntry;)I"))
+    private static int apoli$modifyEnchantmentsOnLevelQuery(ItemEnchantmentsComponent enchantmentsComponent, RegistryEntry<Enchantment> enchantment, Operation<Integer> original, RegistryEntry<Enchantment> mEnchantment, ItemStack stack) {
+        return original.call(ModifyEnchantmentLevelPowerType.getAndUpdateModifiedEnchantments(stack, enchantmentsComponent), enchantment);
     }
 
-    @ModifyExpressionValue(method = "forEachEnchantment(Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;Lnet/minecraft/item/ItemStack;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getEnchantments()Lnet/minecraft/nbt/NbtList;"))
-    private static NbtList apoli$getEnchantmentsOnForEach(NbtList original, EnchantmentHelper.Consumer consumer, ItemStack stack) {
-        return ModifyEnchantmentLevelPower.getEnchantments(stack, original);
+    @ModifyVariable(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/enchantment/EnchantmentHelper$Consumer;)V", at = @At("STORE"))
+    private static ItemEnchantmentsComponent apoli$modifyEnchantmentsOnForEach(ItemEnchantmentsComponent original, ItemStack stack) {
+        return ModifyEnchantmentLevelPowerType.getAndUpdateModifiedEnchantments(stack, original);
     }
 
-    @ModifyExpressionValue(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private static boolean apoli$getlevelWhenEmpty(boolean original, Enchantment enchantment, ItemStack stack) {
-        return original && !ModifyEnchantmentLevelPower.isInEnchantmentMap(((EntityLinkedItemStack) stack).apoli$getEntity());
+    @ModifyExpressionValue(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/enchantment/EnchantmentHelper$ContextAwareConsumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
+    private static boolean apoli$allowWorkableEmptiesInForEach(boolean original, ItemStack stack) {
+        return original && !ModifyEnchantmentLevelPowerType.isWorkableEmptyStack(stack);
     }
 
-    @ModifyExpressionValue(method = "getLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getEnchantments()Lnet/minecraft/nbt/NbtList;"))
-    private static NbtList apoli$getEnchantmentsOnGetLevel(NbtList original, Enchantment enchantment, ItemStack stack) {
-        return ModifyEnchantmentLevelPower.getEnchantments(stack, original);
+    @ModifyVariable(method = "forEachEnchantment(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/enchantment/EnchantmentHelper$ContextAwareConsumer;)V", at = @At("STORE"))
+    private static ItemEnchantmentsComponent apoli$modifyEnchantmentsOnForEachWithContext(ItemEnchantmentsComponent original, ItemStack stack) {
+        return ModifyEnchantmentLevelPowerType.getAndUpdateModifiedEnchantments(stack, original);
     }
 
-    @ModifyExpressionValue(method = "chooseEquipmentWith(Lnet/minecraft/enchantment/Enchantment;Lnet/minecraft/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z"))
-    private static boolean apoli$allowEmptyEquipmentChoosing(boolean original, @Local ItemStack stack) {
-        return original && !ModifyEnchantmentLevelPower.isInEnchantmentMap(((EntityLinkedItemStack) stack).apoli$getEntity());
+    @ModifyVariable(method = "hasAnyEnchantmentsIn", at = @At("STORE"))
+    private static ItemEnchantmentsComponent apoli$modifyEnchantmentsOnInTagQuery(ItemEnchantmentsComponent original, ItemStack stack) {
+        return ModifyEnchantmentLevelPowerType.getAndUpdateModifiedEnchantments(stack, original);
     }
 
 }

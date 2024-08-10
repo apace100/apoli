@@ -1,18 +1,18 @@
 package io.github.apace100.apoli.util.modifier;
 
-import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.CooldownPower;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.VariableIntPower;
+import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.power.type.CooldownPowerType;
+import io.github.apace100.apoli.power.type.VariableIntPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.data.client.BlockStateVariantMap;
 import net.minecraft.entity.Entity;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public enum ModifierOperation implements IModifierOperation {
 
@@ -93,15 +93,22 @@ public enum ModifierOperation implements IModifierOperation {
     });
 
     public static final SerializableData DATA = new SerializableData()
-        .add("value", SerializableDataTypes.DOUBLE)
-        .add("resource", ApoliDataTypes.POWER_TYPE, null)
-        .add("modifier", Modifier.LIST_TYPE, null);
+        .add("amount", SerializableDataTypes.DOUBLE, null)
+        .add("resource", ApoliDataTypes.POWER_REFERENCE, null)
+        .add("modifier", Modifier.LIST_TYPE, null)
+        .postProcessor(data -> {
 
+            if (!data.isPresent("amount") && !data.isPresent("resource")) {
+                throw new IllegalStateException("Either 'amount' or 'resource' fields must be defined!");
+            }
+
+        });
+
+    private final BlockStateVariantMap.TriFunction<Collection<Double>, Double, Double, Double> function;
     private final Phase phase;
     private final int order;
-    private final BlockStateVariantMap.TriFunction<List<Double>, Double, Double, Double> function;
 
-    ModifierOperation(Phase phase, int order, BlockStateVariantMap.TriFunction<List<Double>, Double, Double, Double> function) {
+    ModifierOperation(Phase phase, int order, BlockStateVariantMap.TriFunction<Collection<Double>, Double, Double, Double> function) {
         this.phase = phase;
         this.order = order;
         this.function = function;
@@ -118,40 +125,43 @@ public enum ModifierOperation implements IModifierOperation {
     }
 
     @Override
-    public SerializableData getData() {
+    public SerializableData getSerializableData() {
         return DATA;
     }
 
     @Override
-    public double apply(Entity entity, List<SerializableData.Instance> instances, double base, double current) {
-        return function.apply(
-            instances.stream()
-                .map(instance -> {
-                    double value = 0;
-                    if(instance.isPresent("resource")) {
-                        PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                        PowerType<?> powerType = instance.get("resource");
-                        if(!component.hasPower(powerType)) {
-                            value = instance.get("value");
-                        } else {
-                            Power p = component.getPower(powerType);
-                            if(p instanceof VariableIntPower vip) {
-                                value = vip.getValue();
-                            } else if(p instanceof CooldownPower cp) {
-                                value = cp.getRemainingTicks();
-                            }
-                        }
-                    } else {
-                        value = instance.get("value");
+    public double apply(Entity entity, List<SerializableData.Instance> dataList, double base, double current) {
+
+        Stream<Double> values = dataList.stream().map(data -> {
+
+            Collection<Modifier> modifiers = data.getOrElseGet("modifier", ArrayList::new);
+            PowerReference power = data.get("resource");
+
+            Double amount = data.get("amount");
+            double value = 0;
+
+            if (amount != null) {
+                value = amount;
+            }
+
+            else if (power != null) {
+                switch (power.getType(entity)) {
+                    case VariableIntPowerType varInt ->
+                        value = varInt.getValue();
+                    case CooldownPowerType cooldown ->
+                        value = cooldown.getRemainingTicks();
+                    case null, default -> {
+
                     }
-                    if(instance.isPresent("modifier")) {
-                        List<Modifier> modifiers = instance.get("modifier");
-                        value = ModifierUtil.applyModifiers(entity, modifiers, value);
-                    }
-                    return value;
-                })
-                .collect(Collectors.toList()),
-            base, current);
+                }
+            }
+
+            return ModifierUtil.applyModifiers(entity, modifiers, value);
+
+        });
+
+        return function.apply(values.toList(), base, current);
+
     }
 
 }

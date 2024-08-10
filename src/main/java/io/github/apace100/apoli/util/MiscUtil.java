@@ -1,24 +1,18 @@
 package io.github.apace100.apoli.util;
 
-import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.data.DamageSourceDescription;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageSources;
-import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -43,10 +37,10 @@ public final class MiscUtil {
     }
 
     public static void createExplosion(World world, Entity entity, Vec3d pos, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
-        createExplosion(world, entity, world.getDamageSources().explosion(null), pos.getX(), pos.getY(), pos.getZ(), power, createFire, destructionType, behavior);
+        createExplosion(world, entity, null, pos.getX(), pos.getY(), pos.getZ(), power, createFire, destructionType, behavior);
     }
 
-    public static void createExplosion(World world, Entity entity, DamageSource damageSource, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
+    public static void createExplosion(World world, @Nullable Entity entity, @Nullable DamageSource damageSource, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType, ExplosionBehavior behavior) {
 
         Explosion explosion = new Explosion(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SoundEvents.ENTITY_GENERIC_EXPLODE);
 
@@ -124,7 +118,7 @@ public final class MiscUtil {
         }
 
         if ((entityNbt == null || entityNbt.isEmpty()) && entityToSpawn instanceof MobEntity mobToSpawn) {
-            mobToSpawn.initialize(serverWorld, serverWorld.getLocalDifficulty(BlockPos.ofFloored(pos)), SpawnReason.COMMAND, null, null);
+            mobToSpawn.initialize(serverWorld, serverWorld.getLocalDifficulty(BlockPos.ofFloored(pos)), SpawnReason.COMMAND, null);
         }
 
         return Optional.of(entityToSpawn);
@@ -151,7 +145,7 @@ public final class MiscUtil {
 
     }
 
-    public static BlockState getInWallBlockState(LivingEntity playerEntity) {
+    public static BlockState getInWallBlockState(Entity playerEntity) {
         BlockPos.Mutable mutable = new BlockPos.Mutable();
 
         for(int i = 0; i < 8; ++i) {
@@ -188,30 +182,4 @@ public final class MiscUtil {
         return a.and(b);
     }
 
-    public static DamageSource createDamageSource(DamageSources damageSources,
-                                                  @Nullable DamageSourceDescription damageSourceDescription,
-                                                  @Nullable RegistryKey<DamageType> damageType) {
-        if(damageSourceDescription == null && damageType == null) {
-            throw new JsonSyntaxException("Either a legacy damage source or an ID of a damage type must be specified");
-        }
-        return damageSourceDescription == null ? damageSources.create(damageType) : damageSourceDescription.create(damageSources);
-    }
-
-    public static DamageSource createDamageSource(DamageSources damageSources,
-                                                  @Nullable DamageSourceDescription damageSourceDescription,
-                                                  @Nullable RegistryKey<DamageType> damageType, Entity attacker) {
-        if(damageSourceDescription == null && damageType == null) {
-            throw new JsonSyntaxException("Either a legacy damage source or an ID of a damage type must be specified");
-        }
-        return damageSourceDescription == null ? damageSources.create(damageType, attacker) : damageSourceDescription.create(damageSources, attacker);
-    }
-
-    public static DamageSource createDamageSource(DamageSources damageSources,
-                                                  @Nullable DamageSourceDescription damageSourceDescription,
-                                                  @Nullable RegistryKey<DamageType> damageType, Entity source, Entity attacker) {
-        if(damageSourceDescription == null && damageType == null) {
-            throw new JsonSyntaxException("Either a legacy damage source or an ID of a damage type must be specified");
-        }
-        return damageSourceDescription == null ? damageSources.create(damageType, source, attacker) : damageSourceDescription.create(damageSources, source, attacker);
-    }
 }

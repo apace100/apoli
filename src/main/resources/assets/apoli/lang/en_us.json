@@ -51,6 +51,8 @@
     "text.autoconfig.power_config.option.tooltips.compactUsabilityHints": "Compact Usability Hints",
     "text.autoconfig.power_config.option.tooltips.showUsabilityHints": "Show Usability Hints",
     "text.autoconfig.power_config.title": "Apoli Power Config",
+    "tooltip.apoli.stack_power.description": "  %s",
+    "tooltip.apoli.stack_power.name": "+ %s (Power)",
     "tooltip.apoli.unusable.block.multiple": "Unusable (%s)",
     "tooltip.apoli.unusable.block.single": "Unusable (%s)",
     "tooltip.apoli.unusable.bow.multiple": "Unusable (%s)",

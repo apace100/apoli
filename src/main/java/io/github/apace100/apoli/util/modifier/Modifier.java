@@ -1,16 +1,23 @@
 package io.github.apace100.apoli.util.modifier;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-import io.github.apace100.calio.data.DataException;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapLike;
+import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
+import net.minecraft.network.codec.PacketCodec;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Modifier implements Comparable<Modifier> {
+
+    public static final String TYPE_KEY = "operation";
+    public static final SerializableData DATA = new SerializableData().add(TYPE_KEY, IModifierOperation.DATA_TYPE);
 
     private final IModifierOperation operation;
     private final SerializableData.Instance dataInstance;
@@ -43,52 +50,55 @@ public class Modifier implements Comparable<Modifier> {
         }
     }
 
-    public static final SerializableDataType<Modifier> DATA_TYPE = new SerializableDataType<>(
-        Modifier.class,
-        (buffer, modifier) -> {
-            IModifierOperation.DATA_TYPE.send(buffer, modifier.operation);
-            modifier.operation.getData().write(buffer, modifier.dataInstance);
-        },
-        buffer -> {
+    public static final SerializableDataType<Modifier> DATA_TYPE = SerializableDataType.of(
+        new StrictCodec<>() {
 
-            IModifierOperation operation = IModifierOperation.DATA_TYPE.receive(buffer);
-            SerializableData.Instance data = operation.getData().read(buffer);
+            @Override
+            public <T> Pair<Modifier, T> strictDecode(DynamicOps<T> ops, T input) {
 
-            return new Modifier(operation, data);
+                MapLike<T> mapInput = ops.getMap(input).getOrThrow();
 
-        },
-        jsonElement -> {
+                SerializableData.Instance modifierData = DATA.strictDecode(ops, mapInput);
+                IModifierOperation operation = modifierData.get(TYPE_KEY);
 
-            if (!(jsonElement instanceof JsonObject jsonObject)) {
-                throw new JsonSyntaxException("Expected modifier to be a JSON object.");
+                SerializableData.Instance operationData = operation.getSerializableData().strictDecode(ops, mapInput);
+                return Pair.of(new Modifier(operation, operationData), input);
+
             }
 
-            if (!jsonObject.has("operation")) {
-                throw new JsonSyntaxException("Modifier requires an \"operation\" field.");
+            @Override
+            public <T> T strictEncode(Modifier input, DynamicOps<T> ops, T prefix) {
+
+                Map<T, T> output = new LinkedHashMap<>();
+                IModifierOperation operation = input.getOperation();
+
+                output.put(ops.createString(TYPE_KEY), IModifierOperation.DATA_TYPE.strictEncodeStart(ops, operation));
+                operation.getSerializableData().encode(input.getData(), ops, ops.mapBuilder()).build(ops.empty())
+                    .flatMap(ops::getMapEntries)
+                    .getOrThrow()
+                    .accept(output::put);
+
+                return ops.createMap(output);
+
             }
 
-            try {
+        },
+        PacketCodec.ofStatic(
+            (buf, modifier) -> {
+                IModifierOperation.DATA_TYPE.send(buf, modifier.getOperation());
+                modifier.getOperation().getSerializableData().send(buf, modifier.getData());
+            },
+            buf -> {
 
-                IModifierOperation operation = IModifierOperation.DATA_TYPE.read(jsonObject.get("operation"));
-                SerializableData.Instance data = operation.getData().read(jsonObject);
+                IModifierOperation operation = IModifierOperation.DATA_TYPE.receive(buf);
+                SerializableData.Instance data = operation.getSerializableData().receive(buf);
 
                 return new Modifier(operation, data);
 
-            } catch (Exception e) {
-                throw new DataException(DataException.Phase.READING, "operation", e);
             }
-
-        },
-        modifier -> {
-
-            JsonObject jsonObject = ModifierOperation.DATA.write(modifier.dataInstance);
-            jsonObject.add("operation", IModifierOperation.DATA_TYPE.write(modifier.operation));
-
-            return jsonObject;
-
-        }
+        )
     );
 
-    public static final SerializableDataType<List<Modifier>> LIST_TYPE = SerializableDataType.list(DATA_TYPE);
+    public static final SerializableDataType<List<Modifier>> LIST_TYPE = DATA_TYPE.listOf();
 
 }

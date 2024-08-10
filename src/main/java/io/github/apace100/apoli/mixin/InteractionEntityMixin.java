@@ -1,11 +1,11 @@
 package io.github.apace100.apoli.mixin;
 
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import net.minecraft.advancement.criterion.PlayerHurtEntityCriterion;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -45,14 +45,14 @@ public abstract class InteractionEntityMixin extends Entity {
         float damageDealt = damageDealtRef.get();
         float damageTaken = damageTakenRef.get();
 
-        PowerHolderComponent.withPowers(this, ActionWhenHitPower.class, p -> p.doesApply(attacker, damageSource, damageTaken), p -> p.whenHit(attacker));
-        PowerHolderComponent.withPowers(attacker, ActionOnHitPower.class, p -> p.doesApply(this, damageSource, damageDealt), p -> p.onHit(this));
+        PowerHolderComponent.withPowerTypes(this, ActionWhenHitPowerType.class, p -> p.doesApply(attacker, damageSource, damageTaken), p -> p.whenHit(attacker));
+        PowerHolderComponent.withPowerTypes(attacker, ActionOnHitPowerType.class, p -> p.doesApply(this, damageSource, damageDealt), p -> p.onHit(this));
 
-        PowerHolderComponent.withPowers(this, SelfActionWhenHitPower.class, p -> p.doesApply(damageSource, damageTaken), SelfActionWhenHitPower::whenHit);
-        PowerHolderComponent.withPowers(this, AttackerActionWhenHitPower.class, p -> p.doesApply(damageSource, damageTaken), p -> p.whenHit(attacker));
+        PowerHolderComponent.withPowerTypes(this, SelfActionWhenHitPowerType.class, p -> p.doesApply(damageSource, damageTaken), SelfActionWhenHitPowerType::whenHit);
+        PowerHolderComponent.withPowerTypes(this, AttackerActionWhenHitPowerType.class, p -> p.doesApply(damageSource, damageTaken), p -> p.whenHit(attacker));
 
-        PowerHolderComponent.withPowers(attacker, SelfActionOnHitPower.class, p -> p.doesApply(this, damageSource, damageDealt), SelfActionOnHitPower::onHit);
-        PowerHolderComponent.withPowers(attacker, TargetActionOnHitPower.class, p -> p.doesApply(this, damageSource, damageDealt), p -> p.onHit(this));
+        PowerHolderComponent.withPowerTypes(attacker, SelfActionOnHitPowerType.class, p -> p.doesApply(this, damageSource, damageDealt), SelfActionOnHitPowerType::onHit);
+        PowerHolderComponent.withPowerTypes(attacker, TargetActionOnHitPowerType.class, p -> p.doesApply(this, damageSource, damageDealt), p -> p.onHit(this));
 
     }
 

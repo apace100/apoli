@@ -3,7 +3,7 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.apace100.apoli.access.PowerLinkedListenerData;
-import io.github.apace100.apoli.power.GameEventListenerPower;
+import io.github.apace100.apoli.power.type.GameEventListenerPowerType;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.event.Vibrations;
@@ -22,7 +22,7 @@ public interface VibrationsTickerMixin {
             return;
         }
 
-        if (((PowerLinkedListenerData) listenerData).apoli$getPower().map(GameEventListenerPower::shouldShowParticle).orElse(true)) {
+        if (((PowerLinkedListenerData) listenerData).apoli$getPower().map(GameEventListenerPowerType::shouldShowParticle).orElse(true)) {
             original.call(world, listenerData, callback);
             return;
         }
@@ -36,8 +36,8 @@ public interface VibrationsTickerMixin {
     }
 
     @WrapOperation(method = "spawnVibrationParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;spawnParticles(Lnet/minecraft/particle/ParticleEffect;DDDIDDDD)I"))
-    private static <T extends ParticleEffect> int apoli$preventSpawningParticles(ServerWorld instance, T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed, Operation<Integer> original, ServerWorld world, Vibrations.ListenerData listenerData, Vibrations.Callback callback) {
-        return ((PowerLinkedListenerData) listenerData).apoli$getPower().map(GameEventListenerPower::shouldShowParticle).orElse(true) ? original.call(instance, particle, x, y, z, count, deltaX, deltaY, deltaZ, speed) : 0;
+    private static int apoli$preventSpawningParticles(ServerWorld instance, ParticleEffect particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed, Operation<Integer> original, ServerWorld world, Vibrations.ListenerData listenerData, Vibrations.Callback callback) {
+        return ((PowerLinkedListenerData) listenerData).apoli$getPower().map(GameEventListenerPowerType::shouldShowParticle).orElse(true) ? original.call(instance, particle, x, y, z, count, deltaX, deltaY, deltaZ, speed) : 0;
     }
 
 }

@@ -35,7 +35,8 @@ public class ApoliClassDataClient {
         FEATURE_RENDERERS.addMapping("horse_marking", HorseMarkingFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("deadmau5", Deadmau5FeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("armor", ArmorFeatureRenderer.class);
-        FEATURE_RENDERERS.addMapping("stray_overlay", StrayOverlayFeatureRenderer.class);
+        //  TODO: Remove this non-existent feature renderer -eggohito
+//        FEATURE_RENDERERS.addMapping("stray_overlay", StrayOverlayFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("enderman_block", EndermanBlockFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("mooshroom_mushroom", MooshroomMushroomFeatureRenderer.class);
         FEATURE_RENDERERS.addMapping("iron_golem_crack", IronGolemCrackFeatureRenderer.class);

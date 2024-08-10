@@ -39,7 +39,7 @@ public class CustomToast implements PositionAwareToast {
     private int height;
 
     public CustomToast(CustomToastData toastData) {
-        this(toastData.title(), toastData.description(), toastData.texture(), toastData.iconStack(), toastData.duration());
+        this(toastData.title(), toastData.description(), toastData.texture(), toastData.iconStack(), (int) ((toastData.duration() / 20.0) * 1000.0));
     }
 
     public CustomToast(Text title, Text description, Identifier texture, ItemStack iconStack, int duration) {
@@ -89,8 +89,8 @@ public class CustomToast implements PositionAwareToast {
 
         //  If the title and the description only has 1 line, display as is
         if (title.size() == 1 && description.size() == 1) {
-            context.drawText(textRenderer, title.get(0), toastTextX, 7, TITLE_BASE_COLOR | 0xFF000000, false);
-            context.drawText(textRenderer, description.get(0), toastTextX, 18, -1, false);
+            context.drawText(textRenderer, title.getFirst(), toastTextX, 7, TITLE_BASE_COLOR | 0xFF000000, false);
+            context.drawText(textRenderer, description.getFirst(), toastTextX, 18, -1, false);
         }
 
         //  If the toast has only been displayed for a certain amount of time,

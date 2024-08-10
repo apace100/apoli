@@ -5,10 +5,10 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
-import io.github.apace100.apoli.power.ActionOnBlockUsePower;
-import io.github.apace100.apoli.power.ActiveInteractionPower;
-import io.github.apace100.apoli.power.PreventBlockUsePower;
-import io.github.apace100.apoli.power.Prioritized;
+import io.github.apace100.apoli.power.type.ActionOnBlockUsePowerType;
+import io.github.apace100.apoli.power.type.ActiveInteractionPowerType;
+import io.github.apace100.apoli.power.type.PreventBlockUsePowerType;
+import io.github.apace100.apoli.power.type.Prioritized;
 import io.github.apace100.apoli.util.ActionResultUtil;
 import io.github.apace100.apoli.util.BlockUsagePhase;
 import io.github.apace100.apoli.util.PriorityPhase;
@@ -17,9 +17,9 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,18 +31,18 @@ import java.util.List;
 @Mixin(ClientPlayerInteractionManager.class)
 public abstract class ClientPlayerInteractionManagerMixin {
 
-    @WrapOperation(method = "interactBlockInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;onUse(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"))
-    private ActionResult apoli$beforeUseBlock(BlockState state, World world, PlayerEntity player, Hand hand, BlockHitResult hitResult, Operation<ActionResult> original, @Share("zeroPriority$useBlock") LocalRef<ActionResult> zeroPriority$useBlockRef) {
+    @WrapOperation(method = "interactBlockInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;onUse(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;"))
+    private ActionResult apoli$beforeUseBlock(BlockState state, World world, PlayerEntity player, BlockHitResult hitResult, Operation<ActionResult> original, ClientPlayerEntity mPlayer, Hand mHand, @Share("zeroPriority$useBlock") LocalRef<ActionResult> zeroPriority$useBlockRef) {
 
-        ItemStack stackInHand = player.getStackInHand(hand);
+        ItemStack stackInHand = player.getStackInHand(mHand);
         BlockUsagePhase usePhase = BlockUsagePhase.BLOCK;
 
-        if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, hand)) {
+        if (PreventBlockUsePowerType.doesPrevent(player, usePhase, hitResult, stackInHand, mHand)) {
             return ActionResult.FAIL;
         }
 
-        Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, hand, stackInHand));
+        Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+        aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, mHand, stackInHand));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -50,13 +50,13 @@ public abstract class ClientPlayerInteractionManagerMixin {
                 continue;
             }
 
-            List<ActiveInteractionPower> aips = aipci.getPowers(i);
+            List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
             ActionResult previousResult = ActionResult.PASS;
 
-            for (ActiveInteractionPower aip : aips) {
+            for (ActiveInteractionPowerType aip : aips) {
 
-                ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
-                    ? aobup.executeAction(hitResult, hand)
+                ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
+                    ? aobup.executeAction(hitResult, mHand)
                     : ActionResult.PASS;
 
                 if (ActionResultUtil.shouldOverride(previousResult, currentResult)) {
@@ -75,14 +75,14 @@ public abstract class ClientPlayerInteractionManagerMixin {
             }
 
             if (previousResult.shouldSwingHand()) {
-                player.swingHand(hand);
+                player.swingHand(mHand);
             }
 
             return previousResult;
 
         }
 
-        return original.call(state, world, player, hand, hitResult);
+        return original.call(state, world, player, hitResult);
 
     }
 
@@ -100,8 +100,8 @@ public abstract class ClientPlayerInteractionManagerMixin {
 
         else if (original == ActionResult.PASS) {
 
-            Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-            aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(BlockUsagePhase.BLOCK, PriorityPhase.AFTER, hitResult, hand, stackInHand));
+            Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+            aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(BlockUsagePhase.BLOCK, PriorityPhase.AFTER, hitResult, hand, stackInHand));
 
             for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -109,12 +109,12 @@ public abstract class ClientPlayerInteractionManagerMixin {
                     continue;
                 }
 
-                List<ActiveInteractionPower> aips = aipci.getPowers(i);
+                List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
                 ActionResult previousResult = ActionResult.PASS;
 
-                for (ActiveInteractionPower aip : aips) {
+                for (ActiveInteractionPowerType aip : aips) {
 
-                    ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
+                    ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
                         ? aobup.executeAction(hitResult, hand)
                         : ActionResult.PASS;
 
@@ -143,18 +143,18 @@ public abstract class ClientPlayerInteractionManagerMixin {
 
     }
 
-    @WrapOperation(method = "interactBlockInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;useOnBlock(Lnet/minecraft/item/ItemUsageContext;)Lnet/minecraft/util/ActionResult;"))
-    private ActionResult apoli$beforeItemUseOnBlock(ItemStack stack, ItemUsageContext context, Operation<ActionResult> original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$itemUseOnBlock") LocalRef<ActionResult> zeroPriority$itemUseOnBlockRef) {
+    @WrapOperation(method = "interactBlockInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;onUseWithItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ItemActionResult;"))
+    private ItemActionResult apoli$beforeItemUseOnBlock(BlockState state, ItemStack stack, World world, PlayerEntity player, Hand hand, BlockHitResult hitResult, Operation<ItemActionResult> original, @Share("zeroPriority$itemUseOnBlock") LocalRef<ActionResult> zeroPriority$itemUseOnBlockRef) {
 
         ItemStack stackInHand = player.getStackInHand(hand);
         BlockUsagePhase usePhase = BlockUsagePhase.ITEM;
 
-        if (PreventBlockUsePower.doesPrevent(player, usePhase, hitResult, stackInHand, hand)) {
-            return ActionResult.FAIL;
+        if (PreventBlockUsePowerType.doesPrevent(player, usePhase, hitResult, stackInHand, hand)) {
+            return ItemActionResult.FAIL;
         }
 
-        Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-        aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, hand, stackInHand));
+        Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+        aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(usePhase, PriorityPhase.BEFORE, hitResult, hand, stackInHand));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -162,12 +162,12 @@ public abstract class ClientPlayerInteractionManagerMixin {
                 continue;
             }
 
-            List<ActiveInteractionPower> aips = aipci.getPowers(i);
+            List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
             ActionResult previousResult = ActionResult.PASS;
 
-            for (ActiveInteractionPower aip : aips) {
+            for (ActiveInteractionPowerType aip : aips) {
 
-                ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
+                ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
                     ? aobup.executeAction(hitResult, hand)
                     : ActionResult.PASS;
 
@@ -190,15 +190,26 @@ public abstract class ClientPlayerInteractionManagerMixin {
                 player.swingHand(hand);
             }
 
-            return previousResult;
+            return switch (previousResult) {
+                case SUCCESS, SUCCESS_NO_ITEM_USED ->
+                    ItemActionResult.SUCCESS;
+                case CONSUME ->
+                    ItemActionResult.CONSUME;
+                case CONSUME_PARTIAL ->
+                    ItemActionResult.CONSUME_PARTIAL;
+                case FAIL ->
+                    ItemActionResult.FAIL;
+                default ->
+                    throw new IllegalStateException("Unexpected value: " + previousResult);
+            };
 
         }
 
-        return original.call(stack, context);
+        return original.call(state, stack, world, player, hand, hitResult);
 
     }
 
-    @ModifyReturnValue(method = "interactBlockInternal", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getItemCooldownManager()Lnet/minecraft/entity/player/ItemCooldownManager;")))
+    @ModifyReturnValue(method = "interactBlockInternal", at = @At(value = "RETURN", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/util/ItemActionResult;isAccepted()Z")))
     private ActionResult apoli$afterItemUseOnBlock(ActionResult original, ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Share("zeroPriority$itemUseOnBlock") LocalRef<ActionResult> zeroPriority$itemUseOnBlockRef) {
 
         ActionResult zeroPriority$itemUseOnBlock = zeroPriority$itemUseOnBlockRef.get();
@@ -210,8 +221,8 @@ public abstract class ClientPlayerInteractionManagerMixin {
 
         else if (original == ActionResult.PASS) {
 
-            Prioritized.CallInstance<ActiveInteractionPower> aipci = new Prioritized.CallInstance<>();
-            aipci.add(player, ActionOnBlockUsePower.class, p -> p.shouldExecute(BlockUsagePhase.ITEM, PriorityPhase.AFTER, hitResult, hand, player.getStackInHand(hand)));
+            Prioritized.CallInstance<ActiveInteractionPowerType> aipci = new Prioritized.CallInstance<>();
+            aipci.add(player, ActionOnBlockUsePowerType.class, p -> p.shouldExecute(BlockUsagePhase.ITEM, PriorityPhase.AFTER, hitResult, hand, player.getStackInHand(hand)));
 
             for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
@@ -219,12 +230,12 @@ public abstract class ClientPlayerInteractionManagerMixin {
                     continue;
                 }
 
-                List<ActiveInteractionPower> aips = aipci.getPowers(i);
+                List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
                 ActionResult previousResult = ActionResult.PASS;
 
-                for (ActiveInteractionPower aip : aips) {
+                for (ActiveInteractionPowerType aip : aips) {
 
-                    ActionResult currentResult = aip instanceof ActionOnBlockUsePower aobup
+                    ActionResult currentResult = aip instanceof ActionOnBlockUsePowerType aobup
                         ? aobup.executeAction(hitResult, hand)
                         : ActionResult.PASS;
 

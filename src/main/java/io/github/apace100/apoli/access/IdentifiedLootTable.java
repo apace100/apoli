@@ -1,11 +1,13 @@
 package io.github.apace100.apoli.access;
 
-import net.minecraft.loot.LootManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.loot.LootTable;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.ReloadableRegistries;
 
 public interface IdentifiedLootTable {
 
-    void apoli$setId(Identifier id, LootManager lootManager);
+    void apoli$setKey(RegistryKey<LootTable> lootTableKey, ReloadableRegistries.Lookup registryLookup);
 
-    Identifier apoli$getId();
+    RegistryKey<LootTable> apoli$getLootTableKey();
+
 }

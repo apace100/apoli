@@ -7,11 +7,12 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.apoli.util.StackClickPhase;
 import net.fabricmc.fabric.api.item.v1.FabricItemStack;
+import net.minecraft.component.ComponentHolder;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -33,15 +34,20 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ItemStack.class)
-public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricItemStack {
+public abstract class ItemStackMixin implements ComponentHolder, EntityLinkedItemStack, FabricItemStack {
 
-    @Shadow public abstract @Nullable Entity getHolder();
+    @Nullable
+    @Shadow
+    public abstract Entity getHolder();
 
-    @Shadow public abstract Item getItem();
+    @Shadow
+    public abstract Item getItem();
 
-    @Shadow public abstract boolean isEmpty();
+    @Shadow
+    public abstract boolean isEmpty();
 
-    @Shadow public abstract ItemStack copy();
+    @Shadow
+    public abstract ItemStack copy();
 
     @Unique
     private Entity apoli$holdingEntity;
@@ -70,15 +76,11 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         Entity holder = this.apoli$getEntity();
         if (holder != null) {
-
             if (original.isEmpty()) {
-                original = ModifyEnchantmentLevelPower.getOrCreateWorkableEmptyStack(holder);
-            }
-
-            else {
+                original = ModifyEnchantmentLevelPowerType.getOrCreateWorkableEmptyStack(holder);
+            } else {
                 ((EntityLinkedItemStack) original).apoli$setEntity(holder);
             }
-
         }
 
         return original;
@@ -90,7 +92,7 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
         //  region  Prevent item use
         ItemStack thisAsStack = (ItemStack) (Object) this;
-        if (PowerHolderComponent.hasPower(user, PreventItemUsePower.class, piup -> piup.doesPrevent(thisAsStack))) {
+        if (PowerHolderComponent.hasPowerType(user, PreventItemUsePowerType.class, piup -> piup.doesPrevent(thisAsStack))) {
             return TypedActionResult.fail(thisAsStack);
         }
         //  endregion
@@ -99,17 +101,17 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         StackReference useStackReference = InventoryUtil.getStackReferenceFromStack(user, thisAsStack);
         ItemStack useStack = useStackReference.get();
 
-        ActionOnItemUsePower.TriggerType triggerType = useStack.getMaxUseTime() == 0
-            ? ActionOnItemUsePower.TriggerType.INSTANT
-            : ActionOnItemUsePower.TriggerType.START;
-        ActionOnItemUsePower.executeActions(user, useStackReference, useStack, triggerType, PriorityPhase.BEFORE);
+        ActionOnItemUsePowerType.TriggerType triggerType = useStack.getMaxUseTime(user) == 0
+            ? ActionOnItemUsePowerType.TriggerType.INSTANT
+            : ActionOnItemUsePowerType.TriggerType.START;
+        ActionOnItemUsePowerType.executeActions(user, useStackReference, useStack, triggerType, PriorityPhase.BEFORE);
         //  endregion
 
         //  region  Edible item
         ItemStack oldUseStack = useStack.copy();
-        boolean canConsumeCustomFood = EdibleItemPower.get(useStack, user)
-            .map(EdibleItemPower::getFoodComponent)
-            .map(fc -> user.canConsume(fc.isAlwaysEdible()))
+        boolean canConsumeCustomFood = EdibleItemPowerType.get(useStack, user)
+            .map(EdibleItemPowerType::getFoodComponent)
+            .map(fc -> user.canConsume(fc.canAlwaysEat()))
             .orElse(false);
 
         TypedActionResult<ItemStack> action = canConsumeCustomFood
@@ -122,12 +124,12 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         //  endregion
 
         //  region  Action on item after use
-        useStackReference = StackReference.of(user, LivingEntity.getPreferredEquipmentSlot(oldUseStack));
-        triggerType = useStack.getMaxUseTime() == 0
-            ? ActionOnItemUsePower.TriggerType.INSTANT
-            : ActionOnItemUsePower.TriggerType.START;
+        useStackReference = StackReference.of(user, user.getPreferredEquipmentSlot(oldUseStack));
+        triggerType = useStack.getMaxUseTime(user) == 0
+            ? ActionOnItemUsePowerType.TriggerType.INSTANT
+            : ActionOnItemUsePowerType.TriggerType.START;
 
-        ActionOnItemUsePower.executeActions(user, useStackReference, useStack, triggerType, PriorityPhase.AFTER);
+        ActionOnItemUsePowerType.executeActions(user, useStackReference, useStack, triggerType, PriorityPhase.AFTER);
         return action;
         //  endregion
 
@@ -136,19 +138,19 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
     @WrapOperation(method = "usageTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;usageTick(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;I)V"))
     private void apoli$actionOnItemDuringUse(Item item, World world, LivingEntity user, ItemStack stack, int remainingUseTicks, Operation<Void> original, @Share("usingStackReference") LocalRef<StackReference> sharedUsingStackReference) {
 
-        ActionOnItemUsePower.TriggerType triggerType = ActionOnItemUsePower.TriggerType.DURING;
+        ActionOnItemUsePowerType.TriggerType triggerType = ActionOnItemUsePowerType.TriggerType.DURING;
 
         StackReference usingStackReference = InventoryUtil.getStackReferenceFromStack(user, (ItemStack) (Object) this);
         ItemStack usingStack = usingStackReference.get();
 
-        ActionOnItemUsePower.executeActions(user, usingStackReference, usingStack, triggerType, PriorityPhase.BEFORE);
+        ActionOnItemUsePowerType.executeActions(user, usingStackReference, usingStack, triggerType, PriorityPhase.BEFORE);
 
-        if (EdibleItemPower.get(usingStack, user).isEmpty()) {
+        if (EdibleItemPowerType.get(usingStack, user).isEmpty()) {
             original.call(usingStack.getItem(), world, user, usingStack, remainingUseTicks);
         }
 
         else {
-            ActionOnItemUsePower.executeActions(user, usingStackReference, usingStack, triggerType, PriorityPhase.AFTER);
+            ActionOnItemUsePowerType.executeActions(user, usingStackReference, usingStack, triggerType, PriorityPhase.AFTER);
         }
 
     }
@@ -156,19 +158,19 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
     @WrapOperation(method = "onStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;onStoppedUsing(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)V"))
     private void apoli$actionOnItemStoppedUsing(Item item, ItemStack stack, World world, LivingEntity user, int remainingUseTicks, Operation<Void> original, @Share("stoppedUsingStackReference") LocalRef<StackReference> sharedStoppedUsingStackReference) {
 
-        ActionOnItemUsePower.TriggerType triggerType = ActionOnItemUsePower.TriggerType.STOP;
+        ActionOnItemUsePowerType.TriggerType triggerType = ActionOnItemUsePowerType.TriggerType.STOP;
 
         StackReference stoppedUsingStackReference = InventoryUtil.getStackReferenceFromStack(user, (ItemStack) (Object) this);
         ItemStack stoppedUsingStack = stoppedUsingStackReference.get();
 
-        ActionOnItemUsePower.executeActions(user, stoppedUsingStackReference, stoppedUsingStack, triggerType, PriorityPhase.BEFORE);
+        ActionOnItemUsePowerType.executeActions(user, stoppedUsingStackReference, stoppedUsingStack, triggerType, PriorityPhase.BEFORE);
 
-        if (EdibleItemPower.get(stoppedUsingStack, user).isEmpty()) {
+        if (EdibleItemPowerType.get(stoppedUsingStack, user).isEmpty()) {
             original.call(stoppedUsingStack.getItem(), stoppedUsingStack, world, user, remainingUseTicks);
         }
 
         else {
-            ActionOnItemUsePower.executeActions(user, stoppedUsingStackReference, stoppedUsingStack, triggerType, PriorityPhase.AFTER);
+            ActionOnItemUsePowerType.executeActions(user, stoppedUsingStackReference, stoppedUsingStack, triggerType, PriorityPhase.AFTER);
         }
 
     }
@@ -180,17 +182,17 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         StackReference finishUsingStackRef = InventoryUtil.getStackReferenceFromStack(user, stack);
         ItemStack finishUsingStack = finishUsingStackRef.get();
 
-        ActionOnItemUsePower.executeActions(user, finishUsingStackRef, finishUsingStack, ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.BEFORE);
+        ActionOnItemUsePowerType.executeActions(user, finishUsingStackRef, finishUsingStack, ActionOnItemUsePowerType.TriggerType.FINISH, PriorityPhase.BEFORE);
         //  endregion
 
         //  region  Edible item consumption effects
-        finishUsingStackRef.set(EdibleItemPower.get(finishUsingStack, user)
-            .map(p -> user.eatFood(world, stack))
+        finishUsingStackRef.set(EdibleItemPowerType.get(finishUsingStack, user)
+            .map(p -> user.eatFood(world, stack, p.getFoodComponent()))
             .orElseGet(() -> original.call(finishUsingStack.getItem(), finishUsingStack, world, user)));
         //  endregion
 
         //  region  Action on item after finish using
-        ActionOnItemUsePower.executeActions(user, finishUsingStackRef, finishUsingStack, ActionOnItemUsePower.TriggerType.FINISH, PriorityPhase.AFTER);
+        ActionOnItemUsePowerType.executeActions(user, finishUsingStackRef, finishUsingStack, ActionOnItemUsePowerType.TriggerType.FINISH, PriorityPhase.AFTER);
         return finishUsingStack;
         //  endregion
 
@@ -198,35 +200,35 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
 
     @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
     private UseAction apoli$replaceUseAction(UseAction original) {
-        return EdibleItemPower.get((ItemStack) (Object) this)
+        return EdibleItemPowerType.get((ItemStack) (Object) this)
             .map(p -> p.getConsumeAnimation().getAction())
             .orElse(original);
     }
 
     @ModifyReturnValue(method = "getEatSound", at = @At("RETURN"))
     private SoundEvent apoli$replaceEatingSound(SoundEvent original) {
-        return EdibleItemPower.get((ItemStack) (Object) this)
-            .map(EdibleItemPower::getConsumeSoundEvent)
+        return EdibleItemPowerType.get((ItemStack) (Object) this)
+            .map(EdibleItemPowerType::getConsumeSoundEvent)
             .orElse(original);
     }
 
     @ModifyReturnValue(method = "getDrinkSound", at = @At("RETURN"))
     private SoundEvent apoli$replaceDrinkingSound(SoundEvent original) {
-        return EdibleItemPower.get((ItemStack) (Object) this)
-            .map(EdibleItemPower::getConsumeSoundEvent)
+        return EdibleItemPowerType.get((ItemStack) (Object) this)
+            .map(EdibleItemPowerType::getConsumeSoundEvent)
             .orElse(original);
     }
 
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
-    private int apoli$modifyMaxConsumingTime(int original) {
-        return EdibleItemPower.get((ItemStack) (Object) this)
-            .map(EdibleItemPower::getConsumingTime)
+    private int apoli$modifyMaxUseTicks(int original) {
+        return ModifyFoodPowerType
+            .modifyEatTicks(this.apoli$getEntity(), (ItemStack) (Object) this)
             .orElse(original);
     }
 
     @WrapOperation(method = "isUsedOnRelease", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;isUsedOnRelease(Lnet/minecraft/item/ItemStack;)Z"))
     private boolean apoli$useOnReleaseIfCustomFood(Item item, ItemStack stack, Operation<Boolean> original) {
-        return EdibleItemPower.get(stack).isEmpty()
+        return EdibleItemPowerType.get(stack).isEmpty()
             ? original.call(item, stack)
             : false;
     }
@@ -239,9 +241,9 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         StackReference cursorStackReference = ((ScreenHandlerAccessor) player.currentScreenHandler).callGetCursorStackReference();
         StackReference slotStackReference = StackReference.of(slot.inventory, slot.getIndex());
 
-        return ItemOnItemPower.executeActions(player, PriorityPhase.BEFORE, clickPhase, clickType, slot, slotStackReference, cursorStackReference)
+        return ItemOnItemPowerType.executeActions(player, PriorityPhase.BEFORE, clickPhase, clickType, slot, slotStackReference, cursorStackReference)
             || original.call(cursorStackReference.get().getItem(), cursorStackReference.get(), slot, clickType, player)
-            || ItemOnItemPower.executeActions(player, PriorityPhase.AFTER, clickPhase, clickType, slot, slotStackReference, cursorStackReference);
+            || ItemOnItemPowerType.executeActions(player, PriorityPhase.AFTER, clickPhase, clickType, slot, slotStackReference, cursorStackReference);
 
     }
 
@@ -251,9 +253,9 @@ public abstract class ItemStackMixin implements EntityLinkedItemStack, FabricIte
         StackClickPhase clickPhase = StackClickPhase.SLOT;
         StackReference slotStackReference = StackReference.of(slot.inventory, slot.getIndex());
 
-        return ItemOnItemPower.executeActions(player, PriorityPhase.BEFORE, clickPhase, clickType, slot, slotStackReference, cursorStackReference)
+        return ItemOnItemPowerType.executeActions(player, PriorityPhase.BEFORE, clickPhase, clickType, slot, slotStackReference, cursorStackReference)
             || original.call(slotStackReference.get().getItem(), slotStackReference.get(), cursorStackReference.get(), slot, clickType, player, cursorStackReference)
-            || ItemOnItemPower.executeActions(player, PriorityPhase.AFTER, clickPhase, clickType, slot, slotStackReference, cursorStackReference);
+            || ItemOnItemPowerType.executeActions(player, PriorityPhase.AFTER, clickPhase, clickType, slot, slotStackReference, cursorStackReference);
 
     }
 

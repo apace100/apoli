@@ -7,8 +7,8 @@
     }
   },
   "result": {
-    "item": "minecraft:apple",
-    "amount": 4
+    "id": "minecraft:apple",
+    "count": 4
   },
   "entity_action": {
     "type": "apoli:add_velocity",

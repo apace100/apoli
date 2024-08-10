@@ -1,27 +1,27 @@
 package io.github.apace100.apoli.data;
 
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSyntaxException;
+import com.google.common.collect.ImmutableMap;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapLike;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Active;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeReference;
-import io.github.apace100.apoli.power.factory.action.*;
-import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.action.factory.*;
+import io.github.apace100.apoli.condition.factory.*;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.power.type.Active;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
-import io.github.apace100.calio.ClassUtil;
 import io.github.apace100.calio.SerializationHelper;
+import io.github.apace100.calio.codec.StrictCodec;
+import io.github.apace100.calio.data.DataException;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.mixin.EntityAttributeModifierAccessor;
 import io.github.apace100.calio.util.ArgumentWrapper;
-import io.github.apace100.calio.util.DynamicIdentifier;
 import io.github.apace100.calio.util.IdentifierAlias;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
@@ -30,20 +30,20 @@ import net.minecraft.command.EntitySelector;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.ItemSlotArgumentType;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.StackReference;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextCodecs;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -52,6 +52,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.explosion.Explosion;
 import org.apache.commons.lang3.tuple.Triple;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -60,53 +61,58 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public class ApoliDataTypes {
 
-    public static final SerializableDataType<PowerTypeReference> POWER_TYPE = SerializableDataType.wrap(
-        PowerTypeReference.class, SerializableDataTypes.IDENTIFIER,
-        PowerType::getIdentifier, PowerTypeReference::new);
+    public static final SerializableDataType<PowerReference> POWER_REFERENCE = SerializableDataTypes.IDENTIFIER.xmap(PowerReference::new, Power::getId);
 
-    public static final SerializableDataType<ConditionFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditions.ALIASES, "Entity condition type");
+    public static final SerializableDataType<PowerTypeFactory<? extends PowerType>> POWER_TYPE_FACTORY = SerializableDataType.lazy(() -> SerializableDataType.registry(
+        ApoliRegistries.POWER_FACTORY,
+        Apoli.MODID,
+        PowerTypes.ALIASES,
+        (registry, id) -> new IllegalArgumentException("Power type \"" + id + "\" is not registered")
+    ));
 
-    public static final SerializableDataType<List<ConditionFactory<Entity>.Instance>> ENTITY_CONDITIONS = SerializableDataType.list(ENTITY_CONDITION);
+    public static final SerializableDataType<ConditionTypeFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditions.ALIASES, "Entity condition type");
 
-    public static final SerializableDataType<ConditionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditions.ALIASES, "Bi-entity condition type");
+    public static final SerializableDataType<List<ConditionTypeFactory<Entity>.Instance>> ENTITY_CONDITIONS = ENTITY_CONDITION.listOf();
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = SerializableDataType.list(BIENTITY_CONDITION);
+    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditions.ALIASES, "Bi-entity condition type");
 
-    public static final SerializableDataType<ConditionFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditions.ALIASES, "Item condition type");
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = BIENTITY_CONDITION.listOf();
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS = SerializableDataType.list(ITEM_CONDITION);
+    public static final SerializableDataType<ConditionTypeFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditions.ALIASES, "Item condition type");
 
-    public static final SerializableDataType<ConditionFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditions.ALIASES, "Block condition type");
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS = ITEM_CONDITION.listOf();
 
-    public static final SerializableDataType<List<ConditionFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS = SerializableDataType.list(BLOCK_CONDITION);
+    public static final SerializableDataType<ConditionTypeFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditions.ALIASES, "Block condition type");
 
-    public static final SerializableDataType<ConditionFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditions.ALIASES, "Fluid condition type");
+    public static final SerializableDataType<List<ConditionTypeFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS = BLOCK_CONDITION.listOf();
 
-    public static final SerializableDataType<List<ConditionFactory<FluidState>.Instance>> FLUID_CONDITIONS = SerializableDataType.list(FLUID_CONDITION);
+    public static final SerializableDataType<ConditionTypeFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditions.ALIASES, "Fluid condition type");
 
-    public static final SerializableDataType<ConditionFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditions.ALIASES, "Damage condition type");
+    public static final SerializableDataType<List<ConditionTypeFactory<FluidState>.Instance>> FLUID_CONDITIONS = FLUID_CONDITION.listOf();
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = SerializableDataType.list(DAMAGE_CONDITION);
+    public static final SerializableDataType<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditions.ALIASES, "Damage condition type"));
 
-    public static final SerializableDataType<ConditionFactory<RegistryEntry<Biome>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditions.ALIASES, "Biome condition type");
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = SerializableDataType.lazy(DAMAGE_CONDITION::listOf);
 
-    public static final SerializableDataType<List<ConditionFactory<RegistryEntry<Biome>>.Instance>> BIOME_CONDITIONS = SerializableDataType.list(BIOME_CONDITION);
+    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditions.ALIASES, "Biome condition type");
 
-    public static final SerializableDataType<ActionFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActions.ALIASES, "Entity action type");
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance>> BIOME_CONDITIONS = BIOME_CONDITION.listOf();
 
-    public static final SerializableDataType<List<ActionFactory<Entity>.Instance>> ENTITY_ACTIONS = SerializableDataType.list(ENTITY_ACTION);
+    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActions.ALIASES, "Entity action type");
 
-    public static final SerializableDataType<ActionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActions.ALIASES, "Bi-entity action type");
+    public static final SerializableDataType<List<ActionTypeFactory<Entity>.Instance>> ENTITY_ACTIONS = ENTITY_ACTION.listOf();
 
-    public static final SerializableDataType<List<ActionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = SerializableDataType.list(BIENTITY_ACTION);
+    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActions.ALIASES, "Bi-entity action type");
 
-    public static final SerializableDataType<ActionFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActions.ALIASES, "Block action type");
+    public static final SerializableDataType<List<ActionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = BIENTITY_ACTION.listOf();
 
-    public static final SerializableDataType<List<ActionFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = SerializableDataType.list(BLOCK_ACTION);
+    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActions.ALIASES, "Block action type");
 
-    public static final SerializableDataType<ActionFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActions.ALIASES, "Item action type");
+    public static final SerializableDataType<List<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = BLOCK_ACTION.listOf();
 
-    public static final SerializableDataType<List<ActionFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = SerializableDataType.list(ITEM_ACTION);
+    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActions.ALIASES, "Item action type");
+
+    public static final SerializableDataType<List<ActionTypeFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = ITEM_ACTION.listOf();
 
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
 
@@ -114,60 +120,39 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<InventoryUtil.InventoryType> INVENTORY_TYPE = SerializableDataType.enumValue(InventoryUtil.InventoryType.class);
 
-    public static final SerializableDataType<EnumSet<InventoryUtil.InventoryType>> INVENTORY_TYPE_SET = SerializableDataType.enumSet(InventoryUtil.InventoryType.class, INVENTORY_TYPE);
+    public static final SerializableDataType<EnumSet<InventoryUtil.InventoryType>> INVENTORY_TYPE_SET = SerializableDataType.enumSet(INVENTORY_TYPE);
 
     public static final SerializableDataType<InventoryUtil.ProcessMode> PROCESS_MODE = SerializableDataType.enumValue(InventoryUtil.ProcessMode.class);
 
     public static final SerializableDataType<AttributedEntityAttributeModifier> ATTRIBUTED_ATTRIBUTE_MODIFIER = SerializableDataType.compound(
-        AttributedEntityAttributeModifier.class,
-        new SerializableData()
-            .add("attribute", SerializableDataTypes.ATTRIBUTE)
-            .add("operation", SerializableDataTypes.MODIFIER_OPERATION)
-            .add("value", SerializableDataTypes.DOUBLE)
-            .add("name", SerializableDataTypes.STRING, "Unnamed EntityAttributeModifier"),
-        dataInst -> new AttributedEntityAttributeModifier(dataInst.get("attribute"),
-            new EntityAttributeModifier(
-                dataInst.getString("name"),
-                dataInst.getDouble("value"),
-                dataInst.get("operation"))),
-        (data, inst) -> {
-            SerializableData.Instance dataInst = data.new Instance();
-            dataInst.set("attribute", inst.getAttribute());
-            dataInst.set("operation", inst.getModifier().getOperation());
-            dataInst.set("value", inst.getModifier().getValue());
-            dataInst.set("name", ((EntityAttributeModifierAccessor) inst.getModifier()).getName());
-            return dataInst;
-        });
+        SerializableDataTypes.ATTRIBUTE_MODIFIER.serializableData().copy()
+            .add("attribute", SerializableDataTypes.ATTRIBUTE_ENTRY),
+        (data, ops) -> new AttributedEntityAttributeModifier(
+            data.get("attribute"),
+            SerializableDataTypes.ATTRIBUTE_MODIFIER.fromData(data, ops)
+        ),
+        (attributedAttributeModifier, data) -> SerializableDataTypes.ATTRIBUTE_MODIFIER
+            .writeTo(attributedAttributeModifier.modifier(), data)
+            .set("attribute", attributedAttributeModifier.attribute())
+    );
 
-    public static final SerializableDataType<List<AttributedEntityAttributeModifier>> ATTRIBUTED_ATTRIBUTE_MODIFIERS =
-        SerializableDataType.list(ATTRIBUTED_ATTRIBUTE_MODIFIER);
+    public static final SerializableDataType<List<AttributedEntityAttributeModifier>> ATTRIBUTED_ATTRIBUTE_MODIFIERS = ATTRIBUTED_ATTRIBUTE_MODIFIER.listOf();
 
-    public static final SerializableDataType<Pair<Integer, ItemStack>> POSITIONED_ITEM_STACK = SerializableDataType.compound(ClassUtil.castClass(Pair.class),
-        new SerializableData()
-            .add("item", SerializableDataTypes.ITEM)
-            .add("amount", SerializableDataTypes.INT, 1)
-            .add("tag", SerializableDataTypes.NBT, null)
+    public static final SerializableDataType<Pair<Integer, ItemStack>> POSITIONED_ITEM_STACK = SerializableDataType.compound(
+        SerializableDataTypes.ITEM_STACK.serializableData().copy()
             .add("slot", SerializableDataTypes.INT, Integer.MIN_VALUE),
-        (data) ->  {
-            ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
-            if(data.isPresent("tag")) {
-                stack.setNbt(data.get("tag"));
-            }
-            return new Pair<>(data.getInt("slot"), stack);
-        },
-        ((serializableData, positionedStack) -> {
-            SerializableData.Instance data = serializableData.new Instance();
-            data.set("item", positionedStack.getRight().getItem());
-            data.set("amount", positionedStack.getRight().getCount());
-            data.set("tag", positionedStack.getRight().hasNbt() ? positionedStack.getRight().getNbt() : null);
-            data.set("slot", positionedStack.getLeft());
-            return data;
-        }));
+        (data, ops) -> new Pair<>(
+            data.getInt("slot"),
+            SerializableDataTypes.ITEM_STACK.fromData(data, ops)
+        ),
+        (positionedStack, data) -> SerializableDataTypes.ITEM_STACK
+            .writeTo(positionedStack.getRight(), data)
+            .set("slot", positionedStack.getLeft())
+    );
 
-    public static final SerializableDataType<List<Pair<Integer, ItemStack>>> POSITIONED_ITEM_STACKS = SerializableDataType.list(POSITIONED_ITEM_STACK);
+    public static final SerializableDataType<List<Pair<Integer, ItemStack>>> POSITIONED_ITEM_STACKS = POSITIONED_ITEM_STACK.listOf();
 
     public static final SerializableDataType<Active.Key> KEY = SerializableDataType.compound(
-        Active.Key.class,
         new SerializableData()
             .add("key", SerializableDataTypes.STRING)
             .add("continuous", SerializableDataTypes.BOOLEAN, false),
@@ -181,76 +166,43 @@ public class ApoliDataTypes {
             return key;
 
         },
-        (serializableData, key) -> {
-
-            SerializableData.Instance data = serializableData.new Instance();
-
-            data.set("key", key.key);
-            data.set("continuous", key.continuous);
-
-            return data;
-
-        }
+        (key, data) -> data
+            .set("key", key.key)
+            .set("continuous", key.continuous)
     );
 
-    public static final SerializableDataType<Active.Key> BACKWARDS_COMPATIBLE_KEY = new SerializableDataType<>(
-        Active.Key.class,
-        KEY::send,
-        KEY::receive,
-        jsonElement -> {
+    public static final SerializableDataType<Active.Key> BACKWARDS_COMPATIBLE_KEY = SerializableDataType.of(
+        new StrictCodec<>() {
 
-            if (!(jsonElement instanceof JsonPrimitive jsonPrimitive) || !jsonPrimitive.isString()) {
-                return KEY.read(jsonElement);
+            @Override
+            public <T> com.mojang.datafixers.util.Pair<Active.Key, T> strictDecode(DynamicOps<T> ops, T input) {
+
+                DataResult<String> inputString = ops.getStringValue(input);
+                if (inputString.result().isPresent()) {
+
+                    Active.Key key = new Active.Key();
+
+                    key.key = inputString.getOrThrow();
+                    key.continuous = false;
+
+                    return com.mojang.datafixers.util.Pair.of(key, input);
+
+                }
+
+                else {
+                    return KEY.strictDecode(ops, input);
+                }
+
             }
 
-            Active.Key key = new Active.Key();
-
-            key.key = jsonPrimitive.getAsString();
-            key.continuous = false;
-
-            return key;
+            @Override
+            public <T> T strictEncode(Active.Key input, DynamicOps<T> ops, T prefix) {
+                return KEY.strictEncode(input, ops, prefix);
+            }
 
         },
-        KEY::write
+        KEY.packetCodec()
     );
-
-    public static final SerializableDataType<HudRender> SINGLE_HUD_RENDER = SerializableDataType.compound(
-        HudRender.class,
-        new SerializableData()
-            .add("should_render", SerializableDataTypes.BOOLEAN, true)
-            .add("bar_index", SerializableDataTypes.INT, 0)
-            .add("icon_index", SerializableDataTypes.INT, 0)
-            .add("sprite_location", SerializableDataTypes.IDENTIFIER, Apoli.identifier("textures/gui/resource_bar.png"))
-            .add("condition", ENTITY_CONDITION, null)
-            .add("inverted", SerializableDataTypes.BOOLEAN, false)
-            .add("order", SerializableDataTypes.INT, 0),
-        (data) -> new HudRender(
-            data.get("should_render"),
-            data.get("bar_index"),
-            data.get("icon_index"),
-            data.get("sprite_location"),
-            data.get("condition"),
-            data.get("inverted"),
-            data.get("order")
-        ),
-        (serializableData, hudRender) -> {
-
-            SerializableData.Instance data = serializableData.new Instance();
-
-            data.set("should_render", hudRender.shouldRender());
-            data.set("bar_index", hudRender.getBarIndex());
-            data.set("icon_index", hudRender.getIconIndex());
-            data.set("sprite_location", hudRender.getSpriteLocation());
-            data.set("condition", hudRender.getCondition());
-            data.set("inverted", hudRender.isInverted());
-            data.set("order", hudRender.getOrder());
-
-            return data;
-
-        }
-    );
-
-    public static final SerializableDataType<List<HudRender>> MULTIPLE_HUD_RENDERS = SerializableDataType.list(SINGLE_HUD_RENDER);
 
     /**
      *  <p>A HUD render data type that accepts either a single HUD render or multiple HUD renders. The first HUD render will be considered
@@ -258,268 +210,184 @@ public class ApoliDataTypes {
      *
      *  <p>If the children don't specify an order value, the order value of the parent will be inherited instead.</p>
      */
-    public static final SerializableDataType<HudRender> HUD_RENDER = new SerializableDataType<>(
-        HudRender.class,
-        (buf, hudRender) -> hudRender.send(buf),
-        HudRender::receive,
-        jsonElement -> {
+    public static final SerializableDataType<HudRender> HUD_RENDER = HudRender.DATA_TYPE;
 
-            LinkedList<HudRender> hudRenders = (LinkedList<HudRender>) MULTIPLE_HUD_RENDERS.read(jsonElement);
-            if (hudRenders.isEmpty()) {
-                return HudRender.DONT_RENDER;
-            }
+    public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class, SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
 
-            HudRender parentHudRender = hudRenders.removeFirst();
-            for (HudRender hudRender : hudRenders) {
-                parentHudRender.addChild(hudRender);
-            }
-
-            return parentHudRender;
-
-        },
-        SINGLE_HUD_RENDER::write
-    );
-
-    public static final SerializableDataType<Comparison> COMPARISON = SerializableDataType.enumValue(Comparison.class,
-        SerializationHelper.buildEnumMap(Comparison.class, Comparison::getComparisonString));
-
-    public static final SerializableDataType<PlayerAbility> PLAYER_ABILITY = SerializableDataType.wrap(
-        PlayerAbility.class, SerializableDataTypes.IDENTIFIER,
-        PlayerAbility::getId, id -> Pal.provideRegisteredAbility(id).get());
+    public static final SerializableDataType<PlayerAbility> PLAYER_ABILITY = SerializableDataTypes.IDENTIFIER.xmap(id -> Pal.provideRegisteredAbility(id).get(), PlayerAbility::getId);
 
     public static final SerializableDataType<ArgumentWrapper<Integer>> ITEM_SLOT = SerializableDataType.argumentType(ItemSlotArgumentType.itemSlot());
 
-    public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = SerializableDataType.list(ITEM_SLOT);
+    public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = ITEM_SLOT.listOf();
 
-    public static final SerializableDataType<Explosion.DestructionType> BACKWARDS_COMPATIBLE_DESTRUCTION_TYPE = SerializableDataType.mapped(Explosion.DestructionType.class,
-            HashBiMap.create(ImmutableBiMap.of(
-                    "none", Explosion.DestructionType.KEEP,
-                    "break", Explosion.DestructionType.DESTROY,
-                    "destroy", Explosion.DestructionType.DESTROY_WITH_DECAY)
-            ));
+    public static final SerializableDataType<Explosion.DestructionType> DESTRUCTION_TYPE = SerializableDataType.enumValue(Explosion.DestructionType.class);
 
     public static final SerializableDataType<ArgumentWrapper<EntitySelector>> ENTITIES_SELECTOR = SerializableDataType.argumentType(EntityArgumentType.entities());
-
-    public static final SerializableDataType<DamageSourceDescription> DAMAGE_SOURCE_DESCRIPTION = SerializableDataType.compound(DamageSourceDescription.class,
-            DamageSourceDescription.DATA, DamageSourceDescription::fromData, DamageSourceDescription::toData);
-
-    public static final SerializableDataType<LegacyMaterial> LEGACY_MATERIAL = SerializableDataType.wrap(
-            LegacyMaterial.class, SerializableDataTypes.STRING,
-            LegacyMaterial::getMaterial, LegacyMaterial::new
-    );
 
     public static final SerializableDataType<AdvancementCommand.Operation> ADVANCEMENT_OPERATION = SerializableDataType.enumValue(AdvancementCommand.Operation.class);
 
     public static final SerializableDataType<AdvancementCommand.Selection> ADVANCEMENT_SELECTION = SerializableDataType.enumValue(AdvancementCommand.Selection.class);
 
-    public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = SerializableDataType.list(LEGACY_MATERIAL);
+    public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class, () -> ImmutableMap.of(
+        "left", ClickType.LEFT,
+        "right", ClickType.RIGHT
+    ));
 
-    public static final SerializableDataType<ClickType> CLICK_TYPE = SerializableDataType.enumValue(ClickType.class);
-
-    public static final SerializableDataType<EnumSet<ClickType>> CLICK_TYPE_SET = SerializableDataType.enumSet(ClickType.class, CLICK_TYPE);
+    public static final SerializableDataType<EnumSet<ClickType>> CLICK_TYPE_SET = SerializableDataType.enumSet(CLICK_TYPE);
 
     public static final SerializableDataType<TextAlignment> TEXT_ALIGNMENT = SerializableDataType.enumValue(TextAlignment.class);
 
-    public static final SerializableDataType<Map<Identifier, Identifier>> IDENTIFIER_MAP = new SerializableDataType<>(
-        ClassUtil.castClass(Map.class),
-        (buffer, idMap) -> buffer.writeMap(
-            idMap,
-            PacketByteBuf::writeIdentifier,
-            PacketByteBuf::writeIdentifier
-        ),
-        buffer -> buffer.readMap(
-            PacketByteBuf::readIdentifier,
-            PacketByteBuf::readIdentifier
-        ),
-        jsonElement -> {
+    public static final SerializableDataType<Map<Identifier, Identifier>> IDENTIFIER_MAP = SerializableDataType.map(SerializableDataTypes.IDENTIFIER, SerializableDataTypes.IDENTIFIER);
 
-            if (!(jsonElement instanceof JsonObject jsonObject)) {
-                throw new JsonParseException("Expected a JSON object");
-            }
+    public static final SerializableDataType<Pattern> REGEX = SerializableDataTypes.STRING.xmap(Pattern::compile, Pattern::pattern);
 
-            Map<Identifier, Identifier> map = new LinkedHashMap<>();
-            for (String key : jsonObject.keySet()) {
-
-                if (!(jsonObject.get(key) instanceof JsonPrimitive jsonPrimitive) || !jsonPrimitive.isString()) {
-                    continue;
-                }
-
-                Identifier keyId = new Identifier(key);
-                Identifier valId = new Identifier(jsonPrimitive.getAsString());
-
-                map.put(keyId, valId);
-
-            }
-
-            return map;
-
-        },
-        idMap -> {
-
-            JsonObject jsonObject = new JsonObject();
-            idMap.forEach((keyId, valId) -> jsonObject.addProperty(keyId.toString(), valId.toString()));
-
-            return jsonObject;
-
-        }
-    );
-
-    public static final SerializableDataType<Map<Pattern, Identifier>> REGEX_MAP = new SerializableDataType<>(
-        ClassUtil.castClass(Map.class),
-        (buffer, regexMap) -> buffer.writeMap(
-            regexMap,
-            (keyBuffer, pattern) -> keyBuffer.writeString(pattern.toString()),
-            PacketByteBuf::writeIdentifier
-        ),
-        buffer -> buffer.readMap(
-            keyBuffer -> Pattern.compile(keyBuffer.readString()),
-            PacketByteBuf::readIdentifier
-        ),
-        jsonElement -> {
-
-            if (!(jsonElement instanceof JsonObject jsonObject)) {
-                throw new JsonSyntaxException("Expected a JSON object.");
-            }
-
-            Map<Pattern, Identifier> regexMap = new HashMap<>();
-            for (String key : jsonObject.keySet()) {
-
-                if (!(jsonObject.get(key) instanceof JsonPrimitive jsonPrimitive) || !jsonPrimitive.isString()) {
-                    continue;
-                }
-
-                Pattern pattern = Pattern.compile(key);
-                Identifier id = DynamicIdentifier.of(jsonPrimitive);
-
-                regexMap.put(pattern, id);
-
-            }
-
-            return regexMap;
-
-        },
-        regexMap -> {
-
-            JsonObject jsonObject = new JsonObject();
-            regexMap.forEach((regex, id) -> jsonObject.addProperty(regex.pattern(), id.toString()));
-
-            return jsonObject;
-
-        }
-    );
+    public static final SerializableDataType<Map<Pattern, Identifier>> REGEX_MAP = SerializableDataType.map(REGEX, SerializableDataTypes.IDENTIFIER);
 
     public static final SerializableDataType<GameMode> GAME_MODE = SerializableDataType.enumValue(GameMode.class);
 
     //  This is for keeping backwards compatibility to fields that used to accept strings as translation keys
-    public static final SerializableDataType<Text> DEFAULT_TRANSLATABLE_TEXT = new SerializableDataType<>(
-        Text.class,
-        PacketByteBuf::writeText,
-        PacketByteBuf::readText,
-        jsonElement -> {
-
-            //  If the JSON is a primitive, use it as a translation key
-            if (jsonElement instanceof JsonPrimitive jsonPrimitive) {
-                return Text.translatable(jsonPrimitive.getAsString());
-            }
-
-            //  Otherwise, serialize it as a text as usual
-            return Text.Serialization.fromJsonTree(jsonElement);
-
-        },
-        Text.Serialization::toJsonTree
-    );
-
-    public static final SerializableDataType<Integer> NON_NEGATIVE_INT = SerializableDataType.boundNumber(
-        SerializableDataTypes.INT, 0, Integer.MAX_VALUE,
-        value -> (min, max) -> {
-
-            if (value < min) {
-                throw new IllegalArgumentException("Expected value to be equal or greater than " + min + "! (current value: " + value + ")");
-            }
-
-            return value;
-
-        }
-    );
+    public static final SerializableDataType<Text> DEFAULT_TRANSLATABLE_TEXT = SerializableDataType.of(TextCodecs.CODEC, TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC);
   
     public static final SerializableDataType<StackClickPhase> STACK_CLICK_PHASE = SerializableDataType.enumValue(StackClickPhase.class);
 
-    public static final SerializableDataType<EnumSet<StackClickPhase>> STACK_CLICK_PHASE_SET = SerializableDataType.enumSet(StackClickPhase.class, STACK_CLICK_PHASE);
+    public static final SerializableDataType<EnumSet<StackClickPhase>> STACK_CLICK_PHASE_SET = SerializableDataType.enumSet(STACK_CLICK_PHASE);
   
     public static final SerializableDataType<BlockUsagePhase> BLOCK_USAGE_PHASE = SerializableDataType.enumValue(BlockUsagePhase.class);
 
-    public static final SerializableDataType<EnumSet<BlockUsagePhase>> BLOCK_USAGE_PHASE_SET = SerializableDataType.enumSet(BlockUsagePhase.class, BLOCK_USAGE_PHASE);
+    public static final SerializableDataType<EnumSet<BlockUsagePhase>> BLOCK_USAGE_PHASE_SET = SerializableDataType.enumSet(BLOCK_USAGE_PHASE);
 
-    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
-        return condition(registry, IdentifierAlias.GLOBAL, name);
+    public static final SerializableDataType<EntityPose> ENTITY_POSE = SerializableDataType.enumValue(EntityPose.class);
+
+    public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
+
+    public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, String name) {
+        return condition(registry, null, name);
     }
 
-    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, IdentifierAlias aliases, String name) {
-        return condition(registry, aliases, (conditionFactories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
+    public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, IdentifierAlias aliases, String name) {
+        return condition("type", registry, aliases, (conditionFactories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
     }
 
-    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, IdentifierAlias aliases, BiFunction<Registry<ConditionFactory<T>>, Identifier, RuntimeException> errorHandler) {
-        return new SerializableDataType<>(
-            ClassUtil.castClass(ConditionFactory.Instance.class),
-            (buf, instance) -> instance.write(buf),
-            buf -> {
-                Identifier factoryId = buf.readIdentifier();
-                return registry
-                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
-                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
-                    .read(buf);
-            },
-            jsonElement -> {
+    public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(String field, Registry<ConditionTypeFactory<T>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ConditionTypeFactory<T>>, Identifier, RuntimeException> errorHandler) {
+        return SerializableDataType.of(
+            new StrictCodec<>() {
 
-                if (!(jsonElement instanceof JsonObject jsonObject)) {
-                    throw new JsonSyntaxException("Expected a JSON object.");
+                @Override
+                public <I> com.mojang.datafixers.util.Pair<ConditionTypeFactory<T>.Instance, I> strictDecode(DynamicOps<I> ops, I input) {
+
+                    MapLike<I> mapInput = ops.getMap(input).getOrThrow();
+                    Identifier factoryId = Optional.ofNullable(mapInput.get(field))
+                        .map(type -> SerializableDataTypes.IDENTIFIER.strictParse(ops, type))
+                        .orElseThrow(() -> new DataException(DataException.Phase.READING, field, "Field is required, but is missing!"));
+
+                    ConditionTypeFactory<T> factory = registry
+                        .getOrEmpty(aliases == null ? factoryId : aliases.resolveAlias(factoryId, registry::containsId))
+                        .orElseThrow(() -> errorHandler.apply(registry, factoryId));
+
+                    SerializableData.Instance data = factory.getSerializableData().strictDecode(ops, mapInput);
+                    return com.mojang.datafixers.util.Pair.of(factory.fromData(data), input);
+
                 }
 
-                Identifier factoryId = DynamicIdentifier.of(JsonHelper.getString(jsonObject, "type"));
-                return registry
-                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
-                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
-                    .read(jsonObject);
+                @Override
+                public <I> I strictEncode(ConditionTypeFactory<T>.Instance input, DynamicOps<I> ops, I prefix) {
+
+                    Map<I, I> output = new LinkedHashMap<>();
+
+                    output.put(ops.createString(field), ops.createString(input.getSerializerId().toString()));
+                    ops.getMapEntries(input.getSerializableData().codec().strictEncodeStart(ops, input.getData()))
+                        .getOrThrow()
+                        .accept(output::put);
+
+                    return ops.createMap(output);
+
+                }
 
             },
-            ConditionFactory.Instance::toJson
+            new PacketCodec<>() {
+
+                @Override
+                public ConditionTypeFactory<T>.Instance decode(RegistryByteBuf buf) {
+                    Identifier factoryId = buf.readIdentifier();
+                    return registry.getOrEmpty(factoryId)
+                        .orElseThrow(() -> errorHandler.apply(registry, factoryId))
+                        .receive(buf);
+                }
+
+                @Override
+                public void encode(RegistryByteBuf buf, ConditionTypeFactory<T>.Instance instance) {
+                    instance.send(buf);
+                }
+
+            }
         );
     }
 
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, String name) {
-        return action(registry, IdentifierAlias.GLOBAL, name);
+    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(Registry<ActionTypeFactory<T>> registry, String name) {
+        return action(registry, null, name);
     }
 
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, IdentifierAlias aliases, String name) {
-        return action(registry, aliases, (conditionFactories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
+    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(Registry<ActionTypeFactory<T>> registry, IdentifierAlias aliases, String name) {
+        return action("type", registry, aliases, (factories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
     }
 
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, IdentifierAlias aliases, BiFunction<Registry<ActionFactory<T>>, Identifier, RuntimeException> errorHandler) {
-        return new SerializableDataType<>(
-            ClassUtil.castClass(ActionFactory.Instance.class),
-            (buf, instance) -> instance.write(buf),
-            buf -> {
-                Identifier factoryId = buf.readIdentifier();
-                return registry
-                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
-                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
-                    .read(buf);
-            },
-            jsonElement -> {
+    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(String field, Registry<ActionTypeFactory<T>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionTypeFactory<T>>, Identifier, RuntimeException> errorHandler) {
+        return SerializableDataType.of(
+            new StrictCodec<>() {
 
-                if (!(jsonElement instanceof JsonObject jsonObject)) {
-                    throw new JsonSyntaxException("Expected a JSON object.");
+                @Override
+                public <I> com.mojang.datafixers.util.Pair<ActionTypeFactory<T>.Instance, I> strictDecode(DynamicOps<I> ops, I input) {
+
+                    MapLike<I> mapInput = ops.getMap(input).getOrThrow();
+                    Identifier factoryId = Optional.ofNullable(mapInput.get(field))
+                        .map(id -> SerializableDataTypes.IDENTIFIER.strictParse(ops, id))
+                        .orElseThrow(() -> new DataException(DataException.Phase.READING, field, "Field is required, but is missing!"));
+
+                    ActionTypeFactory<T> factory = registry
+                        .getOrEmpty(aliases == null ? factoryId : aliases.resolveAlias(factoryId, registry::containsId))
+                        .orElseThrow(() -> errorHandler.apply(registry, factoryId));
+
+                    SerializableData.Instance data = factory.getSerializableData().strictDecode(ops, mapInput);
+                    return com.mojang.datafixers.util.Pair.of(factory.fromData(data), input);
+
                 }
 
-                Identifier factoryId = DynamicIdentifier.of(JsonHelper.getString(jsonObject, "type"));
-                return registry
-                    .getOrEmpty(aliases.resolveAlias(factoryId, registry::containsId))
-                    .orElseThrow(() -> errorHandler.apply(registry, factoryId))
-                    .read(jsonObject);
+                @Override
+                public <I> I strictEncode(ActionTypeFactory<T>.Instance input, DynamicOps<I> ops, I prefix) {
+
+                    Map<I, I> output = new LinkedHashMap<>();
+
+                    output.put(ops.createString(field), ops.createString(input.getSerializerId().toString()));
+                    ops.getMapEntries(input.getSerializableData().codec().strictEncodeStart(ops, input.getData()))
+                        .getOrThrow()
+                        .accept(output::put);
+
+                    return ops.createMap(output);
+
+                }
 
             },
-            ActionFactory.Instance::toJson
+            new PacketCodec<>() {
+
+                @Override
+                public ActionTypeFactory<T>.Instance decode(RegistryByteBuf buf) {
+                    Identifier factoryId = buf.readIdentifier();
+                    return registry.getOrEmpty(factoryId)
+                        .orElseThrow(() -> errorHandler.apply(registry, factoryId))
+                        .receive(buf);
+                }
+
+                @Override
+                public void encode(RegistryByteBuf buf, ActionTypeFactory<T>.Instance instance) {
+                    instance.send(buf);
+                }
+
+            }
         );
+    }
+
+    public static void init() {
+
     }
 
 }

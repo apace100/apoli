@@ -1,51 +1,181 @@
 package io.github.apace100.apoli.util;
 
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DynamicOps;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.util.hud_render.ParentHudRender;
+import io.github.apace100.calio.codec.StrictCodec;
+import io.github.apace100.calio.data.CompoundSerializableDataType;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
+import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.Validatable;
 import net.minecraft.entity.Entity;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
-public class HudRender implements Comparable<HudRender> {
+public class HudRender implements Comparable<HudRender>, Validatable {
 
-    public static final HudRender DONT_RENDER = new HudRender(false, 0, 0, Apoli.identifier("textures/gui/resource_bar.png"), null, false, 0);
+    public static final Identifier DEFAULT_SPRITE = Apoli.identifier("textures/gui/resource_bar.png");
+    public static final HudRender DONT_RENDER = new HudRender(null, DEFAULT_SPRITE, false, false, 0, 0, 0);
 
-    private final List<HudRender> children = new LinkedList<>();
+    public static final CompoundSerializableDataType<HudRender> STRICT_DATA_TYPE = SerializableDataType.compound(
+        new SerializableData()
+            .add("condition", ApoliDataTypes.ENTITY_CONDITION, null)
+            .add("sprite_location", SerializableDataTypes.IDENTIFIER, DEFAULT_SPRITE)
+            .add("should_render", SerializableDataTypes.BOOLEAN, true)
+            .add("inverted", SerializableDataTypes.BOOLEAN, false)
+            .add("bar_index", SerializableDataTypes.NON_NEGATIVE_INT, 0)
+            .add("icon_index", SerializableDataTypes.NON_NEGATIVE_INT, 0)
+            .add("order", SerializableDataTypes.INT, 0),
+        data -> new HudRender(
+            data.get("condition"),
+            data.getId("sprite_location"),
+            data.getBoolean("should_render"),
+            data.getBoolean("inverted"),
+            data.getInt("bar_index"),
+            data.getInt("icon_index"),
+            data.getInt("order")
+        ),
+        (hudRender, data) -> data
+            .set("condition", hudRender.getCondition())
+            .set("sprite_location", hudRender.getSpriteLocation())
+            .set("should_render", hudRender.shouldRender())
+            .set("inverted", hudRender.isInverted())
+            .set("bar_index", hudRender.getBarIndex())
+            .set("icon_index", hudRender.getIconIndex())
+            .set("order", hudRender.getOrder())
+    );
 
+    public static final SerializableDataType<List<HudRender>> LIST_DATA_TYPE = STRICT_DATA_TYPE.listOf(1, Integer.MAX_VALUE);
+
+    public static final SerializableDataType<HudRender> DATA_TYPE = SerializableDataType.of(
+        new StrictCodec<>() {
+
+            @Override
+            public <T> Pair<HudRender, T> strictDecode(DynamicOps<T> ops, T input) {
+
+                List<HudRender> hudRenders = new LinkedList<>(LIST_DATA_TYPE.strictParse(ops, input));
+                HudRender parent = hudRenders.removeFirst();
+
+                return Pair.of(new ParentHudRender(parent, hudRenders), input);
+
+            }
+
+            @Override
+            public <T> T strictEncode(HudRender input, DynamicOps<T> ops, T prefix) {
+
+                if (input instanceof ParentHudRender parent) {
+                    return LIST_DATA_TYPE.strictEncode(parent.getChildren(), ops, prefix);
+                }
+
+                else {
+                    return STRICT_DATA_TYPE.strictEncode(input, ops, prefix);
+                }
+
+            }
+
+        },
+        new PacketCodec<>() {
+
+            @Override
+            public HudRender decode(RegistryByteBuf buf) {
+
+                if (buf.readBoolean()) {
+
+                    List<HudRender> children = new LinkedList<>(LIST_DATA_TYPE.packetCodec().decode(buf));
+                    HudRender parent = children.removeFirst();
+
+                    return new ParentHudRender(parent, children);
+
+                }
+
+                else {
+                    return STRICT_DATA_TYPE.packetCodec().decode(buf);
+                }
+
+            }
+
+            @Override
+            public void encode(RegistryByteBuf buf, HudRender hudRender) {
+
+                if (hudRender instanceof ParentHudRender parent) {
+                    buf.writeBoolean(true);
+                    LIST_DATA_TYPE.packetCodec().encode(buf, parent.getChildren());
+                }
+
+                else {
+                    buf.writeBoolean(false);
+                    STRICT_DATA_TYPE.packetCodec().encode(buf, hudRender);
+                }
+
+            }
+
+        }
+    );
+
+    @Nullable
+    private final ConditionTypeFactory<Entity>.Instance condition;
     private final Identifier spriteLocation;
-    private final Predicate<Entity> condition;
 
     private final boolean shouldRender;
     private final boolean inverted;
+
     private final int barIndex;
     private final int iconIndex;
+    private final int order;
 
-    private int order;
-
-    public HudRender(boolean shouldRender, int barIndex, int iconIndex, Identifier spriteLocation, Predicate<Entity> condition, boolean inverted, int order) {
+    public HudRender(@Nullable ConditionTypeFactory<Entity>.Instance condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
+        this.condition = condition;
+        this.spriteLocation = spriteLocation;
         this.shouldRender = shouldRender;
+        this.inverted = inverted;
         this.barIndex = barIndex;
         this.iconIndex = iconIndex;
-        this.spriteLocation = spriteLocation;
-        this.condition = condition;
-        this.inverted = inverted;
         this.order = order;
     }
 
     @Override
     public int compareTo(@NotNull HudRender other) {
-        int orderResult = Integer.compare(this.order, other.order);
-        return orderResult != 0 ? orderResult : this.spriteLocation.compareTo(other.spriteLocation);
+        int orderResult = Integer.compare(this.getOrder(), other.getOrder());
+        return orderResult != 0
+            ? orderResult
+            : this.getSpriteLocation().compareTo(other.getSpriteLocation());
+    }
+
+    @Override
+    public void validate() throws Exception {
+        STRICT_DATA_TYPE.toData(this).validate();
+    }
+
+    @Nullable
+    public ConditionTypeFactory<Entity>.Instance getCondition() {
+        return this.condition;
     }
 
     public Identifier getSpriteLocation() {
         return spriteLocation;
+    }
+
+    public boolean shouldRender() {
+        return shouldRender;
+    }
+
+    public boolean shouldRender(Entity viewer) {
+        return this.shouldRender() && (this.getCondition() == null || this.getCondition().test(viewer));
+    }
+
+    public boolean isInverted() {
+        return inverted;
     }
 
     public int getBarIndex() {
@@ -56,68 +186,37 @@ public class HudRender implements Comparable<HudRender> {
         return iconIndex;
     }
 
-    public boolean isInverted() {
-        return inverted;
-    }
-
-    public boolean shouldRender() {
-        return shouldRender;
-    }
-
-    public boolean shouldRender(Entity viewer) {
-        return shouldRender && (condition == null || condition.test(viewer));
-    }
-
-    public Predicate<Entity> getCondition() {
-        return condition;
-    }
-
     public int getOrder() {
         return order;
     }
 
-    public void setOrder(int order) {
-        this.order = order;
-    }
+    public HudRender withOrder(int order) {
 
-    public void send(PacketByteBuf buffer) {
-        ApoliDataTypes.SINGLE_HUD_RENDER.send(buffer, this);
-        ApoliDataTypes.MULTIPLE_HUD_RENDERS.send(buffer, children);
-    }
-
-    public static HudRender receive(PacketByteBuf buffer) {
-
-        HudRender parentHudRender = ApoliDataTypes.SINGLE_HUD_RENDER.receive(buffer);
-        ApoliDataTypes.MULTIPLE_HUD_RENDERS.receive(buffer).forEach(parentHudRender::addChild);
-
-        return parentHudRender;
-
-    }
-
-    public void addChild(HudRender hudRender) {
-
-        if (this == hudRender) {
-            return;
+        if (this.getOrder() != 0) {
+            return this;
         }
 
-        if (hudRender.getOrder() == 0) {
-            hudRender.setOrder(this.order);
-        }
-
-        this.children.add(hudRender);
+        return new HudRender(
+            this.getCondition(),
+            this.getSpriteLocation(),
+            this.shouldRender(),
+            this.isInverted(),
+            this.getBarIndex(),
+            this.getIconIndex(),
+            order
+        );
 
     }
 
-    public Optional<HudRender> getChildOrSelf(Entity viewer) {
+    public Optional<HudRender> getActive(Entity viewer) {
 
         if (this.shouldRender(viewer)) {
             return Optional.of(this);
         }
 
-        return children
-            .stream()
-            .filter(hudRender -> hudRender.shouldRender(viewer))
-            .findFirst();
+        else {
+            return Optional.empty();
+        }
 
     }
 

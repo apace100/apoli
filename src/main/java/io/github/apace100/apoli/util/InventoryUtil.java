@@ -1,16 +1,21 @@
 package io.github.apace100.apoli.util;
 
+import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.mixin.ItemSlotArgumentTypeAccessor;
-import io.github.apace100.apoli.power.InventoryPower;
-import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.mixin.SlotRangesAccessor;
+import io.github.apace100.apoli.power.type.InventoryPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.ArgumentWrapper;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.SlotRange;
+import net.minecraft.inventory.SlotRanges;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
@@ -52,16 +57,18 @@ public class InventoryUtil {
 
         Set<Integer> slots = new HashSet<>();
 
-        data.<ArgumentWrapper<Integer>>ifPresent("slot", iaw -> slots.add(iaw.get()));
-        data.<List<ArgumentWrapper<Integer>>>ifPresent("slots", iaws -> slots.addAll(iaws.stream().map(ArgumentWrapper::get).toList()));
+        data.<ArgumentWrapper<Integer>>ifPresent("slot", iaw -> slots.add(iaw.argument()));
+        data.<List<ArgumentWrapper<Integer>>>ifPresent("slots", iaws -> slots.addAll(iaws.stream().map(ArgumentWrapper::argument).toList()));
 
-        if (slots.isEmpty()) slots.addAll(ItemSlotArgumentTypeAccessor.getSlotMappings().values());
+        if (slots.isEmpty()) {
+            slots.addAll(getAllSlots());
+        }
 
         return slots;
 
     }
 
-    public static int checkInventory(SerializableData.Instance data, Entity entity, @Nullable InventoryPower inventoryPower, Function<ItemStack, Integer> processor) {
+    public static int checkInventory(SerializableData.Instance data, Entity entity, @Nullable InventoryPowerType inventoryPower, Function<ItemStack, Integer> processor) {
 
         Predicate<Pair<World, ItemStack>> itemCondition = data.get("item_condition");
         Set<Integer> slots = getSlots(data);
@@ -85,7 +92,7 @@ public class InventoryUtil {
 
     }
 
-    public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower, Function<ItemStack, Integer> processor, int limit) {
+    public static void modifyInventory(SerializableData.Instance data, Entity entity, InventoryPowerType inventoryPower, Function<ItemStack, Integer> processor, int limit) {
 
         if(limit <= 0) {
             limit = Integer.MAX_VALUE;
@@ -96,7 +103,7 @@ public class InventoryUtil {
 
         Consumer<Entity> entityAction = data.get("entity_action");
         Predicate<Pair<World, ItemStack>> itemCondition = data.get("item_condition");
-        ActionFactory<Pair<World, StackReference>>.Instance itemAction = data.get("item_action");
+        ActionTypeFactory<Pair<World, StackReference>>.Instance itemAction = data.get("item_action");
 
         int processedItems = 0;
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
@@ -129,7 +136,7 @@ public class InventoryUtil {
 
     }
 
-    public static void replaceInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
+    public static void replaceInventory(SerializableData.Instance data, Entity entity, InventoryPowerType inventoryPower) {
 
         Set<Integer> slots = getSlots(data);
         deduplicateSlots(entity, slots);
@@ -144,9 +151,10 @@ public class InventoryUtil {
         slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
         for (int slot : slots) {
 
-            StackReference stack = getStackReference(entity, inventoryPower, slot);
+            StackReference stackReference = getStackReference(entity, inventoryPower, slot);
+            ItemStack stack = stackReference.get();
 
-            if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack.get())))) {
+            if (!(itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
                 continue;
             }
 
@@ -155,21 +163,22 @@ public class InventoryUtil {
             }
 
             ItemStack stackAfterReplacement = replacementStack.copy();
-            if (mergeNbt && stack.get().hasNbt()) {
-                stack.get().getOrCreateNbt().copyFrom(stackAfterReplacement.getOrCreateNbt());
-                stackAfterReplacement.setNbt(stack.get().getOrCreateNbt());
+            if (mergeNbt) {
+                //  TODO: Either keep this, or re-implement it to merge components in a possibly hacky way (I'd rather not though) -eggohito
+                NbtCompound orgNbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).getNbt();
+                NbtComponent.set(DataComponentTypes.CUSTOM_DATA, stackAfterReplacement, repNbt -> repNbt.copyFrom(orgNbt));
             }
 
-            stack.set(stackAfterReplacement);
+            stackReference.set(stackAfterReplacement);
             if (itemAction != null) {
-                itemAction.accept(new Pair<>(entity.getWorld(), stack));
+                itemAction.accept(new Pair<>(entity.getWorld(), stackReference));
             }
 
         }
 
     }
 
-    public static void dropInventory(SerializableData.Instance data, Entity entity, InventoryPower inventoryPower) {
+    public static void dropInventory(SerializableData.Instance data, Entity entity, InventoryPowerType inventoryPower) {
 
         Set<Integer> slots = getSlots(data);
         deduplicateSlots(entity, slots);
@@ -259,7 +268,7 @@ public class InventoryUtil {
     public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
 
         int slotToSkip = getDuplicatedSlotIndex(entity);
-        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+        for (int slot : getAllSlots()) {
 
             if (slot == slotToSkip) {
                 slotToSkip = Integer.MIN_VALUE;
@@ -283,8 +292,8 @@ public class InventoryUtil {
             return;
         }
 
-        List<InventoryPower> inventoryPowers = component.getPowers(InventoryPower.class);
-        for (InventoryPower inventoryPower : inventoryPowers) {
+        List<InventoryPowerType> inventoryPowers = component.getPowerTypes(InventoryPowerType.class);
+        for (InventoryPowerType inventoryPower : inventoryPowers) {
             for (int index = 0; index < inventoryPower.size(); index++) {
 
                 ItemStack stack = inventoryPower.getStack(index);
@@ -304,7 +313,7 @@ public class InventoryUtil {
     public static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack, BiPredicate<ItemStack, ItemStack> equalityPredicate) {
 
         int slotToSkip = getDuplicatedSlotIndex(entity);
-        for (int slot : ItemSlotArgumentTypeAccessor.getSlotMappings().values()) {
+        for (int slot : getAllSlots()) {
 
             if (slot == slotToSkip) {
                 slotToSkip = Integer.MIN_VALUE;
@@ -322,12 +331,19 @@ public class InventoryUtil {
 
     }
 
+    private static final List<String> EXEMPT_SLOTS = List.of("weapon", "weapon.mainhand");
+
     private static void deduplicateSlots(Entity entity, Set<Integer> slots) {
-        int hotbarSlot = getDuplicatedSlotIndex(entity);
-        if(hotbarSlot != Integer.MIN_VALUE && slots.contains(hotbarSlot)) {
-            Integer mainHandSlot = ItemSlotArgumentTypeAccessor.getSlotMappings().get("weapon.mainhand");
-            slots.remove(mainHandSlot);
+
+        int selectedHotbarSlot = getDuplicatedSlotIndex(entity);
+        if (selectedHotbarSlot != Integer.MIN_VALUE && slots.contains(selectedHotbarSlot)) {
+            SlotRangesAccessor.getSlotRanges()
+                .stream()
+                .filter(sr -> EXEMPT_SLOTS.contains(sr.asString()))
+                .flatMapToInt(sr -> sr.getSlotIds().intStream())
+                .forEach(slots::remove);
         }
+
     }
 
     /**
@@ -338,77 +354,81 @@ public class InventoryUtil {
      *      @return         The slot ID of the hotbar slot or {@link Integer#MIN_VALUE} if the entity is not a player
      */
     private static int getDuplicatedSlotIndex(Entity entity) {
-        if(entity instanceof PlayerEntity player) {
-            int selectedSlot = player.getInventory().selectedSlot;
-            return ItemSlotArgumentTypeAccessor.getSlotMappings().get("hotbar." + selectedSlot);
-        }
-        return Integer.MIN_VALUE;
+
+        SlotRange slotRange = entity instanceof PlayerEntity player
+            ? SlotRanges.fromName("hotbar." + player.getInventory().selectedSlot)
+            : null;
+
+        return slotRange != null
+            ? slotRange.getSlotIds().getFirst()
+            : Integer.MIN_VALUE;
+
     }
 
     /**
      *      <p>Check whether the specified slot is <b>not</b> within the bounds of the entity's {@linkplain
-     *      StackReference stack reference} or the specified {@link InventoryPower}.</p>
+     *      StackReference stack reference} or the specified {@link InventoryPowerType}.</p>
      *
      *      @param entity           The entity check the bounds of its {@linkplain StackReference stack reference}
-     *      @param inventoryPower   The {@link InventoryPower} to check the bounds of
+     *      @param inventoryPower   The {@link InventoryPowerType} to check the bounds of
      *      @param slot             The slot
      *      @return                 {@code true} if the slot is within the bounds of the {@linkplain
-     *      StackReference stack reference} or the {@link InventoryPower}
+     *      StackReference stack reference} or the {@link InventoryPowerType}
      */
-    public static boolean slotNotWithinBounds(Entity entity, @Nullable InventoryPower inventoryPower, int slot) {
+    public static boolean slotNotWithinBounds(Entity entity, @Nullable InventoryPowerType inventoryPower, int slot) {
         return inventoryPower == null ? entity.getStackReference(slot) == StackReference.EMPTY
             : slot < 0 || slot >= inventoryPower.size();
     }
 
     /**
-     *      <p>Get the stack reference from the entity or frin the inventory of the specified {@link InventoryPower} (if it's not null).</p>
+     *      <p>Get the stack reference from the entity or frin the inventory of the specified {@link InventoryPowerType} (if it's not null).</p>
      *
      *      <p><b>Make sure to only call this method after you filter out the slots that aren't within the bounds
-     *      of the entity's {@linkplain StackReference stack reference} or {@link InventoryPower} using {@link
-     *      #slotNotWithinBounds(Entity, InventoryPower, int)}</b></p>
+     *      of the entity's {@linkplain StackReference stack reference} or {@link InventoryPowerType} using {@link
+     *      #slotNotWithinBounds(Entity, InventoryPowerType, int)}</b></p>
      *
      *      @param entity            The entity to get the item stack from its {@linkplain StackReference stack reference}
-     *      @param inventoryPower    The {@link InventoryPower} to get the item stack from (can be null)
+     *      @param inventoryPower    The {@link InventoryPowerType} to get the item stack from (can be null)
      *      @param slot              The (numerical) slot to get the item stack from
      *      @return                  The stack reference of the specified slot
      */
-    public static StackReference getStackReference(Entity entity, @Nullable InventoryPower inventoryPower, int slot) {
+    public static StackReference getStackReference(Entity entity, @Nullable InventoryPowerType inventoryPower, int slot) {
         return inventoryPower == null ? entity.getStackReference(slot) : StackReference.of(inventoryPower, slot);
     }
 
     /**
      *      <p>Get the item stack from the entity's {@linkplain StackReference stack reference} or the inventory of
-     *      the specified {@link InventoryPower} (if it's not null).</p>
+     *      the specified {@link InventoryPowerType} (if it's not null).</p>
      *
      *      <p><b>Make sure to only call this method after you filter out the slots that aren't within the bounds
-     *      of the entity's {@linkplain StackReference stack reference} or {@link InventoryPower} using {@link
-     *      #slotNotWithinBounds(Entity, InventoryPower, int)}</b></p>
+     *      of the entity's {@linkplain StackReference stack reference} or {@link InventoryPowerType} using {@link
+     *      #slotNotWithinBounds(Entity, InventoryPowerType, int)}</b></p>
      *
      *      @param entity            The entity to get the item stack from its {@linkplain StackReference stack reference}
-     *      @param inventoryPower    The {@link InventoryPower} to get the item stack from (can be null)
+     *      @param inventoryPower    The {@link InventoryPowerType} to get the item stack from (can be null)
      *      @param slot              The (numerical) slot to get the item stack from
      *      @return                  The item stack from the specified slot
      */
     @Deprecated(forRemoval = true)
-    public static ItemStack getStack(Entity entity, @Nullable InventoryPower inventoryPower, int slot) {
+    public static ItemStack getStack(Entity entity, @Nullable InventoryPowerType inventoryPower, int slot) {
         return inventoryPower == null ? entity.getStackReference(slot).get() : inventoryPower.getStack(slot);
     }
 
     /**
      *      <p>Set the item stack on the specified slot of the entity's {@linkplain StackReference stack reference}
-     *      or the inventory of the specified {@link InventoryPower} (if it's not null).</p>
+     *      or the inventory of the specified {@link InventoryPowerType} (if it's not null).</p>
      *
      *      <p><b>Make sure to only call this method after you filter out the slots that aren't within the bounds
-     *      of the entity's {@linkplain StackReference stack reference} or {@link InventoryPower} using {@link
-     *      #slotNotWithinBounds(Entity, InventoryPower, int)}</b></p>
+     *      of the entity's {@linkplain StackReference stack reference} or {@link InventoryPowerType} using {@link
+     *      #slotNotWithinBounds(Entity, InventoryPowerType, int)}</b></p>
      *
      *      @param entity           The entity to modify the {@linkplain StackReference stack reference} of
-     *      @param inventoryPower   The {@link InventoryPower} to set the item stack to (can be null)
+     *      @param inventoryPower   The {@link InventoryPowerType} to set the item stack to (can be null)
      *      @param stack            The item stack to set to the specified slot
      *      @param slot             The (numerical) slot to set the item stack to
      */
     @Deprecated(forRemoval = true)
-    public static void setStack(Entity entity, InventoryPower inventoryPower, ItemStack stack, int slot) {
+    public static void setStack(Entity entity, InventoryPowerType inventoryPower, ItemStack stack, int slot) {
         if (inventoryPower == null) {
             entity.getStackReference(slot).set(stack);
         } else {
@@ -442,6 +462,31 @@ public class InventoryUtil {
             }
 
         };
+    }
+
+    public static List<Integer> getAllSlots() {
+        return SlotRangesAccessor.getSlotRanges()
+            .stream()
+            .flatMapToInt(slotRange -> slotRange.getSlotIds().intStream())
+            .boxed()
+            .toList();
+    }
+
+    @Nullable
+    public static Integer getSlotFromStackReference(Entity entity, StackReference stackReference) {
+
+        for (int slot : getAllSlots()) {
+
+            StackReference queriedStackRef = entity.getStackReference(slot);
+
+            if (queriedStackRef != StackReference.EMPTY && queriedStackRef.equals(stackReference)) {
+                return slot;
+            }
+
+        }
+
+        return null;
+
     }
 
 }

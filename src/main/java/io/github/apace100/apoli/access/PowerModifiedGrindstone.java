@@ -1,17 +1,19 @@
 package io.github.apace100.apoli.access;
 
-import io.github.apace100.apoli.power.ModifyGrindstonePower;
+import io.github.apace100.apoli.power.type.ModifyGrindstonePowerType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface PowerModifiedGrindstone {
 
-    List<ModifyGrindstonePower> apoli$getAppliedPowers();
+    List<ModifyGrindstonePowerType> apoli$getAppliedPowers();
 
     PlayerEntity apoli$getPlayer();
 
-    Optional<BlockPos> apoli$getPos();
+    @Nullable
+    BlockPos apoli$getPos();
+
 }

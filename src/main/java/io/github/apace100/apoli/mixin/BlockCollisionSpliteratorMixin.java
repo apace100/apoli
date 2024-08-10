@@ -32,8 +32,10 @@ public abstract class BlockCollisionSpliteratorMixin<T> extends AbstractIterator
     }
 
     @WrapOperation(method = "computeNext", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;"))
-    private VoxelShape apoli$overrideCollisionShapeQuery(BlockState instance, BlockView world, BlockPos pos, ShapeContext context, Operation<VoxelShape> original) {
-        return this.apoli$shouldGetOriginalShapes() ? ((BlockStateCollisionShapeAccess) instance).apoli$getOriginalCollisionShape(world, pos, context) : original.call(instance, world, pos, context);
+    private VoxelShape apoli$overrideCollisionShapeQuery(BlockState state, BlockView world, BlockPos pos, ShapeContext context, Operation<VoxelShape> original) {
+        return state instanceof BlockStateCollisionShapeAccess shapeAccess && this.apoli$shouldGetOriginalShapes()
+            ? shapeAccess.apoli$getOriginalCollisionShape(world, pos, context)
+            : original.call(state, world, pos, context);
     }
 
 }

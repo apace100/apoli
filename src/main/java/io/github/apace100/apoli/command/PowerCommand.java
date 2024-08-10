@@ -1,13 +1,17 @@
 package io.github.apace100.apoli.command;
 
+import com.google.gson.JsonElement;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
+import io.github.apace100.apoli.command.argument.PowerTypeArgumentType;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.util.JsonTextFormatter;
 import joptsimple.internal.Strings;
 import net.minecraft.command.argument.IdentifierArgumentType;
@@ -48,11 +52,15 @@ public class PowerCommand {
 							.then(argument("source", IdentifierArgumentType.identifier())
 								.executes(context -> revokePower(context, true)))))
 				)
-				.then(literal("revokeall")
+				.then(literal("revokeall")	//	TODO: Remove this! -eggohito
 					.then(argument("targets", PowerHolderArgumentType.holders())
 						.then(argument("source", IdentifierArgumentType.identifier())
 							.executes(PowerCommand::revokeAllPowers)))
 				)
+				.then(literal("revoke_all")
+					.then(argument("targets", PowerHolderArgumentType.holders())
+						.then(argument("source", IdentifierArgumentType.identifier())
+							.executes(PowerCommand::revokeAllPowers))))
 				.then(literal("list")
 					.then(argument("target", PowerHolderArgumentType.holder())
 						.executes(context -> listPowers(context, false))
@@ -95,13 +103,13 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerTypeArgumentType.getPower(context, "power");
 		Identifier powerSource = isSourceSpecified ? IdentifierArgumentType.getIdentifier(context, "source") : Apoli.identifier("command");
 
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (!component.addPower(powerType, powerSource)) {
+			if (!component.addPower(power, powerSource)) {
 				continue;
 			}
 
@@ -110,8 +118,8 @@ public class PowerCommand {
 
 		}
 
-		Text powerTypeName = powerType.getName();
-		Text targetName = targets.get(0).getName();
+		Text powerTypeName = power.getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -128,7 +136,7 @@ public class PowerCommand {
 
 		}
 
-		Text processedTargetName = processedTargets.get(0).getName();
+		Text processedTargetName = processedTargets.getFirst().getName();
 		if (isSourceSpecified) {
 			if (processedTargetsSize == 1) {
 				source.sendFeedback(() -> Text.translatable("commands.apoli.grant_from_source.success.single", processedTargetName, powerTypeName, powerSource.toString()), true);
@@ -154,25 +162,25 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerTypeArgumentType.getPower(context, "power");
 		Identifier powerSource = isSourceSpecified ? IdentifierArgumentType.getIdentifier(context, "source") : POWER_SOURCE;
 
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (!component.hasPower(powerType, powerSource)) {
+			if (!component.hasPower(power, powerSource)) {
 				continue;
 			}
 
-			component.removePower(powerType, powerSource);
+			component.removePower(power, powerSource);
 			component.sync();
 
 			processedTargets.add(target);
 
 		}
 
-		Text powerTypeName = powerType.getName();
-		Text targetName = targets.get(0).getName();
+		Text powerTypeName = power.getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -189,7 +197,7 @@ public class PowerCommand {
 
 		}
 
-		Text processedTargetName = processedTargets.get(0).getName();
+		Text processedTargetName = processedTargets.getFirst().getName();
 		if (isSourceSpecified) {
 			if (processedTargetsSize == 1) {
 				source.sendFeedback(() -> Text.translatable("commands.apoli.revoke_from_source.success.single", processedTargetName, powerTypeName, powerSource.toString()), true);
@@ -234,7 +242,7 @@ public class PowerCommand {
 
 		}
 
-		Text targetName = targets.get(0).getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -247,7 +255,7 @@ public class PowerCommand {
 			}
 		} else {
 
-			Text processedTargetName = processedTargets.get(0).getName();
+			Text processedTargetName = processedTargets.getFirst().getName();
 			int finalRevokedPowers = revokedPowers;
 
 			if (processedTargetsSize == 1) {
@@ -271,17 +279,17 @@ public class PowerCommand {
 		int powers = 0;
 
 		PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-		for (PowerType<?> powerType : component.getPowerTypes(includeSubpowers)) {
+		for (Power power : component.getPowers(includeSubpowers)) {
 
 			List<Text> sourcesTooltip = new LinkedList<>();
-			component.getSources(powerType).forEach(id -> sourcesTooltip.add(Text.of(id.toString())));
+			component.getSources(power).forEach(id -> sourcesTooltip.add(Text.of(id.toString())));
 
 			HoverEvent sourceHoverEvent = new HoverEvent(
 				HoverEvent.Action.SHOW_TEXT,
 				Text.translatable("commands.apoli.list.sources", Texts.join(sourcesTooltip, Text.of(",")))
 			);
 
-			Text powerTooltip = Text.literal(powerType.getIdentifier().toString())
+			Text powerTooltip = Text.literal(power.getId().toString())
 				.setStyle(Style.EMPTY.withHoverEvent(sourceHoverEvent));
 
 			powersTooltip.add(powerTooltip);
@@ -307,11 +315,11 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerTypeArgumentType.getPower(context, "power");
 
 		for (LivingEntity target : targets) {
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (component.hasPower(powerType)) {
+			if (component.hasPower(power)) {
 				processedTargets.add(target);
 			}
 		}
@@ -342,14 +350,14 @@ public class PowerCommand {
 		ServerCommandSource source = context.getSource();
 
 		LivingEntity target = PowerHolderArgumentType.getHolder(context, "target");
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerTypeArgumentType.getPower(context, "power");
 
 		PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 		StringBuilder powerSources = new StringBuilder();
 		int powers = 0;
 
 		String separator = "";
-		for (Identifier powerSource : component.getSources(powerType)) {
+		for (Identifier powerSource : component.getSources(power)) {
 
 			powerSources.append(separator).append(powerSource.toString());
 			powers++;
@@ -359,10 +367,10 @@ public class PowerCommand {
 		}
 
 		if (powers == 0) {
-			source.sendError(Text.translatable("commands.apoli.sources.fail", target.getName(), powerType.getName()));
+			source.sendError(Text.translatable("commands.apoli.sources.fail", target.getName(), power.getName()));
 		} else {
 			int finalPowers = powers;
-			source.sendFeedback(() -> Text.translatable("commands.apoli.sources.pass", target.getName(), finalPowers, powerType.getName(), powerSources.toString()), true);
+			source.sendFeedback(() -> Text.translatable("commands.apoli.sources.pass", target.getName(), finalPowers, power.getName(), powerSources.toString()), true);
 		}
 
 		return powers;
@@ -376,18 +384,18 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerTypeArgumentType.getPower(context, "power");
 
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			List<Identifier> powerSources = component.getSources(powerType);
+			List<Identifier> powerSources = component.getSources(power);
 			if (powerSources.isEmpty()) {
 				continue;
 			}
 
-			for (Identifier powerSource : component.getSources(powerType)) {
-				component.removePower(powerType, powerSource);
+			for (Identifier powerSource : component.getSources(power)) {
+				component.removePower(power, powerSource);
 			}
 
 			component.sync();
@@ -395,8 +403,8 @@ public class PowerCommand {
 
 		}
 
-		Text targetName = targets.get(0).getName();
-		Text powerTypeName = powerType.getName();
+		Text targetName = targets.getFirst().getName();
+		Text powerTypeName = power.getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -408,7 +416,7 @@ public class PowerCommand {
 				source.sendError(Text.translatable("commands.apoli.remove.fail.multiple", powerTypeName));
 			}
 		} else {
-			Text processedTargetName = processedTargets.get(0).getName();
+			Text processedTargetName = processedTargets.getFirst().getName();
 			if (processedTargetsSize == 1) {
 				source.sendFeedback(() -> Text.translatable("commands.apoli.remove.success.single", processedTargetName, powerTypeName), true);
 			} else {
@@ -445,23 +453,23 @@ public class PowerCommand {
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			Set<PowerType<?>> powerTypes = component.getPowerTypes(false);
-			if (powerTypes.isEmpty()) {
+			Set<Power> powers = component.getPowers(false);
+			if (powers.isEmpty()) {
 				continue;
 			}
 
-			for (PowerType<?> powerType : powerTypes) {
-				List<Identifier> powerSources = component.getSources(powerType);
+			for (Power power : powers) {
+				List<Identifier> powerSources = component.getSources(power);
 				powerSources.forEach(component::removeAllPowersFromSource);
 			}
 
 			component.sync();
-			clearedPowers += powerTypes.size();
+			clearedPowers += powers.size();
 			processedTargets.add(target);
 
 		}
 
-		Text targetName = targets.get(0).getName();
+		Text targetName = targets.getFirst().getName();
 
 		int targetsSize = targets.size();
 		int processedTargetsSize = processedTargets.size();
@@ -474,7 +482,7 @@ public class PowerCommand {
 			}
 		} else {
 
-			Text processedTargetName = processedTargets.get(0).getName();
+			Text processedTargetName = processedTargets.getFirst().getName();
 			int finalClearedPowers = clearedPowers;
 
 			if (processedTargetsSize == 1) {
@@ -492,11 +500,12 @@ public class PowerCommand {
 	private static int dumpPowerJson(CommandContext<ServerCommandSource> context, boolean indentSpecified) throws CommandSyntaxException {
 
 		ServerCommandSource source = context.getSource();
-		PowerType<?> powerType = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerTypeArgumentType.getPower(context, "power");
 
 		String indent = Strings.repeat(' ', indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4);
-		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(powerType.toJson()), false);
+		JsonElement powerJson = Power.DATA_TYPE.strictEncodeStart(JsonOps.INSTANCE, power);
 
+		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(powerJson), false);
 		return 1;
 
 	}
