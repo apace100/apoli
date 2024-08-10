@@ -2,7 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.EntityLinkedType;
-import io.github.apace100.apoli.power.ModifyTypeTagPowerType;
+import io.github.apace100.apoli.power.type.ModifyTypeTagPowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.entry.RegistryEntryList;

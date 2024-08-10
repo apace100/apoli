@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.power.factory;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.ModifyTypeTagPowerType;
+import io.github.apace100.apoli.power.type.ModifyTypeTagPowerType;
 import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.util.IdentifierAlias;
