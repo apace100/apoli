@@ -29,6 +29,7 @@
         "EntityAccessor",
         "EntityAttributeInstanceMixin",
         "EntityMixin",
+        "EntityTypeMixin",
         "EquipmentMixin",
         "ExperienceOrbEntityMixin",
         "GrindstoneScreenHandlerBottomInputSlotMixin",

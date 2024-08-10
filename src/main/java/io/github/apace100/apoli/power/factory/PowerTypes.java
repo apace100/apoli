@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.ModifyTypeTagPowerType;
 import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.util.IdentifierAlias;
@@ -133,6 +134,7 @@ public class PowerTypes {
         register(PreventEntitySelectionPowerType::getFactory);
         register(SprintingPowerType::getFactory);
         register(PosePowerType::getFactory);
+        register(ModifyTypeTagPowerType::getFactory);
     }
 
     @SuppressWarnings("unchecked")
