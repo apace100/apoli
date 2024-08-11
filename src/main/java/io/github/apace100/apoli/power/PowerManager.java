@@ -242,7 +242,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             if (oldPowerType.getClass().isAssignableFrom(newPowerType.getClass())) {
                 //  Transfer the data of the old power to the new power if the old power is an instance of the new power
                 Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", oldPowerId);
-                newPowerType.fromTag(oldPowerType.toTag(true), true);
+                newPowerType.fromTag(oldPowerType.toTag());
             } else {
                 //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
                 //  occurs if the power no longer uses the same power type as it used to

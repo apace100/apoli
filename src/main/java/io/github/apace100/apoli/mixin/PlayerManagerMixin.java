@@ -32,10 +32,7 @@ public abstract class PlayerManagerMixin {
 
 	@Inject(method = "remove", at = @At("HEAD"))
 	private void apoli$invokeOnRemovedPowerCallbackOnRemoved(ServerPlayerEntity player, CallbackInfo ci) {
-		PowerHolderComponent.KEY.get(player).getPowerTypes().forEach(power -> {
-			power.onRemoved();
-			power.onRemoved(false);
-		});
+		PowerHolderComponent.KEY.get(player).getPowerTypes().forEach(PowerType::onRemoved);
 	}
 
 	@WrapOperation(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;getRespawnTarget(ZLnet/minecraft/world/TeleportTarget$PostDimensionTransition;)Lnet/minecraft/world/TeleportTarget;"))
@@ -59,10 +56,7 @@ public abstract class PlayerManagerMixin {
 
 	@Inject(method = "respawnPlayer", at = @At("HEAD"))
 	private void apoli$invokeOnRemovedPowerCallbackOnRespawn(ServerPlayerEntity player, boolean alive, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayerEntity> cir) {
-		PowerHolderComponent.KEY.get(player).getPowerTypes().forEach(power -> {
-			power.onRemoved();
-			power.onRemoved(false);
-		});
+		PowerHolderComponent.KEY.get(player).getPowerTypes().forEach(PowerType::onRemoved);
 	}
 
 	@Inject(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;onSpawn()V"))

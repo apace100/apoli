@@ -91,7 +91,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             return;
         }
 
-        powerData.put("Data", powerType.toTag(true));
+        powerData.put("Data", powerType.toTag());
         SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), power.getId(), powerData);
 
         for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
@@ -129,7 +129,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
             PowerType powerType = component.getPowerType(power);
             if (powerType != null) {
-                powersToSync.put(power.getId(), powerType.toTag(true));
+                powersToSync.put(power.getId(), powerType.toTag());
             }
 
         }

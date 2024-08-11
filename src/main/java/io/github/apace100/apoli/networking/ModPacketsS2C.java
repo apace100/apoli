@@ -168,7 +168,7 @@ public class ModPacketsS2C {
         PowerType powerType = component.getPowerType(power);
 
         if (powerType != null) {
-            powerType.fromTag(payload.powerData().get("Data"), true);
+            powerType.fromTag(payload.powerData().get("Data"));
         }
 
     }
@@ -204,7 +204,7 @@ public class ModPacketsS2C {
             PowerType powerType = component.getPowerType(power);
 
             if (powerType != null) {
-                powerType.fromTag(powerTypeData, true);
+                powerType.fromTag(powerTypeData);
             }
 
         }

@@ -62,7 +62,7 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
     }
 
     @Override
-    public void onRemoved(boolean onSync) {
+    public void onRemoved() {
 
         for (int slot : InventoryUtil.getAllSlots()) {
 
