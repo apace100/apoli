@@ -24,9 +24,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Identifier;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -113,7 +111,7 @@ public class PowerCommand {
 				continue;
 			}
 
-			component.sync();
+			PowerHolderComponent.PacketHandlers.GRANT_POWERS.sync(target, Map.of(powerSource, List.of(power)));
 			processedTargets.add(target);
 
 		}
@@ -168,13 +166,11 @@ public class PowerCommand {
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (!component.hasPower(power, powerSource)) {
+			if (!component.removePower(power, powerSource)) {
 				continue;
 			}
 
-			component.removePower(power, powerSource);
-			component.sync();
-
+			PowerHolderComponent.PacketHandlers.REVOKE_POWERS.sync(target, Map.of(powerSource, List.of(power)));
 			processedTargets.add(target);
 
 		}
@@ -235,7 +231,7 @@ public class PowerCommand {
 				continue;
 			}
 
-			component.sync();
+			PowerHolderComponent.PacketHandlers.REVOKE_ALL_POWERS.sync(target, List.of(powerSource));
 			processedTargets.add(target);
 
 			revokedPowers += revokedPowersFromSource;
@@ -385,20 +381,22 @@ public class PowerCommand {
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
 		Power power = PowerTypeArgumentType.getPower(context, "power");
-
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 			List<Identifier> powerSources = component.getSources(power);
+
 			if (powerSources.isEmpty()) {
 				continue;
 			}
 
-			for (Identifier powerSource : component.getSources(power)) {
+			Map<Identifier, List<Power>> powersBySource = new HashMap<>();
+			for (Identifier powerSource : powerSources) {
+				powersBySource.computeIfAbsent(powerSource, k -> new LinkedList<>()).add(power);
 				component.removePower(power, powerSource);
 			}
 
-			component.sync();
+			PowerHolderComponent.PacketHandlers.REVOKE_POWERS.sync(target, powersBySource);
 			processedTargets.add(target);
 
 		}
@@ -453,18 +451,20 @@ public class PowerCommand {
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			Set<Power> powers = component.getPowers(false);
-			if (powers.isEmpty()) {
+			List<Identifier> powerSources = component.getPowers(false)
+				.stream()
+				.map(component::getSources)
+				.flatMap(Collection::stream)
+				.toList();
+
+			if (powerSources.isEmpty()) {
 				continue;
 			}
 
-			for (Power power : powers) {
-				List<Identifier> powerSources = component.getSources(power);
-				powerSources.forEach(component::removeAllPowersFromSource);
-			}
+			powerSources.forEach(component::removeAllPowersFromSource);
+			PowerHolderComponent.PacketHandlers.REVOKE_ALL_POWERS.sync(target, powerSources);
 
-			component.sync();
-			clearedPowers += powers.size();
+			clearedPowers += powerSources.size();
 			processedTargets.add(target);
 
 		}

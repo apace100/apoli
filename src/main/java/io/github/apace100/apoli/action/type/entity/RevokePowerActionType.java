@@ -10,6 +10,9 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 
+import java.util.List;
+import java.util.Map;
+
 public class RevokePowerActionType {
 
     public static void action(Entity entity, PowerReference power, Identifier source) {
@@ -19,7 +22,7 @@ public class RevokePowerActionType {
             .orElse(false);
 
         if (revoked) {
-            PowerHolderComponent.sync(entity);
+            PowerHolderComponent.PacketHandlers.REVOKE_POWERS.sync(entity, Map.of(source, List.of(power)));
         }
 
     }

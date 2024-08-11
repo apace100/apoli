@@ -17,7 +17,6 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,13 +25,13 @@ import java.util.stream.Collectors;
 
 public class PowerHolderComponentImpl implements PowerHolderComponent {
 
-    private final LivingEntity owner;
-
     private final ConcurrentHashMap<Power, PowerType> powers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Power, List<Identifier>> powerSources = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<Power, PowerType> powersToRemove = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Power, PowerType> powersToAdd = new ConcurrentHashMap<>();
+
+    private final LivingEntity owner;
 
     public PowerHolderComponentImpl(LivingEntity owner) {
         this.owner = owner;
@@ -243,19 +242,6 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void readFromNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup lookup) {
-        this.fromTag(compoundTag, true);
-    }
-
-    protected void fromTag(NbtCompound compoundTag, boolean callPowerOnAdd) {
-
-        if (owner == null) {
-            Apoli.LOGGER.error("Owner was null in PowerHolderComponent#fromTag! This is not supposed to happen :(");
-            return;
-        }
-
-        if (callPowerOnAdd) {
-            powers.values().forEach(PowerType::onRemoved);
-        }
 
         NbtList powersTag = compoundTag.getList("Powers", NbtElement.COMPOUND_TYPE);
         powers.clear();
@@ -265,7 +251,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             NbtCompound powerTag = powersTag.getCompound(i);
             Identifier powerTypeId = Identifier.tryParse(powerTag.getString("Type"));
 
-            if (powerTypeId == null || (callPowerOnAdd && PowerManager.isDisabled(powerTypeId))) {
+            if (powerTypeId == null || PowerManager.isDisabled(powerTypeId)) {
                 continue;
             }
 
@@ -276,8 +262,35 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedList::new));
 
+            if (sources.isEmpty()) {
+                Apoli.LOGGER.warn("Power \"{}\" with missing sources found on entity {}! Skipping...", powerTypeId, owner.getName().getString());
+                return;
+            }
+
             try {
-                readPower(powerTag.get("Data"), powerTypeId, sources, callPowerOnAdd);
+
+                Power power = PowerManager.get(powerTypeId);
+                PowerType powerType = power.create(owner);
+
+                try {
+
+                    NbtElement powerData = powerTag.get("Data");
+
+                    if (powerData != null) {
+                        powerType.fromTag(powerData);
+                    }
+
+                }
+
+                catch (ClassCastException e) {
+                    //  Occurs when the power was overridden by a data pack since last world load
+                    //  where the overridden power now uses different data classes
+                    Apoli.LOGGER.warn("Data type of power \"{}\" changed, skipping data for that power on entity {}", powerTypeId, owner.getName().getString());
+                }
+
+                powerSources.put(power, sources);
+                powers.put(power, powerType);
+
             }
 
             catch (IllegalArgumentException e) {
@@ -288,21 +301,21 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
         }
 
-        for (Map.Entry<Power, List<Identifier>> entry : powerSources.entrySet()) {
+        for (Power power : powers.keySet()) {
 
-            if (!(entry.getKey() instanceof MultiplePower multiplePower)) {
+            if (!(power instanceof MultiplePower multiplePower)) {
                 continue;
             }
 
             for (Identifier subPowerId : multiplePower.getSubPowers()) {
 
                 try {
-                    readPower(null, subPowerId, entry.getValue(), callPowerOnAdd);
+                    PowerManager.get(subPowerId);
                 }
 
-                catch (IllegalArgumentException e) {
+                catch (Exception ignored) {
 
-                    if (!(callPowerOnAdd && PowerManager.isDisabled(subPowerId))) {
+                    if (!PowerManager.isDisabled(subPowerId)) {
                         Apoli.LOGGER.warn("Multiple power \"{}\" (read from NBT data) contained unregistered sub-power: \"{}\"", multiplePower.getId(), subPowerId);
                     }
 
@@ -314,45 +327,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     }
 
-    protected void readPower(@Nullable NbtElement powerData, Identifier powerTypeId, List<Identifier> sources, boolean callPowerOnAdd) {
-
-        Power power = PowerManager.get(powerTypeId);
-        PowerType powerType = power.create(owner);
-
-        if (sources.isEmpty()) {
-            Apoli.LOGGER.warn("Power \"{}\" with missing sources found on entity {}! Skipping...", powerTypeId, owner.getName().getString());
-            return;
-        }
-
-        try {
-
-            if (powerData != null) {
-                powerType.fromTag(powerData);
-            }
-
-        }
-
-        catch (ClassCastException e) {
-            //  Occurs when the power was overridden by a data pack since last world load
-            //  where the overridden power now uses different data classes
-            Apoli.LOGGER.warn("Data type of power \"{}\" changed, skipping data for that power on entity {}", powerTypeId, owner.getName().getString());
-        }
-
-        powerSources.put(power, sources);
-        powers.put(power, powerType);
-
-        if (callPowerOnAdd) {
-            powerType.onAdded();
-        }
-
-    }
-
     @Override
     public void writeToNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup wrapperLookup) {
-        this.toTag(compoundTag);
-    }
-
-    private void toTag(NbtCompound compoundTag) {
 
         NbtList powersTag = new NbtList();
         for (Map.Entry<Power, PowerType> entry : powers.entrySet()) {
@@ -385,21 +361,22 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void writeSyncPacket(RegistryByteBuf buf, ServerPlayerEntity recipient) {
-
-        NbtCompound compoundTag = new NbtCompound();
-        this.toTag(compoundTag);
-
-        buf.writeNbt(compoundTag);
-
+        buf.writeVarInt(-1);
+        PowerHolderComponent.super.writeSyncPacket(buf, recipient);
     }
 
     @Override
     public void applySyncPacket(RegistryByteBuf buf) {
 
-        NbtCompound compoundTag = buf.readNbt();
-
-        if (compoundTag != null) {
-            this.fromTag(compoundTag, false);
+        switch (buf.readVarInt()) {
+            case 0 ->
+                PacketHandlers.GRANT_POWERS.apply(buf, this);
+            case 1 ->
+                PacketHandlers.REVOKE_POWERS.apply(buf, this);
+            case 2 ->
+                PacketHandlers.REVOKE_ALL_POWERS.apply(buf, this);
+            default ->
+                PowerHolderComponent.super.applySyncPacket(buf);
         }
 
     }

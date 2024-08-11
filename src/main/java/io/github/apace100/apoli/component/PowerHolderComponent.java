@@ -6,6 +6,7 @@ import io.github.apace100.apoli.integration.ModifyValueCallback;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowerS2CPacket;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowersInBulkS2CPacket;
 import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.AttributeModifyTransferPowerType;
 import io.github.apace100.apoli.power.type.PowerType;
@@ -17,6 +18,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -24,10 +27,13 @@ import org.jetbrains.annotations.Nullable;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.ComponentRegistry;
 import org.ladysnake.cca.api.v3.component.sync.AutoSyncedComponent;
+import org.ladysnake.cca.api.v3.component.sync.ComponentPacketWriter;
 import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -62,7 +68,11 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     void sync();
 
     static void sync(Entity entity) {
-        KEY.sync(entity);
+
+        if (KEY.isProvidedBy(entity)) {
+            KEY.sync(entity);
+        }
+
     }
 
     static void syncPower(Entity entity, Power power) {
@@ -237,6 +247,105 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
         else {
             return baseValue;
+        }
+
+    }
+
+    final class PacketHandlers {
+
+        public static final PacketHandler<Map<Identifier, List<Power>>> GRANT_POWERS = new PacketHandler.Impl<>(
+            powersBySource -> (buf, recipient) -> buf.writeMap(powersBySource,
+                PacketByteBuf::writeIdentifier,
+                (vbuf, powers) -> vbuf.writeCollection(powers, (ebuf, power) -> ebuf.writeIdentifier(power.getId()))
+            ),
+            (buf, component) -> {
+
+                var powersBySource = buf.readMap(
+                    PacketByteBuf::readIdentifier,
+                    vbuf -> vbuf.readCollection(ArrayList::new, ebuf -> PowerManager.get(ebuf.readIdentifier())));
+
+                powersBySource.forEach((source, powers) -> powers.forEach(power -> component.addPower(power, source)));
+
+            },
+            0
+        );
+
+        public static final PacketHandler<Map<Identifier, List<Power>>> REVOKE_POWERS = new PacketHandler.Impl<>(
+            GRANT_POWERS::write,
+            (buf, component) -> {
+
+                var powersBySource = buf.readMap(
+                    PacketByteBuf::readIdentifier,
+                    vbuf -> vbuf.readCollection(ArrayList::new, ebuf -> PowerManager.get(ebuf.readIdentifier())));
+
+                powersBySource.forEach((source, powers) -> powers.forEach(power -> component.removePower(power, source)));
+
+            },
+            1
+        );
+
+        public static final PacketHandler<List<Identifier>> REVOKE_ALL_POWERS = new PacketHandler.Impl<>(
+            sources -> (buf, recipient) ->
+                buf.writeCollection(sources, PacketByteBuf::writeIdentifier),
+            (buf, component) -> buf
+                .readCollection(ArrayList::new, PacketByteBuf::readIdentifier)
+                .forEach(component::removeAllPowersFromSource),
+            2
+        );
+
+    }
+
+    abstract sealed class PacketHandler<T> permits PacketHandler.Impl {
+
+        public abstract ComponentPacketWriter write(T type);
+
+        public abstract void apply(RegistryByteBuf buf, PowerHolderComponent component);
+
+        public abstract int getId();
+
+        public final void sync(Entity powerHolder, T type) {
+
+            if (KEY.isProvidedBy(powerHolder)) {
+
+                KEY.sync(powerHolder, (buf, recipient) -> {
+
+                    buf.writeVarInt(this.getId());
+                    this.write(type).writeSyncPacket(buf, recipient);
+
+                });
+
+            }
+
+        }
+
+        public static final class Impl<T> extends PacketHandler<T> {
+
+            final Function<T, ComponentPacketWriter> writer;
+            final BiConsumer<RegistryByteBuf, PowerHolderComponent> applier;
+
+            final int id;
+
+            private Impl(Function<T, ComponentPacketWriter> writer, BiConsumer<RegistryByteBuf, PowerHolderComponent> applier, int id) {
+                this.writer = writer;
+                this.applier = applier;
+                this.id = id;
+            }
+
+            @Override
+            public ComponentPacketWriter write(T type) {
+                return writer.apply(type);
+            }
+
+            @Override
+            public void apply(RegistryByteBuf buf, PowerHolderComponent component) {
+                applier.accept(buf, component);
+            }
+
+            @Override
+            public int getId() {
+                return id;
+            }
+
         }
 
     }

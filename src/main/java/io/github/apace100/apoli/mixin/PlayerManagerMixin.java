@@ -18,7 +18,6 @@ import net.minecraft.world.TeleportTarget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = PlayerManager.class, priority = 800)
@@ -28,11 +27,6 @@ public abstract class PlayerManagerMixin {
 	private boolean apoli$preventEndExitSpawnpointResetting(ServerPlayerEntity newPlayer, ServerPlayerEntity oldPlayer) {
 		return !(oldPlayer instanceof EndRespawningEntity endRespawningEntity)
 			|| endRespawningEntity.apoli$hasRealRespawnPoint();
-	}
-
-	@Inject(method = "remove", at = @At("HEAD"))
-	private void apoli$invokeOnRemovedPowerCallbackOnRemoved(ServerPlayerEntity player, CallbackInfo ci) {
-		PowerHolderComponent.KEY.get(player).getPowerTypes().forEach(PowerType::onRemoved);
 	}
 
 	@WrapOperation(method = "respawnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;getRespawnTarget(ZLnet/minecraft/world/TeleportTarget$PostDimensionTransition;)Lnet/minecraft/world/TeleportTarget;"))

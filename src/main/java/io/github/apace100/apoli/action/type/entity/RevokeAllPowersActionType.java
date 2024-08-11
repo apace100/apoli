@@ -8,6 +8,8 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 
+import java.util.List;
+
 public class RevokeAllPowersActionType {
 
     public static void action(Entity entity, Identifier source) {
@@ -17,7 +19,7 @@ public class RevokeAllPowersActionType {
             .orElse(0);
 
         if (revokedPowers > 0) {
-            PowerHolderComponent.sync(entity);
+            PowerHolderComponent.PacketHandlers.REVOKE_ALL_POWERS.sync(entity, List.of(source));
         }
 
     }
