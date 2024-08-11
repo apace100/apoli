@@ -48,12 +48,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T extends PowerType> T getPowerType(Power power) {
-        if(powers.containsKey(power)) {
-            return (T)powers.get(power);
-        }
-        return null;
+    public PowerType getPowerType(Power power) {
+        return powers.get(power);
     }
 
     @Override
@@ -61,6 +57,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         return new LinkedList<>(powers.values());
     }
 
+    @Override
     public Set<Power> getPowers(boolean includeSubPowers) {
         return powers.keySet()
             .stream()
@@ -74,24 +71,26 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T extends PowerType> List<T> getPowerTypes(Class<T> powerClass, boolean includeInactive) {
-        List<T> list = new LinkedList<>();
-        for(PowerType powerType : powers.values()) {
-            if(powerClass.isAssignableFrom(powerType.getClass()) && (includeInactive || powerType.isActive())) {
-                list.add((T) powerType);
-            }
-        }
-        return list;
+        return powers.values()
+            .stream()
+            .filter(type -> powerClass.isAssignableFrom(type.getClass()))
+            .map(powerClass::cast)
+            .filter(type -> includeInactive || type.isActive())
+            .collect(Collectors.toCollection(LinkedList::new));
     }
 
     @Override
     public List<Identifier> getSources(Power power) {
-        if(powerSources.containsKey(power)) {
+
+        if (powerSources.containsKey(power)) {
             return List.copyOf(powerSources.get(power));
-        } else {
+        }
+
+        else {
             return List.of();
         }
+
     }
 
     @Override
@@ -164,13 +163,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public List<Power> getPowersFromSource(Identifier source) {
-        List<Power> powers = new LinkedList<>();
-        for(Map.Entry<Power, List<Identifier>> sourceEntry : powerSources.entrySet()) {
-            if(sourceEntry.getValue().contains(source)) {
-                powers.add(sourceEntry.getKey());
-            }
-        }
-        return powers;
+        return powerSources.entrySet()
+            .stream()
+            .filter(e -> e.getValue().contains(source))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toCollection(LinkedList::new));
     }
 
     @Override
@@ -241,7 +238,11 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void serverTick() {
-        this.getPowerTypes(PowerType.class, true).stream().filter(p -> p.shouldTick() && (p.shouldTickWhenInactive() || p.isActive())).forEach(PowerType::tick);
+        this.getPowerTypes(PowerType.class, true)
+            .stream()
+            .filter(PowerType::shouldTick)
+            .filter(type -> type.shouldTickWhenInactive() || type.isActive())
+            .forEach(PowerType::tick);
     }
 
     @Override

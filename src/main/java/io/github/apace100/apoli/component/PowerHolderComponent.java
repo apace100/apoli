@@ -47,7 +47,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     boolean hasPower(Power power, Identifier source);
 
-    <T extends PowerType> T getPowerType(Power power);
+    PowerType getPowerType(Power power);
 
     List<PowerType> getPowerTypes();
 
