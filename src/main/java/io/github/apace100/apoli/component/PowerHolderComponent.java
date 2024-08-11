@@ -29,6 +29,7 @@ import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public interface PowerHolderComponent extends AutoSyncedComponent, ServerTickingComponent {
 
@@ -222,7 +223,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 .filter(powerFilter)
                 .peek(powerAction)
                 .flatMap(p -> p.getModifiers().stream())
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
 
             component.getPowerTypes(AttributeModifyTransferPowerType.class)
                 .stream()
