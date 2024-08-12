@@ -3,6 +3,7 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Cancellable;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
@@ -35,7 +36,6 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,11 +47,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity implements ScreenHandlerListener, EndRespawningEntity, CustomToastViewer {
@@ -76,9 +72,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     private boolean spawnForced;
 
     @Shadow
-    public abstract void setSpawnPoint(RegistryKey<World> dimension, @Nullable BlockPos pos, float angle, boolean forced, boolean sendMessage);
-
-    @Shadow
     public abstract void sendMessage(Text message);
 
     @Shadow
@@ -96,28 +89,29 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
         super(world, pos, yaw, gameProfile);
     }
 
-    @Inject(method = "trySleep", at = @At(value = "INVOKE",target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"), cancellable = true)
-    public void preventSleep(BlockPos pos, CallbackInfoReturnable<Either<SleepFailureReason, Unit>> info) {
+    @WrapOperation(method = "trySleep", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;setSpawnPoint(Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/util/math/BlockPos;FZZ)V"))
+    private void apoli$preventSleep(ServerPlayerEntity serverPlayer, RegistryKey<World> dimension, BlockPos pos, float angle, boolean forced, boolean sendMessage, Operation<Void> original, @Cancellable CallbackInfoReturnable<Either<SleepFailureReason, Unit>> cir) {
 
-        LinkedList<PreventSleepPowerType> preventSleepPowers = PowerHolderComponent.getPowerTypes(this, PreventSleepPowerType.class)
+        List<PreventSleepPowerType> preventSleepPowers = PowerHolderComponent.getPowerTypes(this, PreventSleepPowerType.class)
             .stream()
-            .filter(p -> p.doesPrevent(this.getWorld(), pos))
-            .collect(Collectors.toCollection(LinkedList::new));
+            .filter(type -> type.doesPrevent(this.getWorld(), pos))
+            .sorted(Comparator.comparing(PreventSleepPowerType::getPriority))
+            .toList();
 
         if (preventSleepPowers.isEmpty()) {
-            return;
+            original.call(serverPlayer, dimension, pos, angle, forced, sendMessage);
         }
 
-        preventSleepPowers.sort(Collections.reverseOrder(PreventSleepPowerType::compareTo));
-        PreventSleepPowerType preventSleepPower = preventSleepPowers
-            .getFirst();
+        else {
 
-        if (preventSleepPowers.stream().allMatch(PreventSleepPowerType::doesAllowSpawnPoint)) {
-            this.setSpawnPoint(this.getWorld().getRegistryKey(), pos, this.getYaw(), false, true);
+            if (preventSleepPowers.stream().allMatch(PreventSleepPowerType::doesAllowSpawnPoint)) {
+                original.call(serverPlayer, dimension, pos, angle, forced, sendMessage);
+            }
+
+            cir.setReturnValue(Either.left(SleepFailureReason.OTHER_PROBLEM));
+            this.sendMessage(preventSleepPowers.getLast().getMessage(), true);
+
         }
-
-        info.setReturnValue(Either.left(SleepFailureReason.OTHER_PROBLEM));
-        this.sendMessage(preventSleepPower.getMessage(), true);
 
     }
 
