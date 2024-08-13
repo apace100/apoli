@@ -106,13 +106,9 @@ public class PowerCommand {
 
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (!component.addPower(power, powerSource)) {
-				continue;
+			if (PowerHolderComponent.grantPower(target, power, powerSource, true)) {
+				processedTargets.add(target);
 			}
-
-			PowerHolderComponent.PacketHandlers.GRANT_POWERS.sync(target, Map.of(powerSource, List.of(power)));
-			processedTargets.add(target);
 
 		}
 
@@ -165,13 +161,9 @@ public class PowerCommand {
 
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (!component.removePower(power, powerSource)) {
-				continue;
+			if (PowerHolderComponent.revokePower(target, power, powerSource, true)) {
+				processedTargets.add(target);
 			}
-
-			PowerHolderComponent.PacketHandlers.REVOKE_POWERS.sync(target, Map.of(powerSource, List.of(power)));
-			processedTargets.add(target);
 
 		}
 
@@ -224,17 +216,12 @@ public class PowerCommand {
 
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			int revokedPowersFromSource = component.removeAllPowersFromSource(powerSource);
-
-			if (revokedPowersFromSource == 0) {
-				continue;
-			}
-
-			PowerHolderComponent.PacketHandlers.REVOKE_ALL_POWERS.sync(target, List.of(powerSource));
-			processedTargets.add(target);
-
+			int revokedPowersFromSource = PowerHolderComponent.revokeAllPowersFromSource(target, powerSource, true);
 			revokedPowers += revokedPowersFromSource;
+
+			if (revokedPowersFromSource > 0) {
+				processedTargets.add(target);
+			}
 
 		}
 
@@ -383,21 +370,12 @@ public class PowerCommand {
 		Power power = PowerTypeArgumentType.getPower(context, "power");
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			List<Identifier> powerSources = component.getSources(power);
+			List<Identifier> powerSources = PowerHolderComponent.KEY.get(target).getSources(power);
+			int revokedPowers = PowerHolderComponent.revokeAllPowersFromSource(target, powerSources, true);
 
-			if (powerSources.isEmpty()) {
-				continue;
+			if (revokedPowers > 0) {
+				processedTargets.add(target);
 			}
-
-			Map<Identifier, List<Power>> powersBySource = new HashMap<>();
-			for (Identifier powerSource : powerSources) {
-				powersBySource.computeIfAbsent(powerSource, k -> new LinkedList<>()).add(power);
-				component.removePower(power, powerSource);
-			}
-
-			PowerHolderComponent.PacketHandlers.REVOKE_POWERS.sync(target, powersBySource);
-			processedTargets.add(target);
 
 		}
 
@@ -447,7 +425,6 @@ public class PowerCommand {
 		}
 
 		int clearedPowers = 0;
-
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);

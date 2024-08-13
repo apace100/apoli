@@ -75,6 +75,90 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     }
 
+    static boolean grantPower(@NotNull Entity entity, Power power, Identifier source, boolean sync) {
+        return grantPower(entity, Map.of(source, List.of(power)), sync);
+    }
+
+    static boolean grantPower(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
+
+        if (KEY.isProvidedBy(entity)) {
+
+            PowerHolderComponent component = KEY.get(entity);
+            boolean granted = powersBySource.entrySet()
+                .stream()
+                .flatMap(e -> e.getValue().stream().map(power -> component.addPower(power, e.getKey())))
+                .reduce(false, Boolean::logicalOr);
+
+            if (granted && sync && !entity.getWorld().isClient) {
+                PacketHandlers.GRANT_POWERS.sync(entity, powersBySource);
+            }
+
+            return granted;
+
+        }
+
+        else {
+            return false;
+        }
+
+    }
+
+    static boolean revokePower(@NotNull Entity entity, Power power, Identifier source, boolean sync) {
+        return revokePower(entity, Map.of(source, List.of(power)), sync);
+    }
+
+    static boolean revokePower(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
+
+        if (KEY.isProvidedBy(entity)) {
+
+            PowerHolderComponent component = KEY.get(entity);
+            boolean revoked = powersBySource.entrySet()
+                .stream()
+                .flatMap(e -> e.getValue().stream().map(power -> component.removePower(power, e.getKey())))
+                .reduce(false, Boolean::logicalOr);
+
+            if (revoked && sync && !entity.getWorld().isClient) {
+                PacketHandlers.REVOKE_POWERS.sync(entity, powersBySource);
+            }
+
+            return revoked;
+
+        }
+
+        else {
+            return false;
+        }
+
+    }
+
+    static int revokeAllPowersFromSource(@NotNull Entity entity, Identifier source, boolean sync) {
+        return revokeAllPowersFromSource(entity, List.of(source), sync);
+    }
+
+    static int revokeAllPowersFromSource(@NotNull Entity entity, Collection<Identifier> sources, boolean sync) {
+
+        if (KEY.isProvidedBy(entity)) {
+
+            PowerHolderComponent component = KEY.get(entity);
+            int revokedPowers = sources
+                .stream()
+                .map(component::removeAllPowersFromSource)
+                .reduce(0, Integer::sum);
+
+            if (revokedPowers > 0 && sync && !entity.getWorld().isClient) {
+                PacketHandlers.REVOKE_ALL_POWERS.sync(entity, sources);
+            }
+
+            return revokedPowers;
+
+        }
+
+        else {
+            return 0;
+        }
+
+    }
+
     static void syncPower(Entity entity, Power power) {
 
         if (entity == null || entity.getWorld().isClient) {
@@ -253,7 +337,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     final class PacketHandlers {
 
-        public static final PacketHandler<Map<Identifier, List<Power>>> GRANT_POWERS = new PacketHandler.Impl<>(
+        public static final PacketHandler<Map<Identifier, Collection<Power>>> GRANT_POWERS = new PacketHandler.Impl<>(
             powersBySource -> (buf, recipient) -> buf.writeMap(powersBySource,
                 PacketByteBuf::writeIdentifier,
                 (vbuf, powers) -> vbuf.writeCollection(powers, (ebuf, power) -> ebuf.writeIdentifier(power.getId()))
@@ -270,7 +354,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             0
         );
 
-        public static final PacketHandler<Map<Identifier, List<Power>>> REVOKE_POWERS = new PacketHandler.Impl<>(
+        public static final PacketHandler<Map<Identifier, Collection<Power>>> REVOKE_POWERS = new PacketHandler.Impl<>(
             GRANT_POWERS::write,
             (buf, component) -> {
 
@@ -284,7 +368,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             1
         );
 
-        public static final PacketHandler<List<Identifier>> REVOKE_ALL_POWERS = new PacketHandler.Impl<>(
+        public static final PacketHandler<Collection<Identifier>> REVOKE_ALL_POWERS = new PacketHandler.Impl<>(
             sources -> (buf, recipient) ->
                 buf.writeCollection(sources, PacketByteBuf::writeIdentifier),
             (buf, component) -> buf

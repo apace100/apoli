@@ -16,15 +16,7 @@ import java.util.Map;
 public class RevokePowerActionType {
 
     public static void action(Entity entity, PowerReference power, Identifier source) {
-
-        boolean revoked = PowerHolderComponent.KEY.maybeGet(entity)
-            .map(component -> component.removePower(power, source))
-            .orElse(false);
-
-        if (revoked) {
-            PowerHolderComponent.PacketHandlers.REVOKE_POWERS.sync(entity, Map.of(source, List.of(power)));
-        }
-
+        PowerHolderComponent.revokePower(entity, power, source, true);
     }
 
     public static ActionTypeFactory<Entity> getFactory() {

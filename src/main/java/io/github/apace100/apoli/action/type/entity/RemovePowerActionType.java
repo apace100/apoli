@@ -9,30 +9,21 @@ import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 
+import java.util.Collection;
 import java.util.List;
 
 public class RemovePowerActionType {
 
     public static void action(Entity entity, PowerReference power) {
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        if (component == null) {
-            return;
-        }
+        List<Identifier> sources = PowerHolderComponent.KEY.maybeGet(entity)
+            .stream()
+            .map(component -> component.getSources(power))
+            .flatMap(Collection::stream)
+            .toList();
 
-        List<Identifier> sources = component.getSources(power);
-        int removedPowers = 0;
-
-        for (Identifier source : sources) {
-
-            if (component.removePower(power, source)) {
-                removedPowers++;
-            }
-
-        }
-
-        if (removedPowers > 0) {
-            component.sync();
+        if (!sources.isEmpty()) {
+            PowerHolderComponent.revokeAllPowersFromSource(entity, sources, true);
         }
 
     }

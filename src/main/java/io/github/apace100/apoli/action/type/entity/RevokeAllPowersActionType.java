@@ -13,15 +13,7 @@ import java.util.List;
 public class RevokeAllPowersActionType {
 
     public static void action(Entity entity, Identifier source) {
-
-        int revokedPowers = PowerHolderComponent.KEY.maybeGet(entity)
-            .map(component -> component.removeAllPowersFromSource(source))
-            .orElse(0);
-
-        if (revokedPowers > 0) {
-            PowerHolderComponent.PacketHandlers.REVOKE_ALL_POWERS.sync(entity, List.of(source));
-        }
-
+        PowerHolderComponent.revokeAllPowersFromSource(entity, source, true);
     }
 
     public static ActionTypeFactory<Entity> getFactory() {
