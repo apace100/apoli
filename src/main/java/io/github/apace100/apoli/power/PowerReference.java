@@ -19,13 +19,17 @@ public class PowerReference extends Power {
             .set("hidden", true));
     }
 
-    @Nullable
+    public static PowerReference of(String namespace, String path) {
+        return new PowerReference(Identifier.of(namespace, path));
+    }
+
+    public static PowerReference of(String str) {
+        return new PowerReference(Identifier.of(str));
+    }
+
     @Override
     public PowerTypeFactory<? extends PowerType>.Instance getFactoryInstance() {
-        Power power = this.getReference();
-        return power != null
-            ? power.getFactoryInstance()
-            : null;
+        return this.strictGetReference().getFactoryInstance();
     }
 
     @Nullable
@@ -54,9 +58,13 @@ public class PowerReference extends Power {
             .orElse(null);
     }
 
+    public Power strictGetReference() {
+        return PowerManager.get(this.getId());
+    }
+
     @Override
     public void validate() throws Exception {
-        PowerManager.get(this.getId());
+        this.strictGetReference();
     }
 
 }

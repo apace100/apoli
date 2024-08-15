@@ -99,7 +99,7 @@ public enum ModifierOperation implements IModifierOperation {
         .postProcessor(data -> {
 
             if (!data.isPresent("amount") && !data.isPresent("resource")) {
-                throw new IllegalStateException("Either 'amount' or 'resource' fields must be defined!");
+                throw new IllegalStateException("Either 'amount' or 'resource' field must be defined!");
             }
 
         });
@@ -135,28 +135,23 @@ public enum ModifierOperation implements IModifierOperation {
         Stream<Double> values = dataList.stream().map(data -> {
 
             Collection<Modifier> modifiers = data.getOrElseGet("modifier", ArrayList::new);
-            PowerReference power = data.get("resource");
+            double amount = data.getOrElseGet("amount", () -> {
 
-            Double amount = data.get("amount");
-            double value = 0;
-
-            if (amount != null) {
-                value = amount;
-            }
-
-            else if (power != null) {
-                switch (power.getType(entity)) {
+                PowerReference resource = data.get("resource");
+                Integer resourceValue = switch (resource.getType(entity)) {
                     case VariableIntPowerType varInt ->
-                        value = varInt.getValue();
+                        varInt.getValue();
                     case CooldownPowerType cooldown ->
-                        value = cooldown.getRemainingTicks();
-                    case null, default -> {
+                        cooldown.getRemainingTicks();
+                    case null, default ->
+                        0;
+                };
 
-                    }
-                }
-            }
+                return resourceValue.doubleValue();
 
-            return ModifierUtil.applyModifiers(entity, modifiers, value);
+            });
+
+            return ModifierUtil.applyModifiers(entity, modifiers, amount);
 
         });
 

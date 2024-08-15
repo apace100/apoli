@@ -9,13 +9,17 @@ import java.util.*;
 
 public class ModifierUtil {
 
-    public static Modifier createSimpleModifier(IModifierOperation operation, double value) {
-        return new Modifier(operation, operation.getSerializableData().instance().set("value", value));
+    /**
+     *  Use {@link Modifier#of(ModifierOperation, double)} instead.
+     */
+    @Deprecated(forRemoval = true)
+    public static Modifier createSimpleModifier(ModifierOperation operation, double amount) {
+        return Modifier.of(operation, amount);
     }
 
     public static Modifier fromAttributeModifier(EntityAttributeModifier attributeModifier) {
 
-        IModifierOperation operation = switch (attributeModifier.operation()) {
+        ModifierOperation operation = switch (attributeModifier.operation()) {
             case ADD_VALUE ->
                 ModifierOperation.ADD_BASE_EARLY;
             case ADD_MULTIPLIED_BASE ->
@@ -24,20 +28,7 @@ public class ModifierUtil {
                 ModifierOperation.MULTIPLY_TOTAL_MULTIPLICATIVE;
         };
 
-        return createSimpleModifier(operation, attributeModifier.value());
-
-    }
-
-    public static Map<IModifierOperation, List<SerializableData.Instance>> sortModifiers(Collection<Modifier> modifiers) {
-
-        Map<IModifierOperation, List<SerializableData.Instance>> buckets = new HashMap<>();
-        for(Modifier modifier : modifiers) {
-            buckets
-                .computeIfAbsent(modifier.getOperation(), op -> new LinkedList<>())
-                .add(modifier.getData());
-        }
-
-        return buckets;
+        return Modifier.of(operation, attributeModifier.value());
 
     }
 
@@ -45,7 +36,18 @@ public class ModifierUtil {
         return applyModifiers(entity, sortModifiers(modifiers), baseValue);
     }
 
-    public static double applyModifiers(Entity entity, Map<IModifierOperation, List<SerializableData.Instance>> modifiers, double baseValue) {
+    private static Map<IModifierOperation, List<SerializableData.Instance>> sortModifiers(Collection<Modifier> modifiers) {
+
+        Map<IModifierOperation, List<SerializableData.Instance>> buckets = new LinkedHashMap<>();
+        modifiers.forEach(mod -> buckets
+            .computeIfAbsent(mod.getOperation(), op -> new LinkedList<>())
+            .add(mod.getData()));
+
+        return buckets;
+
+    }
+
+    private static double applyModifiers(Entity entity, Map<IModifierOperation, List<SerializableData.Instance>> modifiers, double baseValue) {
 
         final AtomicDouble currentBase = new AtomicDouble(baseValue);
         final AtomicDouble currentValue = new AtomicDouble(baseValue);
@@ -69,4 +71,5 @@ public class ModifierUtil {
         return currentValue.get();
 
     }
+
 }

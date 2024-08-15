@@ -182,7 +182,7 @@ public class Power implements Validatable {
     }
 
     public PowerType create(@Nullable LivingEntity entity) {
-        return factoryInstance.apply(this, entity);
+        return this.getFactoryInstance().apply(this, entity);
     }
 
     public boolean isHidden() {
