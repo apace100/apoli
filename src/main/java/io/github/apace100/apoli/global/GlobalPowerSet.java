@@ -76,11 +76,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
             MultiplePower multiplePower = getMultiple(power);
             if (multiplePower != null) {
                 //  Add the sub-powers of the multiple power to the result list
-                multiplePower.getSubPowers()
-                    .stream()
-                    .filter(PowerManager::contains)
-                    .map(PowerManager::get)
-                    .forEach(result::add);
+                result.addAll(multiplePower.getSubPowers());
             }
 
         }
@@ -96,8 +92,8 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
             return multiplePowerType;
         }
 
-        else if (power instanceof PowerReference powerTypeRef && powerTypeRef.getReference() instanceof MultiplePower multiplePowerType) {
-            return multiplePowerType;
+        else if (power instanceof PowerReference powerRef && powerRef.getReference() instanceof MultiplePower multiplePower) {
+            return multiplePower;
         }
 
         else {
@@ -181,7 +177,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
             .filter(pt -> !PowerManager.contains(pt.getId()))
             .collect(Collectors.toList());
 
-        invalid.forEach(powers::remove);
+        powers.removeIf(invalid::contains);
         invalid.removeIf(pt -> PowerManager.isDisabled(pt.getId()));
 
         return invalid;

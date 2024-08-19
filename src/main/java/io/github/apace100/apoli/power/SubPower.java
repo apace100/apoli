@@ -9,17 +9,21 @@ public class SubPower extends Power {
     private final Identifier superPowerId;
     private final String subName;
 
-    public SubPower(Identifier superPowerId, String subName, Power basePower) {
-        super(basePower.getFactoryInstance(), basePower.getData());
+    protected SubPower(Identifier superPowerId, String subName, Power basePower) {
+        super(basePower.getFactoryInstance(), basePower.data);
         this.superPowerId = superPowerId;
         this.subName = subName;
     }
 
     @Override
+    public PowerPayloadType payloadType() {
+        return PowerPayloadType.SUB_POWER;
+    }
+
+    @Override
     public void send(RegistryByteBuf buf) {
 
-        buf.writeEnumConstant(PowerPayloadType.SUB_POWER);
-        super.sendInternal(buf);
+        super.send(buf);
 
         buf.writeIdentifier(this.getSuperPowerId());
         buf.writeString(this.getSubName());

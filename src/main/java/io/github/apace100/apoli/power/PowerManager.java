@@ -21,6 +21,7 @@ import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -38,6 +39,7 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
 import org.ladysnake.cca.api.v3.component.ComponentProvider;
 
@@ -45,7 +47,6 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
@@ -62,6 +63,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         PowerManager::getResult,
         Power::getId
     );
+
     public static final PacketCodec<ByteBuf, Power> DISPATCH_PACKET_CODEC = Identifier.PACKET_CODEC.xmap(
         PowerManager::get,
         Power::getId
@@ -266,17 +268,38 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     private void readSuperOrNormalPower(String packName, Identifier powerId, JsonObject powerJson) {
 
         Power power = Power.fromJson(powerId, powerJson);
-        if (power instanceof MultiplePower multiplePower) {
+        if (power.isMultiple()) {
 
-            Set<SubPower> subPowers = new HashSet<>(multiplePower.getSubPowersInternal());
-            subPowers.removeIf(subPower -> !this.validateSubPower(packName, subPower, powerJson.getAsJsonObject(subPower.getSubName())));
+            Set<SubPower> subPowers = new ObjectOpenHashSet<>();
+            powerJson.asMap().forEach((key, jsonElement) -> {
 
-            multiplePower = new MultiplePower(power, subPowers.stream().map(Power::getId).collect(Collectors.toSet()));
+                if (shouldIgnoreField(key)) {
+                    return;
+                }
 
-            if (!this.validatePower(packName, multiplePower, powerJson) && isDisabled(powerId)) {
-                multiplePower.getSubPowers().forEach(PowerManager::disable);
-                remove(powerId);
-            }
+                try {
+
+                    if (!(jsonElement instanceof JsonObject subPowerJson)) {
+                        throw new JsonSyntaxException("Expected a JSON object");
+                    }
+
+                    Identifier subPowerId = Identifier.of(powerId + "_" + key);
+                    SubPower subPower = new SubPower(powerId, key, Power.fromJson(subPowerId, subPowerJson));
+
+                    if (this.validateSubPower(packName, subPower, subPowerJson)) {
+                        subPowers.add(subPower);
+                    }
+
+                }
+
+                catch (Exception e) {
+                    Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power \"{}\": {}", key, powerId, e.getMessage());
+                }
+
+            });
+
+            MultiplePower multiplePower = new MultiplePower(power, subPowers);
+            this.validatePower(packName, multiplePower, powerJson);
 
         }
 
@@ -288,15 +311,17 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     private boolean validateSubPower(String packName, SubPower subPower, JsonObject subPowerJson) {
 
-        Identifier subPowerId = subPower.getId();
-        if (!(subPower.getData().get(ResourceConditions.CONDITIONS_KEY) instanceof JsonObject resourceConditionJson) || ResourceConditionsImpl.applyResourceConditions(resourceConditionJson, directoryName, subPowerId, Calio.getDynamicRegistries().orElse(null))) {
-            this.validatePower(packName, subPower, subPowerJson);
-            return true;
+        if (!ResourceConditionsImpl.applyResourceConditions(subPowerJson, directoryName, subPower.getId(), Calio.getDynamicRegistries().orElse(null))) {
+            this.onReject(packName, subPower.getId());
+            return false;
+        }
+
+        else if (subPower.isMultiple()) {
+            throw new IllegalStateException("Using the 'multiple' power type in sub-powers is not allowed!");
         }
 
         else {
-            this.onReject(packName, subPowerId);
-            return false;
+            return this.validatePower(packName, subPower, subPowerJson);
         }
 
     }
@@ -305,7 +330,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
         Identifier powerId = power.getId();
 
-        int currLoadingPriority = power.getData().getInt(Power.LOADING_PRIORITY_KEY);
+        int currLoadingPriority = JsonHelper.getInt(powerJson, "loading_priority", 0);
         int prevLoadingPriority = LOADING_PRIORITIES.getOrDefault(powerId, 0);
 
         if (!contains(powerId)) {
@@ -372,7 +397,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
         Power oldPower = remove(id);
         if (oldPower instanceof MultiplePower oldMultiplePower) {
-            oldMultiplePower.getSubPowers().forEach(PowerManager::remove);
+            oldMultiplePower.getSubPowers().forEach(subPower -> remove(subPower.getId()));
         }
 
         PowerOverrideCallback.EVENT.invoker().onPowerOverride(id);

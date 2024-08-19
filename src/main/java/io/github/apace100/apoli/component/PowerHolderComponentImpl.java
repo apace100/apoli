@@ -1,10 +1,7 @@
 package io.github.apace100.apoli.component;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.MultiplePower;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerManager;
-import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
@@ -128,12 +125,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
         }
 
-        if (power instanceof MultiplePower multiplePowerType) {
-            multiplePowerType.getSubPowers()
-                .stream()
-                .filter(PowerManager::contains)
-                .map(PowerManager::get)
-                .forEach(pt -> this.removePower(pt, source, false));
+        if (power instanceof MultiplePower multiplePower) {
+            multiplePower.getSubPowers().forEach(subPower -> this.removePower(subPower, source, false));
         }
 
         if (!root) {
@@ -198,12 +191,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
         powersToAdd.put(power, powerType);
 
-        if (power instanceof MultiplePower multiplePowerType) {
-            multiplePowerType.getSubPowers()
-                .stream()
-                .filter(PowerManager::contains)
-                .map(PowerManager::get)
-                .forEach(pt -> this.addPower(pt, source, false));
+        if (power instanceof MultiplePower multiplePower) {
+            multiplePower.getSubPowers().forEach(subPower -> this.addPower(subPower, source, false));
         }
 
         if (!root) {
@@ -249,9 +238,9 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         for (int i = 0; i < powersTag.size(); i++) {
 
             NbtCompound powerTag = powersTag.getCompound(i);
-            Identifier powerTypeId = Identifier.tryParse(powerTag.getString("Type"));
+            Identifier powerId = Identifier.tryParse(powerTag.getString("Type"));
 
-            if (powerTypeId == null || PowerManager.isDisabled(powerTypeId)) {
+            if (powerId == null || PowerManager.isDisabled(powerId)) {
                 continue;
             }
 
@@ -263,13 +252,13 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 .collect(Collectors.toCollection(LinkedList::new));
 
             if (sources.isEmpty()) {
-                Apoli.LOGGER.warn("Power \"{}\" with missing sources found on entity {}! Skipping...", powerTypeId, owner.getName().getString());
+                Apoli.LOGGER.warn("Power \"{}\" with missing sources found on entity {}! Skipping...", powerId, owner.getName().getString());
                 return;
             }
 
             try {
 
-                Power power = PowerManager.get(powerTypeId);
+                Power power = PowerManager.get(powerId);
                 PowerType powerType = power.create(owner);
 
                 try {
@@ -285,7 +274,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 catch (ClassCastException e) {
                     //  Occurs when the power was overridden by a data pack since last world load
                     //  where the overridden power now uses different data classes
-                    Apoli.LOGGER.warn("Data type of power \"{}\" changed, skipping data for that power on entity {}", powerTypeId, owner.getName().getString());
+                    Apoli.LOGGER.warn("Data type of power \"{}\" changed, skipping data for that power on entity {}", powerId, owner.getName().getString());
                 }
 
                 powerSources.put(power, sources);
@@ -296,31 +285,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             catch (IllegalArgumentException e) {
                 //  Occurs when the power is either not registered in the power registry,
                 //  or the power no longer exists
-                Apoli.LOGGER.warn("Unregistered power \"{}\" found on entity {}, skipping...", powerTypeId, owner.getName().getString());
-            }
-
-        }
-
-        for (Power power : powers.keySet()) {
-
-            if (!(power instanceof MultiplePower multiplePower)) {
-                continue;
-            }
-
-            for (Identifier subPowerId : multiplePower.getSubPowers()) {
-
-                try {
-                    PowerManager.get(subPowerId);
-                }
-
-                catch (Exception ignored) {
-
-                    if (!PowerManager.isDisabled(subPowerId)) {
-                        Apoli.LOGGER.warn("Multiple power \"{}\" (read from NBT data) contained unregistered sub-power: \"{}\"", multiplePower.getId(), subPowerId);
-                    }
-
-                }
-
+                Apoli.LOGGER.warn("Unregistered power \"{}\" found on entity {}, skipping...", powerId, owner.getName().getString());
             }
 
         }

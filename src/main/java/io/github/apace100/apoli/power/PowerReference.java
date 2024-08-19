@@ -41,16 +41,6 @@ public class PowerReference extends Power {
             : null;
     }
 
-    @Override
-    public boolean isMultiple() {
-        return false;
-    }
-
-    @Override
-    public boolean isSubPower() {
-        return false;
-    }
-
     @Nullable
     public Power getReference() {
         return PowerManager
