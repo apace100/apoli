@@ -25,6 +25,8 @@ import net.minecraft.util.math.random.Random;
 
 import java.util.function.Consumer;
 
+//  TODO: Remove this power type in favor of using its action type counterpart -eggohito
+@Deprecated
 public class FireProjectilePowerType extends ActiveCooldownPowerType {
 
     private final EntityType<?> entityType;
@@ -144,23 +146,25 @@ public class FireProjectilePowerType extends ActiveCooldownPowerType {
 
     private void fireProjectile() {
 
-        if (entityType == null || entity.getWorld().isClient) return;
+        if (entityType == null || !(entity.getWorld() instanceof ServerWorld serverWorld)) {
+            return;
+        }
 
-        ServerWorld serverWorld = (ServerWorld) entity.getWorld();
-        float yaw = entity.getYaw();
+        Random random = serverWorld.getRandom();
+
+        Vec3d velocity = entity.getVelocity();
+        Vec3d verticalOffset = entity.getPos().add(0, entity.getEyeHeight(entity.getPose()), 0);
+
         float pitch = entity.getPitch();
+        float yaw = entity.getYaw();
 
         Entity entityToSpawn = MiscUtil
-            .getEntityWithPassengers(serverWorld, entityType, tag, entity.getPos().add(0, entity.getEyeHeight(entity.getPose()), 0), yaw, pitch)
+            .getEntityWithPassengers(serverWorld, entityType, tag, verticalOffset, yaw, pitch)
             .orElse(null);
 
         if (entityToSpawn == null) {
             return;
         }
-
-        Vec3d rotationVector = entity.getRotationVector();
-        Vec3d velocity = entity.getVelocity();
-        Random random = serverWorld.getRandom();
 
         if (entityToSpawn instanceof ProjectileEntity projectileToSpawn) {
 
@@ -175,24 +179,24 @@ public class FireProjectilePowerType extends ActiveCooldownPowerType {
 
         else {
 
-            float  f = 0.017453292F;
-            double g = 0.007499999832361937D;
+            float  j = 0.017453292F;
+            double k = 0.007499999832361937D;
 
-            float h = -MathHelper.sin(yaw * f) * MathHelper.cos(pitch * f);
-            float i = -MathHelper.sin(pitch * f);
-            float j =  MathHelper.cos(yaw * f) * MathHelper.cos(pitch * f);
+            float l = -MathHelper.sin(yaw * j) * MathHelper.cos(pitch * j);
+            float m = -MathHelper.sin(pitch * j);
+            float n =  MathHelper.cos(yaw * j) * MathHelper.cos(pitch * j);
 
-            Vec3d vec3d = new Vec3d(h, i, j)
+            Vec3d velocityToApply = new Vec3d(l, m, n)
                 .normalize()
-                .add(random.nextGaussian() * g * divergence, random.nextGaussian() * g * divergence, random.nextGaussian() * g * divergence)
+                .add(random.nextGaussian() * k * divergence, random.nextGaussian() * k * divergence, random.nextGaussian() * k * divergence)
                 .multiply(speed);
 
-            entityToSpawn.setVelocity(vec3d);
+            entityToSpawn.setVelocity(velocityToApply);
             entityToSpawn.addVelocity(velocity.x, entity.isOnGround() ? 0.0D : velocity.y, velocity.z);
 
         }
 
-        if (tag.isEmpty()) {
+        if (!tag.isEmpty()) {
 
             NbtCompound mergedTag = entityToSpawn.writeNbt(new NbtCompound());
             mergedTag.copyFrom(tag);

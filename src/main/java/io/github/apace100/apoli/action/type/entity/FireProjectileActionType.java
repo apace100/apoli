@@ -49,15 +49,12 @@ public class FireProjectileActionType {
 
             if (entityToSpawn instanceof ProjectileEntity projectileToSpawn) {
 
-                projectileToSpawn.setOwner(entity);
-
                 if (projectileToSpawn instanceof ExplosiveProjectileEntity explosiveProjectileToSpawn) {
                     explosiveProjectileToSpawn.accelerationPower = speed;
                 }
 
-                else {
-                    projectileToSpawn.setVelocity(entity, pitch, yaw, 0F, speed, divergence);
-                }
+                projectileToSpawn.setOwner(entity);
+                projectileToSpawn.setVelocity(entity, pitch, yaw, 0F, speed, divergence);
 
             }
 
@@ -70,12 +67,12 @@ public class FireProjectileActionType {
                 float m = -MathHelper.sin(pitch * j);
                 float n =  MathHelper.cos(yaw * j) * MathHelper.cos(pitch * j);
 
-                Vec3d entityToSpawnVelocity = new Vec3d(l, m, n)
+                Vec3d velocityToApply = new Vec3d(l, m, n)
                     .normalize()
                     .add(random.nextGaussian() * k * divergence, random.nextGaussian() * k * divergence, random.nextGaussian() * k * divergence)
                     .multiply(speed);
 
-                entityToSpawn.setVelocity(entityToSpawnVelocity);
+                entityToSpawn.setVelocity(velocityToApply);
                 entityToSpawn.addVelocity(velocity.x, entity.isOnGround() ? 0.0D : velocity.y, velocity.z);
 
             }
