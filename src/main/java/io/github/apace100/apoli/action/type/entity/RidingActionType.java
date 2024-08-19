@@ -48,7 +48,7 @@ public class RidingActionType {
 
     public static ActionTypeFactory<Entity> getFactory() {
         return new ActionTypeFactory<>(
-            Apoli.identifier("passenger_action"),
+            Apoli.identifier("riding_action"),
             new SerializableData()
                 .add("action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null)

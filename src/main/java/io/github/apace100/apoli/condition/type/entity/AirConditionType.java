@@ -16,7 +16,7 @@ public class AirConditionType {
 
     public static ConditionTypeFactory<Entity> getFactory() {
         return new ConditionTypeFactory<>(
-            Apoli.identifier("food_level"),
+            Apoli.identifier("air"),
             new SerializableData()
                 .add("comparison", ApoliDataTypes.COMPARISON)
                 .add("compare_to", SerializableDataTypes.INT),
