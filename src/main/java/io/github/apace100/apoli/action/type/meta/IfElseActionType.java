@@ -27,7 +27,8 @@ public class IfElseActionType {
     }
 
     public static <T, U> ActionTypeFactory<T> getFactory(SerializableDataType<ActionTypeFactory<T>.Instance> actionDataType, SerializableDataType<ConditionTypeFactory<U>.Instance> conditionDataType, Function<T, U> actionToConditionTypeFunction) {
-        return new ActionTypeFactory<>(Apoli.identifier("if_else"),
+        return new ActionTypeFactory<>(
+            Apoli.identifier("if_else"),
             new SerializableData()
                 .add("condition", conditionDataType)
                 .add("if_action", actionDataType)
@@ -35,7 +36,7 @@ public class IfElseActionType {
             (data, t) -> action(t,
                 data.get("condition"),
                 data.get("if_action"),
-                data.get("else_action"),
+                data.getOrElse("else_action", _t -> {}),
                 actionToConditionTypeFunction
             )
         );
