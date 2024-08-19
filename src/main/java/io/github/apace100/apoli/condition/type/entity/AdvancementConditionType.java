@@ -5,9 +5,9 @@ import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.mixin.ClientAdvancementManagerAccessor;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.advancement.AdvancementProgress;
+import net.minecraft.client.network.ClientAdvancementManager;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -45,8 +45,8 @@ public class AdvancementConditionType {
 
         else if (player instanceof ClientPlayerEntity clientPlayer && clientPlayer.networkHandler != null) {
 
-            AdvancementEntry advancement = clientPlayer.networkHandler.getAdvancementHandler().get(advancementId);
-            Map<Advancement, AdvancementProgress> progresses = ((ClientAdvancementManagerAccessor) clientPlayer.networkHandler.getAdvancementHandler()).getAdvancementProgresses();
+            ClientAdvancementManager advancementManager = clientPlayer.networkHandler.getAdvancementHandler();
+            AdvancementEntry advancement = advancementManager.get(advancementId);
 
             if (advancement == null) {
                 //  We don't want to print an error here if the advancement does not exist,
@@ -54,10 +54,11 @@ public class AdvancementConditionType {
                 return false;
             }
 
-            else {
-                return progresses.containsKey(advancement.value())
-                    && progresses.get(advancement.value()).isDone();
-            }
+            Map<AdvancementEntry, AdvancementProgress> progresses = ((ClientAdvancementManagerAccessor) advancementManager).getAdvancementProgresses();
+            AdvancementProgress progress = progresses.get(advancement);
+
+            return progress != null
+                && progress.isDone();
 
         }
 
