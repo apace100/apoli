@@ -4,9 +4,9 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.OverlaySpriteHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.PostLoadTexturesCallback;
-import io.github.apace100.apoli.power.EntityGlowPower;
-import io.github.apace100.apoli.power.OverlayPower;
-import io.github.apace100.apoli.power.SelfGlowPower;
+import io.github.apace100.apoli.power.type.EntityGlowPowerType;
+import io.github.apace100.apoli.power.type.OverlayPowerType;
+import io.github.apace100.apoli.power.type.SelfGlowPowerType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -45,12 +45,12 @@ public abstract class MinecraftClientMixin implements OverlaySpriteHolder {
     @ModifyReturnValue(method = "hasOutline", at = @At("RETURN"))
     private boolean apoli$makeEntitiesGlow(boolean original, Entity entity) {
         return original
-            || (player != entity && PowerHolderComponent.hasPower(player, EntityGlowPower.class, p -> p.doesApply(entity)))
-            || PowerHolderComponent.hasPower(entity, SelfGlowPower.class, p -> p.doesApply(player));
+            || (player != entity && PowerHolderComponent.hasPowerType(player, EntityGlowPowerType.class, p -> p.doesApply(entity)))
+            || PowerHolderComponent.hasPowerType(entity, SelfGlowPowerType.class, p -> p.doesApply(player));
     }
 
     @Unique
-    private OverlayPower.SpriteHolder apoli$overlaySpriteHolder;
+    private OverlayPowerType.SpriteHolder apoli$overlaySpriteHolder;
 
     @Override
     public Sprite apoli$getSprite(Identifier id) {
@@ -59,7 +59,7 @@ public abstract class MinecraftClientMixin implements OverlaySpriteHolder {
 
     @Inject(method = "<init>", at = @At(value = "NEW", target = "(Lnet/minecraft/client/MinecraftClient;)Lnet/minecraft/client/gui/hud/InGameHud;"))
     private void apoli$registerCustomAtlases(RunArgs args, CallbackInfo ci) {
-        this.apoli$overlaySpriteHolder = new OverlayPower.SpriteHolder(this.getTextureManager());
+        this.apoli$overlaySpriteHolder = new OverlayPowerType.SpriteHolder(this.getTextureManager());
         this.resourceManager.registerReloader(apoli$overlaySpriteHolder);
     }
 

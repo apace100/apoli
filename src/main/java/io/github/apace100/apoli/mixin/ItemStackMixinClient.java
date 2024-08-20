@@ -8,8 +8,8 @@ import io.github.apace100.apoli.ApoliClient;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
-import io.github.apace100.apoli.power.PreventItemUsePower;
-import io.github.apace100.apoli.power.TooltipPower;
+import io.github.apace100.apoli.power.type.PreventItemUsePowerType;
+import io.github.apace100.apoli.power.type.TooltipPowerType;
 import io.github.apace100.apoli.util.ApoliConfigClient;
 import io.github.apace100.apoli.util.KeyBindingUtil;
 import net.fabricmc.api.EnvType;
@@ -86,7 +86,7 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
             return;
         }
 
-        List<PreventItemUsePower> preventItemUsePowers = PowerHolderComponent.getPowers(player, PreventItemUsePower.class)
+        List<PreventItemUsePowerType> preventItemUsePowers = PowerHolderComponent.getPowerTypes(player, PreventItemUsePowerType.class)
             .stream()
             .filter(p -> p.doesPrevent((ItemStack) (Object) this))
             .toList();
@@ -105,9 +105,9 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
 
         if (preventItemUsePowers.size() == 1) {
 
-            PreventItemUsePower preventItemUsePower = preventItemUsePowers.getFirst();
+            PreventItemUsePowerType preventItemUsePower = preventItemUsePowers.getFirst();
 
-            powerText = preventItemUsePower.getType().getName().formatted(powerTextFormat);
+            powerText = preventItemUsePower.getPower().getName().formatted(powerTextFormat);
             baseText = Text.translatable(translationKey, powerText).formatted(baseTextFormat);
 
             apoli$tooltip.add(baseText);
@@ -160,10 +160,10 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
         original.call(stack, componentType, context, tooltipConsumer, type);
 
         if (componentType == DataComponentTypes.LORE) {
-            PowerHolderComponent.getPowers(player, TooltipPower.class)
+            PowerHolderComponent.getPowerTypes(player, TooltipPowerType.class)
                 .stream()
                 .filter(p -> p.doesApply((ItemStack) (Object) this))
-                .sorted(Comparator.comparing(TooltipPower::getOrder))
+                .sorted(Comparator.comparing(TooltipPowerType::getOrder))
                 .forEach(p -> p.addToTooltip(tooltipConsumer));
         }
 
@@ -206,13 +206,13 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
     }
 
     @Unique
-    private void apoli$appendExpandedTooltip(List<PreventItemUsePower> powers, List<Text> tooltip, String translationKey, Formatting powerTextColor, Formatting baseTextColor) {
+    private void apoli$appendExpandedTooltip(List<PreventItemUsePowerType> powers, List<Text> tooltip, String translationKey, Formatting powerTextColor, Formatting baseTextColor) {
 
         List<Text> powerTexts = new LinkedList<>();
-        for (PreventItemUsePower power : powers) {
+        for (PreventItemUsePowerType power : powers) {
 
             MutableText prependedText = Text.literal("  - ").formatted(baseTextColor);
-            MutableText powerText = power.getType().getName().formatted(powerTextColor);
+            MutableText powerText = power.getPower().getName().formatted(powerTextColor);
 
             powerTexts.add(prependedText.append(powerText));
 

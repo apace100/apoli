@@ -2,8 +2,8 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import io.github.apace100.apoli.power.ActionOnItemPickupPower;
-import io.github.apace100.apoli.power.PreventItemPickupPower;
+import io.github.apace100.apoli.power.type.ActionOnItemPickupPowerType;
+import io.github.apace100.apoli.power.type.PreventItemPickupPowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
@@ -25,12 +25,12 @@ public abstract class ItemEntityMixin extends Entity {
     private boolean apoli$onItemPickup(PlayerInventory instance, ItemStack stack, Operation<Boolean> original, PlayerEntity player) {
 
         ItemEntity thisAsItemEntity = (ItemEntity) (Object) this;
-        if (PreventItemPickupPower.doesPrevent(thisAsItemEntity, player)) {
+        if (PreventItemPickupPowerType.doesPrevent(thisAsItemEntity, player)) {
             return false;
         }
 
         if (original.call(instance, stack)) {
-            ActionOnItemPickupPower.executeActions(thisAsItemEntity, player);
+            ActionOnItemPickupPowerType.executeActions(thisAsItemEntity, player);
             return true;
         }
 

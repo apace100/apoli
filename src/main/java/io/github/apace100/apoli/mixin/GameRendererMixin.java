@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
@@ -68,10 +68,10 @@ public abstract class GameRendererMixin {
     @Inject(at = @At("TAIL"), method = "onCameraEntitySet")
     private void apoli$loadShaderFromPowerOnCameraEntity(Entity entity, CallbackInfo ci) {
 
-        PowerHolderComponent.getPowers(client.getCameraEntity(), ShaderPower.class)
+        PowerHolderComponent.getPowerTypes(client.getCameraEntity(), ShaderPowerType.class)
             .stream()
             .filter(p -> resourceManager.getResource(p.getShaderLocation()).isPresent())
-            .max(Comparator.comparing(ShaderPower::getPriority))
+            .max(Comparator.comparing(ShaderPowerType::getPriority))
             .ifPresent(p -> {
 
                 Identifier shaderLocation = p.getShaderLocation();
@@ -87,10 +87,10 @@ public abstract class GameRendererMixin {
     private void apoli$loadShaderFromPower(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
 
         //  Load a shader from a shader power with a high priority
-        PowerHolderComponent.getPowers(client.getCameraEntity(), ShaderPower.class)
+        PowerHolderComponent.getPowerTypes(client.getCameraEntity(), ShaderPowerType.class)
             .stream()
             .filter(p -> resourceManager.getResource(p.getShaderLocation()).isPresent())
-            .max(Comparator.comparing(ShaderPower::getPriority))
+            .max(Comparator.comparing(ShaderPowerType::getPriority))
             .ifPresent(p -> {
                 Identifier shaderLocation = p.getShaderLocation();
                 if (shaderLocation != apoli$currentlyLoadedShader) {
@@ -100,7 +100,7 @@ public abstract class GameRendererMixin {
             });
 
         //  Remove the currently loaded shader if the entity doesn't have any shader powers
-        if (!PowerHolderComponent.hasPower(client.getCameraEntity(), ShaderPower.class) && apoli$currentlyLoadedShader != null) {
+        if (!PowerHolderComponent.hasPowerType(client.getCameraEntity(), ShaderPowerType.class) && apoli$currentlyLoadedShader != null) {
 
             if (postProcessor != null) {
                 disablePostProcessor();
@@ -115,25 +115,25 @@ public abstract class GameRendererMixin {
 
     @Inject(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;hudHidden:Z"))
     private void apoli$renderOverlayPowersBelowHud(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
+        PowerHolderComponent.getPowerTypes(client.getCameraEntity(), OverlayPowerType.class)
             .stream()
-            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.BELOW_HUD))
-            .sorted(Comparator.comparing(OverlayPower::getPriority))
-            .forEach(OverlayPower::render);
+            .filter(p -> p.shouldRender(client.options, OverlayPowerType.DrawPhase.BELOW_HUD))
+            .sorted(Comparator.comparing(OverlayPowerType::getPriority))
+            .forEach(OverlayPowerType::render);
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 0))
     private void apoli$renderOverlayPowersAboveHud(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        PowerHolderComponent.getPowers(client.getCameraEntity(), OverlayPower.class)
+        PowerHolderComponent.getPowerTypes(client.getCameraEntity(), OverlayPowerType.class)
             .stream()
-            .filter(p -> p.shouldRender(client.options, OverlayPower.DrawPhase.ABOVE_HUD))
-            .sorted(Comparator.comparing(OverlayPower::getPriority))
-            .forEach(OverlayPower::render);
+            .filter(p -> p.shouldRender(client.options, OverlayPowerType.DrawPhase.ABOVE_HUD))
+            .sorted(Comparator.comparing(OverlayPowerType::getPriority))
+            .forEach(OverlayPowerType::render);
     }
 
     @Inject(at = @At("HEAD"), method = "togglePostProcessorEnabled", cancellable = true)
     private void disableShaderToggle(CallbackInfo ci) {
-        PowerHolderComponent.withPower(client.getCameraEntity(), ShaderPower.class, p -> true, shaderPower -> {
+        PowerHolderComponent.withPowerType(client.getCameraEntity(), ShaderPowerType.class, p -> true, shaderPower -> {
             Identifier shaderLoc = shaderPower.getShaderLocation();
             if(!shaderPower.isToggleable() && apoli$currentlyLoadedShader == shaderLoc) {
                 ci.cancel();
@@ -144,20 +144,20 @@ public abstract class GameRendererMixin {
     // NightVisionPower
     @WrapMethod(method = "getNightVisionStrength")
     private static float apoli$modifyNightVisionStrength(LivingEntity entity, float tickDelta, Operation<Float> original) {
-        return PowerHolderComponent.getPowers(entity, NightVisionPower.class)
+        return PowerHolderComponent.getPowerTypes(entity, NightVisionPowerType.class)
             .stream()
-            .map(NightVisionPower::getStrength)
+            .map(NightVisionPowerType::getStrength)
             .max(Float::compareTo)
             .orElseGet(() -> original.call(entity, tickDelta));
     }
 
     @ModifyExpressionValue(method = "getFov", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getSubmersionType()Lnet/minecraft/block/enums/CameraSubmersionType;"))
     private CameraSubmersionType apoli$modifySubmersionTypeFov(CameraSubmersionType original, Camera camera) {
-        return PowerHolderComponent.getPowers(camera.getFocusedEntity(), ModifyCameraSubmersionTypePower.class, true)
+        return PowerHolderComponent.getPowerTypes(camera.getFocusedEntity(), ModifyCameraSubmersionTypePowerType.class, true)
             .stream()
             .filter(p -> p.doesModify(original) && p.isActive())
             .findFirst()
-            .map(ModifyCameraSubmersionTypePower::getNewType)
+            .map(ModifyCameraSubmersionTypePowerType::getNewType)
             .orElse(original);
     }
 
@@ -167,9 +167,9 @@ public abstract class GameRendererMixin {
     // PHASING: remove_blocks
     @Inject(at = @At(value = "HEAD"), method = "render")
     private void beforeRender(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        List<PhasingPower> phasings = PowerHolderComponent.getPowers(camera.getFocusedEntity(), PhasingPower.class);
-        if (phasings.stream().anyMatch(pp -> pp.getRenderType() == PhasingPower.RenderType.REMOVE_BLOCKS)) {
-            float view = phasings.stream().filter(pp -> pp.getRenderType() == PhasingPower.RenderType.REMOVE_BLOCKS).map(PhasingPower::getViewDistance).min(Float::compareTo).get();
+        List<PhasingPowerType> phasings = PowerHolderComponent.getPowerTypes(camera.getFocusedEntity(), PhasingPowerType.class);
+        if (phasings.stream().anyMatch(pp -> pp.getRenderType() == PhasingPowerType.RenderType.REMOVE_BLOCKS)) {
+            float view = phasings.stream().filter(pp -> pp.getRenderType() == PhasingPowerType.RenderType.REMOVE_BLOCKS).map(PhasingPowerType::getViewDistance).min(Float::compareTo).get();
             Set<BlockPos> eyePositions = getEyePos(0.25F, 0.05F, 0.25F);
             Set<BlockPos> noLongerEyePositions = new HashSet<>();
             for (BlockPos p : savedStates.keySet()) {
@@ -202,7 +202,7 @@ public abstract class GameRendererMixin {
     // PHASING
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;update(Lnet/minecraft/world/BlockView;Lnet/minecraft/entity/Entity;ZZF)V"), method = "renderWorld")
     private void preventThirdPerson(Camera camera, BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta) {
-        if (PowerHolderComponent.getPowers(camera.getFocusedEntity(), PhasingPower.class).stream().anyMatch(pp -> pp.getRenderType() == PhasingPower.RenderType.REMOVE_BLOCKS)) {
+        if (PowerHolderComponent.getPowerTypes(camera.getFocusedEntity(), PhasingPowerType.class).stream().anyMatch(pp -> pp.getRenderType() == PhasingPowerType.RenderType.REMOVE_BLOCKS)) {
             camera.update(area, focusedEntity, false, false, tickDelta);
         } else {
             camera.update(area, focusedEntity, thirdPerson, inverseView, tickDelta);
@@ -223,7 +223,7 @@ public abstract class GameRendererMixin {
     private static boolean apoli$preventEntitySelection(boolean original, Entity target) {
         Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
         return original
-            && !PowerHolderComponent.hasPower(cameraEntity, PreventEntitySelectionPower.class, p -> p.doesPrevent(target));
+            && !PowerHolderComponent.hasPowerType(cameraEntity, PreventEntitySelectionPowerType.class, p -> p.doesPrevent(target));
     }
 
 }

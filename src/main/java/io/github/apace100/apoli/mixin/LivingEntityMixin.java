@@ -9,13 +9,15 @@ import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDamageTypes;
 import io.github.apace100.apoli.networking.packet.s2c.SyncAttackerS2CPacket;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.type.FoodComponent;
-import net.minecraft.entity.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -37,11 +39,16 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 @Mixin(LivingEntity.class)
@@ -90,8 +97,8 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
         RegistryEntry<StatusEffect> effectType = original.getEffectType();
 
-        float amplifier = PowerHolderComponent.modify(this, ModifyStatusEffectAmplifierPower.class, original.getAmplifier(), p -> p.doesApply(effectType));
-        float duration = PowerHolderComponent.modify(this, ModifyStatusEffectDurationPower.class, original.getDuration(), p -> p.doesApply(effectType));
+        float amplifier = PowerHolderComponent.modify(this, ModifyStatusEffectAmplifierPowerType.class, original.getAmplifier(), p -> p.doesApply(effectType));
+        float duration = PowerHolderComponent.modify(this, ModifyStatusEffectDurationPowerType.class, original.getDuration(), p -> p.doesApply(effectType));
 
         return new StatusEffectInstance(
             effectType,
@@ -124,12 +131,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @ModifyReturnValue(method = "canWalkOnFluid", at = @At("RETURN"))
     private boolean apoli$letEntitiesWalkOnFluid(boolean original, FluidState fluidState) {
         return original
-            || PowerHolderComponent.hasPower(this, WalkOnFluidPower.class, p -> fluidState.isIn(p.getFluidTag()));
+            || PowerHolderComponent.hasPowerType(this, WalkOnFluidPowerType.class, p -> fluidState.isIn(p.getFluidTag()));
     }
 
     @ModifyVariable(method = "heal", at = @At("HEAD"), argsOnly = true)
     private float modifyHealingApplied(float originalValue) {
-        return PowerHolderComponent.modify(this, ModifyHealingPower.class, originalValue);
+        return PowerHolderComponent.modify(this, ModifyHealingPowerType.class, originalValue);
     }
 
     @Unique
@@ -157,22 +164,22 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         float newValue = original;
 
         if (source.getAttacker() != null && source.isIn(DamageTypeTags.IS_PROJECTILE)) {
-            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyProjectileDamagePower.class, original,
+            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyProjectileDamagePowerType.class, original,
                 p -> p.doesApply(source, original, thisAsLiving),
                 p -> p.executeActions(thisAsLiving));
         } else if (source.getAttacker() != null) {
-            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPower.class, original,
+            newValue = PowerHolderComponent.modify(source.getAttacker(), ModifyDamageDealtPowerType.class, original,
                 p -> p.doesApply(source, original, thisAsLiving),
                 p -> p.executeActions(thisAsLiving));
         }
 
         float intermediateValue = newValue;
-        newValue = PowerHolderComponent.modify(this, ModifyDamageTakenPower.class, intermediateValue,
+        newValue = PowerHolderComponent.modify(this, ModifyDamageTakenPowerType.class, intermediateValue,
             p -> p.doesApply(source, intermediateValue),
             p -> p.executeActions(source.getAttacker()));
 
         apoli$hasModifiedDamage = newValue != original;
-        List<ModifyDamageTakenPower> modifyDamageTakenPowers = PowerHolderComponent.getPowers(this, ModifyDamageTakenPower.class)
+        List<ModifyDamageTakenPowerType> modifyDamageTakenPowers = PowerHolderComponent.getPowerTypes(this, ModifyDamageTakenPowerType.class)
             .stream()
             .filter(mdtp -> mdtp.doesApply(source, original))
             .toList();
@@ -240,31 +247,31 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
         Entity attacker = source.getAttacker();
 
-        PowerHolderComponent.withPowers(this, ActionWhenHitPower.class, p -> p.doesApply(attacker, source, amount), p -> p.whenHit(attacker));
-        PowerHolderComponent.withPowers(attacker, ActionOnHitPower.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
+        PowerHolderComponent.withPowerTypes(this, ActionWhenHitPowerType.class, p -> p.doesApply(attacker, source, amount), p -> p.whenHit(attacker));
+        PowerHolderComponent.withPowerTypes(attacker, ActionOnHitPowerType.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
 
-        PowerHolderComponent.withPowers(this, SelfActionWhenHitPower.class, p -> p.doesApply(source, amount), SelfActionWhenHitPower::whenHit);
-        PowerHolderComponent.withPowers(this, AttackerActionWhenHitPower.class, p -> p.doesApply(source, amount), p -> p.whenHit(attacker));
+        PowerHolderComponent.withPowerTypes(this, SelfActionWhenHitPowerType.class, p -> p.doesApply(source, amount), SelfActionWhenHitPowerType::whenHit);
+        PowerHolderComponent.withPowerTypes(this, AttackerActionWhenHitPowerType.class, p -> p.doesApply(source, amount), p -> p.whenHit(attacker));
 
-        PowerHolderComponent.withPowers(attacker, SelfActionOnHitPower.class, p -> p.doesApply(this, source, amount), SelfActionOnHitPower::onHit);
-        PowerHolderComponent.withPowers(attacker, TargetActionOnHitPower.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
+        PowerHolderComponent.withPowerTypes(attacker, SelfActionOnHitPowerType.class, p -> p.doesApply(this, source, amount), SelfActionOnHitPowerType::onHit);
+        PowerHolderComponent.withPowerTypes(attacker, TargetActionOnHitPowerType.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
 
     }
 
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
     private void invokeDeathAction(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        PowerHolderComponent.withPowers(this, ActionOnDeathPower.class, p -> p.doesApply(source.getAttacker(), source, amount), p -> p.onDeath(source.getAttacker()));
+        PowerHolderComponent.withPowerTypes(this, ActionOnDeathPowerType.class, p -> p.doesApply(source.getAttacker(), source, amount), p -> p.onDeath(source.getAttacker()));
     }
 
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onDeath(Lnet/minecraft/entity/damage/DamageSource;)V"))
     private void invokeKillAction(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        PowerHolderComponent.getPowers(source.getAttacker(), SelfActionOnKillPower.class).forEach(p -> p.onKill((LivingEntity)(Object)this, source, amount));
+        PowerHolderComponent.withPowerTypes(source.getAttacker(), SelfActionOnKillPowerType.class, p -> p.doesApply(this, source, amount), SelfActionOnKillPowerType::executeAction);
     }
 
     @ModifyExpressionValue(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isWet()Z"))
     private boolean apoli$preventExtinguishingWhenPowerSwimming(boolean original) {
 
-        if (this.isSwimming() && this.getFluidHeight(FluidTags.WATER) <= 0 && PowerHolderComponent.hasPower(this, SwimmingPower.class)) {
+        if (this.isSwimming() && this.getFluidHeight(FluidTags.WATER) <= 0 && PowerHolderComponent.hasPowerType(this, SwimmingPowerType.class)) {
             return false;
         }
 
@@ -279,7 +286,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFrozenTicks()I"))
     private void freezeEntityFromPower(CallbackInfo ci) {
-        if(PowerHolderComponent.hasPower(this, FreezePower.class)) {
+        if(PowerHolderComponent.hasPowerType(this, FreezePowerType.class)) {
             this.prevPowderSnowState = this.inPowderSnow;
             this.inPowderSnow = true;
         }
@@ -287,14 +294,14 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;removePowderSnowSlow()V"))
     private void unfreezeEntityFromPower(CallbackInfo ci) {
-        if(PowerHolderComponent.hasPower(this, FreezePower.class)) {
+        if(PowerHolderComponent.hasPowerType(this, FreezePowerType.class)) {
             this.inPowderSnow = this.prevPowderSnowState;
         }
     }
 
     @Inject(method = "canFreeze", at = @At("RETURN"), cancellable = true)
     private void allowFreezingPower(CallbackInfoReturnable<Boolean> cir) {
-        if(PowerHolderComponent.hasPower(this, FreezePower.class)) {
+        if(PowerHolderComponent.hasPowerType(this, FreezePowerType.class)) {
             cir.setReturnValue(true);
         }
     }
@@ -311,7 +318,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @ModifyReturnValue(method = "getJumpVelocity()F", at = @At("RETURN"))
     private float apoli$modifyJumpVelocity(float original) {
 
-        float modified = PowerHolderComponent.modify(this, ModifyJumpPower.class, original, p -> true, ModifyJumpPower::executeAction);
+        float modified = PowerHolderComponent.modify(this, ModifyJumpPowerType.class, original, p -> true, ModifyJumpPowerType::executeAction);
         this.apoli$applySprintJumpingEffects = modified > 0;
 
         return modified;
@@ -327,7 +334,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @ModifyReturnValue(method = "canHaveStatusEffect", at = @At("RETURN"))
     private boolean apoli$effectImmunity(boolean original, StatusEffectInstance effectInstance) {
         return original
-            && !PowerHolderComponent.hasPower(this, EffectImmunityPower.class, p -> p.doesApply(effectInstance));
+            && !PowerHolderComponent.hasPowerType(this, EffectImmunityPowerType.class, p -> p.doesApply(effectInstance));
     }
 
     // CLIMBING
@@ -338,7 +345,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
             return true;
         }
 
-        List<ClimbingPower> climbingPowers = PowerHolderComponent.getPowers(this, ClimbingPower.class);
+        List<ClimbingPowerType> climbingPowers = PowerHolderComponent.getPowerTypes(this, ClimbingPowerType.class);
         if (this.isSpectator() || climbingPowers.isEmpty()) {
             return false;
         }
@@ -351,32 +358,31 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @ModifyReturnValue(method = "isHoldingOntoLadder", at = @At("RETURN"))
     private boolean apoli$overrideClimbHold(boolean original) {
 
-        List<ClimbingPower> climbingPowers = PowerHolderComponent.getPowers(this, ClimbingPower.class);
+        List<ClimbingPowerType> climbingPowers = PowerHolderComponent.getPowerTypes(this, ClimbingPowerType.class);
         if (climbingPowers.isEmpty()) {
             return original;
         }
 
         return climbingPowers
             .stream()
-            .anyMatch(ClimbingPower::canHold);
+            .anyMatch(ClimbingPowerType::canHold);
 
     }
 
     // SLOW_FALLING
     @ModifyVariable(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getFluidState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/fluid/FluidState;"), method = "travel", name = "d", ordinal = 0)
-    public double modifyFallingVelocity(double in) {
-        if(this.getVelocity().y > 0D) {
-            return in;
-        }
-        List<ModifyFallingPower> modifyFallingPowers = PowerHolderComponent.getPowers(this, ModifyFallingPower.class);
-        if(!modifyFallingPowers.isEmpty()) {
+    public double modifyFallingVelocity(double original) {
 
-            if(modifyFallingPowers.stream().anyMatch(p -> !p.takeFallDamage)) {
-                this.fallDistance = 0;
-            }
-            return PowerHolderComponent.modify(this, ModifyFallingPower.class, in);
+        if (this.getVelocity().y > 0D) {
+            return original;
         }
-        return in;
+
+        if (ModifyFallingPowerType.shouldNegateFallDamage(this)) {
+            this.fallDistance = 0;
+        }
+
+        return PowerHolderComponent.modify(this, ModifyFallingPowerType.class, original);
+
     }
 
     @Inject(method = "getAttributes", at = @At("RETURN"))
@@ -390,13 +396,13 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @ModifyVariable(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isOnGround()Z", opcode = Opcodes.GETFIELD, ordinal = 2))
     private float modifySlipperiness(float original) {
-        return PowerHolderComponent.modify(this, ModifySlipperinessPower.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
+        return PowerHolderComponent.modify(this, ModifySlipperinessPowerType.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
     @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 1))
     private boolean apoli$preventDeath(boolean original, DamageSource source, float amount) {
 
-        if (original && PreventDeathPower.doesPrevent(this, source, amount)) {
+        if (original && PreventDeathPowerType.doesPrevent(this, source, amount)) {
             this.setHealth(1.0F);
             return false;
         }
@@ -414,16 +420,16 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         }
 
         StackReference newStackRef = InventoryUtil.createStackReference(original);
-        List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(this, ModifyFoodPower.class)
+        List<ModifyFoodPowerType> modifyFoodPowers = PowerHolderComponent.getPowerTypes(this, ModifyFoodPowerType.class)
             .stream()
             .filter(mfp -> mfp.doesApply(original))
             .toList();
 
-        for (ModifyFoodPower modifyFoodPower : modifyFoodPowers) {
+        for (ModifyFoodPowerType modifyFoodPower : modifyFoodPowers) {
             modifyFoodPower.setConsumedItemStackReference(newStackRef);
         }
 
-        EdibleItemPower.get(original.copy(), this).ifPresent(this::apoli$setEdibleItemPower);
+        EdibleItemPowerType.get(original.copy(), this).ifPresent(this::apoli$setEdibleItemPower);
 
         this.apoli$setCurrentModifyFoodPowers(modifyFoodPowers);
         this.apoli$setOriginalFoodStack(original);
@@ -443,7 +449,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @ModifyReturnValue(method = "eatFood", at = @At("RETURN"))
     private ItemStack apoli$modifyCustomFoodAndCleanUp(ItemStack original) {
 
-        EdibleItemPower edibleItemPower = this.apoli$getEdibleItemPower();
+        EdibleItemPowerType edibleItemPower = this.apoli$getEdibleItemPower();
         ItemStack result = original;
 
         modifyCustomFood:
@@ -493,7 +499,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "applyFoodEffects", at = @At("HEAD"), cancellable = true)
     private void apoli$preventApplyingFoodEffects(FoodComponent component, CallbackInfo ci) {
-        if (this.apoli$getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPower::doesPreventEffects)) {
+        if (this.apoli$getCurrentModifyFoodPowers().stream().anyMatch(ModifyFoodPowerType::doesPreventEffects)) {
             ci.cancel();
         }
     }
@@ -526,13 +532,13 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
 
     @Inject(method = "getOffGroundSpeed", at = @At("RETURN"), cancellable = true)
     private void modifyFlySpeed(CallbackInfoReturnable<Float> cir) {
-        cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, cir.getReturnValue()));
+        cir.setReturnValue(PowerHolderComponent.modify(this, ModifyAirSpeedPowerType.class, cir.getReturnValue()));
     }
 
     @WrapOperation(method = "getAttackDistanceScalingFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isInvisible()Z"))
     private boolean apoli$specificallyInvisibleTo(LivingEntity livingEntity, Operation<Boolean> original, @Nullable Entity viewer) {
 
-        List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(livingEntity, InvisibilityPower.class, true);
+        List<InvisibilityPowerType> invisibilityPowers = PowerHolderComponent.getPowerTypes(livingEntity, InvisibilityPowerType.class, true);
         if (viewer == null || invisibilityPowers.isEmpty()) {
             return original.call(livingEntity);
         }
@@ -546,28 +552,28 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z"))
     private boolean apoli$cancelOutJumpVelocityIfNotMovingWithSprintPower(boolean original) {
         // The movement check is here so this doesn't happen if the player is moving at a sprinting amount.
-        if (PowerHolderComponent.hasPower(this, SprintingPower.class) && this.apoli$getHorizontalMovementValue() < this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)) {
+        if (PowerHolderComponent.hasPowerType(this, SprintingPowerType.class) && this.apoli$getHorizontalMovementValue() < this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)) {
             return false;
         }
         return original;
     }
 
     @Unique
-    private List<ModifyFoodPower> apoli$currentModifyFoodPowers = new LinkedList<>();
+    private List<ModifyFoodPowerType> apoli$currentModifyFoodPowers = new LinkedList<>();
 
     @Unique
     private ItemStack apoli$originalFoodStack;
 
     @Unique
-    private EdibleItemPower apoli$edibleItemPower;
+    private EdibleItemPowerType apoli$edibleItemPower;
 
     @Override
-    public List<ModifyFoodPower> apoli$getCurrentModifyFoodPowers() {
+    public List<ModifyFoodPowerType> apoli$getCurrentModifyFoodPowers() {
         return apoli$currentModifyFoodPowers;
     }
 
     @Override
-    public void apoli$setCurrentModifyFoodPowers(List<ModifyFoodPower> powers) {
+    public void apoli$setCurrentModifyFoodPowers(List<ModifyFoodPowerType> powers) {
         apoli$currentModifyFoodPowers = powers;
     }
 
@@ -582,12 +588,12 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     @Override
-    public EdibleItemPower apoli$getEdibleItemPower() {
+    public EdibleItemPowerType apoli$getEdibleItemPower() {
         return apoli$edibleItemPower;
     }
 
     @Override
-    public void apoli$setEdibleItemPower(EdibleItemPower power) {
+    public void apoli$setEdibleItemPower(EdibleItemPowerType power) {
         this.apoli$edibleItemPower = power;
     }
 

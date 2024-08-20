@@ -11,7 +11,7 @@
   "target_action": {
     "type": "apoli:apply_effect",
     "effect": {
-      "effect": "minecraft:poison",
+      "id": "minecraft:poison",
       "duration": 140,
       "amplifier": 1
     }

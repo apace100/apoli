@@ -3,7 +3,7 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyFoodPower;
+import io.github.apace100.apoli.power.type.ModifyFoodPowerType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -17,7 +17,7 @@ public abstract class ItemMixin {
 
     @ModifyExpressionValue(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;canConsume(Z)Z"))
     private boolean apoli$makeItemAlwaysEdible(boolean original, World world, PlayerEntity user, Hand hand, @Local ItemStack stackInHand) {
-        return original || PowerHolderComponent.hasPower(user, ModifyFoodPower.class, mfp -> mfp.doesMakeAlwaysEdible() && mfp.doesApply(stackInHand));
+        return original || PowerHolderComponent.hasPowerType(user, ModifyFoodPowerType.class, mfp -> mfp.doesMakeAlwaysEdible() && mfp.doesApply(stackInHand));
     }
 
 }

@@ -5,11 +5,12 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import io.github.apace100.apoli.access.EntityLinkedType;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.util.ArmPoseReference;
 import io.github.apace100.calio.Calio;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
@@ -19,8 +20,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EntityPose;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
@@ -42,6 +43,7 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.event.listener.EntityGameEventHandler;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -52,11 +54,13 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder, LeashableEntity {
+public abstract class EntityMixin implements MovingEntity, SubmergableEntity, ModifiedPoseHolder, CustomLeashable {
 
     @Shadow
     private World world;
@@ -101,7 +105,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @ModifyReturnValue(method = "isFireImmune", at = @At("RETURN"))
     private boolean apoli$makeFullyFireImmune(boolean original) {
         return original
-            || PowerHolderComponent.hasPower((Entity) (Object) this, FireImmunityPower.class);
+            || PowerHolderComponent.hasPowerType((Entity) (Object) this, FireImmunityPowerType.class);
     }
 
     @ModifyReturnValue(method = "isTouchingWater", at = @At("RETURN"))
@@ -112,37 +116,37 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
         }
 
         return original
-            && !(waterMovingEntity.apoli$isInMovementPhase() && PowerHolderComponent.hasPower((Entity) (Object) this, IgnoreWaterPower.class));
+            && !(waterMovingEntity.apoli$isInMovementPhase() && PowerHolderComponent.hasPowerType((Entity) (Object) this, IgnoreWaterPowerType.class));
 
     }
 
     @Inject(method = "fall", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onLandedUpon(Lnet/minecraft/world/World;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;F)V"))
     private void invokeActionOnLand(CallbackInfo ci) {
-        PowerHolderComponent.withPowers((Entity) (Object) this, ActionOnLandPower.class, p -> true, ActionOnLandPower::executeAction);
+        PowerHolderComponent.withPowerTypes((Entity) (Object) this, ActionOnLandPowerType.class, p -> true, ActionOnLandPowerType::executeAction);
     }
 
     @ModifyReturnValue(method = "isInvulnerableTo", at = @At("RETURN"))
     private boolean apoli$makeEntitiesInvulnerable(boolean original, DamageSource source) {
         return original
-            || PowerHolderComponent.hasPower((Entity) (Object) this, InvulnerablePower.class, p -> p.doesApply(source));
+            || PowerHolderComponent.hasPowerType((Entity) (Object) this, InvulnerablePowerType.class, p -> p.doesApply(source));
     }
 
     @ModifyExpressionValue(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isWet()Z"))
     private boolean apoli$preventExtinguishingFromPowerSwimming(boolean original) {
         return original
-            && !(this.isSwimming() && PowerHolderComponent.hasPower((Entity) (Object) this, SwimmingPower.class));
+            && !(this.isSwimming() && PowerHolderComponent.hasPowerType((Entity) (Object) this, SwimmingPowerType.class));
     }
 
     @ModifyReturnValue(method = "isInvisible", at = @At("RETURN"))
     private boolean apoli$invisibility(boolean original) {
         return original
-            || PowerHolderComponent.hasPower((Entity) (Object) this, InvisibilityPower.class);
+            || PowerHolderComponent.hasPowerType((Entity) (Object) this, InvisibilityPowerType.class);
     }
 
     @WrapOperation(method = "isInvisibleTo", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isInvisible()Z"))
     private boolean apoli$specificallyInvisibleTo(Entity entity, Operation<Boolean> original, PlayerEntity viewer) {
 
-        List<InvisibilityPower> invisibilityPowers = PowerHolderComponent.getPowers(entity, InvisibilityPower.class, true);
+        List<InvisibilityPowerType> invisibilityPowers = PowerHolderComponent.getPowerTypes(entity, InvisibilityPowerType.class, true);
         if (viewer == null || invisibilityPowers.isEmpty()) {
             return original.call(entity);
         }
@@ -157,7 +161,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @Inject(method = "pushOutOfBlocks", at = @At(value = "NEW", target = "()Lnet/minecraft/util/math/BlockPos$Mutable;"), cancellable = true)
     protected void apoli$ignorePhasingEntities(double x, double y, double z, CallbackInfo ci, @Local BlockPos pos) {
 
-        if (PowerHolderComponent.hasPower((Entity) (Object) this, PhasingPower.class, p -> p.doesApply(pos))) {
+        if (PowerHolderComponent.hasPowerType((Entity) (Object) this, PhasingPowerType.class, p -> p.doesApply(pos))) {
             ci.cancel();
         }
 
@@ -176,16 +180,16 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
         }
 
         return new Vec3d(
-            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPower.class, original.x, p -> p.axes.contains(Direction.Axis.X), null),
-            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPower.class, original.y, p -> p.axes.contains(Direction.Axis.Y), null),
-            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPower.class, original.z, p -> p.axes.contains(Direction.Axis.Z), null)
+            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPowerType.class, original.x, p -> p.doesApply(Direction.Axis.X), p -> {}),
+            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPowerType.class, original.y, p -> p.doesApply(Direction.Axis.Y), p -> {}),
+            PowerHolderComponent.modify((Entity)(Object) this, ModifyVelocityPowerType.class, original.z, p -> p.doesApply(Direction.Axis.Z), p -> {})
         );
 
     }
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLandingPos()Lnet/minecraft/util/math/BlockPos;"))
     private void forceGrounded(MovementType movementType, Vec3d movement, CallbackInfo ci) {
-        if(PowerHolderComponent.hasPower((Entity)(Object)this, GroundedPower.class)) {
+        if(PowerHolderComponent.hasPowerType((Entity)(Object)this, GroundedPowerType.class)) {
             this.onGround = true;
         }
     }
@@ -244,7 +248,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
         float green = 0.0f;
         float blue = 0.0f;
 
-        for (EntityGlowPower entityGlowPower : PowerHolderComponent.getPowers(cameraEntity, EntityGlowPower.class)) {
+        for (EntityGlowPowerType entityGlowPower : PowerHolderComponent.getPowerTypes(cameraEntity, EntityGlowPowerType.class)) {
 
             if ((hasTeamColor && entityGlowPower.usesTeams()) || !entityGlowPower.doesApply(renderedEntity)) {
                 continue;
@@ -258,7 +262,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
 
         }
 
-        for (SelfGlowPower selfGlowPower : PowerHolderComponent.getPowers(renderedEntity, SelfGlowPower.class)) {
+        for (SelfGlowPowerType selfGlowPower : PowerHolderComponent.getPowerTypes(renderedEntity, SelfGlowPowerType.class)) {
 
             if ((hasTeamColor && selfGlowPower.usesTeams()) || !selfGlowPower.doesApply(cameraEntity)) {
                 continue;
@@ -281,18 +285,18 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @Inject(method = "updateEventHandler", at = @At("HEAD"))
     private void apoli$updateCustomEventHandlers(BiConsumer<EntityGameEventHandler<?>, ServerWorld> callback, CallbackInfo ci) {
         if (world instanceof ServerWorld serverWorld) {
-            PowerHolderComponent.getPowers((Entity) (Object) this, GameEventListenerPower.class).forEach(gelp -> callback.accept(gelp.getGameEventHandler(), serverWorld));
+            PowerHolderComponent.getPowerTypes((Entity) (Object) this, GameEventListenerPowerType.class).forEach(gelp -> callback.accept(gelp.getGameEventHandler(), serverWorld));
         }
     }
 
     @ModifyExpressionValue(method = "pushAwayFrom", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isConnectedThroughVehicle(Lnet/minecraft/entity/Entity;)Z"))
     private boolean apoli$preventEntityPushing(boolean original, Entity fromEntity) {
-        return original || PreventEntityCollisionPower.doesApply(fromEntity, (Entity) (Object) this);
+        return original || PreventEntityCollisionPowerType.doesApply(fromEntity, (Entity) (Object) this);
     }
 
     @ModifyReturnValue(method = "collidesWith", at = @At("RETURN"))
     private boolean apoli$preventEntityCollision(boolean original, Entity other) {
-        return !PreventEntityCollisionPower.doesApply((Entity) (Object) this, other) && original;
+        return !PreventEntityCollisionPowerType.doesApply((Entity) (Object) this, other) && original;
     }
 
     @Unique
@@ -366,6 +370,16 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
             this.apoli$movingVertically = true;
         }
 
+    }
+
+    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;type:Lnet/minecraft/entity/EntityType;", opcode = Opcodes.GETFIELD))
+    private EntityType<?> apoli$cacheToType(EntityType<?> original) {
+
+        if (original instanceof EntityLinkedType linkedType) {
+            linkedType.apoli$setEntity((Entity) (Object) this);
+        }
+
+        return original;
     }
 
     @Unique
@@ -462,9 +476,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void apoli$overridePose(CallbackInfo ci) {
-        PowerHolderComponent.getPowers((Entity) (Object) this, PosePower.class)
+        PowerHolderComponent.getPowerTypes((Entity) (Object) this, PosePowerType.class)
             .stream()
-            .max(Comparator.comparing(PosePower::getPriority))
+            .max(Comparator.comparing(PosePowerType::getPriority))
             .ifPresentOrElse(
                 posePower -> {
 

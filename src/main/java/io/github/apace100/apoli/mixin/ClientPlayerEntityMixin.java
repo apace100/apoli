@@ -10,7 +10,7 @@ import io.github.apace100.apoli.access.PowerCraftingBook;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.screen.toast.CustomToast;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -25,7 +25,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -53,9 +55,9 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 
     @Inject(at = @At("HEAD"), method = "isSubmergedInWater", cancellable = true)
     private void allowSwimming(CallbackInfoReturnable<Boolean> cir)  {
-        if(PowerHolderComponent.hasPower(this, SwimmingPower.class)) {
+        if(PowerHolderComponent.hasPowerType(this, SwimmingPowerType.class)) {
             cir.setReturnValue(true);
-        } else if(PowerHolderComponent.hasPower(this, IgnoreWaterPower.class)) {
+        } else if(PowerHolderComponent.hasPowerType(this, IgnoreWaterPowerType.class)) {
             cir.setReturnValue(false);
         }
     }
@@ -77,7 +79,7 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerAbilities;getFlySpeed()F"))
     private float modifyFlySpeed(PlayerAbilities playerAbilities){
-        return PowerHolderComponent.modify(this, ModifyAirSpeedPower.class, playerAbilities.getFlySpeed());
+        return PowerHolderComponent.modify(this, ModifyAirSpeedPowerType.class, playerAbilities.getFlySpeed());
     }
 
     @Override
@@ -90,20 +92,20 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     }
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
-    private void apoli$cacheSprintingPowers(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
-        sprintingPowersRef.set(PowerHolderComponent.getPowers(this, SprintingPower.class));
-        preventSprintingRef.set(PowerHolderComponent.hasPower(this, PreventSprintingPower.class));
+    private void apoli$cacheSprintingPowers(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPowerType>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+        sprintingPowersRef.set(PowerHolderComponent.getPowerTypes(this, SprintingPowerType.class));
+        preventSprintingRef.set(PowerHolderComponent.hasPowerType(this, PreventSprintingPowerType.class));
     }
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
-    private boolean apoli$allowActivePowerSprinting(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+    private boolean apoli$allowActivePowerSprinting(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPowerType>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
         return original || (this.isWalking() && sprintingPowersRef.get()
             .stream()
-            .anyMatch(SprintingPower::shouldRequireInput));
+            .anyMatch(SprintingPowerType::shouldRequireInput));
     }
 
     @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z"))
-    private void apoli$allowPassivePowerSprinting(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+    private void apoli$allowPassivePowerSprinting(CallbackInfo ci, @Share("sprintingPowers") LocalRef<List<SprintingPowerType>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
 
         if (this.isSprinting() || preventSprintingRef.get()) {
             return;
@@ -111,19 +113,19 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 
         this.setSprinting(sprintingPowersRef.get()
             .stream()
-            .anyMatch(Predicate.not(SprintingPower::shouldRequireInput)));
+            .anyMatch(Predicate.not(SprintingPowerType::shouldRequireInput)));
 
     }
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"))
-    private boolean apoli$accountForSprintingPowersWhenCancelling(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPower>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
+    private boolean apoli$accountForSprintingPowersWhenCancelling(boolean original, @Share("sprintingPowers") LocalRef<List<SprintingPowerType>> sprintingPowersRef, @Share("preventSprinting") LocalBooleanRef preventSprintingRef) {
         return (original || !sprintingPowersRef.get().isEmpty())
             && !preventSprintingRef.get();
     }
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z"))
     private boolean apoli$forceSneakingPose(boolean original) {
-        return original || PosePower.hasEntityPose(this, EntityPose.CROUCHING);
+        return original || PosePowerType.hasEntityPose(this, EntityPose.CROUCHING);
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))

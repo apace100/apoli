@@ -19,7 +19,11 @@
     "type": "apoli:consume"
   },
   "result_stack": {
-    "item": "minecraft:potion",
-    "tag": "{Potion:\"minecraft:water\"}"
+    "id": "minecraft:potion",
+    "components": {
+      "minecraft:potion_contents": {
+        "potion": "minecraft:water"
+      }
+    }
   }
 }

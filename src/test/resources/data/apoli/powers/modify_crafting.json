@@ -9,7 +9,7 @@
   "entity_action": {
     "type": "apoli:give",
     "stack": {
-      "item": "minecraft:dirt"
+      "id": "minecraft:dirt"
     }
   }
 }

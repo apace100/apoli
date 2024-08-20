@@ -2,14 +2,13 @@ package io.github.apace100.apoli.global;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class GlobalPowerSetUtil {
@@ -17,69 +16,65 @@ public class GlobalPowerSetUtil {
     public static final Identifier POWER_SOURCE = Apoli.identifier("global");
 
     public static List<GlobalPowerSet> getApplicableSets(EntityType<?> type) {
-        return GlobalPowerSetLoader.ALL
-            .values()
+        return GlobalPowerSetManager.ALL.values()
             .stream()
             .filter(gps -> gps.doesApply(type))
             .sorted(GlobalPowerSet::compareTo)
             .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    public static Set<Identifier> getPowerTypeIds(List<GlobalPowerSet> powerSets) {
+    public static Set<Identifier> getPowerIds(List<GlobalPowerSet> powerSets) {
         return powerSets.stream()
-            .flatMap(gps -> gps.getPowerTypes().stream())
-            .map(PowerType::getIdentifier)
+            .flatMap(gps -> gps.getPowers().stream())
+            .map(Power::getId)
+            .collect(Collectors.toSet());
+    }
+
+    public static Set<Power> flattenPowers(Collection<GlobalPowerSet> sets) {
+        return sets
+            .stream()
+            .map(GlobalPowerSet::getPowers)
+            .flatMap(Collection::stream)
             .collect(Collectors.toSet());
     }
 
     public static void applyGlobalPowers(Entity entity) {
 
-        if (entity.getWorld().isClient) {
+        if (entity.getWorld().isClient || !PowerHolderComponent.KEY.isProvidedBy(entity)) {
             return;
         }
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        if (component == null) {
-            return;
-        }
+        PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
 
         List<GlobalPowerSet> globalPowerSets = getApplicableSets(entity.getType());
-        Set<Identifier> powerTypeIds = getPowerTypeIds(globalPowerSets);
+        Set<Power> powers = flattenPowers(globalPowerSets);
 
-        boolean changed = removeExcessPowers(component, powerTypeIds);
-        for (GlobalPowerSet globalPowerSet : globalPowerSets) {
-            changed |= addMissingPowers(component, globalPowerSet);
+        Set<Power> removedPowers = removeExcessPowers(component, powers);
+        Set<Power> addedPowers = addMissingPowers(component, powers);
+
+        if (!removedPowers.isEmpty()) {
+            PowerHolderComponent.PacketHandlers.REVOKE_POWERS.sync(entity, Map.of(POWER_SOURCE, removedPowers));
         }
 
-        if (changed) {
-            component.sync();
+        if (!addedPowers.isEmpty()) {
+            PowerHolderComponent.PacketHandlers.GRANT_POWERS.sync(entity, Map.of(POWER_SOURCE, addedPowers));
         }
 
     }
 
-    private static boolean removeExcessPowers(PowerHolderComponent phc, Set<Identifier> expected) {
-
-        List<PowerType<?>> powersToRemove = phc.getPowersFromSource(POWER_SOURCE)
+    private static Set<Power> removeExcessPowers(PowerHolderComponent component, Set<Power> expected) {
+        return component.getPowersFromSource(POWER_SOURCE)
             .stream()
-            .filter(p -> !expected.contains(p.getIdentifier()))
-            .toList();
-
-        powersToRemove.forEach(p -> phc.removePower(p, POWER_SOURCE));
-        return !powersToRemove.isEmpty();
-
+            .filter(Predicate.not(expected::contains))
+            .filter(power -> component.removePower(power, POWER_SOURCE))
+            .collect(Collectors.toSet());
     }
 
-    private static boolean addMissingPowers(PowerHolderComponent phc, GlobalPowerSet powerSet) {
-
-        boolean added = false;
-        for(PowerType<?> power : powerSet.getPowerTypes()) {
-            if(!phc.hasPower(power, POWER_SOURCE)) {
-                phc.addPower(power, POWER_SOURCE);
-                added = true;
-            }
-        }
-
-        return added;
-
+    private static Set<Power> addMissingPowers(PowerHolderComponent component, Set<Power> powers) {
+        return powers
+            .stream()
+            .filter(power -> component.addPower(power, POWER_SOURCE))
+            .collect(Collectors.toSet());
     }
+
 }

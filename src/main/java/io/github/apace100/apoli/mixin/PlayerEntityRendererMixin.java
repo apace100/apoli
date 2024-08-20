@@ -10,8 +10,8 @@ import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import io.github.apace100.apoli.access.PseudoRenderDataHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PosePower;
-import io.github.apace100.apoli.power.ModelColorPower;
+import io.github.apace100.apoli.power.type.ModelColorPowerType;
+import io.github.apace100.apoli.power.type.PosePowerType;
 import io.github.apace100.apoli.util.ArmPoseReference;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -45,16 +45,16 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     @WrapOperation(method = "renderArm", at = {@At(value = "INVOKE", target = "Lnet/minecraft/client/model/ModelPart;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;II)V", ordinal = 0), @At(value = "INVOKE", target = "Lnet/minecraft/client/model/ModelPart;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;II)V", ordinal = 1)})
     private void apoli$makeArmAndSleeveTransparent(ModelPart instance, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, Operation<Void> original, MatrixStack mMatrices, VertexConsumerProvider mVertexConsumers, int mLight, AbstractClientPlayerEntity mPlayer, @Local Identifier skinTextureId) {
 
-        List<ModelColorPower> modelColorPowers = PowerHolderComponent.getPowers(mPlayer, ModelColorPower.class);
+        List<ModelColorPowerType> modelColorPowers = PowerHolderComponent.getPowerTypes(mPlayer, ModelColorPowerType.class);
         if (modelColorPowers.isEmpty()) {
             original.call(instance, matrices, vertices, light, overlay);
             return;
         }
 
-        float red = modelColorPowers.stream().map(ModelColorPower::getRed).reduce((a, b) -> a * b).orElse(1.0f);
-        float green = modelColorPowers.stream().map(ModelColorPower::getGreen).reduce((a, b) -> a * b).orElse(1.0f);
-        float blue = modelColorPowers.stream().map(ModelColorPower::getBlue).reduce((a, b) -> a * b).orElse(1.0f);
-        float alpha = modelColorPowers.stream().map(ModelColorPower::getAlpha).min(Float::compare).orElse(1.0f);
+        float red = modelColorPowers.stream().map(ModelColorPowerType::getRed).reduce((a, b) -> a * b).orElse(1.0f);
+        float green = modelColorPowers.stream().map(ModelColorPowerType::getGreen).reduce((a, b) -> a * b).orElse(1.0f);
+        float blue = modelColorPowers.stream().map(ModelColorPowerType::getBlue).reduce((a, b) -> a * b).orElse(1.0f);
+        float alpha = modelColorPowers.stream().map(ModelColorPowerType::getAlpha).min(Float::compare).orElse(1.0f);
 
         instance.render(matrices, mVertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(skinTextureId)), light, overlay, ColorHelper.Argb.fromFloats(alpha, red, green, blue));
 
@@ -79,7 +79,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isUsingRiptide()Z"))
     private boolean apoli$accountForForcedRiptide(boolean original, AbstractClientPlayerEntity player) {
-        return original || PosePower.hasEntityPose(player, EntityPose.SPIN_ATTACK);
+        return original || PosePowerType.hasEntityPose(player, EntityPose.SPIN_ATTACK);
     }
 
     @ModifyExpressionValue(method = "setupTransforms(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/util/math/MatrixStack;FFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getFallFlyingTicks()I"))

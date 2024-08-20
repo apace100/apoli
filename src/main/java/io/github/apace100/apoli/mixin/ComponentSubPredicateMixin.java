@@ -2,7 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import io.github.apace100.apoli.power.ModifyEnchantmentLevelPower;
+import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
@@ -22,7 +22,7 @@ public interface ComponentSubPredicateMixin {
             //  The resulting object had to be cast to ItemEnchantmentsComponent, but that should be fine since we're checking if the component
             //  type is enchantments anyway, right...? We can't even check if the object is an instance of it since that would just not work if
             //  it's null... -eggohito
-            return ModifyEnchantmentLevelPower.getEnchantments(stack, (ItemEnchantmentsComponent) objComponent, true);
+            return ModifyEnchantmentLevelPowerType.getEnchantments(stack, (ItemEnchantmentsComponent) objComponent, true);
         }
 
         else {

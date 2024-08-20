@@ -6,8 +6,8 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerManager;
 import net.minecraft.component.ComponentChanges;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.Entity;
@@ -76,7 +76,7 @@ public class RemovePowerLootFunction extends ConditionalLootFunction {
     protected void onSlotsRemoval(LootContext context, Collection<ItemPowersComponent.Entry> removedEntries) {
 
         Entity entity = context.get(LootContextParameters.THIS_ENTITY);
-        PowerType<?> power = PowerTypeRegistry.getNullable(powerId);
+        Power power = PowerManager.getOptional(powerId).orElse(null);
 
         if (entity == null || power == null) {
             return;

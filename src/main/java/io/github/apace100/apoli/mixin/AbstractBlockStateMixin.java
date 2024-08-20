@@ -5,8 +5,8 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.serialization.MapCodec;
 import io.github.apace100.apoli.access.BlockStateCollisionShapeAccess;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PhasingPower;
-import io.github.apace100.apoli.power.PreventBlockSelectionPower;
+import io.github.apace100.apoli.power.type.PhasingPowerType;
+import io.github.apace100.apoli.power.type.PreventBlockSelectionPowerType;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -43,21 +43,21 @@ public abstract class AbstractBlockStateMixin extends State<Block, BlockState> i
 
     @ModifyReturnValue(method = "getOutlineShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("RETURN"))
     private VoxelShape apoli$preventBlockSelection(VoxelShape original, BlockView blockView, BlockPos blockPos, ShapeContext context) {
-        return PreventBlockSelectionPower.doesPrevent(context, blockPos)
+        return PreventBlockSelectionPowerType.doesPrevent(context, blockPos)
             ? VoxelShapes.empty()
             : original;
     }
 
     @ModifyReturnValue(method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("RETURN"))
     private VoxelShape apoli$phaseThroughBlocks(VoxelShape original, BlockView blockView, BlockPos blockPos, ShapeContext context) {
-        return !apoli$queryOriginal && PhasingPower.shouldPhase(context, original, blockPos)
+        return !apoli$queryOriginal && PhasingPowerType.shouldPhase(context, original, blockPos)
             ? VoxelShapes.empty()
             : original;
     }
 
     @WrapWithCondition(method = "onEntityCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onEntityCollision(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V"))
     private boolean apoli$preventOnEntityCollisionCallWhenPhasing(Block instance, BlockState state, World world, BlockPos blockPos, Entity entity) {
-        return !PowerHolderComponent.hasPower(entity, PhasingPower.class, p -> p.doesApply(blockPos));
+        return !PowerHolderComponent.hasPowerType(entity, PhasingPowerType.class, p -> p.doesApply(blockPos));
     }
 
     @Override

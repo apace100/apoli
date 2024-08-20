@@ -10,7 +10,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class AdvancementUtil {
 
@@ -39,7 +38,7 @@ public class AdvancementUtil {
 
     }
 
-    public static void processCriteria(AdvancementEntry advancementEntry, Set<String> criteria, AdvancementCommand.Operation operation, ServerPlayerEntity serverPlayerEntity) {
+    public static void processCriteria(AdvancementEntry advancementEntry, Collection<String> criteria, AdvancementCommand.Operation operation, ServerPlayerEntity serverPlayerEntity) {
         for (String criterion : criteria.stream().filter(c -> advancementEntry.value().criteria().containsKey(c)).toList()) {
             operation.processEachCriterion(serverPlayerEntity, advancementEntry, criterion);
         }

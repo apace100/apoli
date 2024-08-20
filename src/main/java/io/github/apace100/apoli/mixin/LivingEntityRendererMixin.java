@@ -10,7 +10,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 import io.github.apace100.apoli.access.PseudoRenderDataHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.type.*;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -40,29 +40,29 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
 
     @ModifyReturnValue(method = "isShaking", at = @At("RETURN"))
     private boolean apoli$letEntitiesShakeTheirBodies(boolean original, LivingEntity entity) {
-        return original || PowerHolderComponent.hasPower(entity, ShakingPower.class);
+        return original || PowerHolderComponent.hasPowerType(entity, ShakingPowerType.class);
     }
 
     @ModifyExpressionValue(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
     private boolean apoli$preventOutlineWhenInvisible(boolean original, LivingEntity entity) {
-        return !PowerHolderComponent.hasPower(entity, InvisibilityPower.class, Predicate.not(InvisibilityPower::shouldRenderOutline)) && original;
+        return !PowerHolderComponent.hasPowerType(entity, InvisibilityPowerType.class, Predicate.not(InvisibilityPowerType::shouldRenderOutline)) && original;
     }
 
     @WrapOperation(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getRenderLayer(Lnet/minecraft/entity/LivingEntity;ZZZ)Lnet/minecraft/client/render/RenderLayer;"))
     private RenderLayer apoli$useTranslucentRenderLayerWhenVisible(LivingEntityRenderer<?, ?> renderer, LivingEntity entity, boolean showBody, boolean translucent, boolean showOutline, Operation<RenderLayer> original) {
-        return original.call(renderer, entity, showBody, translucent || showBody && PowerHolderComponent.hasPower(entity, ModelColorPower.class, ModelColorPower::isTranslucent), showOutline);
+        return original.call(renderer, entity, showBody, translucent || showBody && PowerHolderComponent.hasPowerType(entity, ModelColorPowerType.class, ModelColorPowerType::isTranslucent), showOutline);
     }
 
     @WrapWithCondition(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/feature/FeatureRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/Entity;FFFFFF)V"))
     private boolean apoli$preventFeatureRender(FeatureRenderer<?, ?> instance, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, Entity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-        return (!(instance instanceof ArmorFeatureRenderer<?, ?, ?>) || !PowerHolderComponent.hasPower(entity, InvisibilityPower.class, Predicate.not(InvisibilityPower::shouldRenderArmor)))
-            && !PowerHolderComponent.hasPower(entity, PreventFeatureRenderPower.class, p -> p.doesApply(instance));
+        return (!(instance instanceof ArmorFeatureRenderer<?, ?, ?>) || !PowerHolderComponent.hasPowerType(entity, InvisibilityPowerType.class, Predicate.not(InvisibilityPowerType::shouldRenderArmor)))
+            && !PowerHolderComponent.hasPowerType(entity, PreventFeatureRenderPowerType.class, p -> p.doesApply(instance));
     }
 
     @WrapOperation(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))
     private void apoli$renderColorChangedModel(EntityModel<LivingEntity> entityModel, MatrixStack matrixStack, VertexConsumer vertexConsumer, int light, int overlay, int argb, Operation<Void> original, LivingEntity entity) {
 
-        List<ModelColorPower> modelColorPowers = PowerHolderComponent.getPowers(entity, ModelColorPower.class);
+        List<ModelColorPowerType> modelColorPowers = PowerHolderComponent.getPowerTypes(entity, ModelColorPowerType.class);
         if (modelColorPowers.isEmpty()) {
             original.call(entityModel, matrixStack, vertexConsumer, light, overlay, argb);
             return;
@@ -71,21 +71,21 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
         //  TODO: Implement custom blending modes for blending colors -eggohito
         float newRed = modelColorPowers
             .stream()
-            .map(ModelColorPower::getRed)
+            .map(ModelColorPowerType::getRed)
             .reduce((float) ColorHelper.Argb.getRed(argb) / 255, (a, b) -> a * b);
         float newGreen = modelColorPowers
             .stream()
-            .map(ModelColorPower::getGreen)
+            .map(ModelColorPowerType::getGreen)
             .reduce((float) ColorHelper.Argb.getGreen(argb) / 255, (a, b) -> a * b);
         float newBlue = modelColorPowers
             .stream()
-            .map(ModelColorPower::getBlue)
+            .map(ModelColorPowerType::getBlue)
             .reduce((float) ColorHelper.Argb.getBlue(argb) / 255, (a, b) -> a * b);
 
         float oldAlpha = (float) ColorHelper.Argb.getAlpha(argb) / 255;
         float newAlpha = modelColorPowers
             .stream()
-            .map(ModelColorPower::getAlpha)
+            .map(ModelColorPowerType::getAlpha)
             .min(Float::compareTo)
             .map(alphaFactor -> oldAlpha * alphaFactor)
             .orElse(oldAlpha);
@@ -96,7 +96,7 @@ public abstract class LivingEntityRendererMixin extends EntityRenderer<LivingEnt
 
     @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isUsingRiptide()Z"))
     private boolean apoli$forceRiptidePose(boolean original, LivingEntity entity) {
-        return original || PosePower.hasEntityPose(entity, EntityPose.SPIN_ATTACK);
+        return original || PosePowerType.hasEntityPose(entity, EntityPose.SPIN_ATTACK);
     }
 
     @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;deathTime:I", ordinal = 0))

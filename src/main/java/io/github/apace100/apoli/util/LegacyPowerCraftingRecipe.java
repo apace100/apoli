@@ -2,8 +2,8 @@ package io.github.apace100.apoli.util;
 
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyCraftingPower;
-import io.github.apace100.apoli.power.RecipePower;
+import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
+import io.github.apace100.apoli.power.type.RecipePowerType;
 import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -83,9 +83,9 @@ public class LegacyPowerCraftingRecipe extends SpecialCraftingRecipe {
         return ApoliRecipeSerializers.LEGACY_POWER_CRAFTING;
     }
 
-    private static List<RecipePower> getRecipePowers(CraftingRecipeInput input) {
+    private static List<RecipePowerType> getRecipePowers(CraftingRecipeInput input) {
         return input instanceof PowerCraftingInventory pci
-            ? PowerHolderComponent.getPowers(pci.apoli$getPlayer(), RecipePower.class)
+            ? PowerHolderComponent.getPowerTypes(pci.apoli$getPlayer(), RecipePowerType.class)
             : Lists.newArrayList();
     }
 

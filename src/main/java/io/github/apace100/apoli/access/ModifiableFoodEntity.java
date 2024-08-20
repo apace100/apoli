@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.access;
 
-import io.github.apace100.apoli.power.EdibleItemPower;
-import io.github.apace100.apoli.power.ModifyFoodPower;
+import io.github.apace100.apoli.power.type.EdibleItemPowerType;
+import io.github.apace100.apoli.power.type.ModifyFoodPowerType;
 import net.minecraft.item.ItemStack;
 
 import java.util.List;
@@ -11,10 +11,10 @@ public interface ModifiableFoodEntity {
     ItemStack apoli$getOriginalFoodStack();
     void apoli$setOriginalFoodStack(ItemStack original);
 
-    List<ModifyFoodPower> apoli$getCurrentModifyFoodPowers();
-    void apoli$setCurrentModifyFoodPowers(List<ModifyFoodPower> powers);
+    List<ModifyFoodPowerType> apoli$getCurrentModifyFoodPowers();
+    void apoli$setCurrentModifyFoodPowers(List<ModifyFoodPowerType> powers);
 
-    EdibleItemPower apoli$getEdibleItemPower();
-    void apoli$setEdibleItemPower(EdibleItemPower power);
+    EdibleItemPowerType apoli$getEdibleItemPower();
+    void apoli$setEdibleItemPower(EdibleItemPowerType power);
 
 }

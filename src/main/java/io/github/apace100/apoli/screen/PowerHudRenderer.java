@@ -2,7 +2,7 @@ package io.github.apace100.apoli.screen;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.HudRendered;
+import io.github.apace100.apoli.power.type.HudRendered;
 import io.github.apace100.apoli.util.ApoliConfigClient;
 import io.github.apace100.apoli.util.HudRender;
 import net.fabricmc.api.EnvType;
@@ -16,7 +16,9 @@ import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Environment(EnvType.CLIENT)
@@ -55,12 +57,12 @@ public class PowerHudRenderer implements GameHudRender {
         x.set(((context.getScaledWindowWidth() / 2) + 20) + config.resourcesAndCooldowns.hudOffsetX);
         y.set((context.getScaledWindowHeight() - yOffset) + config.resourcesAndCooldowns.hudOffsetY);
 
-        PowerHolderComponent.KEY.get(player).getPowers()
+        PowerHolderComponent.KEY.get(player).getPowerTypes()
             .stream()
             .filter(p -> p instanceof HudRendered)
             .map(p -> (HudRendered) p)
             .filter(HudRendered::shouldRender)
-            .map(h -> Map.entry(h, h.getRenderSettings().getChildOrSelf(player)))
+            .map(h -> Map.entry(h, h.getRenderSettings().getActive(player)))
             .filter(entry -> entry.getValue().isPresent())
             .sorted(Map.Entry.comparingByValue(Comparator.comparing(Optional::get)))
             .forEach(entry -> {

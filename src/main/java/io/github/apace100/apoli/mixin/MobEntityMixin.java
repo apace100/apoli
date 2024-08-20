@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import io.github.apace100.apoli.power.ActionOnItemPickupPower;
-import io.github.apace100.apoli.power.PreventItemPickupPower;
+import io.github.apace100.apoli.power.type.ActionOnItemPickupPowerType;
+import io.github.apace100.apoli.power.type.PreventItemPickupPowerType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
@@ -22,11 +22,11 @@ public abstract class MobEntityMixin extends LivingEntity implements Targeter {
     @WrapWithCondition(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/MobEntity;loot(Lnet/minecraft/entity/ItemEntity;)V"))
     private boolean apoli$onItemPickup(MobEntity instance, ItemEntity itemEntity) {
 
-        if (PreventItemPickupPower.doesPrevent(itemEntity, this)) {
+        if (PreventItemPickupPowerType.doesPrevent(itemEntity, this)) {
             return false;
         }
 
-        ActionOnItemPickupPower.executeActions(itemEntity, this);
+        ActionOnItemPickupPowerType.executeActions(itemEntity, this);
         return true;
 
     }

@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import io.github.apace100.apoli.power.ModifyGrindstonePower;
+import io.github.apace100.apoli.power.type.ModifyGrindstonePowerType;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.GrindstoneScreenHandler;
@@ -25,7 +25,7 @@ public class GrindstoneScreenHandlerTopInputSlotMixin {
     @ModifyReturnValue(method = "canInsert", at = @At("RETURN"))
     private boolean apoli$allowStackInTopSlotViaPower(boolean original, ItemStack stack) {
         return original
-            || ModifyGrindstonePower.allowsInTopSlot(apoli$grindstoneHandler, stack);
+            || ModifyGrindstonePowerType.allowsInTopSlot(apoli$grindstoneHandler, stack);
     }
 
 }

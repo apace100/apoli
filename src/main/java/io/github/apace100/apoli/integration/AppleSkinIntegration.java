@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.integration;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.EdibleItemPower;
-import io.github.apace100.apoli.power.ModifyFoodPower;
+import io.github.apace100.apoli.power.type.EdibleItemPowerType;
+import io.github.apace100.apoli.power.type.ModifyFoodPowerType;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import net.minecraft.component.type.FoodComponent;
@@ -23,11 +23,11 @@ public class AppleSkinIntegration implements AppleSkinApi {
             PlayerEntity player = event.player;
             ItemStack stack = event.itemStack;
 
-            EdibleItemPower.get(stack, player)
-                .map(EdibleItemPower::getFoodComponent)
+            EdibleItemPowerType.get(stack, player)
+                .map(EdibleItemPowerType::getFoodComponent)
                 .ifPresent(foodComponent -> event.modifiedFoodComponent = foodComponent);
 
-            List<ModifyFoodPower> modifyFoodPowers = PowerHolderComponent.getPowers(player, ModifyFoodPower.class)
+            List<ModifyFoodPowerType> modifyFoodPowers = PowerHolderComponent.getPowerTypes(player, ModifyFoodPowerType.class)
                 .stream()
                 .filter(p -> p.doesApply(stack))
                 .toList();

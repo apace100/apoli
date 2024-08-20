@@ -2,7 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.RestrictArmorPower;
+import io.github.apace100.apoli.power.type.RestrictArmorPowerType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
@@ -22,7 +22,7 @@ public abstract class ArmorSlotMixin {
     @ModifyReturnValue(method = "canInsert", at = @At("RETURN"))
     private boolean apoli$preventArmorInsertion(boolean original, ItemStack stack) {
         return original
-            && !PowerHolderComponent.hasPower(this.entity, RestrictArmorPower.class, p -> p.canEquip(stack, this.equipmentSlot));
+            && !PowerHolderComponent.hasPowerType(this.entity, RestrictArmorPowerType.class, p -> p.doesRestrict(stack, this.equipmentSlot));
     }
 
 }
