@@ -74,6 +74,7 @@
 		"SlotRangesAccessor",
 		"StatusEffectInstanceMixin",
 		"StatusEffectMixin",
+		"TagGroupLoaderMixin",
 		"VibrationsListenerDataMixin",
 		"VibrationsTickerMixin",
 		"WeightedListEntryAccessor",
