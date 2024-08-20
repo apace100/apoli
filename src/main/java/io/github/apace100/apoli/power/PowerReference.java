@@ -29,7 +29,7 @@ public class PowerReference extends Power {
 
     @Override
     public PowerTypeFactory<? extends PowerType>.Instance getFactoryInstance() {
-        return this.strictGetReference().getFactoryInstance();
+        return this.getReferenceStrict().getFactoryInstance();
     }
 
     @Nullable
@@ -48,13 +48,13 @@ public class PowerReference extends Power {
             .orElse(null);
     }
 
-    public Power strictGetReference() {
+    public Power getReferenceStrict() {
         return PowerManager.get(this.getId());
     }
 
     @Override
     public void validate() throws Exception {
-        this.strictGetReference();
+        this.getReferenceStrict();
     }
 
 }

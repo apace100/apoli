@@ -15,10 +15,12 @@ import io.github.apace100.apoli.util.PowerPayloadType;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.Validatable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -27,6 +29,7 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class Power implements Validatable {
 
@@ -327,6 +330,50 @@ public class Power implements Validatable {
     public static Text createTranslatable(Identifier id, String type) {
         String translationKey = Util.createTranslationKey("power", id) + "." + type;
         return Text.translatable(translationKey);
+    }
+
+    public record Entry(PowerTypeFactory<?> typeFactory, PowerReference power, @Nullable NbtElement nbtData, List<Identifier> sources) {
+
+        private static final SerializableDataType<List<Identifier>> MUTABLE_IDENTIFIERS = SerializableDataTypes.IDENTIFIER.listOf(1, Integer.MAX_VALUE).xmap(LinkedList::new, Function.identity());
+
+        public static final StrictCodec<Entry> CODEC = SerializableDataType.compound(
+            new SerializableData()
+                .add("Factory", ApoliDataTypes.POWER_TYPE_FACTORY, null)
+                .addFunctionedDefault("type", ApoliDataTypes.POWER_TYPE_FACTORY, data -> data.get("Factory"))
+                .add("Type", ApoliDataTypes.POWER_REFERENCE, null)
+                .addFunctionedDefault("id", ApoliDataTypes.POWER_REFERENCE, data -> data.get("Type"))
+                .add("Data", ApoliDataTypes.NBT_ELEMENT, null)
+                .addFunctionedDefault("data", ApoliDataTypes.NBT_ELEMENT, data -> data.get("Data"))
+                .add("Sources", MUTABLE_IDENTIFIERS, null)
+                .addFunctionedDefault("sources", MUTABLE_IDENTIFIERS, data -> data.get("Sources"))
+                .postProcessor(data -> {
+
+                    if (!data.isPresent("type")) {
+                        throw Calio.createMissingRequiredFieldError("type");
+                    }
+
+                    if (!data.isPresent("id")) {
+                        throw Calio.createMissingRequiredFieldError("id");
+                    }
+
+                    if (!data.isPresent("sources")) {
+                        throw Calio.createMissingRequiredFieldError("sources");
+                    }
+
+                }),
+            data -> new Entry(
+                data.get("type"),
+                data.get("id"),
+                data.get("data"),
+                data.get("sources")
+            ),
+            (entry, data) -> data
+                .set("type", entry.typeFactory())
+                .set("id", entry.power())
+                .set("data", entry.nbtData())
+                .set("sources", entry.sources())
+        );
+
     }
 
 }
