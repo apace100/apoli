@@ -7,15 +7,14 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.recipe.CraftingRecipe;
-import net.minecraft.recipe.RecipeEntry;
+import net.minecraft.util.Identifier;
 
 public class RecipePowerType extends PowerType implements Prioritized<RecipePowerType> {
 
-    private final RecipeEntry<CraftingRecipe> recipe;
+    private final Identifier recipe;
     private final int priority;
 
-    public RecipePowerType(Power power, LivingEntity entity, RecipeEntry<CraftingRecipe> recipe, int priority) {
+    public RecipePowerType(Power power, LivingEntity entity, Identifier recipe, int priority) {
         super(power, entity);
         this.recipe = recipe;
         this.priority = priority;
@@ -26,7 +25,7 @@ public class RecipePowerType extends PowerType implements Prioritized<RecipePowe
         return priority;
     }
 
-    public RecipeEntry<CraftingRecipe> getRecipe() {
+    public Identifier getRecipeId() {
         return recipe;
     }
 
@@ -34,7 +33,7 @@ public class RecipePowerType extends PowerType implements Prioritized<RecipePowe
         return new PowerTypeFactory<>(
             Apoli.identifier("recipe"),
             new SerializableData()
-                .add("recipe", ApoliDataTypes.CRAFTING_RECIPE)
+                .add("recipe", ApoliDataTypes.POWER_CRAFTING_RECIPE_ID)
                 .add("priority", SerializableDataTypes.INT, 0),
             data -> (power, entity) -> new RecipePowerType(power, entity,
                 data.get("recipe"),

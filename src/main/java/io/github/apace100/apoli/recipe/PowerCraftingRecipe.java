@@ -5,10 +5,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.NeoRecipePower;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.type.RecipePowerType;
 import io.github.apace100.apoli.util.ApoliCodecs;
+import io.github.apace100.calio.Calio;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
@@ -39,18 +39,17 @@ public record PowerCraftingRecipe(Identifier powerId, CraftingRecipe recipe) imp
     @Override
     public boolean matches(CraftingRecipeInput input, World world) {
 
-        if (!(input instanceof PowerCraftingInventory pci) || pci.apoli$getPlayer() == null) {
+        if (!(input instanceof PowerCraftingInventory pci)) {
             return false;
         }
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(pci.apoli$getPlayer());
-        PowerType<?> powerType = PowerTypeRegistry.getNullable(powerId);
+        RecipePowerType recipePowerType = PowerHolderComponent.KEY.maybeGet(pci.apoli$getPlayer())
+            .flatMap(component -> PowerManager.getOptional(powerId).map(component::getPowerType))
+            .filter(RecipePowerType.class::isInstance)
+            .map(RecipePowerType.class::cast)
+            .orElse(null);
 
-        if (component == null || powerType == null || !(component.getPower(powerType) instanceof NeoRecipePower recipePower)) {
-            return false;
-        }
-
-        return world.getRecipeManager().get(recipePower.getRecipeId())
+        return recipePowerType != null && world.getRecipeManager().get(recipePowerType.getRecipeId())
             .filter(entry -> Objects.equals(this, entry.value()))
             .map(entry -> recipe.matches(input, world))
             .orElse(false);
@@ -127,7 +126,7 @@ public record PowerCraftingRecipe(Identifier powerId, CraftingRecipe recipe) imp
 
     public static void validatePowerRecipesPostReload() {
 
-        DataPackContents dataPackContents = Apoli.DATA_PACK_CONTENTS.get(Unit.INSTANCE);
+        DataPackContents dataPackContents = Calio.DATA_PACK_CONTENTS.get(Unit.INSTANCE);
         if (dataPackContents == null) {
             return;
         }
@@ -139,7 +138,7 @@ public record PowerCraftingRecipe(Identifier powerId, CraftingRecipe recipe) imp
             .stream()
             .filter(recipe -> recipe.value() instanceof PowerCraftingRecipe)
             .map(recipe -> new RecipeEntry<>(recipe.id(), (PowerCraftingRecipe) recipe.value()))
-            .filter(recipe -> !PowerTypeRegistry.contains(recipe.value().powerId()))
+            .filter(recipe -> !PowerManager.contains(recipe.value().powerId()))
             .peek(recipe -> Apoli.LOGGER.error("Removed power recipe \"{}\" which references invalid power \"{}\"!", recipe.id(), recipe.value().powerId()))
             .toList();
 

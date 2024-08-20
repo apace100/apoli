@@ -4,9 +4,8 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerCraftingBook;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.NeoRecipePower;
-import io.github.apace100.apoli.power.PowerType;
-import io.github.apace100.apoli.power.PowerTypeRegistry;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.type.RecipePowerType;
 import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
 import net.minecraft.recipe.RecipeEntry;
@@ -14,6 +13,8 @@ import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.book.RecipeBook;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+
+import java.util.Objects;
 
 @Mixin(RecipeResultCollection.class)
 public abstract class RecipeResultCollectionMixin {
@@ -23,13 +24,15 @@ public abstract class RecipeResultCollectionMixin {
 
         if (original && recipeEntry.value() instanceof PowerCraftingRecipe pcr && recipeBook instanceof PowerCraftingBook pcb && pcb.apoli$getPlayer() != null) {
 
-            PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(pcb.apoli$getPlayer());
-            PowerType<?> powerType = PowerTypeRegistry.getNullable(pcr.powerId());
+            PowerHolderComponent component = PowerHolderComponent.KEY.get(pcb.apoli$getPlayer());
+            RecipePowerType recipePowerType = PowerManager.getOptional(pcr.powerId())
+                .map(component::getPowerType)
+                .filter(RecipePowerType.class::isInstance)
+                .map(RecipePowerType.class::cast)
+                .orElse(null);
 
-            return powerType != null
-                && component != null
-                && component.getPower(powerType) instanceof NeoRecipePower recipePower
-                && recipeEntry.id().equals(recipePower.getRecipeId());
+            return recipePowerType != null
+                && Objects.equals(recipePowerType.getRecipeId(), recipeEntry.id());
 
         }
 

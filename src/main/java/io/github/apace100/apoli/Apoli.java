@@ -13,11 +13,14 @@ import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.condition.factory.*;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetManager;
+import io.github.apace100.apoli.integration.PostPowerReloadCallback;
 import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
+import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
@@ -38,7 +41,6 @@ import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ladysnake.cca.api.v3.entity.EntityComponentFactoryRegistry;
@@ -126,6 +128,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);
 
 		LOGGER.info("Apoli " + VERSION + " has initialized. Ready to power up your game!");
+
 	}
 
 	public static Identifier identifier(String path) {
