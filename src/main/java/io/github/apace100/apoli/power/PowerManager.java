@@ -21,7 +21,7 @@ import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -270,7 +270,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         Power power = Power.fromJson(powerId, powerJson);
         if (power.isMultiple()) {
 
-            Set<SubPower> subPowers = new ObjectOpenHashSet<>();
+            Set<SubPower> subPowers = new ObjectLinkedOpenHashSet<>();
             powerJson.asMap().forEach((key, jsonElement) -> {
 
                 if (shouldIgnoreField(key)) {
