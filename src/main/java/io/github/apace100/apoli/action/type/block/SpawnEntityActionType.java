@@ -50,7 +50,7 @@ public class SpawnEntityActionType {
             new SerializableData()
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
                 .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("tag", SerializableDataTypes.NBT, new NbtCompound()),
+                .add("tag", SerializableDataTypes.NBT_COMPOUND, new NbtCompound()),
             (data, block) -> action(block.getLeft(), block.getMiddle(),
                 data.get("entity_type"),
                 data.getOrElse("entity_action", e -> {}),

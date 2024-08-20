@@ -342,8 +342,8 @@ public class Power implements Validatable {
                 .addFunctionedDefault("type", ApoliDataTypes.POWER_TYPE_FACTORY, data -> data.get("Factory"))
                 .add("Type", ApoliDataTypes.POWER_REFERENCE, null)
                 .addFunctionedDefault("id", ApoliDataTypes.POWER_REFERENCE, data -> data.get("Type"))
-                .add("Data", ApoliDataTypes.NBT_ELEMENT, null)
-                .addFunctionedDefault("data", ApoliDataTypes.NBT_ELEMENT, data -> data.get("Data"))
+                .add("Data", SerializableDataTypes.NBT_ELEMENT, null)
+                .addFunctionedDefault("data", SerializableDataTypes.NBT_ELEMENT, data -> data.get("Data"))
                 .add("Sources", MUTABLE_IDENTIFIERS, null)
                 .addFunctionedDefault("sources", MUTABLE_IDENTIFIERS, data -> data.get("Sources"))
                 .postProcessor(data -> {

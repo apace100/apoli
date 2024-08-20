@@ -21,7 +21,7 @@ public class CustomDataConditionType {
         return new ConditionTypeFactory<>(
             Apoli.identifier("custom_data"),
             new SerializableData()
-                .add("nbt", SerializableDataTypes.NBT),
+                .add("nbt", SerializableDataTypes.NBT_COMPOUND),
             (data, worldAndStack) -> condition(worldAndStack.getRight(),
                 data.get("nbt")
             )

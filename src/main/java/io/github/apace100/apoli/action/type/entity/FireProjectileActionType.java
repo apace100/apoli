@@ -99,7 +99,7 @@ public class FireProjectileActionType {
             new SerializableData()
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
                 .add("projectile_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("tag", SerializableDataTypes.NBT, new NbtCompound())
+                .add("tag", SerializableDataTypes.NBT_COMPOUND, new NbtCompound())
                 .add("divergence", SerializableDataTypes.FLOAT, 1F)
                 .add("speed", SerializableDataTypes.FLOAT, 1.5F)
                 .add("count", SerializableDataTypes.INT, 1),

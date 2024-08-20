@@ -26,7 +26,7 @@ public class NbtConditionType {
         return new ConditionTypeFactory<>(
             Apoli.identifier("nbt"),
             new SerializableData()
-                .add("nbt", SerializableDataTypes.NBT),
+                .add("nbt", SerializableDataTypes.NBT_COMPOUND),
             (data, cachedBlock) -> condition(cachedBlock,
                 data.get("nbt")
             )

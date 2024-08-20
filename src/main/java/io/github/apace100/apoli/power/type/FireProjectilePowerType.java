@@ -229,7 +229,7 @@ public class FireProjectilePowerType extends ActiveCooldownPowerType {
                 .add("sound", SerializableDataTypes.SOUND_EVENT, null)
                 .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
                 .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
-                .add("tag", SerializableDataTypes.NBT, new NbtCompound())
+                .add("tag", SerializableDataTypes.NBT_COMPOUND, new NbtCompound())
                 .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key())
                 .add("projectile_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("shooter_action", ApoliDataTypes.ENTITY_ACTION, null),

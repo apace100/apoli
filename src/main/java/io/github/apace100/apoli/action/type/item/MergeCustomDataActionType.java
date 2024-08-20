@@ -23,7 +23,7 @@ public class MergeCustomDataActionType {
         return ItemActionTypeFactory.createItemStackBased(
             Apoli.identifier("merge_custom_data"),
             new SerializableData()
-                .add("nbt", SerializableDataTypes.NBT),
+                .add("nbt", SerializableDataTypes.NBT_COMPOUND),
             (data, worldAndStack) -> action(worldAndStack.getRight(),
                 data.get("nbt")
             )
