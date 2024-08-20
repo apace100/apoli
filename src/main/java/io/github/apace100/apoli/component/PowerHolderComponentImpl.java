@@ -63,16 +63,16 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public <T extends PowerType> List<T> getPowerTypes(Class<T> powerClass) {
-        return getPowerTypes(powerClass, false);
+    public <T extends PowerType> List<T> getPowerTypes(Class<T> typeClass) {
+        return getPowerTypes(typeClass, false);
     }
 
     @Override
-    public <T extends PowerType> List<T> getPowerTypes(Class<T> powerClass, boolean includeInactive) {
+    public <T extends PowerType> List<T> getPowerTypes(Class<T> typeClass, boolean includeInactive) {
         return powers.values()
             .stream()
-            .filter(type -> powerClass.isAssignableFrom(type.getClass()))
-            .map(powerClass::cast)
+            .filter(typeClass::isInstance)
+            .map(typeClass::cast)
             .filter(type -> includeInactive || type.isActive())
             .collect(Collectors.toCollection(LinkedList::new));
     }
@@ -326,22 +326,25 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void writeSyncPacket(RegistryByteBuf buf, ServerPlayerEntity recipient) {
-        buf.writeVarInt(-1);
+        buf.writeVarInt(0);
         PowerHolderComponent.super.writeSyncPacket(buf, recipient);
     }
 
     @Override
     public void applySyncPacket(RegistryByteBuf buf) {
 
-        switch (buf.readVarInt()) {
+        int syncType = buf.readVarInt();
+        switch (syncType) {
             case 0 ->
-                PacketHandlers.GRANT_POWERS.apply(buf, this);
+                PowerHolderComponent.super.applySyncPacket(buf);
             case 1 ->
-                PacketHandlers.REVOKE_POWERS.apply(buf, this);
+                PacketHandlers.GRANT_POWERS.apply(buf, this);
             case 2 ->
+                PacketHandlers.REVOKE_POWERS.apply(buf, this);
+            case 3 ->
                 PacketHandlers.REVOKE_ALL_POWERS.apply(buf, this);
             default ->
-                PowerHolderComponent.super.applySyncPacket(buf);
+                Apoli.LOGGER.warn("Received unknown sync type with ID {} (expected value range: [0 to 3]) when applying sync packet to entity {}! Skipping...", syncType, owner.getName().getString());
         }
 
     }

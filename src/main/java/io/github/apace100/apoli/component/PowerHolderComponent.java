@@ -59,9 +59,9 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     Set<Power> getPowers(boolean includeSubPowers);
 
-    <T extends PowerType> List<T> getPowerTypes(Class<T> powerClass);
+    <T extends PowerType> List<T> getPowerTypes(Class<T> typeClass);
 
-    <T extends PowerType> List<T> getPowerTypes(Class<T> powerClass, boolean includeInactive);
+    <T extends PowerType> List<T> getPowerTypes(Class<T> typeClass, boolean includeInactive);
 
     List<Identifier> getSources(Power power);
 
@@ -81,7 +81,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static boolean grantPower(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
-        if (KEY.isProvidedBy(entity)) {
+        if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
 
             PowerHolderComponent component = KEY.get(entity);
             boolean granted = powersBySource.entrySet()
@@ -89,7 +89,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 .flatMap(e -> e.getValue().stream().map(power -> component.addPower(power, e.getKey())))
                 .reduce(false, Boolean::logicalOr);
 
-            if (granted && sync && !entity.getWorld().isClient) {
+            if (granted && sync) {
                 PacketHandlers.GRANT_POWERS.sync(entity, powersBySource);
             }
 
@@ -109,7 +109,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static boolean revokePower(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
-        if (KEY.isProvidedBy(entity)) {
+        if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
 
             PowerHolderComponent component = KEY.get(entity);
             boolean revoked = powersBySource.entrySet()
@@ -117,7 +117,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 .flatMap(e -> e.getValue().stream().map(power -> component.removePower(power, e.getKey())))
                 .reduce(false, Boolean::logicalOr);
 
-            if (revoked && sync && !entity.getWorld().isClient) {
+            if (revoked && sync) {
                 PacketHandlers.REVOKE_POWERS.sync(entity, powersBySource);
             }
 
@@ -137,7 +137,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static int revokeAllPowersFromSource(@NotNull Entity entity, Collection<Identifier> sources, boolean sync) {
 
-        if (KEY.isProvidedBy(entity)) {
+        if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
 
             PowerHolderComponent component = KEY.get(entity);
             int revokedPowers = sources
@@ -145,7 +145,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 .map(component::removeAllPowersFromSource)
                 .reduce(0, Integer::sum);
 
-            if (revokedPowers > 0 && sync && !entity.getWorld().isClient) {
+            if (revokedPowers > 0 && sync) {
                 PacketHandlers.REVOKE_ALL_POWERS.sync(entity, sources);
             }
 
@@ -165,8 +165,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             return;
         }
 
-        if (power instanceof PowerReference powerTypeRef) {
-            power = powerTypeRef.getReference();
+        if (power instanceof PowerReference powerReference) {
+            power = powerReference.getReference();
         }
 
         if (power == null) {
@@ -188,8 +188,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         powerData.put("Data", powerType.toTag());
         SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), power.getId(), powerData);
 
-        for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
-            ServerPlayNetworking.send(otherPlayer, syncPowerPacket);
+        for (ServerPlayerEntity trackingPlayer : PlayerLookup.tracking(entity)) {
+            ServerPlayNetworking.send(trackingPlayer, syncPowerPacket);
         }
 
         if (entity instanceof ServerPlayerEntity player) {
@@ -213,8 +213,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
         for (Power power : powers) {
 
-            if (power instanceof PowerReference powerTypeRef) {
-                power = powerTypeRef.getReference();
+            if (power instanceof PowerReference powerReference) {
+                power = powerReference.getReference();
             }
 
             if (power == null) {
@@ -247,7 +247,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
         Optional<T> power = KEY.maybeGet(entity)
             .stream()
-            .flatMap(pc -> pc.getPowerTypes(powerClass).stream())
+            .map(pc-> pc.getPowerTypes(powerClass))
+            .flatMap(Collection::stream)
             .filter(filter)
             .findFirst();
 
@@ -283,12 +284,14 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         return hasPowerType(entity, powerClass, p -> true);
     }
 
-    static <T extends PowerType> boolean hasPowerType(Entity entity, Class<T> powerClass, @NotNull Predicate<T> powerFilter) {
+    static <T extends PowerType> boolean hasPowerType(Entity entity, Class<T> typeClass, @NotNull Predicate<T> typeFilter) {
         return KEY.maybeGet(entity)
             .stream()
-            .flatMap(pc -> pc.getPowerTypes().stream())
-            .filter(p -> powerClass.isAssignableFrom(p.getClass()))
-            .anyMatch(p -> p.isActive() && powerFilter.test(powerClass.cast(p)));
+            .map(PowerHolderComponent::getPowerTypes)
+            .flatMap(Collection::stream)
+            .filter(typeClass::isInstance)
+            .map(typeClass::cast)
+            .anyMatch(type -> type.isActive() && typeFilter.test(type));
     }
 
     static <T extends ValueModifyingPowerType> float modify(Entity entity, Class<T> powerClass, float baseValue) {
@@ -351,7 +354,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 powersBySource.forEach((source, powers) -> powers.forEach(power -> component.addPower(power, source)));
 
             },
-            0
+            1
         );
 
         public static final PacketHandler<Map<Identifier, Collection<Power>>> REVOKE_POWERS = new PacketHandler.Impl<>(
@@ -365,7 +368,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
                 powersBySource.forEach((source, powers) -> powers.forEach(power -> component.removePower(power, source)));
 
             },
-            1
+            2
         );
 
         public static final PacketHandler<Collection<Identifier>> REVOKE_ALL_POWERS = new PacketHandler.Impl<>(
@@ -374,7 +377,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             (buf, component) -> buf
                 .readCollection(ArrayList::new, PacketByteBuf::readIdentifier)
                 .forEach(component::removeAllPowersFromSource),
-            2
+            3
         );
 
     }
