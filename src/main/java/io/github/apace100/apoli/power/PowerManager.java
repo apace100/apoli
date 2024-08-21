@@ -11,7 +11,7 @@ import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.*;
-import io.github.apace100.apoli.networking.packet.s2c.SyncPowerTypesS2CPacket;
+import io.github.apace100.apoli.networking.packet.s2c.SyncPowersS2CPacket;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -520,11 +520,11 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     }
 
     public void send(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, new SyncPowerTypesS2CPacket(powersById));
+        ServerPlayNetworking.send(player, new SyncPowersS2CPacket(powersById));
     }
 
     @Environment(EnvType.CLIENT)
-    public static void receive(SyncPowerTypesS2CPacket packet, ClientPlayNetworking.Context context) {
+    public static void receive(SyncPowersS2CPacket packet, ClientPlayNetworking.Context context) {
         startBuild();
         packet.powersById().forEach(PowerManager::register);
         endBuild();

@@ -257,7 +257,7 @@ public class Power implements Validatable {
                 return switch (payloadType) {
                     case MULTIPLE_POWER -> {
 
-                        Set<SubPower> subPowers = new HashSet<>();
+                        Set<SubPower> subPowers = new LinkedHashSet<>();
                         int count = buf.readVarInt();
 
                         for (int i = 0; i < count; i++) {
