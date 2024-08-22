@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.server.MinecraftServer;
@@ -23,6 +24,8 @@ import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 
 public class BlockActions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {

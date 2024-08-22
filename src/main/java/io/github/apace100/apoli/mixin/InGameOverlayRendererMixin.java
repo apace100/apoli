@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.PhasingPower;
+import io.github.apace100.apoli.power.type.PhasingPowerType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -19,11 +19,13 @@ public class InGameOverlayRendererMixin {
 
     @Inject(method = "renderInWallOverlay", at = @At("HEAD"), cancellable = true)
     private static void preventInWallOverlayRendering(Sprite sprite, MatrixStack matrixStack, CallbackInfo ci) {
-        MinecraftClient minecraftClient = MinecraftClient.getInstance();
-        if(minecraftClient.cameraEntity != null) {
-            if(PowerHolderComponent.getPowers(minecraftClient.cameraEntity, PhasingPower.class).size() > 0) {
-                ci.cancel();
-            }
+
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        if (PowerHolderComponent.hasPowerType(client.getCameraEntity(), PhasingPowerType.class)) {
+            ci.cancel();
         }
+
     }
+
 }

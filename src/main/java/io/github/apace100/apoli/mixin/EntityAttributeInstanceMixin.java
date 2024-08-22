@@ -3,13 +3,14 @@ package io.github.apace100.apoli.mixin;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.OwnableAttributeInstance;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyAttributePower;
+import io.github.apace100.apoli.power.type.ModifyAttributePowerType;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.registry.entry.RegistryEntry;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,7 +27,10 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
     @Shadow
     public abstract Set<EntityAttributeModifier> getModifiers();
 
-    @Shadow public abstract EntityAttribute getAttribute();
+    @Shadow
+    public abstract double getBaseValue();
+
+    @Shadow public abstract RegistryEntry<EntityAttribute> getAttribute();
 
     @Unique
     @Nullable
@@ -42,10 +46,15 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
         return apoli$owner;
     }
 
+    /**
+     *  TODO: Optimize this impl. by using a modifier cache, injecting into {@link EntityAttributeInstance#computeValue()}, and calling
+     *        {@link EntityAttributeInstance#onUpdate()} if the modifier cache is no longer up-to-date -eggohito
+     */
+    @SuppressWarnings("JavadocReference")
     @ModifyReturnValue(method = "getValue", at = @At("RETURN"))
     private double apoli$modifyAttribute(double original) {
 
-        List<Modifier> powerModifiers = PowerHolderComponent.getPowers(this.apoli$getOwner(), ModifyAttributePower.class)
+        List<Modifier> powerModifiers = PowerHolderComponent.getPowerTypes(this.apoli$getOwner(), ModifyAttributePowerType.class)
             .stream()
             .filter(p -> p.getAttribute() == this.getAttribute())
             .flatMap(p -> p.getModifiers().stream())
@@ -60,7 +69,7 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
             .map(ModifierUtil::fromAttributeModifier)
             .toList();
 
-        return ModifierUtil.applyModifiers(this.apoli$getOwner(), Stream.concat(powerModifiers.stream(), vanillaModifiers.stream()).toList(), original);
+        return ModifierUtil.applyModifiers(this.apoli$getOwner(), Stream.concat(powerModifiers.stream(), vanillaModifiers.stream()).toList(), this.getBaseValue());
 
     }
 

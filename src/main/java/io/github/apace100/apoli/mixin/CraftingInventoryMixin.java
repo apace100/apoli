@@ -1,24 +1,39 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.access.PowerCraftingInventory;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.type.PowerType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(CraftingInventory.class)
-public class CraftingInventoryMixin implements PowerCraftingInventory {
+public abstract class CraftingInventoryMixin implements PowerCraftingInventory {
 
     @Unique
-    private Power apoli$CachedPower;
+    private PowerType apoli$CachedPowerType;
+
+    @Unique
+    private PlayerEntity apoli$cachedPlayer;
 
     @Override
-    public void apoli$setPower(Power power) {
-        apoli$CachedPower = power;
+    public void apoli$setPowerType(PowerType powerType) {
+        apoli$CachedPowerType = powerType;
     }
 
     @Override
-    public Power apoli$getPower() {
-        return apoli$CachedPower;
+    public PowerType apoli$getPowerType() {
+        return apoli$CachedPowerType;
     }
+
+    @Override
+    public PlayerEntity apoli$getPlayer() {
+        return apoli$cachedPlayer;
+    }
+
+    @Override
+    public void apoli$setPlayer(PlayerEntity player) {
+        this.apoli$cachedPlayer = player;
+    }
+
 }

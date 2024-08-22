@@ -7,12 +7,11 @@
 		}
 	},
 	"food_component": {
-		"hunger": 8,
+		"nutrition": 8,
 		"saturation": 2.5,
-		"meat": true
-	},
-	"result_stack": {
-		"item": "minecraft:water_bucket"
+		"using_converts_to": {
+			"id": "minecraft:water_bucket"
+		}
 	},
 	"condition": {
 		"type": "apoli:or",

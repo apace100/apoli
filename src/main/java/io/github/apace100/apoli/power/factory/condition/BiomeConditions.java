@@ -8,17 +8,16 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.registry.RegistryKeys;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
-import java.util.List;
-
 public class BiomeConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
         MetaConditions.register(ApoliDataTypes.BIOME_CONDITION, BiomeConditions::register);
@@ -28,13 +27,6 @@ public class BiomeConditions {
             .add("comparison", ApoliDataTypes.COMPARISON)
             .add("compare_to", SerializableDataTypes.FLOAT),
             (data, biome) -> ((Comparison)data.get("comparison")).compare(biome.value().getTemperature(), data.getFloat("compare_to"))));
-        register(new ConditionFactory<>(Apoli.identifier("category"), new SerializableData() // Deprecated
-            .add("category", SerializableDataTypes.STRING),
-            (data, biome) -> {
-                Identifier tagId = Apoli.identifier("category/" + data.getString("category"));
-                TagKey<Biome> biomeTag = TagKey.of(RegistryKeys.BIOME, tagId);
-                return biome.isIn(biomeTag);
-            }));
         register(new ConditionFactory<>(Apoli.identifier("precipitation"), new SerializableData()
             .add("precipitation", SerializableDataType.enumValue(Biome.Precipitation.class)),
             (data, biome) -> biome.value().getPrecipitation(new BlockPos(0, 64, 0)).equals(data.get("precipitation"))));

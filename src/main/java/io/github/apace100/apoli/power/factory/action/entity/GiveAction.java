@@ -49,7 +49,7 @@ public class GiveAction {
                 return;
             }
 
-            if (!ItemStack.canCombine(stackInSlot, stack) || stackInSlot.getCount() >= stackInSlot.getMaxCount()) {
+            if (!ItemStack.areEqual(stackInSlot, stack) || stackInSlot.getCount() >= stackInSlot.getMaxCount()) {
                 break tryPreferredSlot;
             }
 

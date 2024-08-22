@@ -3,13 +3,12 @@ package io.github.apace100.apoli.power.factory.action.entity;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.action.ActionFactory;
+import io.github.apace100.apoli.power.type.InventoryPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 
@@ -29,9 +28,9 @@ public class DropInventoryAction {
                 PowerHolderComponent.KEY.maybeGet(entity).ifPresent(
                     powerHolderComponent -> {
 
-                        PowerType<?> targetPowerType = data.get("power");
-                        Power targetPower = powerHolderComponent.getPower(targetPowerType);
-                        if (!(targetPower instanceof InventoryPower inventoryPower)) return;
+                        Power targetPower = data.get("power");
+                        PowerType targetPowerType = powerHolderComponent.getPowerType(targetPower);
+                        if (!(targetPowerType instanceof InventoryPowerType inventoryPower)) return;
 
                         dropInventory(data, entity, inventoryPower);
 
@@ -52,7 +51,7 @@ public class DropInventoryAction {
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("slots", ApoliDataTypes.ITEM_SLOTS, null)
                 .add("slot", ApoliDataTypes.ITEM_SLOT, null)
-                .add("power", ApoliDataTypes.POWER_TYPE, null)
+                .add("power", ApoliDataTypes.POWER_REFERENCE, null)
                 .add("throw_randomly", SerializableDataTypes.BOOLEAN, false)
                 .add("retain_ownership", SerializableDataTypes.BOOLEAN, true)
                 .add("amount", SerializableDataTypes.INT, 0),

@@ -1,160 +1,171 @@
 package io.github.apace100.apoli.component;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.MultiplePower;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     private final LivingEntity owner;
-    private final ConcurrentHashMap<PowerType<?>, Power> powers = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<PowerType<?>, List<Identifier>> powerSources = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<Power, PowerType> powers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Power, List<Identifier>> powerSources = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<Power, PowerType> powersToRemove = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Power, PowerType> powersToAdd = new ConcurrentHashMap<>();
 
     public PowerHolderComponentImpl(LivingEntity owner) {
         this.owner = owner;
     }
 
     @Override
-    public boolean hasPower(PowerType<?> powerType) {
-        return powers.containsKey(powerType);
+    public boolean hasPower(Power power) {
+        return powers.containsKey(power);
     }
 
     @Override
-    public boolean hasPower(PowerType<?> powerType, Identifier source) {
-        return powerSources.containsKey(powerType) && powerSources.get(powerType).contains(source);
+    public boolean hasPower(Power power, Identifier source) {
+        return powerSources.containsKey(power) && powerSources.get(power).contains(source);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Power> T getPower(PowerType<T> powerType) {
-        if(powers.containsKey(powerType)) {
-            return (T)powers.get(powerType);
+    public <T extends PowerType> T getPowerType(Power power) {
+        if(powers.containsKey(power)) {
+            return (T)powers.get(power);
         }
         return null;
     }
 
     @Override
-    public List<Power> getPowers() {
+    public List<PowerType> getPowerTypes() {
         return new LinkedList<>(powers.values());
     }
 
-    public Set<PowerType<?>> getPowerTypes(boolean getSubPowerTypes) {
-
-        Set<PowerType<?>> powerTypes = new HashSet<>(powers.keySet());
-        if (!getSubPowerTypes) {
-
-            for (PowerType<?> powerType : powers.keySet()) {
-
-                if (!(powerType instanceof MultiplePowerType<?> multiplePowerType)) {
-                    continue;
-                }
-
-                multiplePowerType.getSubPowers()
-                    .stream()
-                    .filter(PowerTypeRegistry::contains)
-                    .map(PowerTypeRegistry::get)
-                    .forEach(powerTypes::remove);
-
-            }
-
-        }
-
-        return powerTypes;
-
+    public Set<Power> getPowers(boolean includeSubPowers) {
+        return powers.keySet()
+            .stream()
+            .filter(pt -> includeSubPowers || !pt.isSubPower())
+            .collect(Collectors.toCollection(HashSet::new));
     }
 
     @Override
-    public <T extends Power> List<T> getPowers(Class<T> powerClass) {
-        return getPowers(powerClass, false);
+    public <T extends PowerType> List<T> getPowerTypes(Class<T> powerClass) {
+        return getPowerTypes(powerClass, false);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Power> List<T> getPowers(Class<T> powerClass, boolean includeInactive) {
+    public <T extends PowerType> List<T> getPowerTypes(Class<T> powerClass, boolean includeInactive) {
         List<T> list = new LinkedList<>();
-        for(Power power : powers.values()) {
-            if(powerClass.isAssignableFrom(power.getClass()) && (includeInactive || power.isActive())) {
-                list.add((T)power);
+        for(PowerType powerType : powers.values()) {
+            if(powerClass.isAssignableFrom(powerType.getClass()) && (includeInactive || powerType.isActive())) {
+                list.add((T) powerType);
             }
         }
         return list;
     }
 
     @Override
-    public List<Identifier> getSources(PowerType<?> powerType) {
-        if(powerSources.containsKey(powerType)) {
-            return List.copyOf(powerSources.get(powerType));
+    public List<Identifier> getSources(Power power) {
+        if(powerSources.containsKey(power)) {
+            return List.copyOf(powerSources.get(power));
         } else {
             return List.of();
         }
     }
 
-    public void removePower(PowerType<?> powerType, Identifier source) {
+    @Override
+    public boolean removePower(Power power, Identifier source) {
+        return this.removePower(power, source, true);
+    }
 
-        StringBuilder errorMessage = new StringBuilder("Cannot remove a non-existing power");
-        if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
-            powerType = powerTypeRef.getReferencedPowerType();
-            errorMessage.append(" (ID: \"").append(powerType.getIdentifier()).append("\")");
+    protected boolean removePower(Power power, Identifier source, boolean root) {
+
+        StringBuilder errorMessage= new StringBuilder("Cannot remove a non-existing power");
+        if (power instanceof PowerReference powerTypeReference) {
+            errorMessage.append(" (ID: \")").append(power.getId()).append("\")");
+            power = powerTypeReference.getReference();
         }
 
-        if (powerType == null) {
+        if (power == null) {
             Apoli.LOGGER.error(errorMessage.append(" from entity ").append(owner.getName().getString()));
-            return;
+            return false;
         }
 
-        List<Identifier> sources = powerSources.getOrDefault(powerType, new LinkedList<>());
-        if (sources.isEmpty()) {
-            return;
+        if (!powerSources.containsKey(power)) {
+            return false;
         }
 
+        List<Identifier> sources = powerSources.get(power);
         sources.remove(source);
-        if (sources.isEmpty()) {
 
-            Power power = powers.remove(powerType);
-            if (power != null) {
+        if (sources.isEmpty() && powers.containsKey(power)) {
 
-                power.onRemoved();
-                power.onRemoved(false);
+            PowerType powerType = powers.get(power);
+            powersToRemove.put(power, powerType);
 
-                power.onLost();
+            powerType.onRemoved();
+            powerType.onRemoved(false);
 
-            }
+            powerType.onLost();
 
         }
 
-        if (powerType instanceof MultiplePowerType<?> multiplePowerType) {
+        if (power instanceof MultiplePower multiplePowerType) {
             multiplePowerType.getSubPowers()
                 .stream()
-                .filter(PowerTypeRegistry::contains)
-                .map(PowerTypeRegistry::get)
-                .forEach(pt -> removePower(pt, source));
+                .filter(PowerManager::contains)
+                .map(PowerManager::get)
+                .forEach(pt -> this.removePower(pt, source, false));
         }
+
+        if (!root) {
+            return true;
+        }
+
+        powers.keySet().removeIf(powersToRemove::containsKey);
+        powerSources.keySet().removeIf(powersToRemove::containsKey);
+
+        powersToRemove.clear();
+
+        return true;
 
     }
 
     @Override
     public int removeAllPowersFromSource(Identifier source) {
-        List<PowerType<?>> powersToRemove = getPowersFromSource(source);
-        powersToRemove.forEach(p -> removePower(p, source));
-        return powersToRemove.size();
+        //noinspection MappingBeforeCount
+        return (int) this.getPowersFromSource(source)
+            .stream()
+            .filter(Predicate.not(Power::isSubPower))
+            .peek(pt -> this.removePower(pt, source))
+            .count();
     }
 
     @Override
-    public List<PowerType<?>> getPowersFromSource(Identifier source) {
-        List<PowerType<?>> powers = new LinkedList<>();
-        for(Map.Entry<PowerType<?>, List<Identifier>> sourceEntry : powerSources.entrySet()) {
+    public List<Power> getPowersFromSource(Identifier source) {
+        List<Power> powers = new LinkedList<>();
+        for(Map.Entry<Power, List<Identifier>> sourceEntry : powerSources.entrySet()) {
             if(sourceEntry.getValue().contains(source)) {
                 powers.add(sourceEntry.getKey());
             }
@@ -162,44 +173,66 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         return powers;
     }
 
-    public boolean addPower(PowerType<?> powerType, Identifier source) {
+    @Override
+    public boolean addPower(Power power, Identifier source) {
+        return this.addPower(power, source, true);
+    }
+
+    protected boolean addPower(Power power, Identifier source, boolean root) {
 
         StringBuilder errorMessage = new StringBuilder("Cannot add a non-existing power");
-        if (powerType instanceof PowerTypeReference<?> powerTypeRef) {
-            powerType = powerTypeRef.getReferencedPowerType();
-            errorMessage.append(" (ID: \"").append(powerTypeRef.getIdentifier()).append("\")");
+        if (power instanceof PowerReference powerTypeRef) {
+            power = powerTypeRef.getReference();
+            errorMessage.append(" (ID: \"").append(powerTypeRef.getId()).append("\")");
         }
 
-        if (powerType == null) {
+        if (power == null) {
             Apoli.LOGGER.error(errorMessage.append(" to entity ").append(owner.getName().getString()));
             return false;
         }
 
-        List<Identifier> sources = powerSources.computeIfAbsent(powerType, pt -> new LinkedList<>());
+        List<Identifier> sources = powerSources.computeIfAbsent(power, pt -> new LinkedList<>());
         if (sources.contains(source)) {
             return false;
         }
 
+        PowerType powerType = power.create(owner);
         sources.add(source);
-        if (powerType instanceof MultiplePowerType<?> multiplePowerType) {
+
+        powerSources.put(power, sources);
+        powers.put(power, powerType);
+
+        powersToAdd.put(power, powerType);
+
+        if (power instanceof MultiplePower multiplePowerType) {
             multiplePowerType.getSubPowers()
                 .stream()
-                .filter(PowerTypeRegistry::contains)
-                .map(PowerTypeRegistry::get)
-                .forEach(pt -> addPower(pt, source));
+                .filter(PowerManager::contains)
+                .map(PowerManager::get)
+                .forEach(pt -> this.addPower(pt, source, false));
         }
 
-        Power power = powerType.create(owner);
-        power.onGained();
+        if (!root) {
+            return true;
+        }
 
-        power.onAdded();
-        power.onAdded(false);
+        Iterator<Map.Entry<Power, PowerType>> addedIterator = powersToAdd.entrySet().iterator();
+        while (addedIterator.hasNext()) {
 
-        powerSources.put(powerType, sources);
-        powers.put(powerType, power);
+            Map.Entry<Power, PowerType> addedEntry = addedIterator.next();
 
-        if (owner instanceof ServerPlayerEntity player) {
-            GainedPowerCriterion.INSTANCE.trigger(player, powerType);
+            PowerType addedPowerType = addedEntry.getValue();
+            addedIterator.remove();
+
+            addedPowerType.onGained();
+
+            addedPowerType.onAdded();
+            addedPowerType.onAdded(false);
+
+            if (owner instanceof ServerPlayerEntity player) {
+                GainedPowerCriterion.INSTANCE.trigger(player, addedEntry.getKey());
+            }
+
         }
 
         return true;
@@ -208,31 +241,31 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void serverTick() {
-        this.getPowers(Power.class, true).stream().filter(p -> p.shouldTick() && (p.shouldTickWhenInactive() || p.isActive())).forEach(Power::tick);
+        this.getPowerTypes(PowerType.class, true).stream().filter(p -> p.shouldTick() && (p.shouldTickWhenInactive() || p.isActive())).forEach(PowerType::tick);
     }
 
     @Override
-    public void readFromNbt(@NotNull NbtCompound compoundTag) {
+    public void readFromNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup lookup) {
         this.fromTag(compoundTag, true);
     }
 
-    private void fromTag(NbtCompound compoundTag, boolean callPowerOnAdd) {
+    protected void fromTag(NbtCompound compoundTag, boolean callPowerOnAdd) {
 
         if (owner == null) {
             Apoli.LOGGER.error("Owner was null in PowerHolderComponent#fromTag! This is not supposed to happen :(");
             return;
         }
 
-        for (Power power : powers.values()) {
+        for (PowerType powerType : powers.values()) {
 
             if (callPowerOnAdd) {
 
-                power.onRemoved();
-                power.onLost();
+                powerType.onRemoved();
+                powerType.onLost();
 
             }
 
-            power.onRemoved(!callPowerOnAdd);
+            powerType.onRemoved(!callPowerOnAdd);
 
         }
 
@@ -243,7 +276,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             NbtCompound powerTag = powersTag.getCompound(i);
             Identifier powerTypeId = Identifier.tryParse(powerTag.getString("Type"));
 
-            if (powerTypeId == null || (callPowerOnAdd && PowerTypeRegistry.isDisabled(powerTypeId))) {
+            if (powerTypeId == null || (callPowerOnAdd && PowerManager.isDisabled(powerTypeId))) {
                 continue;
             }
 
@@ -256,27 +289,32 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
             try {
 
-                PowerType<?> powerType = PowerTypeRegistry.get(powerTypeId);
-                Power power = powerType.create(owner);
+                Power power = PowerManager.get(powerTypeId);
+                PowerType powerType = power.create(owner);
 
-                powerSources.put(powerType, sources);
+                if (sources.isEmpty()) {
+                    Apoli.LOGGER.warn("Power \"{}\" with missing sources found on entity {}! Skipping...", powerTypeId, owner.getName().getString());
+                    continue;
+                }
+
+                powerSources.put(power, sources);
 
                 try {
                     NbtElement powerData = powerTag.get("Data");
-                    power.fromTag(powerData);
+                    powerType.fromTag(powerData, !callPowerOnAdd);
                 } catch (ClassCastException e) {
                     //  Occurs when the power was overridden by a data pack since last world load
                     //  where the overridden power now uses different data classes
                     Apoli.LOGGER.warn("Data type of power \"{}\" changed, skipping data for that power on entity {}", powerTypeId, owner.getName().getString());
                 }
 
-                powers.put(powerType, power);
+                powers.put(power, powerType);
 
                 if (callPowerOnAdd) {
-                    power.onAdded();
+                    powerType.onAdded();
                 }
 
-                power.onAdded(!callPowerOnAdd);
+                powerType.onAdded(!callPowerOnAdd);
 
             } catch (IllegalArgumentException e) {
                 //  Occurs when the power is either not registered in the power registry,
@@ -286,25 +324,25 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
         }
 
-        for (Map.Entry<PowerType<?>, List<Identifier>> entry : powerSources.entrySet()) {
+        for (Map.Entry<Power, List<Identifier>> entry : powerSources.entrySet()) {
 
-            PowerType<?> powerType = entry.getKey();
-            if (!(powerType instanceof MultiplePowerType<?> multiplePowerType)) {
+            Power power = entry.getKey();
+            if (!(power instanceof MultiplePower multiplePowerType)) {
                 continue;
             }
 
-            List<Identifier> subPowerIds = multiplePowerType.getSubPowers();
+            Set<Identifier> subPowerIds = multiplePowerType.getSubPowers();
             for (Identifier subPowerId : subPowerIds) {
                 try {
 
-                    PowerType<?> subPowerType = PowerTypeRegistry.get(subPowerId);
+                    Power subPower = PowerManager.get(subPowerId);
                     for (Identifier source : entry.getValue()) {
-                        addPower(subPowerType, source);
+                        addPower(subPower, source);
                     }
 
                 } catch (IllegalArgumentException e) {
-                    if (!(callPowerOnAdd && PowerTypeRegistry.isDisabled(subPowerId))) {
-                        Apoli.LOGGER.warn("Multiple power \"{}\" (read from NBT data) contained unregistered sub-power: \"{}\"", powerType.getIdentifier(), subPowerId);
+                    if (!(callPowerOnAdd && PowerManager.isDisabled(subPowerId))) {
+                        Apoli.LOGGER.warn("Multiple power \"{}\" (read from NBT data) contained unregistered sub-power: \"{}\"", power.getId(), subPowerId);
                     }
                 }
             }
@@ -314,17 +352,25 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void writeToNbt(@NotNull NbtCompound compoundTag) {
+    public void writeToNbt(@NotNull NbtCompound compoundTag, RegistryWrapper.WrapperLookup wrapperLookup) {
+        this.toTag(compoundTag, false);
+    }
+
+    private void toTag(NbtCompound compoundTag, boolean onSync) {
 
         NbtList powersTag = new NbtList();
-        for (Map.Entry<PowerType<?>, Power> entry : powers.entrySet()) {
+        for (Map.Entry<Power, PowerType> entry : powers.entrySet()) {
 
-            PowerType<?> power = entry.getKey();
+            Power power = entry.getKey();
             NbtCompound powerTag = new NbtCompound();
 
-            powerTag.putString("Factory", power.getFactory().getFactory().getSerializerId().toString());
-            powerTag.putString("Type", power.getIdentifier().toString());
-            powerTag.put("Data", entry.getValue().toTag());
+            if (!powerSources.containsKey(power) || powerSources.get(power).isEmpty()) {
+                continue;
+            }
+
+            powerTag.putString("Factory", power.getFactoryInstance().getFactory().getSerializerId().toString());
+            powerTag.putString("Type", power.getId().toString());
+            powerTag.put("Data", entry.getValue().toTag(onSync));
 
             NbtList sourcesTag = new NbtList();
             powerSources.get(entry.getKey())
@@ -342,11 +388,24 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void applySyncPacket(PacketByteBuf buf) {
+    public void writeSyncPacket(RegistryByteBuf buf, ServerPlayerEntity recipient) {
+
+        NbtCompound compoundTag = new NbtCompound();
+        this.toTag(compoundTag, true);
+
+        buf.writeNbt(compoundTag);
+
+    }
+
+    @Override
+    public void applySyncPacket(RegistryByteBuf buf) {
+
         NbtCompound compoundTag = buf.readNbt();
-        if(compoundTag != null) {
+
+        if (compoundTag != null) {
             this.fromTag(compoundTag, false);
         }
+
     }
 
     @Override
@@ -357,8 +416,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder("PowerHolderComponent[\n");
-        for (Map.Entry<PowerType<?>, Power> powerEntry : powers.entrySet()) {
-            str.append("\t").append(PowerTypeRegistry.getId(powerEntry.getKey())).append(": ").append(powerEntry.getValue().toTag().toString()).append("\n");
+        for (Map.Entry<Power, PowerType> powerEntry : powers.entrySet()) {
+            str.append("\t").append(powerEntry.getKey().getId()).append(": ").append(powerEntry.getValue().toTag().toString()).append("\n");
         }
         str.append("]");
         return str.toString();

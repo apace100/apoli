@@ -14,7 +14,7 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
 
@@ -25,9 +25,11 @@ public class DamageSourceDescription {
 
     private static final Multimap<String, TagKey<DamageType>> STRING_TO_TAGS = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
     private static final Map<TagKey<DamageType>, String> TAG_TO_STRING = new HashMap<>();
+
     private static final int TAG_COUNT;
 
     static {
+
         registerDamageTypeTagMapping("bypasses_armor", DamageTypeTags.BYPASSES_ARMOR);
         registerDamageTypeTagMapping("fire", DamageTypeTags.IS_FIRE);
         registerDamageTypeTagMapping("unblockable", DamageTypeTags.BYPASSES_SHIELD);
@@ -37,10 +39,12 @@ public class DamageSourceDescription {
         registerDamageTypeTagMapping("projectile", DamageTypeTags.IS_PROJECTILE);
         registerDamageTypeTagMapping("explosive", DamageTypeTags.IS_EXPLOSION);
 
-        for(String jsonKey : STRING_TO_TAGS.keySet()) {
+        for (String jsonKey : STRING_TO_TAGS.keySet()) {
             DATA.add(jsonKey, SerializableDataTypes.BOOLEAN, false);
         }
+
         TAG_COUNT = STRING_TO_TAGS.values().size();
+
     }
 
     private static void registerDamageTypeTagMapping(String jsonKey, TagKey<DamageType> tag) {
@@ -99,29 +103,46 @@ public class DamageSourceDescription {
     }
 
     private void findBestMatchingDamageType(DamageSources damageSources) {
-        Optional<? extends RegistryEntry<DamageType>> bestMatchingDamageType = damageSources.registry.streamEntries()
-                .max(Comparator.comparingInt(this::getTagMatches));
-        if(bestMatchingDamageType.isPresent()) {
-            RegistryEntry<DamageType> bestMatch = bestMatchingDamageType.get();
-            int bestMatchTagCount = getTagMatches(bestMatch);
-            if(bestMatchTagCount < TAG_COUNT) {
-                Apoli.LOGGER.warn("Could not find a perfect damage type for legacy damage source field, best match: {} out of {} tags with damage type \"{}\". Consider creating your own custom damage type.",
-                        bestMatchTagCount, TAG_COUNT, bestMatch.getKey().map(RegistryKey::getValue).map(Identifier::toString).orElse("<unknown>"));
-            }
-            damageType = bestMatch.getKey().orElseThrow();
-        } else {
-            throw new NoSuchElementException("Damage type registry was empty or not loaded yet");
+
+        var damageTypeRegistryKey = damageSources.registry.getKey();
+        Triple<? extends RegistryEntry<DamageType>, Integer, Integer> bestMatch = damageSources.registry
+            .streamEntries()
+            .map(ref -> Triple.of(ref, this.getTagMatches(ref), this.getNameMatches(ref, damageSources)))
+            .max(Comparator.comparingInt(tri -> tri.getMiddle() + tri.getRight()))
+            .orElseThrow(() -> new NoSuchElementException("Registry \"" + damageTypeRegistryKey.getValue() + "\" was empty or not loaded yet!"));
+
+        int bestMatchTagCount = bestMatch.getMiddle();
+        int bestMatchNameCount = bestMatch.getRight();
+
+        RegistryKey<DamageType> bestMatchDamageType = bestMatch.getLeft()
+            .getKey()
+            .orElseThrow();
+
+        if (bestMatchTagCount < TAG_COUNT || bestMatchNameCount == 0) {
+            Apoli.LOGGER.warn("Couldn't find the perfect damage type for legacy damage source \"{}\". Best match: {} out of {} tags with damage type \"{}\". Consider creating your own custom damage type.",
+                this.getName(),
+                bestMatchTagCount,
+                TAG_COUNT,
+                bestMatchDamageType.getValue());
         }
+
+        this.damageType = bestMatchDamageType;
+
+    }
+
+    private int getNameMatches(RegistryEntry<DamageType> damageTypeEntry, DamageSources damageSources) {
+        return damageTypeEntry.getKeyOrValue()
+            .map(damageSources.registry::getOrEmpty, Optional::of)
+            .filter(damageType -> this.getName().equals(damageType.msgId()))
+            .map(damageType -> 100)
+            .orElse(0);
     }
 
     private int getTagMatches(RegistryEntry<DamageType> damageType) {
-        int count = 0;
-        for(TagKey<DamageType> tag : STRING_TO_TAGS.values()) {
-            if(damageType.isIn(tag) == desiredDamageTypeTags.contains(tag)) {
-                count++;
-            }
-        }
-        return count;
+        return (int) STRING_TO_TAGS.values()
+            .stream()
+            .filter(tag -> damageType.isIn(tag) == desiredDamageTypeTags.contains(tag))
+            .count();
     }
 
     public static DamageSourceDescription fromData(SerializableData.Instance dataInstance) {
@@ -134,16 +155,20 @@ public class DamageSourceDescription {
         return damageSourceDescription;
     }
 
-    public static SerializableData.Instance toData(SerializableData data, DamageSourceDescription damageSourceDescription) {
-        SerializableData.Instance instance = data.new Instance();
-        instance.set("name", damageSourceDescription.getName());
+    public static void toData(DamageSourceDescription damageSourceDescription, SerializableData.Instance data) {
+
+        data.set("name", damageSourceDescription.getName());
         Set<TagKey<DamageType>> tags = damageSourceDescription.getDamageTypeTags();
+
         for(Map.Entry<TagKey<DamageType>, String> damageTagPair : TAG_TO_STRING.entrySet()) {
+
             TagKey<DamageType> tag = damageTagPair.getKey();
             String jsonKey = damageTagPair.getValue();
-            boolean isTrueAlready = instance.isPresent(jsonKey) && instance.getBoolean(jsonKey);
-            instance.set(jsonKey, isTrueAlready || tags.contains(tag));
+
+            boolean isTrueAlready = data.isPresent(jsonKey) && data.getBoolean(jsonKey);
+            data.set(jsonKey, isTrueAlready || tags.contains(tag));
+
         }
-        return instance;
+
     }
 }

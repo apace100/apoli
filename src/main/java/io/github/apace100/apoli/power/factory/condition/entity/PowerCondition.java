@@ -3,7 +3,7 @@ package io.github.apace100.apoli.power.factory.condition.entity;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.PowerType;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -15,24 +15,24 @@ public class PowerCondition {
 
     public static boolean condition(SerializableData.Instance data, Entity entity) {
 
-        PowerType<?> powerType = data.get("power");
+        Power power = data.get("power");
         Identifier powerSource = data.get("source");
 
         return PowerHolderComponent.KEY.maybeGet(entity)
-            .map(component -> hasPower(component, powerType, powerSource))
+            .map(component -> hasPower(component, power, powerSource))
             .orElse(false);
 
     }
 
-    private static boolean hasPower(PowerHolderComponent component, PowerType<?> powerType, @Nullable Identifier powerSource) {
-        return powerSource != null ? component.hasPower(powerType, powerSource) : component.hasPower(powerType);
+    private static boolean hasPower(PowerHolderComponent component, Power power, @Nullable Identifier powerSource) {
+        return powerSource != null ? component.hasPower(power, powerSource) : component.hasPower(power);
     }
 
     public static ConditionFactory<Entity> getFactory() {
         return new ConditionFactory<>(
             Apoli.identifier("power"),
             new SerializableData()
-                .add("power", ApoliDataTypes.POWER_TYPE)
+                .add("power", ApoliDataTypes.POWER_REFERENCE)
                 .add("source", SerializableDataTypes.IDENTIFIER, null),
             PowerCondition::condition
         );

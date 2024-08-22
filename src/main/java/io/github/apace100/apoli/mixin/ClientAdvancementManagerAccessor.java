@@ -13,4 +13,5 @@ public interface ClientAdvancementManagerAccessor {
 
     @Accessor
     Map<Advancement, AdvancementProgress> getAdvancementProgresses();
+
 }

@@ -3,10 +3,10 @@ package io.github.apace100.apoli.power.factory.condition.entity;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.InventoryPower;
 import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerType;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
+import io.github.apace100.apoli.power.type.InventoryPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -39,13 +39,13 @@ public class InventoryCondition {
                 break powerTest;
             }
 
-            PowerType<?> targetPowerType = data.get("power");
-            if (targetPowerType == null) {
+            Power targetPower = data.get("power");
+            if (targetPower == null) {
                 break powerTest;
             }
 
-            Power targetPower = component.getPower(targetPowerType);
-            if (!(targetPower instanceof InventoryPower inventoryPower)) {
+            PowerType targetPowerType = component.getPowerType(targetPower);
+            if (!(targetPowerType instanceof InventoryPowerType inventoryPower)) {
                 break powerTest;
             }
 
@@ -66,7 +66,7 @@ public class InventoryCondition {
                 .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
                 .add("slots", ApoliDataTypes.ITEM_SLOTS, null)
                 .add("slot", ApoliDataTypes.ITEM_SLOT, null)
-                .add("power", ApoliDataTypes.POWER_TYPE, null)
+                .add("power", ApoliDataTypes.POWER_REFERENCE, null)
                 .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN)
                 .add("compare_to", SerializableDataTypes.INT, 0),
             InventoryCondition::condition

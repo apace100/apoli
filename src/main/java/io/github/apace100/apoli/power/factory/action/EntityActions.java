@@ -3,20 +3,23 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.action.entity.*;
 import io.github.apace100.apoli.power.factory.action.meta.*;
+import io.github.apace100.apoli.power.type.CooldownPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.power.type.TogglePowerType;
+import io.github.apace100.apoli.power.type.VariableIntPowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.AreaEffectCloudEntity;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.PotionUtil;
 import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
@@ -31,12 +34,13 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.joml.Vector3f;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class EntityActions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {
@@ -79,7 +83,7 @@ public class EntityActions {
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("clear_effect"), new SerializableData()
-            .add("effect", SerializableDataTypes.STATUS_EFFECT, null),
+            .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY, null),
             (data, entity) -> {
                 if(entity instanceof LivingEntity le) {
                     if(data.isPresent("effect")) {
@@ -127,33 +131,6 @@ public class EntityActions {
             .add("block_action", ApoliDataTypes.BLOCK_ACTION),
             (data, entity) -> ((ActionFactory<Triple<World, BlockPos, Direction>>.Instance)data.get("block_action")).accept(
                 Triple.of(entity.getWorld(), entity.getBlockPos(), Direction.UP))));
-        register(new ActionFactory<>(Apoli.identifier("spawn_effect_cloud"), new SerializableData()
-            .add("radius", SerializableDataTypes.FLOAT, 3.0F)
-            .add("radius_on_use", SerializableDataTypes.FLOAT, -0.5F)
-            .add("wait_time", SerializableDataTypes.INT, 10)
-            .add("effect", SerializableDataTypes.STATUS_EFFECT_INSTANCE, null)
-            .add("effects", SerializableDataTypes.STATUS_EFFECT_INSTANCES, null),
-            (data, entity) -> {
-                AreaEffectCloudEntity areaEffectCloudEntity = new AreaEffectCloudEntity(entity.getWorld(), entity.getX(), entity.getY(), entity.getZ());
-                if (entity instanceof LivingEntity) {
-                    areaEffectCloudEntity.setOwner((LivingEntity)entity);
-                }
-                areaEffectCloudEntity.setRadius(data.getFloat("radius"));
-                areaEffectCloudEntity.setRadiusOnUse(data.getFloat("radius_on_use"));
-                areaEffectCloudEntity.setWaitTime(data.getInt("wait_time"));
-                areaEffectCloudEntity.setRadiusGrowth(-areaEffectCloudEntity.getRadius() / (float)areaEffectCloudEntity.getDuration());
-                List<StatusEffectInstance> effects = new LinkedList<>();
-                if(data.isPresent("effect")) {
-                    effects.add(data.get("effect"));
-                }
-                if(data.isPresent("effects")) {
-                    effects.addAll(data.get("effects"));
-                }
-                areaEffectCloudEntity.setColor(PotionUtil.getColor(effects));
-                effects.forEach(areaEffectCloudEntity::addEffect);
-
-                entity.getWorld().spawnEntity(areaEffectCloudEntity);
-            }));
         register(new ActionFactory<>(Apoli.identifier("extinguish"), new SerializableData(),
             (data, entity) -> entity.extinguish()));
         register(new ActionFactory<>(Apoli.identifier("execute_command"), new SerializableData()
@@ -176,31 +153,31 @@ public class EntityActions {
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("change_resource"), new SerializableData()
-            .add("resource", ApoliDataTypes.POWER_TYPE)
+            .add("resource", ApoliDataTypes.POWER_REFERENCE)
             .add("change", SerializableDataTypes.INT)
             .add("operation", ApoliDataTypes.RESOURCE_OPERATION, ResourceOperation.ADD),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    PowerType<?> powerType = data.get("resource");
-                    Power p = component.getPower(powerType);
+                    Power power = data.get("resource");
+                    PowerType p = component.getPowerType(power);
                     ResourceOperation operation = data.get("operation");
                     int change = data.getInt("change");
-                    if(p instanceof VariableIntPower vip) {
+                    if(p instanceof VariableIntPowerType vip) {
                         if (operation == ResourceOperation.ADD) {
                             int newValue = vip.getValue() + change;
                             vip.setValue(newValue);
                         } else if (operation == ResourceOperation.SET) {
                             vip.setValue(change);
                         }
-                        PowerHolderComponent.syncPower(entity, powerType);
-                    } else if(p instanceof CooldownPower cp) {
+                        PowerHolderComponent.syncPower(entity, power);
+                    } else if(p instanceof CooldownPowerType cp) {
                         if (operation == ResourceOperation.ADD) {
                             cp.modify(change);
                         } else if (operation == ResourceOperation.SET) {
                             cp.setCooldown(change);
                         }
-                        PowerHolderComponent.syncPower(entity, powerType);
+                        PowerHolderComponent.syncPower(entity, power);
                     }
                 }
             }));
@@ -232,24 +209,24 @@ public class EntityActions {
         register(GiveAction.getFactory());
         register(EquippedItemAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("trigger_cooldown"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE),
+            .add("power", ApoliDataTypes.POWER_REFERENCE),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType<?>)data.get("power"));
-                    if(p instanceof CooldownPower cp) {
+                    PowerType p = component.getPowerType(data.get("power"));
+                    if(p instanceof CooldownPowerType cp) {
                         cp.use();
                     }
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("toggle"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE),
+            .add("power", ApoliDataTypes.POWER_REFERENCE),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    Power p = component.getPower((PowerType<?>)data.get("power"));
-                    if(p instanceof TogglePower) {
-                        ((TogglePower)p).onUse();
+                    PowerType p = component.getPowerType(data.get("power"));
+                    if(p instanceof TogglePowerType) {
+                        ((TogglePowerType)p).onUse();
                     }
                 }
             }));
@@ -257,32 +234,32 @@ public class EntityActions {
             .add("event", SerializableDataTypes.GAME_EVENT),
             (data, entity) -> entity.emitGameEvent(data.get("event"))));
         register(new ActionFactory<>(Apoli.identifier("set_resource"), new SerializableData()
-            .add("resource", ApoliDataTypes.POWER_TYPE)
+            .add("resource", ApoliDataTypes.POWER_REFERENCE)
             .add("value", SerializableDataTypes.INT),
             (data, entity) -> {
                 if(entity instanceof LivingEntity) {
                     PowerHolderComponent component = PowerHolderComponent.KEY.get(entity);
-                    PowerType<?> powerType = data.get("resource");
-                    Power p = component.getPower(powerType);
+                    Power power = data.get("resource");
+                    PowerType p = component.getPowerType(power);
                     int value = data.getInt("value");
-                    if(p instanceof VariableIntPower vip) {
+                    if(p instanceof VariableIntPowerType vip) {
                         vip.setValue(value);
-                        PowerHolderComponent.syncPower(entity, powerType);
-                    } else if(p instanceof CooldownPower cp) {
+                        PowerHolderComponent.syncPower(entity, power);
+                    } else if(p instanceof CooldownPowerType cp) {
                         cp.setCooldown(value);
-                        PowerHolderComponent.syncPower(entity, powerType);
+                        PowerHolderComponent.syncPower(entity, power);
                     }
                 }
             }));
         register(new ActionFactory<>(Apoli.identifier("grant_power"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("power", ApoliDataTypes.POWER_REFERENCE)
             .add("source", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
                 component.addPower(data.get("power"), data.getId("source"));
                 component.sync();
             })));
         register(new ActionFactory<>(Apoli.identifier("revoke_power"), new SerializableData()
-            .add("power", ApoliDataTypes.POWER_TYPE)
+            .add("power", ApoliDataTypes.POWER_REFERENCE)
             .add("source", SerializableDataTypes.IDENTIFIER),
             (data, entity) -> PowerHolderComponent.KEY.maybeGet(entity).ifPresent(component -> {
                 component.removePower(data.get("power"), data.getId("source"));
@@ -370,8 +347,10 @@ public class EntityActions {
         register(SelectorAction.getFactory());
         register(GrantAdvancementAction.getFactory());
         register(RevokeAdvancementAction.getFactory());
-        register(ActionOnSetAction.getFactory());
+        register(ActionOnEntitySetAction.getFactory());
         register(RandomTeleportAction.getFactory());
+        register(ShowToastAction.getFactory());
+        register(SpawnEffectCloudAction.getFactory());
     }
 
     private static void register(ActionFactory<Entity> actionFactory) {

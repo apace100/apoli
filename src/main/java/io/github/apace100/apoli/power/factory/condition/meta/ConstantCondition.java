@@ -1,9 +1,14 @@
 package io.github.apace100.apoli.power.factory.condition.meta;
 
+import com.google.common.base.Suppliers;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.factory.condition.ConditionFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+
+import java.util.function.Supplier;
 
 public class ConstantCondition {
 
@@ -18,6 +23,17 @@ public class ConstantCondition {
                 .add("value", SerializableDataTypes.BOOLEAN),
             ConstantCondition::condition
         );
+    }
+
+    public static <T> Supplier<ConditionFactory<T>.Instance> create(Registry<ConditionFactory<T>> registry, boolean value) {
+        return Suppliers.memoize(() -> {
+
+            ConditionFactory<T> constantFactory = registry.getOrThrow(RegistryKey.of(registry.getKey(), Apoli.identifier("constant")));
+            SerializableData serializableData = constantFactory.getSerializableData();
+
+            return constantFactory.fromData(serializableData.instance().set("value", value));
+
+        });
     }
 
 }

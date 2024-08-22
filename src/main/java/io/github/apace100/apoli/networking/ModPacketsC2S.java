@@ -3,14 +3,14 @@ package io.github.apace100.apoli.networking;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
-import io.github.apace100.apoli.networking.packet.c2s.PlayerLandedC2SPacket;
-import io.github.apace100.apoli.networking.packet.c2s.PreventedEntityInteractionC2SPacket;
 import io.github.apace100.apoli.networking.packet.c2s.UseActivePowersC2SPacket;
 import io.github.apace100.apoli.networking.task.VersionHandshakeTask;
-import io.github.apace100.apoli.power.*;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.type.Active;
+import io.github.apace100.apoli.power.type.PowerType;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConfigurationNetworkHandler;
@@ -18,39 +18,44 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-@SuppressWarnings("UnstableApiUsage")
 public class ModPacketsC2S {
 
     public static void register() {
 
         if (Apoli.PERFORM_VERSION_CHECK) {
             ServerConfigurationConnectionEvents.CONFIGURE.register(ModPacketsC2S::handshake);
-            ServerConfigurationNetworking.registerGlobalReceiver(VersionHandshakePacket.TYPE, ModPacketsC2S::handleHandshakeReply);
+            ServerConfigurationNetworking.registerGlobalReceiver(VersionHandshakePacket.PACKET_ID, ModPacketsC2S::handleHandshakeReply);
         }
 
-        ServerPlayNetworking.registerGlobalReceiver(UseActivePowersC2SPacket.TYPE, ModPacketsC2S::onUseActivePowers);
-        ServerPlayNetworking.registerGlobalReceiver(PlayerLandedC2SPacket.TYPE, ModPacketsC2S::onPlayerLanded);
-        ServerPlayNetworking.registerGlobalReceiver(PreventedEntityInteractionC2SPacket.TYPE, ModPacketsC2S::onPreventedEntityInteraction);
+        ServerPlayConnectionEvents.INIT.register((handler, server) ->
+            ServerPlayNetworking.registerReceiver(handler, UseActivePowersC2SPacket.PACKET_ID, ModPacketsC2S::onUseActivePowers)
+        );
 
     }
 
     private static void handshake(ServerConfigurationNetworkHandler handler, MinecraftServer server) {
 
-        if (ServerConfigurationNetworking.canSend(handler, VersionHandshakePacket.TYPE)) {
+        if (ServerConfigurationNetworking.canSend(handler, VersionHandshakePacket.PACKET_ID)) {
             handler.addTask(new VersionHandshakeTask(Apoli.SEMVER));
-            return;
         }
 
-        handler.disconnect(Text.of("This server requires you to install the Apoli mod (v" + Apoli.VERSION + ") to play."));
+        else {
+            handler.disconnect(Text.of("This server requires you to install the Apoli mod (v" + Apoli.VERSION + ") to play."));
+        }
 
     }
 
-    private static void handleHandshakeReply(VersionHandshakePacket packet, ServerConfigurationNetworkHandler handler, PacketSender responseSender) {
 
-        boolean mismatch = packet.semver().length != Apoli.SEMVER.length;
-        for (int i = 0; !mismatch && i < packet.semver().length - 1; i++) {
+    private static void handleHandshakeReply(VersionHandshakePacket payload, ServerConfigurationNetworking.Context context) {
 
-            if (packet.semver()[i] != Apoli.SEMVER[i]) {
+        ServerConfigurationNetworkHandler handler = context.networkHandler();
+
+        int[] semver = payload.semver();
+        boolean mismatch = semver.length != Apoli.SEMVER.length;
+
+        for (int i = 0; !mismatch && i < semver.length - 1; i++) {
+
+            if (semver[i] != Apoli.SEMVER[i]) {
                 mismatch = true;
                 break;
             }
@@ -65,39 +70,37 @@ public class ModPacketsC2S {
         StringBuilder semverString = new StringBuilder();
         String separator = "";
 
-        for (int i : packet.semver()) {
+        for (int i : payload.semver()) {
             semverString.append(separator).append(i);
             separator = ".";
         }
 
-        handler.disconnect(Text.translatable("apoli.gui.version_mismatch", Apoli.VERSION, semverString));
+        handler.disconnect(Text.stringifiedTranslatable("apoli.gui.version_mismatch", Apoli.VERSION, semverString));
 
     }
 
-    private static void onUseActivePowers(UseActivePowersC2SPacket packet, ServerPlayerEntity player, PacketSender responseSender) {
 
+    private static void onUseActivePowers(UseActivePowersC2SPacket payload, ServerPlayNetworking.Context context) {
+
+        ServerPlayerEntity player = context.player();
         PowerHolderComponent component = PowerHolderComponent.KEY.get(player);
-        for (Identifier powerTypeId : packet.powerTypeIds()) {
 
-            PowerType<?> powerType = PowerTypeRegistry.getNullable(powerTypeId);
+        for (Identifier powerTypeId : payload.powerTypeIds()) {
+
+            PowerType powerType = (PowerType) PowerManager.getOptional(powerTypeId)
+                .map(component::getPowerType)
+                .orElse(null);
+
             if (powerType == null) {
                 Apoli.LOGGER.warn("Found unknown power \"{}\" while receiving packet for triggering active powers of player {}!", powerTypeId, player.getName().getString());
-                continue;
             }
 
-            Power power = component.getPower(powerType);
-            if (power instanceof Active activePower) {
+            else if (powerType instanceof Active activePower) {
                 activePower.onUse();
             }
 
         }
 
     }
-
-    private static void onPlayerLanded(PlayerLandedC2SPacket packet, ServerPlayerEntity player, PacketSender responseSender) {
-        PowerHolderComponent.getPowers(player, ActionOnLandPower.class).forEach(ActionOnLandPower::executeAction);
-    }
-
-    private static void onPreventedEntityInteraction(PreventedEntityInteractionC2SPacket packet, ServerPlayerEntity player, PacketSender responseSender) {}
 
 }

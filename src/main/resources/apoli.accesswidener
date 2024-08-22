@@ -4,6 +4,7 @@ mutable field net/minecraft/item/ItemStack item Lnet/minecraft/item/Item;
 accessible method net/minecraft/item/ItemStack <init> (Ljava/lang/Void;)V
 extendable class net/minecraft/item/ItemStack
 accessible class net/minecraft/enchantment/EnchantmentHelper$Consumer
+accessible class net/minecraft/enchantment/EnchantmentHelper$ContextAwareConsumer
 accessible class net/minecraft/client/render/BackgroundRenderer$FogData
 accessible class net/minecraft/server/command/AdvancementCommand$Operation
 accessible class net/minecraft/server/command/AdvancementCommand$Selection
@@ -13,3 +14,11 @@ extendable class net/minecraft/world/event/Vibrations$ListenerData
 accessible field net/minecraft/server/command/AdvancementCommand$Selection before Z
 accessible field net/minecraft/server/command/AdvancementCommand$Selection after Z
 accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
+accessible class net/minecraft/entity/player/ItemCooldownManager$Entry
+accessible field net/minecraft/entity/player/ItemCooldownManager entries Ljava/util/Map;
+accessible field net/minecraft/entity/player/ItemCooldownManager$Entry startTick I
+accessible field net/minecraft/entity/player/ItemCooldownManager$Entry endTick I
+accessible class net/minecraft/client/toast/ToastManager$Entry
+accessible class net/minecraft/server/network/ServerPlayerEntity$RespawnPos
+accessible class net/minecraft/screen/slot/ArmorSlot
+accessible class net/minecraft/client/MinecraftClient$LoadingContext

@@ -9,6 +9,7 @@ import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FluidFillable;
@@ -25,6 +26,8 @@ import net.minecraft.util.math.Direction;
 import java.util.Collection;
 
 public class BlockConditions {
+
+    public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     @SuppressWarnings("unchecked")
     public static void register() {
@@ -134,9 +137,9 @@ public class BlockConditions {
             (data, block) -> {
                 NbtCompound nbt = new NbtCompound();
                 if(block.getBlockEntity() != null) {
-                    nbt = block.getBlockEntity().createNbtWithIdentifyingData();
+                    nbt = block.getBlockEntity().createNbtWithIdentifyingData(block.getWorld().getRegistryManager());
                 }
-                return NbtHelper.matches((NbtCompound)data.get("nbt"), nbt, true);
+                return NbtHelper.matches(data.get("nbt"), nbt, true);
             }));
         register(new ConditionFactory<>(Apoli.identifier("slipperiness"), new SerializableData()
             .add("comparison", ApoliDataTypes.COMPARISON)

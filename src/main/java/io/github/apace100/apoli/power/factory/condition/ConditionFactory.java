@@ -1,77 +1,91 @@
 package io.github.apace100.apoli.power.factory.condition;
 
-import com.google.gson.JsonObject;
-import io.github.apace100.apoli.power.factory.Factory;
+import io.github.apace100.apoli.factory.Factory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ConditionFactory<T> implements Factory {
 
-    private final Identifier identifier;
-    private final BiFunction<SerializableData.Instance, T, Boolean> condition;
+    protected final Identifier id;
+    protected final Function<SerializableData.Instance, Predicate<T>> conditionFactory;
 
-    protected final SerializableData data;
+    protected final SerializableData serializableData;
 
-    public ConditionFactory(Identifier identifier, SerializableData data, BiFunction<SerializableData.Instance, T, Boolean> condition) {
-        this.identifier = identifier;
-        this.condition = condition;
-        this.data = data
-            .add("inverted", SerializableDataTypes.BOOLEAN, false);
-    }
-
-    public class Instance implements Predicate<T> {
-
-        private final SerializableData.Instance dataInstance;
-        private Instance(SerializableData.Instance data) {
-            this.dataInstance = data;
-        }
-
-        @Override
-        public final boolean test(T t) {
-            return dataInstance.getBoolean("inverted") != isFulfilled(t);
-        }
-
-        public boolean isFulfilled(T t) {
-            return condition.apply(dataInstance, t);
-        }
-
-        public void write(PacketByteBuf buf) {
-            buf.writeIdentifier(identifier);
-            data.write(buf, dataInstance);
-        }
-
-        public JsonObject toJson() {
-
-            JsonObject jsonObject = data.write(dataInstance);
-            jsonObject.addProperty("type", identifier.toString());
-
-            return jsonObject;
-
-        }
-
+    public ConditionFactory(Identifier id, SerializableData serializableData, BiFunction<SerializableData.Instance, T, Boolean> condition) {
+        this.id = id;
+        this.conditionFactory = data -> t -> condition.apply(data, t);
+        this.serializableData = serializableData.copy().add("inverted", SerializableDataTypes.BOOLEAN, false);
     }
 
     @Override
     public Identifier getSerializerId() {
-        return identifier;
+        return id;
     }
 
     @Override
     public SerializableData getSerializableData() {
-        return data;
+        return serializableData;
     }
 
-    public Instance read(JsonObject json) {
-        return new Instance(data.read(json));
+    @Override
+    public Instance receive(RegistryByteBuf buffer) {
+        return new Instance(serializableData.receive(buffer));
     }
 
-    public Instance read(PacketByteBuf buffer) {
-        return new Instance(data.read(buffer));
+    @Override
+    public Instance fromData(SerializableData.Instance data) {
+        return new Instance(data);
+    }
+
+    public class Instance implements Factory.Instance, Predicate<T> {
+
+        protected final SerializableData.Instance data;
+        protected final Predicate<T> condition;
+
+        protected Instance(SerializableData.Instance data) {
+            this.condition = conditionFactory.apply(data);
+            this.data = data;
+        }
+
+        @Override
+        public SerializableData.Instance getData() {
+            return data;
+        }
+
+        @Override
+        public ConditionFactory<T> getFactory() {
+            return ConditionFactory.this;
+        }
+
+        @Override
+        public boolean test(T t) {
+            return data.getBoolean("inverted") != condition.test(t);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+
+            if (this == obj) {
+                return true;
+            }
+
+            else if (obj instanceof ConditionFactory<?>.Instance other) {
+                return this.getData().equals(other.getData())
+                    && this.getFactory().equals(other.getFactory());
+            }
+
+            else {
+                return false;
+            }
+
+        }
+
     }
 
 }

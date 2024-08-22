@@ -1,12 +1,11 @@
 package io.github.apace100.apoli.mixin;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyBlockRenderPower;
-import io.github.apace100.apoli.power.ModifyFluidRenderPower;
+import io.github.apace100.apoli.power.type.ModifyBlockRenderPowerType;
+import io.github.apace100.apoli.power.type.ModifyFluidRenderPowerType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.chunk.ChunkRendererRegion;
 import net.minecraft.fluid.FluidState;
@@ -24,7 +23,7 @@ public class ChunkRendererRegionMixin {
     private void modifyBlockRender(BlockPos pos, CallbackInfoReturnable<BlockState> cir) {
         MinecraftClient client = MinecraftClient.getInstance();
         if(client.world != null && client.player != null) {
-            for(ModifyBlockRenderPower power : PowerHolderComponent.getPowers(client.player, ModifyBlockRenderPower.class)) {
+            for(ModifyBlockRenderPowerType power : PowerHolderComponent.getPowerTypes(client.player, ModifyBlockRenderPowerType.class)) {
                 if(power.doesPrevent(client.world, pos)) {
                     cir.setReturnValue(power.getBlockState());
                     return;
@@ -37,7 +36,7 @@ public class ChunkRendererRegionMixin {
     private void modifyFluidRender(BlockPos pos, CallbackInfoReturnable<FluidState> cir) {
         MinecraftClient client = MinecraftClient.getInstance();
         if(client.world != null && client.player != null) {
-            for(ModifyFluidRenderPower power : PowerHolderComponent.getPowers(client.player, ModifyFluidRenderPower.class)) {
+            for(ModifyFluidRenderPowerType power : PowerHolderComponent.getPowerTypes(client.player, ModifyFluidRenderPowerType.class)) {
                 if(power.doesPrevent(client.world, pos)) {
                     cir.setReturnValue(power.getFluidState());
                     return;

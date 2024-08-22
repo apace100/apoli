@@ -1,41 +1,25 @@
 package io.github.apace100.apoli.networking.packet.s2c;
 
 import io.github.apace100.apoli.Apoli;
-import net.fabricmc.fabric.api.networking.v1.FabricPacket;
-import net.fabricmc.fabric.api.networking.v1.PacketType;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.network.packet.CustomPayload;
 
-import java.util.OptionalInt;
+import java.util.Optional;
 
-public record SyncAttackerS2CPacket(int targetId, OptionalInt attackerId) implements FabricPacket {
+public record SyncAttackerS2CPacket(int targetId, Optional<Integer> attackerId) implements CustomPayload {
 
-    public static final PacketType<SyncAttackerS2CPacket> TYPE = PacketType.create(
-        Apoli.identifier("s2c/set_attacker"), SyncAttackerS2CPacket::read
+    public static final Id<SyncAttackerS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/sync_attacker"));
+    public static final PacketCodec<RegistryByteBuf, SyncAttackerS2CPacket> PACKET_CODEC = PacketCodec.tuple(
+        PacketCodecs.VAR_INT, SyncAttackerS2CPacket::targetId,
+        PacketCodecs.optional(PacketCodecs.VAR_INT), SyncAttackerS2CPacket::attackerId,
+        SyncAttackerS2CPacket::new
     );
 
-    private static SyncAttackerS2CPacket read(PacketByteBuf buffer) {
-
-        int targetId = buffer.readVarInt();
-        OptionalInt attackerId = buffer.readBoolean() ? OptionalInt.of(buffer.readVarInt()) : OptionalInt.empty();
-
-        return new SyncAttackerS2CPacket(targetId, attackerId);
-
-    }
-
     @Override
-    public void write(PacketByteBuf buffer) {
-
-        buffer.writeVarInt(targetId);
-        buffer.writeBoolean(attackerId.isPresent());
-
-        attackerId.ifPresent(buffer::writeVarInt);
-
-
-    }
-
-    @Override
-    public PacketType<?> getType() {
-        return TYPE;
+    public Id<? extends CustomPayload> getId() {
+        return PACKET_ID;
     }
 
 }

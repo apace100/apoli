@@ -1,29 +1,31 @@
 package io.github.apace100.apoli.mixin;
 
-import io.github.apace100.apoli.access.PowerModifiedGrindstone;
-import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.ModifyGrindstonePower;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import io.github.apace100.apoli.power.type.ModifyGrindstonePowerType;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.GrindstoneScreenHandler;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(targets = "net/minecraft/screen/GrindstoneScreenHandler$2")
 public class GrindstoneScreenHandlerTopInputSlotMixin {
 
-    @Final
-    @Shadow
-    GrindstoneScreenHandler field_16777;
+    @Unique
+    private GrindstoneScreenHandler apoli$grindstoneHandler;
 
-    @Inject(method = "canInsert", at = @At("HEAD"), cancellable = true)
-    private void allowPowerStacks(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        PowerModifiedGrindstone pmg = (PowerModifiedGrindstone) field_16777;
-        if(PowerHolderComponent.hasPower(pmg.apoli$getPlayer(), ModifyGrindstonePower.class, p -> p.allowsInTop(stack))) {
-            cir.setReturnValue(true);
-        }
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void apoli$cacheGrindstone(GrindstoneScreenHandler grindstoneScreenHandler, Inventory inventory, int i, int j, int k, CallbackInfo ci) {
+        this.apoli$grindstoneHandler = grindstoneScreenHandler;
     }
+
+    @ModifyReturnValue(method = "canInsert", at = @At("RETURN"))
+    private boolean apoli$allowStackInTopSlotViaPower(boolean original, ItemStack stack) {
+        return original
+            || ModifyGrindstonePowerType.allowsInTopSlot(apoli$grindstoneHandler, stack);
+    }
+
 }

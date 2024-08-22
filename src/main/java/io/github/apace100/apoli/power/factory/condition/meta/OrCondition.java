@@ -16,11 +16,11 @@ public class OrCondition {
             .anyMatch(condition -> condition.test(type));
     }
 
-    public static <T> ConditionFactory<T> getFactory(SerializableDataType<ConditionFactory<T>.Instance> dataType) {
+    public static <T> ConditionFactory<T> getFactory(SerializableDataType<ConditionFactory<T>.Instance> conditionDataType) {
         return new ConditionFactory<>(
             Apoli.identifier("or"),
             new SerializableData()
-                .add("conditions", SerializableDataType.list(dataType)),
+                .add("conditions", conditionDataType.listOf()),
             OrCondition::condition
         );
     }

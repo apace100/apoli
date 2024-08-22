@@ -20,18 +20,18 @@ public class ModifierUtil {
     }
 
     public static Modifier fromAttributeModifier(EntityAttributeModifier attributeModifier) {
-        IModifierOperation operation = null;
-        switch(attributeModifier.getOperation()) {
-            case ADDITION -> operation = ModifierOperation.ADD_BASE_EARLY;
-            case MULTIPLY_BASE -> operation = ModifierOperation.MULTIPLY_BASE_ADDITIVE;
-            case MULTIPLY_TOTAL -> operation = ModifierOperation.MULTIPLY_TOTAL_MULTIPLICATIVE;
-        }
-        if(operation == null) {
-            throw new RuntimeException(
-                "Could not construct generic modifier from attribute modifier. Unknown operation: "
-                    + attributeModifier.getOperation());
-        }
-        return createSimpleModifier(operation, attributeModifier.getValue());
+
+        IModifierOperation operation = switch (attributeModifier.operation()) {
+            case ADD_VALUE ->
+                ModifierOperation.ADD_BASE_EARLY;
+            case ADD_MULTIPLIED_BASE ->
+                ModifierOperation.MULTIPLY_BASE_MULTIPLICATIVE;
+            case ADD_MULTIPLIED_TOTAL ->
+                ModifierOperation.MULTIPLY_TOTAL_MULTIPLICATIVE;
+        };
+
+        return createSimpleModifier(operation, attributeModifier.value());
+
     }
 
     public static Map<IModifierOperation, List<SerializableData.Instance>> sortModifiers(List<Modifier> modifiers) {

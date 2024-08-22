@@ -23,7 +23,8 @@
             "compare_to": 3
           },
           {
-            "type": "apoli:meat"
+            "type": "apoli:in_tag",
+            "tag": "minecraft:wolf_food"
           }
         ]
       },
