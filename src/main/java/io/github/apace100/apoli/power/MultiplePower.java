@@ -2,17 +2,25 @@ package io.github.apace100.apoli.power;
 
 import com.google.common.collect.ImmutableSet;
 import io.github.apace100.apoli.util.PowerPayloadType;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.util.Identifier;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class MultiplePower extends Power {
 
-    private final ImmutableSet<SubPower> subPowers;
+    private ImmutableSet<Identifier> subPowerIds = ImmutableSet.of();
 
-    protected MultiplePower(Power basePower, Set<SubPower> subPowers) {
+    MultiplePower(Power basePower, Set<Identifier> subPowerIds) {
+        this(basePower);
+        this.subPowerIds = ImmutableSet.copyOf(subPowerIds);
+    }
+
+    MultiplePower(Power basePower) {
         super(basePower.getFactoryInstance(), basePower.data);
-        this.subPowers = ImmutableSet.copyOf(subPowers);
     }
 
     @Override
@@ -22,16 +30,26 @@ public class MultiplePower extends Power {
 
     @Override
     public void send(RegistryByteBuf buf) {
-
         super.send(buf);
+        buf.writeCollection(subPowerIds, PacketByteBuf::writeIdentifier);
+    }
 
-        buf.writeVarInt(subPowers.size());
-        subPowers.forEach(subPower -> subPower.send(buf));
+    public ImmutableSet<Identifier> getSubPowerIds() {
+        return subPowerIds;
+    }
 
+    void setSubPowerIds(Set<Identifier> subPowerIds) {
+        this.subPowerIds = ImmutableSet.copyOf(subPowerIds);
     }
 
     public Set<SubPower> getSubPowers() {
-        return subPowers;
+        return this.getSubPowerIds()
+            .stream()
+            .filter(PowerManager::contains)
+            .map(PowerManager::get)
+            .filter(SubPower.class::isInstance)
+            .map(SubPower.class::cast)
+            .collect(Collectors.toCollection(HashSet::new));
     }
 
 }

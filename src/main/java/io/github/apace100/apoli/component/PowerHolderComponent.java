@@ -3,8 +3,8 @@ package io.github.apace100.apoli.component;
 import com.google.common.collect.Lists;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.ModifyValueCallback;
-import io.github.apace100.apoli.networking.packet.s2c.SyncPowerS2CPacket;
-import io.github.apace100.apoli.networking.packet.s2c.SyncPowersInBulkS2CPacket;
+import io.github.apace100.apoli.networking.packet.s2c.SyncPowerDataS2CPacket;
+import io.github.apace100.apoli.networking.packet.s2c.SyncBulkPowerDataS2CPacket;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.PowerReference;
@@ -186,14 +186,14 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         }
 
         powerData.put("Data", powerType.toTag());
-        SyncPowerS2CPacket syncPowerPacket = new SyncPowerS2CPacket(entity.getId(), power.getId(), powerData);
+        SyncPowerDataS2CPacket syncPowerDataPacket = new SyncPowerDataS2CPacket(entity.getId(), power.getId(), powerData);
 
         for (ServerPlayerEntity trackingPlayer : PlayerLookup.tracking(entity)) {
-            ServerPlayNetworking.send(trackingPlayer, syncPowerPacket);
+            ServerPlayNetworking.send(trackingPlayer, syncPowerDataPacket);
         }
 
         if (entity instanceof ServerPlayerEntity player) {
-            ServerPlayNetworking.send(player, syncPowerPacket);
+            ServerPlayNetworking.send(player, syncPowerDataPacket);
         }
 
     }
@@ -232,13 +232,13 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
             return;
         }
 
-        SyncPowersInBulkS2CPacket syncPowersPacket = new SyncPowersInBulkS2CPacket(entity.getId(), powersToSync);
+        SyncBulkPowerDataS2CPacket syncBulkPowerDataPacket = new SyncBulkPowerDataS2CPacket(entity.getId(), powersToSync);
         for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
-            ServerPlayNetworking.send(otherPlayer, syncPowersPacket);
+            ServerPlayNetworking.send(otherPlayer, syncBulkPowerDataPacket);
         }
 
         if (entity instanceof ServerPlayerEntity player) {
-            ServerPlayNetworking.send(player, syncPowersPacket);
+            ServerPlayNetworking.send(player, syncBulkPowerDataPacket);
         }
 
     }

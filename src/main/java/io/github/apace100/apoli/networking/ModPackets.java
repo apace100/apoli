@@ -17,9 +17,9 @@ public class ModPackets {
         PayloadTypeRegistry.playS2C().register(SyncStatusEffectS2CPacket.PACKET_ID, SyncStatusEffectS2CPacket.PACKET_CODEC);
         PayloadTypeRegistry.playS2C().register(ShowToastS2CPacket.PACKET_ID, ShowToastS2CPacket.PACKET_CODEC);
         PayloadTypeRegistry.playS2C().register(MountPlayerS2CPacket.PACKET_ID, MountPlayerS2CPacket.PACKET_CODEC);
-        PayloadTypeRegistry.playS2C().register(SyncPowerS2CPacket.PACKET_ID, SyncPowerS2CPacket.PACKET_CODEC);
-        PayloadTypeRegistry.playS2C().register(SyncPowersInBulkS2CPacket.PACKET_ID, SyncPowersInBulkS2CPacket.PACKET_CODEC);
-        PayloadTypeRegistry.playS2C().register(SyncPowerTypesS2CPacket.PACKET_ID, SyncPowerTypesS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncPowerDataS2CPacket.PACKET_ID, SyncPowerDataS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncBulkPowerDataS2CPacket.PACKET_ID, SyncBulkPowerDataS2CPacket.PACKET_CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncPowersS2CPacket.PACKET_ID, SyncPowersS2CPacket.PACKET_CODEC);
 
         PayloadTypeRegistry.playC2S().register(UseActivePowersC2SPacket.PACKET_ID, UseActivePowersC2SPacket.PACKET_CODEC);
 

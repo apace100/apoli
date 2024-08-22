@@ -11,12 +11,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public record SyncPowerTypesS2CPacket(Map<Identifier, Power> powersById) implements CustomPayload {
+public record SyncPowersS2CPacket(Map<Identifier, Power> powersById) implements CustomPayload {
 
-    public static final Id<SyncPowerTypesS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/sync_power_types"));
-    public static final PacketCodec<RegistryByteBuf, SyncPowerTypesS2CPacket> PACKET_CODEC = PacketCodec.of(SyncPowerTypesS2CPacket::write, SyncPowerTypesS2CPacket::read);
+    public static final Id<SyncPowersS2CPacket> PACKET_ID = new Id<>(Apoli.identifier("s2c/sync_power_registry"));
+    public static final PacketCodec<RegistryByteBuf, SyncPowersS2CPacket> PACKET_CODEC = PacketCodec.of(SyncPowersS2CPacket::write, SyncPowersS2CPacket::read);
 
-    public static SyncPowerTypesS2CPacket read(RegistryByteBuf buf) {
+    public static SyncPowersS2CPacket read(RegistryByteBuf buf) {
 
         Map<Identifier, Power> powersById = new HashMap<>();
         int count = buf.readVarInt();
@@ -35,7 +35,7 @@ public record SyncPowerTypesS2CPacket(Map<Identifier, Power> powersById) impleme
 
         }
 
-        return new SyncPowerTypesS2CPacket(powersById);
+        return new SyncPowersS2CPacket(powersById);
 
     }
 

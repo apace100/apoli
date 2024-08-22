@@ -135,6 +135,10 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		return Identifier.of(MODID, path);
 	}
 
+	public static boolean onServerSide() {
+		return server != null && server.isOnThread();
+	}
+
 	@Override
 	public void registerEntityComponentFactories(EntityComponentFactoryRegistry registry) {
 		registry.beginRegistration(LivingEntity.class, PowerHolderComponent.KEY)

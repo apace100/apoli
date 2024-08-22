@@ -9,7 +9,7 @@ public class SubPower extends Power {
     private final Identifier superPowerId;
     private final String subName;
 
-    protected SubPower(Identifier superPowerId, String subName, Power basePower) {
+    SubPower(Identifier superPowerId, String subName, Power basePower) {
         super(basePower.getFactoryInstance(), basePower.data);
         this.superPowerId = superPowerId;
         this.subName = subName;
