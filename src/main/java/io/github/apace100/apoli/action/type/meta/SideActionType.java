@@ -32,7 +32,7 @@ public class SideActionType {
     }
 
     public static <T> ActionTypeFactory<T> getFactory(SerializableDataType<ActionTypeFactory<T>.Instance> dataType) {
-        return getFactory(dataType, t -> Apoli.server != null && Apoli.server.isOnThread());
+        return getFactory(dataType, t -> Apoli.onServerSide());
     }
 
     public enum Side {

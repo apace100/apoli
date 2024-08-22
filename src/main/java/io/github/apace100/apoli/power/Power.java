@@ -21,6 +21,7 @@ import io.github.apace100.calio.util.Validatable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -255,27 +256,8 @@ public class Power implements Validatable {
 
                 Power basePower = new Power(powerType, data);
                 return switch (payloadType) {
-                    case MULTIPLE_POWER -> {
-
-                        Set<SubPower> subPowers = new LinkedHashSet<>();
-                        int count = buf.readVarInt();
-
-                        for (int i = 0; i < count; i++) {
-
-                            Power power = receive(buf);
-                            if (power instanceof SubPower subPower) {
-                                subPowers.add(subPower);
-                            }
-
-                            else {
-                                throw new IllegalStateException("Received sub-power \"" + power.getId() + "\", which isn't an actual sub-power!");
-                            }
-
-                        }
-
-                        yield new MultiplePower(basePower, subPowers);
-
-                    }
+                    case MULTIPLE_POWER ->
+                        new MultiplePower(basePower, buf.readCollection(LinkedHashSet::new, PacketByteBuf::readIdentifier));
                     case SUB_POWER ->
                         new SubPower(buf.readIdentifier(), buf.readString(), basePower);
                     default ->

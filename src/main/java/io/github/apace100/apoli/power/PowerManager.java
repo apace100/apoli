@@ -1,7 +1,5 @@
 package io.github.apace100.apoli.power;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -13,14 +11,16 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowersS2CPacket;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.SubPowerException;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -41,6 +41,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
+import org.jetbrains.annotations.Nullable;
 import org.ladysnake.cca.api.v3.component.ComponentProvider;
 
 import java.util.*;
@@ -87,11 +88,8 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     private static final Map<Identifier, Integer> LOADING_PRIORITIES = new HashMap<>();
     private static final Map<String, AdditionalPowerDataCallback> ADDITIONAL_DATA = new HashMap<>();
 
-    private static ImmutableMap<Identifier, Power> powersById = ImmutableMap.of();
-    private static Map<Identifier, Power> powersByIdBuilder;
-
-    private static ImmutableSet<Identifier> disabledPowers = ImmutableSet.of();
-    private static Set<Identifier> disabledPowersBuilder;
+    private static final Map<Identifier, Power> POWERS_BY_ID = new HashMap<>();
+    private static final Set<Identifier> DISABLED_POWERS = new HashSet<>();
 
     private static boolean building;
     private static boolean validated;
@@ -134,7 +132,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     protected void apply(MultiJsonDataContainer prepared, ResourceManager manager, Profiler profiler) {
 
         LOADING_PRIORITIES.clear();
-        startBuild();
+        startBuilding();
 
         PowerReloadCallback.EVENT.invoker().onPowerReload();
         PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
@@ -151,16 +149,12 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
                 }
 
                 PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(id, jsonObject);
-                this.readSuperOrNormalPower(packName, id, jsonObject);
+                this.readMultipleOrNormalPower(packName, id, jsonObject);
 
-            }
-
-            catch (SubPowerException spe) {
-                Apoli.LOGGER.error(spe.getMessage());
             }
 
             catch (Exception e) {
-                Apoli.LOGGER.error("There was a problem reading power \"{}\": {}", id, e.getMessage());
+                Apoli.LOGGER.error("There was a problem reading power \"{}\" from data pack [{}]: {}", id, packName, e.getMessage());
             }
 
         });
@@ -170,11 +164,10 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
 
-        Apoli.LOGGER.info("Finished loading powers from data files. Registry contains {} powers", size());
+        endBuilding();
         validate();
 
         PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
-        endBuild();
 
         if (validated) {
             Apoli.LOGGER.info("Finished validating powers from data files. Registry contains {} powers.", size());
@@ -265,12 +258,14 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     }
 
-    private void readSuperOrNormalPower(String packName, Identifier powerId, JsonObject powerJson) {
+    private void readMultipleOrNormalPower(String packName, Identifier powerId, JsonObject powerJson) {
 
-        Power power = Power.fromJson(powerId, powerJson);
-        if (power.isMultiple()) {
+        Power basePower = Power.fromJson(powerId, powerJson);
+        if (basePower.isMultiple()) {
 
-            Set<SubPower> subPowers = new ObjectLinkedOpenHashSet<>();
+            Power supposedMultiplePower = this.readPower(packName, new MultiplePower(basePower), powerJson);
+            Set<Identifier> subPowerIds = new ObjectLinkedOpenHashSet<>();
+
             powerJson.asMap().forEach((key, jsonElement) -> {
 
                 if (shouldIgnoreField(key)) {
@@ -283,77 +278,144 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
                         throw new JsonSyntaxException("Expected a JSON object");
                     }
 
+                    assert Identifier.isPathValid(key);
                     Identifier subPowerId = Identifier.of(powerId + "_" + key);
-                    SubPower subPower = new SubPower(powerId, key, Power.fromJson(subPowerId, subPowerJson));
 
-                    if (this.validateSubPower(packName, subPower, subPowerJson)) {
-                        subPowers.add(subPower);
+                    if (this.readSubPower(packName, powerId, subPowerId, key, subPowerJson)) {
+                        subPowerIds.add(subPowerId);
                     }
 
                 }
 
                 catch (Exception e) {
-                    Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power \"{}\": {}", key, powerId, e.getMessage());
+                    Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power \"{}\" from data pack [{}]: {}", key, powerId, packName, e.getMessage());
                 }
 
             });
 
-            MultiplePower multiplePower = new MultiplePower(power, subPowers);
-            this.validatePower(packName, multiplePower, powerJson);
+            if (supposedMultiplePower instanceof MultiplePower multiplePower) {
+                multiplePower.setSubPowerIds(subPowerIds);
+            }
+
+            else if (isDisabled(powerId)) {
+                subPowerIds.forEach(PowerManager::disable);
+            }
 
         }
 
         else {
-            this.validatePower(packName, power, powerJson);
+            this.readPower(packName, basePower, powerJson);
         }
 
     }
 
-    private boolean validateSubPower(String packName, SubPower subPower, JsonObject subPowerJson) {
+    private boolean readSubPower(String packName, Identifier superPowerId, Identifier subPowerId, String name, JsonObject subPowerJson) {
 
-        if (!ResourceConditionsImpl.applyResourceConditions(subPowerJson, directoryName, subPower.getId(), Calio.getDynamicRegistries().orElse(null))) {
-            this.onReject(packName, subPower.getId());
+        if (!ResourceConditionsImpl.applyResourceConditions(subPowerJson, directoryName, subPowerId, Calio.getDynamicRegistries().orElse(null))) {
+            this.onReject(packName, subPowerId);
             return false;
         }
 
-        else if (subPower.isMultiple()) {
-            throw new IllegalStateException("Using the 'multiple' power type in sub-powers is not allowed!");
-        }
-
         else {
-            return this.validatePower(packName, subPower, subPowerJson);
+
+            SubPower subPower = switch (this.readPower(packName, new SubPower(superPowerId, name, Power.fromJson(subPowerId, subPowerJson)), subPowerJson)) {
+                case SubPower selfSubPower ->
+                    selfSubPower;
+                case Power power ->
+                    new SubPower(superPowerId, name, power);
+                case null ->
+                    null;
+            };
+
+            if (subPower != null && subPower.isMultiple()) {
+                throw new IllegalStateException("Using the '" + PowerTypes.MULTIPLE.getSerializerId() + "' power type in sub-powers is not allowed!");
+            }
+
+            else {
+                return subPower != null;
+            }
+
         }
 
     }
 
-    private boolean validatePower(String packName, Power power, JsonObject powerJson) {
+    @Nullable
+    private <P extends Power> Power readPower(String packName, P power, JsonObject powerJson) {
 
         Identifier powerId = power.getId();
 
-        int currLoadingPriority = JsonHelper.getInt(powerJson, "loading_priority", 0);
-        int prevLoadingPriority = LOADING_PRIORITIES.getOrDefault(powerId, 0);
+        int priority = JsonHelper.getInt(powerJson, "loading_priority", 0);
+        int previousPriority = LOADING_PRIORITIES.computeIfAbsent(powerId, k -> priority);
 
         if (!contains(powerId)) {
-            this.finishReadingPower(PowerManager::register, powerId, power, powerJson, currLoadingPriority);
-            return true;
+            return this.finishReadingPower(PowerManager::register, powerId, power, powerJson, priority);
         }
 
-        else if (currLoadingPriority < prevLoadingPriority) {
+        else if (previousPriority < priority) {
 
-            Apoli.LOGGER.warn("Overriding power \"{}\" (with prev. loading priority of {}) with a higher loading priority of {} from data pack [{}]!", powerId, prevLoadingPriority, currLoadingPriority, packName);
-            this.finishReadingPower(PowerManager::update, powerId, power, powerJson, currLoadingPriority);
+            StringBuilder overrideMessage = new StringBuilder("Overriding ");
+            if (power instanceof SubPower subPower) {
+                overrideMessage
+                    .append("sub-power \"")
+                    .append(subPower.getSubName())
+                    .append("\" of power \"")
+                    .append(subPower.getSuperPowerId())
+                    .append("\"");
+            }
 
-            return true;
+            else {
+                overrideMessage.append("power \"")
+                    .append(power.getId())
+                    .append("\"");
+            }
+
+            Apoli.LOGGER.warn(overrideMessage
+                .append(" (with a previous loading priority of ")
+                .append(previousPriority)
+                .append(") with the same power that has a higher loading priority of ")
+                .append(priority)
+                .append(" from data pack [")
+                .append(packName)
+                .append("]!"));
+
+            return this.finishReadingPower(PowerManager::update, powerId, power, powerJson, priority);
 
         }
 
         else {
-            return power.isSubPower();
+
+            StringBuilder overrideHint = new StringBuilder("Ignoring ");
+            if (power instanceof SubPower subPower) {
+                overrideHint
+                    .append("sub-power \"")
+                    .append(subPower.getSubName())
+                    .append("\" of power \"")
+                    .append(subPower.getSuperPowerId())
+                    .append("\"");
+            }
+
+            else {
+                overrideHint.append("power \"")
+                    .append(power.getId())
+                    .append("\"");
+            }
+
+            Apoli.LOGGER.warn(overrideHint
+                .append(" from data pack [")
+                .append(packName)
+                .append("]. Its loading priority must be higher than ")
+                .append(previousPriority)
+                .append(" in order to override the same power added by a previous data pack!"));
+
+            return power.isSubPower()
+                ? get(powerId)
+                : null;
+
         }
 
     }
 
-    private <T extends Power> void finishReadingPower(BiFunction<Identifier, T, T> powerTypeProcessor, Identifier powerId, T power, JsonObject jsonObject, int priority) {
+    private <P extends Power> P finishReadingPower(BiFunction<Identifier, Power, Power> powerTypeProcessor, Identifier powerId, P power, JsonObject jsonObject, int priority) {
 
         Identifier powerFactoryId = power.getFactoryInstance().getFactory().getSerializerId();
         boolean subPower = power.isSubPower();
@@ -364,25 +426,25 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         handleAdditionalData(powerId, powerFactoryId, subPower, jsonObject, power);
         PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(powerId, powerFactoryId, subPower, jsonObject, power);
 
+        return power;
+
     }
 
     private static Power register(Identifier id, Power power) {
 
-        if (powersByIdBuilder == null) {
+        if (!building) {
             return power;
         }
 
-        else if (powersByIdBuilder.containsKey(id)) {
-            throw new IllegalArgumentException("Tried to register duplicate power with ID: \"" + id + "\"");
+        else if (POWERS_BY_ID.containsKey(id)) {
+            throw new IllegalArgumentException("Tried to register duplicate power with ID \"" + id + "\"");
         }
 
         else {
 
-            if (disabledPowersBuilder != null) {
-                disabledPowersBuilder.remove(id);
-            }
+            DISABLED_POWERS.remove(id);
+            POWERS_BY_ID.put(id, power);
 
-            powersByIdBuilder.put(id, power);
             return power;
 
         }
@@ -391,24 +453,30 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     private static Power update(Identifier id, Power power) {
 
-        if (powersByIdBuilder == null) {
+        if (!building) {
             return power;
         }
 
-        Power oldPower = remove(id);
-        if (oldPower instanceof MultiplePower oldMultiplePower) {
-            oldMultiplePower.getSubPowers().forEach(subPower -> remove(subPower.getId()));
-        }
+        else {
 
-        PowerOverrideCallback.EVENT.invoker().onPowerOverride(id);
-        return register(id, power);
+            if (remove(id) instanceof MultiplePower removedMultiplePower) {
+                removedMultiplePower.getSubPowers()
+                    .stream()
+                    .map(Power::getId)
+                    .forEach(PowerManager::remove);
+            }
+
+            PowerOverrideCallback.EVENT.invoker().onPowerOverride(id);
+            return register(id, power);
+
+        }
 
     }
 
     private static Power remove(Identifier id) {
 
-        if (powersByIdBuilder != null) {
-            return powersByIdBuilder.remove(id);
+        if (building) {
+            return POWERS_BY_ID.remove(id);
         }
 
         else {
@@ -418,47 +486,27 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     }
 
     public static void disable(Identifier id) {
-
-        if (disabledPowersBuilder == null) {
-            return;
-        }
-
         remove(id);
-        disabledPowersBuilder.add(id);
-
-    }
-
-    private static void startBuild() {
-
-        PowerClearCallback.EVENT.invoker().onPowerClear();
-
-        building = true;
-        validated = false;
-
-        powersById = ImmutableMap.of();
-        powersByIdBuilder = new HashMap<>();
-
-        disabledPowers = ImmutableSet.of();
-        disabledPowersBuilder = new HashSet<>();
-
+        DISABLED_POWERS.add(id);
     }
 
     /**
-     *  Validates all powers if the power manager is currently building. The power manager will only (re)build on resource reload.
+     *  Validates all registered powers.
      */
     public static void validate() {
 
-        if (building && powersByIdBuilder == null) {
+        if (POWERS_BY_ID.isEmpty()) {
             return;
         }
 
-        Iterator<Map.Entry<Identifier, Power>> powerTypeIterator = powersByIdBuilder.entrySet().iterator();
         Apoli.LOGGER.info("Validating {} powers...", size());
+
+        Iterator<Map.Entry<Identifier, Power>> powerTypeIterator = POWERS_BY_ID.entrySet().iterator();
+        validated = true;
 
         while (powerTypeIterator.hasNext()) {
 
             Map.Entry<Identifier, Power> powerTypeEntry = powerTypeIterator.next();
-            validated = true;
 
             Identifier id = powerTypeEntry.getKey();
             Power power = powerTypeEntry.getValue();
@@ -498,36 +546,44 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     }
 
-    private static void endBuild() {
+    private static void startBuilding() {
 
-        if (powersByIdBuilder == null) {
-            Apoli.LOGGER.warn("Couldn't build power manager, as it has no entry builder!");
+        if (building) {
+            return;
         }
 
-        else {
+        PowerClearCallback.EVENT.invoker().onPowerClear();
 
-            powersById = ImmutableMap.copyOf(powersByIdBuilder);
+        building = true;
+        validated = false;
 
-            if (disabledPowersBuilder != null) {
-                disabledPowers = ImmutableSet.copyOf(disabledPowersBuilder);
-            }
+        POWERS_BY_ID.clear();
+        DISABLED_POWERS.clear();
 
+    }
+
+    private static void endBuilding() {
+
+        if (!building) {
+            return;
         }
 
-        powersByIdBuilder = null;
         building = false;
+        if (Apoli.onServerSide()) {
+            Apoli.LOGGER.info("Finished loading powers from data files. Registry contains {} powers", size());
+        }
 
     }
 
     public void send(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, new SyncPowersS2CPacket(powersById));
+        ServerPlayNetworking.send(player, new SyncPowersS2CPacket(POWERS_BY_ID));
     }
 
     @Environment(EnvType.CLIENT)
     public static void receive(SyncPowersS2CPacket packet, ClientPlayNetworking.Context context) {
-        startBuild();
+        startBuilding();
         packet.powersById().forEach(PowerManager::register);
-        endBuild();
+        endBuilding();
     }
 
     public static DataResult<Power> getResult(Identifier id) {
@@ -543,7 +599,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     }
 
     public static Optional<Power> getOptional(Identifier id) {
-        return Optional.ofNullable(((building ? ImmutableMap.copyOf(powersByIdBuilder) : powersById).get(id)));
+        return Optional.ofNullable(POWERS_BY_ID.get(id));
     }
 
     public static Power get(Identifier id) {
@@ -551,33 +607,31 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     }
 
     public static Set<Map.Entry<Identifier, Power>> entrySet() {
-        return (building ? ImmutableMap.copyOf(powersByIdBuilder) : powersById).entrySet();
+        return new ObjectArraySet<>(POWERS_BY_ID.entrySet());
     }
 
     public static Collection<Power> values() {
-        return (building ? ImmutableMap.copyOf(powersByIdBuilder) : powersById).values();
+        return new ObjectArrayList<>(POWERS_BY_ID.values());
     }
 
     public static Stream<Identifier> streamIds() {
-        return (building ? ImmutableMap.copyOf(powersByIdBuilder) : powersById)
-            .keySet()
-            .stream();
+        return new ObjectArraySet<>(POWERS_BY_ID.keySet()).stream();
     }
 
     public static void forEach(BiConsumer<Identifier, Power> biConsumer) {
-        (building ? powersByIdBuilder : powersById).forEach(biConsumer);
+        POWERS_BY_ID.forEach(biConsumer);
     }
 
     public static boolean isDisabled(Identifier id) {
-        return (building ? ImmutableSet.copyOf(disabledPowersBuilder) : disabledPowers).contains(id);
+        return DISABLED_POWERS.contains(id);
     }
 
     public static boolean contains(Identifier id) {
-        return (building ? ImmutableMap.copyOf(powersByIdBuilder) : powersById).containsKey(id);
+        return POWERS_BY_ID.containsKey(id);
     }
 
     public static int size() {
-        return (building ? ImmutableMap.copyOf(powersByIdBuilder) : powersById).size();
+        return POWERS_BY_ID.size();
     }
 
     private static void handleAdditionalData(Identifier powerId, Identifier factoryId, boolean isSubPower, JsonObject json, Power power) {
