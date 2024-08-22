@@ -268,11 +268,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
-            if (!aipci.hasPowers(i)) {
+            if (!aipci.hasPowerTypes(i)) {
                 continue;
             }
 
-            List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
+            List<ActiveInteractionPowerType> aips = aipci.getPowerTypes(i);
             ActionResult previousResult = ActionResult.PASS;
 
             for (ActiveInteractionPowerType aip : aips) {
@@ -333,11 +333,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
             for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
-                if (!aipci.hasPowers(i)) {
+                if (!aipci.hasPowerTypes(i)) {
                     continue;
                 }
 
-                List<ActiveInteractionPowerType> aips = aipci.getPowers(i);
+                List<ActiveInteractionPowerType> aips = aipci.getPowerTypes(i);
                 ActionResult previousResult = ActionResult.PASS;
 
                 for (ActiveInteractionPowerType aip : aips) {

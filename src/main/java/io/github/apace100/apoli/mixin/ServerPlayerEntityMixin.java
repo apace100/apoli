@@ -11,7 +11,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.access.EndRespawningEntity;
-import io.github.apace100.apoli.access.PowerCraftingBook;
+import io.github.apace100.apoli.access.PowerCraftingObject;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
 import io.github.apace100.apoli.networking.packet.s2c.ShowToastS2CPacket;
@@ -250,8 +250,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity implements Sc
     @ModifyExpressionValue(method = "<init>", at = @At(value = "NEW", target = "()Lnet/minecraft/server/network/ServerRecipeBook;"))
     private ServerRecipeBook apoli$cachePlayerToRecipeBook(ServerRecipeBook original) {
 
-        if (original instanceof PowerCraftingBook pcb) {
-            pcb.apoli$setPlayer(this);
+        if (original instanceof PowerCraftingObject pco) {
+            pco.apoli$setPlayer(this);
         }
 
         return original;

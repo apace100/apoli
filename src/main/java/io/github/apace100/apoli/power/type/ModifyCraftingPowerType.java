@@ -1,15 +1,22 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.slot.CraftingResultSlot;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -17,6 +24,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -87,6 +95,38 @@ public class ModifyCraftingPowerType extends ValueModifyingPowerType implements 
         if(entityAction != null) {
             entityAction.accept(entity);
         }
+
+    }
+
+    public static ItemStack executeAfterCraftingAction(PlayerEntity player, RecipeInputInventory recipeInput, Slot slot, ItemStack stack) {
+
+        if (!(recipeInput instanceof PowerCraftingInventory pci)) {
+            return stack;
+        }
+
+        StackReference stackReference = InventoryUtil.createStackReference(stack);
+        List<ModifyCraftingPowerType> modifyCraftingPowers = pci.apoli$getPowerTypes()
+            .stream()
+            .filter(ModifyCraftingPowerType.class::isInstance)
+            .map(ModifyCraftingPowerType.class::cast)
+            .toList();
+
+        if (modifyCraftingPowers.isEmpty()) {
+            return stack;
+        }
+
+        if (MiscUtil.hasSpaceInInventory(player, stack) && slot instanceof CraftingResultSlot) {
+
+            ItemStack copy = stack.copy();
+            modifyCraftingPowers.forEach(mcpt -> mcpt.applyAfterCraftingItemAction(stackReference));
+
+            if (stackReference.get().isEmpty()) {
+                slot.onTakeItem(player, copy);
+            }
+
+        }
+
+        return stackReference.get();
 
     }
 

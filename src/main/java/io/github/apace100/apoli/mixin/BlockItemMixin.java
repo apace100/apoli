@@ -51,11 +51,11 @@ public class BlockItemMixin {
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
 
-            if (!aipci.hasPowers(i)) {
+            if (!aipci.hasPowerTypes(i)) {
                 continue;
             }
 
-            List<PreventBlockPlacePowerType> pbpps = aipci.getPowers(i)
+            List<PreventBlockPlacePowerType> pbpps = aipci.getPowerTypes(i)
                 .stream()
                 .filter(p -> p instanceof PreventBlockPlacePowerType)
                 .map(p -> (PreventBlockPlacePowerType) p)
@@ -85,7 +85,7 @@ public class BlockItemMixin {
         aipci.add(user, ActionOnBlockPlacePowerType.class, aobpp -> aobpp.shouldExecute(stack, hand, toPos, onPos, direction));
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
-            aipci.getPowers(i)
+            aipci.getPowerTypes(i)
                 .stream()
                 .filter(p -> p instanceof ActionOnBlockPlacePowerType)
                 .forEach(p -> ((ActionOnBlockPlacePowerType) p).executeOtherActions(toPos, onPos, direction));
@@ -101,7 +101,7 @@ public class BlockItemMixin {
         Prioritized.CallInstance<ActiveInteractionPowerType> aipci = aipciRef.get();
 
         for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
-            aipci.getPowers(i)
+            aipci.getPowerTypes(i)
                 .stream()
                 .filter(p -> p instanceof ActionOnBlockPlacePowerType)
                 .forEach(p -> ((ActionOnBlockPlacePowerType) p).executeItemActions(context.getHand()));

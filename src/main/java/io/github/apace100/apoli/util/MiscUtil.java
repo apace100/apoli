@@ -8,7 +8,10 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
@@ -180,6 +183,12 @@ public final class MiscUtil {
             return a;
         }
         return a.and(b);
+    }
+
+    public static boolean hasSpaceInInventory(PlayerEntity player, ItemStack stack) {
+        PlayerInventory inventory = player.getInventory();
+        return inventory.getOccupiedSlotWithRoomForStack(stack) != -1
+            || inventory.getEmptySlot() != -1;
     }
 
 }

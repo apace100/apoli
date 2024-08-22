@@ -4,11 +4,10 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.access.PowerModifiedGrindstone;
-import io.github.apace100.apoli.access.SlotState;
 import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
 import io.github.apace100.apoli.power.type.ModifyGrindstonePowerType;
 import io.github.apace100.apoli.util.InventoryUtil;
-import io.github.apace100.apoli.util.ModifiedCraftingRecipe;
+import io.github.apace100.apoli.recipe.ModifiedCraftingRecipe;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.StackReference;
@@ -28,7 +27,7 @@ import java.util.Optional;
 public class ScreenHandlerMixin {
 
     @ModifyExpressionValue(method = "internalOnSlotClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/Slot;tryTakeStackRange(IILnet/minecraft/entity/player/PlayerEntity;)Ljava/util/Optional;"))
-    private Optional<ItemStack> apoli$performAfterGrindstoneActions(Optional<ItemStack> original, int slotIndex, int button, SlotActionType actionType, PlayerEntity player, @Local Slot slot) {
+    private Optional<ItemStack> apoli$performAfterCraftingActions(Optional<ItemStack> original, int slotIndex, int button, SlotActionType actionType, PlayerEntity player, @Local Slot slot) {
 
         if ((ScreenHandler) (Object) this instanceof PowerModifiedGrindstone pmg && original.isPresent() && slotIndex == 2) {
 
@@ -38,33 +37,36 @@ public class ScreenHandlerMixin {
             }
 
             StackReference stackReference = InventoryUtil.createStackReference(original.get());
-            applyingPowers.forEach(mgp -> {
-                mgp.applyAfterGrindingItemAction(stackReference);
-                mgp.executeActions(pmg.apoli$getPos());
-            });
+            applyingPowers.forEach(mgpt -> mgpt.executeActions(pmg.apoli$getPos(), stackReference));
 
             return Optional.of(stackReference.get());
 
         }
 
-        else if (original.isPresent() && slot instanceof CraftingResultSlot resultSlot && resultSlot instanceof SlotState slotState) {
+        else if (original.isPresent() && slot instanceof CraftingResultSlot resultSlot) {
 
             if (!(((CraftingResultSlotAccessor) resultSlot).getInput() instanceof CraftingInventory craftingInventory)) {
                 return original;
             }
 
-            if (!(craftingInventory instanceof PowerCraftingInventory pci) || !(pci.apoli$getPowerType() instanceof ModifyCraftingPowerType modifyCraftingPower)) {
+            if (!(craftingInventory instanceof PowerCraftingInventory pci)) {
                 return original;
             }
 
-            modifyCraftingPower.executeActions(ModifiedCraftingRecipe.getBlockFromInventory(craftingInventory));
-            StackReference stackReference = InventoryUtil.createStackReference(original.get());
+            List<ModifyCraftingPowerType> modifyCraftingPowers = pci.apoli$getPowerTypes()
+                .stream()
+                .filter(ModifyCraftingPowerType.class::isInstance)
+                .map(ModifyCraftingPowerType.class::cast)
+                .toList();
 
-            if (slotState.apoli$getState().map(id -> !ModifyCraftingPowerType.MODIFIED_RESULT_STACK.equals(id)).orElse(true)) {
-                modifyCraftingPower.applyAfterCraftingItemAction(stackReference);
+            if (modifyCraftingPowers.isEmpty()) {
+                return original;
             }
 
-            slotState.apoli$setState(null);
+            modifyCraftingPowers.forEach(mcpt -> mcpt.executeActions(ModifiedCraftingRecipe.getBlockFromInventory(craftingInventory)));
+            StackReference stackReference = InventoryUtil.createStackReference(original.get());
+
+            modifyCraftingPowers.forEach(mcpt -> mcpt.applyAfterCraftingItemAction(stackReference));
             return Optional.of(stackReference.get());
 
         }

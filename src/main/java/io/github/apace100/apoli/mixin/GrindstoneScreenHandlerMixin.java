@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerModifiedGrindstone;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.type.ModifyGrindstonePowerType;
@@ -13,6 +14,7 @@ import net.minecraft.screen.GrindstoneScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -24,7 +26,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mixin(GrindstoneScreenHandler.class)
 public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler implements PowerModifiedGrindstone {
@@ -45,6 +49,10 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
     @Final
     public static int INPUT_2_ID;
 
+    @Shadow
+    @Final
+    public static int OUTPUT_ID;
+
     @Unique
     private PlayerEntity apoli$cachedPlayer;
 
@@ -61,7 +69,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At("RETURN"))
     private void cachePlayer(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, CallbackInfo ci) {
         apoli$cachedPlayer = playerInventory.player;
-        apoli$cachedPosition = context.get((w, bp) -> bp).orElse(null);
+        apoli$cachedPosition = context.get((world, pos) -> pos).orElse(null);
     }
 
     @Inject(method = "updateResult", at = @At("RETURN"))
@@ -75,7 +83,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
             .stream()
             .filter(mgp -> mgp.doesApply(topStack, bottomStack, outputStackRef.get(), apoli$cachedPosition))
             .peek(mgp -> mgp.setOutput(topStack, bottomStack, outputStackRef))
-            .toList();
+            .collect(Collectors.toCollection(LinkedList::new));
 
         result.setStack(0, outputStackRef.get());
         this.sendContentUpdates();
@@ -83,21 +91,23 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
     }
 
     @ModifyVariable(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;"), ordinal = 1)
-    private ItemStack performAfterGrindstoneActionsQuickMove(ItemStack original, PlayerEntity player, int slot) {
+    private ItemStack performAfterGrindstoneActionsQuickMove(ItemStack original, PlayerEntity player, int slotIndex, @Local Slot slot) {
 
-        StackReference newStackRef = InventoryUtil.createStackReference(original);
         List<ModifyGrindstonePowerType> applyingPowers = this.apoli$getAppliedPowers();
+        StackReference stackReference = InventoryUtil.createStackReference(original);
 
-        if (slot != 2 || applyingPowers == null) {
+        if (slotIndex != OUTPUT_ID || applyingPowers == null || applyingPowers.isEmpty()) {
             return original;
         }
 
-        for (ModifyGrindstonePowerType applyingPower : applyingPowers) {
-            applyingPower.applyAfterGrindingItemAction(newStackRef);
-            applyingPower.executeActions(this.apoli$getPos());
+        ItemStack copy = original.copy();
+        applyingPowers.forEach(mgpt -> mgpt.executeActions(this.apoli$getPos(), stackReference));
+
+        if (stackReference.get().isEmpty()) {
+            this.getSlot(slotIndex).onTakeItem(player, copy);
         }
 
-        return newStackRef.get();
+        return stackReference.get();
 
     }
 

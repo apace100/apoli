@@ -6,7 +6,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.authlib.GameProfile;
 import io.github.apace100.apoli.access.CustomToastViewer;
-import io.github.apace100.apoli.access.PowerCraftingBook;
+import io.github.apace100.apoli.access.PowerCraftingObject;
 import io.github.apace100.apoli.access.WaterMovingEntity;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.CustomToastData;
@@ -131,8 +131,8 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     @Inject(method = "<init>", at = @At("TAIL"))
     private void apoli$cachePlayerToRecipeBook(MinecraftClient client, ClientWorld world, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook, boolean lastSneaking, boolean lastSprinting, CallbackInfo ci) {
 
-        if (this.recipeBook instanceof PowerCraftingBook pcb) {
-            pcb.apoli$setPlayer(this);
+        if (this.recipeBook instanceof PowerCraftingObject pco) {
+            pco.apoli$setPlayer(this);
         }
 
     }

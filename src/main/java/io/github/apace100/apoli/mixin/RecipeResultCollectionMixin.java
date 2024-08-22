@@ -2,7 +2,7 @@ package io.github.apace100.apoli.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
-import io.github.apace100.apoli.access.PowerCraftingBook;
+import io.github.apace100.apoli.access.PowerCraftingObject;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.type.RecipePowerType;
@@ -22,9 +22,9 @@ public abstract class RecipeResultCollectionMixin {
     @ModifyExpressionValue(method = "computeCraftables", at = @At(value = "INVOKE", target = "Lnet/minecraft/recipe/RecipeMatcher;match(Lnet/minecraft/recipe/Recipe;Lit/unimi/dsi/fastutil/ints/IntList;)Z"))
     private boolean apoli$accountForPowerRecipes(boolean original, RecipeMatcher recipeFinder, int gridWidth, int gridHeight, RecipeBook recipeBook, @Local RecipeEntry<?> recipeEntry) {
 
-        if (original && recipeEntry.value() instanceof PowerCraftingRecipe pcr && recipeBook instanceof PowerCraftingBook pcb && pcb.apoli$getPlayer() != null) {
+        if (original && recipeEntry.value() instanceof PowerCraftingRecipe pcr && recipeBook instanceof PowerCraftingObject pco && pco.apoli$getPlayer() != null) {
 
-            PowerHolderComponent component = PowerHolderComponent.KEY.get(pcb.apoli$getPlayer());
+            PowerHolderComponent component = PowerHolderComponent.KEY.get(pco.apoli$getPlayer());
             RecipePowerType recipePowerType = PowerManager.getOptional(pcr.powerId())
                 .map(component::getPowerType)
                 .filter(RecipePowerType.class::isInstance)
