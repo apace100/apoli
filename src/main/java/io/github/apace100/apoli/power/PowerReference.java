@@ -19,32 +19,26 @@ public class PowerReference extends Power {
             .set("hidden", true));
     }
 
-    @Nullable
+    public static PowerReference of(String namespace, String path) {
+        return new PowerReference(Identifier.of(namespace, path));
+    }
+
+    public static PowerReference of(String str) {
+        return new PowerReference(Identifier.of(str));
+    }
+
     @Override
     public PowerTypeFactory<? extends PowerType>.Instance getFactoryInstance() {
-        Power power = this.getReference();
-        return power != null
-            ? power.getFactoryInstance()
-            : null;
+        return this.getReferenceStrict().getFactoryInstance();
     }
 
     @Nullable
     @Override
-    public PowerType get(Entity entity) {
+    public PowerType getType(Entity entity) {
         Power power = this.getReference();
         return power != null
-            ? power.get(entity)
+            ? power.getType(entity)
             : null;
-    }
-
-    @Override
-    public boolean isMultiple() {
-        return false;
-    }
-
-    @Override
-    public boolean isSubPower() {
-        return false;
     }
 
     @Nullable
@@ -54,9 +48,13 @@ public class PowerReference extends Power {
             .orElse(null);
     }
 
+    public Power getReferenceStrict() {
+        return PowerManager.get(this.getId());
+    }
+
     @Override
     public void validate() throws Exception {
-        PowerManager.get(this.getId());
+        this.getReferenceStrict();
     }
 
 }

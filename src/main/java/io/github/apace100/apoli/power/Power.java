@@ -5,15 +5,13 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapLike;
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.PowerPayloadType;
-import io.github.apace100.apoli.util.StrictPowerDataType;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.SerializableData;
@@ -22,6 +20,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.Validatable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.text.MutableText;
@@ -31,11 +30,11 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class Power implements Validatable {
 
     public static final String TYPE_KEY = "type";
-    public static final String LOADING_PRIORITY_KEY = "loading_priority";
 
     public static final SerializableData DATA = new SerializableData()
         .add("id", SerializableDataTypes.IDENTIFIER)
@@ -44,105 +43,91 @@ public class Power implements Validatable {
         .addFunctionedDefault("description", ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT, data -> createTranslatable(data.getId("id"), "description"))
         .add("hidden", SerializableDataTypes.BOOLEAN, false);
 
-    /**
-     *  <p>A data type for parsing {@linkplain Power powers}. It can decode and encode normal powers and powers that use the {@link PowerTypes#MULTIPLE multiple} power type (and its sub-powers.)</p>
-     *  <p>However, evaluation of the powers' loading priority and resource condition must be handled <b>manually</b> (like in {@link PowerManager}.)</p>
-     */
-    public static final SerializableDataType<Power> DATA_TYPE = SerializableDataType.of(
-        new StrictCodec<>() {
+    private static final StrictCodec<Power> STRICT_CODEC = new StrictCodec<>() {
 
-            @Override
-            public <I> Pair<Power, I> strictDecode(DynamicOps<I> ops, I input) {
+        @Override
+        public <I> Pair<Power, I> strictDecode(DynamicOps<I> ops, I input) {
 
-                Power power = StrictPowerDataType.INSTANCE.strictParse(ops, input);
-                MapLike<I> mapInput = ops.getMap(input).getOrThrow();
+            MapLike<I> mapInput = ops.getMap(input).getOrThrow();
+            SerializableData.Instance powerData = Power.DATA.strictDecode(ops, mapInput);
 
-                if (power.isMultiple()) {
+            PowerTypeFactory<?> factory = powerData.get(Power.TYPE_KEY);
+            SerializableData.Instance factoryData = factory.getSerializableData().strictDecode(ops, mapInput);
 
-                    Set<SubPower> subPowers = new LinkedHashSet<>();
-                    mapInput.entries().forEach(keyAndValue -> {
+            return Pair.of(new Power(factory.fromData(factoryData), powerData), input);
 
-                        String subPowerName = ops.getStringValue(keyAndValue.getFirst()).getOrThrow();
-                        if (PowerManager.shouldIgnoreField(subPowerName)) {
-                            return;
-                        }
+        }
 
-                        try {
+        @Override
+        public <I> I strictEncode(Power input, DynamicOps<I> ops, I prefix) {
 
-                            Map<I, I> subMap = new LinkedHashMap<>();
+            Map<I, I> output = new LinkedHashMap<>();
 
-                            subMap.put(ops.createString("id"), ops.createString(power.getId() + "_" + subPowerName));
-                            ops.getMapEntries(keyAndValue.getSecond())
-                                .getOrThrow()
-                                .accept(subMap::put);
+            PowerTypeFactory<?>.Instance instance = input.getFactoryInstance();
+            SerializableData instanceSerializableData = instance.getSerializableData();
 
-                            Power baseSubPower = StrictPowerDataType.INSTANCE.strictParse(ops, ops.createMap(subMap));
-                            SubPower subPower = new SubPower(power.getId(), subPowerName, baseSubPower);
+            Power.DATA.getFields().forEach((name, field) -> {
 
-                            if (baseSubPower.isMultiple()) {
-                                throw new IllegalArgumentException("Using the 'multiple' power type in sub-powers is not allowed!");
-                            }
+                output.put(ops.createString(name), field.dataType().strictEncodeStart(ops, input.data.get(name)));
 
-                            subPowers.add(subPower);
-
-                        }
-
-                        catch (Exception e) {
-                            Apoli.LOGGER.error("There was a problem reading sub-power \"{}\" in power \"{}\": {}", subPowerName, power.getId(), e.getMessage());
-                        }
-
-                    });
-
-                    MultiplePower multiplePower = new MultiplePower(subPowers, power);
-                    return Pair.of(multiplePower, input);
-
+                if (name.equals(Power.TYPE_KEY)) {
+                    ops.getMapEntries(instanceSerializableData.codec().strictEncodeStart(ops, instance.getData()))
+                        .getOrThrow()
+                        .accept(output::put);
                 }
 
-                else {
-                    return Pair.of(power, input);
-                }
+            });
 
-            }
+            return ops.createMap(output);
 
-            @Override
-            public <I> I strictEncode(Power input, DynamicOps<I> ops, I prefix) {
+        }
 
-                Map<I, I> encodedPower = new LinkedHashMap<>();
+    };
 
-                PowerTypeFactory<?>.Instance instance = input.getFactoryInstance();
-                SerializableData instanceSerializableData = instance.getSerializableData();
+    public static final StrictCodec<Power> CODEC = new StrictCodec<>() {
 
-                DATA.getFields().forEach((name, field) -> {
+        @Override
+        public <T> Pair<Power, T> strictDecode(DynamicOps<T> ops, T input) {
+            return STRICT_CODEC.strictDecode(ops, input);
+        }
 
-                    encodedPower.put(ops.createString(name), field.dataType().strictEncodeStart(ops, input.getData().get(name)));
+        @Override
+        public <T> T strictEncode(Power input, DynamicOps<T> ops, T prefix) {
 
-                    if (name.equals(TYPE_KEY)) {
+            Map<T, T> output = new LinkedHashMap<>();
 
-                        if (input instanceof MultiplePower multiplePower) {
-                            multiplePower
-                                .getSubPowersInternal()
-                                .forEach(subPower -> encodedPower.put(ops.createString(subPower.getSubName()), StrictPowerDataType.INSTANCE.strictEncodeStart(ops, subPower)));
-                        }
+            PowerTypeFactory<?>.Instance instance = input.getFactoryInstance();
+            SerializableData instanceSerializableData = instance.getSerializableData();
 
-                        ops.getMapEntries(instanceSerializableData.codec().strictEncodeStart(ops, instance.getData()))
-                            .getOrThrow()
-                            .accept(encodedPower::put);
+            Power.DATA.getFields().forEach((name, field) -> {
 
+                output.put(ops.createString(name), field.dataType().strictEncodeStart(ops, input.data.get(name)));
+
+                if (name.equals(Power.TYPE_KEY)) {
+
+                    if (input instanceof MultiplePower multiplePower) {
+                        multiplePower
+                            .getSubPowers()
+                            .forEach(subPower -> output.put(ops.createString(subPower.getSubName()), STRICT_CODEC.strictEncodeStart(ops, subPower)));
                     }
 
-                });
+                    ops.getMapEntries(instanceSerializableData.codec().strictEncodeStart(ops, instance.getData()))
+                        .getOrThrow()
+                        .accept(output::put);
 
-                return ops.createMap(encodedPower);
+                }
 
-            }
+            });
 
-        },
-        StrictPowerDataType.INSTANCE.packetCodec()
-    );
+            return ops.createMap(output);
+
+        }
+
+    };
+
+    protected final SerializableData.Instance data;
 
     private final PowerTypeFactory<? extends PowerType>.Instance factoryInstance;
-    private final SerializableData.Instance data;
-
     private final Identifier id;
 
     private final Text name;
@@ -150,7 +135,7 @@ public class Power implements Validatable {
 
     private final boolean hidden;
 
-    public Power(PowerTypeFactory<? extends PowerType>.Instance factoryInstance, SerializableData.Instance data) {
+    protected Power(PowerTypeFactory<? extends PowerType>.Instance factoryInstance, SerializableData.Instance data) {
         this.factoryInstance = factoryInstance;
         this.data = data;
         this.id = data.getId("id");
@@ -161,7 +146,7 @@ public class Power implements Validatable {
 
     public static Power fromJson(Identifier id, JsonObject jsonObject) {
         jsonObject.addProperty("id", id.toString());
-        return DATA_TYPE.strictParse(Calio.wrapRegistryOps(JsonOps.INSTANCE), jsonObject);
+        return CODEC.strictParse(Calio.wrapRegistryOps(JsonOps.INSTANCE), jsonObject);
     }
 
     @Override
@@ -177,12 +162,8 @@ public class Power implements Validatable {
         return factoryInstance;
     }
 
-    public SerializableData.Instance getData() {
-        return data;
-    }
-
     public PowerType create(@Nullable LivingEntity entity) {
-        return factoryInstance.apply(this, entity);
+        return this.getFactoryInstance().apply(this, entity);
     }
 
     public boolean isHidden() {
@@ -190,25 +171,25 @@ public class Power implements Validatable {
             || this.hidden;
     }
 
-    public boolean isMultiple() {
+    public final boolean isMultiple() {
         return this.getFactoryInstance().getFactory() == PowerTypes.MULTIPLE
             || this instanceof MultiplePower;
     }
 
-    public boolean isSubPower() {
+    public final boolean isSubPower() {
         return this instanceof SubPower;
     }
 
     public boolean isActive(Entity entity) {
-        PowerType powerType = this.get(entity);
+        PowerType powerType = this.getType(entity);
         return powerType != null
             && powerType.isActive();
     }
 
     @Nullable
-    public PowerType get(Entity entity) {
+    public PowerType getType(Entity entity) {
 
-        if (PowerHolderComponent.KEY.isProvidedBy(entity)) {
+        if (entity != null && PowerHolderComponent.KEY.isProvidedBy(entity)) {
             return PowerHolderComponent.KEY.get(entity).getPowerType(this);
         }
 
@@ -226,14 +207,15 @@ public class Power implements Validatable {
         return description.copy();
     }
 
-    public void send(RegistryByteBuf buf) {
-        buf.writeEnumConstant(PowerPayloadType.POWER);
-        this.sendInternal(buf);
+    public PowerPayloadType payloadType() {
+        return PowerPayloadType.POWER;
     }
 
-    protected final void sendInternal(RegistryByteBuf buf) {
+    public void send(RegistryByteBuf buf) {
 
+        buf.writeEnumConstant(this.payloadType());
         buf.writeIdentifier(this.getId());
+
         if (this.getFactoryInstance() != null) {
 
             buf.writeBoolean(true);
@@ -275,7 +257,7 @@ public class Power implements Validatable {
                 Power basePower = new Power(powerType, data);
                 return switch (payloadType) {
                     case MULTIPLE_POWER ->
-                        new MultiplePower(basePower, buf.readCollection(HashSet::new, PacketByteBuf::readIdentifier));
+                        new MultiplePower(basePower, buf.readCollection(LinkedHashSet::new, PacketByteBuf::readIdentifier));
                     case SUB_POWER ->
                         new SubPower(buf.readIdentifier(), buf.readString(), basePower);
                     default ->
@@ -297,12 +279,12 @@ public class Power implements Validatable {
     }
 
     public JsonObject toJson() {
-        return DATA_TYPE.strictEncodeStart(JsonOps.INSTANCE, this).getAsJsonObject();
+        return CODEC.strictEncodeStart(JsonOps.INSTANCE, this).getAsJsonObject();
     }
 
     @Override
     public int hashCode() {
-        return this.getId().hashCode();
+        return Objects.hash(id);
     }
 
     @Override
@@ -330,6 +312,50 @@ public class Power implements Validatable {
     public static Text createTranslatable(Identifier id, String type) {
         String translationKey = Util.createTranslationKey("power", id) + "." + type;
         return Text.translatable(translationKey);
+    }
+
+    public record Entry(PowerTypeFactory<?> typeFactory, PowerReference power, @Nullable NbtElement nbtData, List<Identifier> sources) {
+
+        private static final SerializableDataType<List<Identifier>> MUTABLE_IDENTIFIERS = SerializableDataTypes.IDENTIFIER.listOf(1, Integer.MAX_VALUE).xmap(LinkedList::new, Function.identity());
+
+        public static final StrictCodec<Entry> CODEC = SerializableDataType.compound(
+            new SerializableData()
+                .add("Factory", ApoliDataTypes.POWER_TYPE_FACTORY, null)
+                .addFunctionedDefault("type", ApoliDataTypes.POWER_TYPE_FACTORY, data -> data.get("Factory"))
+                .add("Type", ApoliDataTypes.POWER_REFERENCE, null)
+                .addFunctionedDefault("id", ApoliDataTypes.POWER_REFERENCE, data -> data.get("Type"))
+                .add("Data", SerializableDataTypes.NBT_ELEMENT, null)
+                .addFunctionedDefault("data", SerializableDataTypes.NBT_ELEMENT, data -> data.get("Data"))
+                .add("Sources", MUTABLE_IDENTIFIERS, null)
+                .addFunctionedDefault("sources", MUTABLE_IDENTIFIERS, data -> data.get("Sources"))
+                .postProcessor(data -> {
+
+                    if (!data.isPresent("type")) {
+                        throw Calio.createMissingRequiredFieldError("type");
+                    }
+
+                    if (!data.isPresent("id")) {
+                        throw Calio.createMissingRequiredFieldError("id");
+                    }
+
+                    if (!data.isPresent("sources")) {
+                        throw Calio.createMissingRequiredFieldError("sources");
+                    }
+
+                }),
+            data -> new Entry(
+                data.get("type"),
+                data.get("id"),
+                data.get("data"),
+                data.get("sources")
+            ),
+            (entry, data) -> data
+                .set("type", entry.typeFactory())
+                .set("id", entry.power())
+                .set("data", entry.nbtData())
+                .set("sources", entry.sources())
+        );
+
     }
 
 }

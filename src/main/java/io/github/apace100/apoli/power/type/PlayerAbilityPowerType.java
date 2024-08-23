@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
@@ -22,14 +22,18 @@ public class PlayerAbilityPowerType extends PowerType {
 
     public PlayerAbilityPowerType(Power power, LivingEntity entity, PlayerAbility playerAbility) {
         super(power, entity);
-
         this.ability = playerAbility;
         this.source = Pal.getAbilitySource(this.getId());
+    }
 
-        if (entity instanceof PlayerEntity) {
-            this.setTicking(true);
-        }
+    @Override
+    public boolean shouldTick() {
+        return entity instanceof PlayerEntity;
+    }
 
+    @Override
+    public boolean shouldTickWhenInactive() {
+        return this.shouldTick();
     }
 
     @Override
@@ -52,26 +56,28 @@ public class PlayerAbilityPowerType extends PowerType {
     @Override
     public void tick() {
 
-        if (entity.getWorld().isClient || !(entity instanceof PlayerEntity playerEntity)) {
+        if (!(entity instanceof PlayerEntity player)) {
             return;
         }
 
         if (shouldRefresh) {
-
-            ability.getTracker(playerEntity).refresh(true);
+            ability.getTracker(player).refresh(true);
             shouldRefresh = false;
-
-            return;
-
         }
 
-        boolean active = this.isActive();
-        boolean hasAbility = this.hasAbility();
+        else {
 
-        if (active && !hasAbility) {
-            grantAbility();
-        } else if (!active && hasAbility) {
-            revokeAbility();
+            boolean active = this.isActive();
+            boolean hasAbility = this.hasAbility();
+
+            if (active && !hasAbility) {
+                this.grantAbility();
+            }
+
+            else if (!active && hasAbility) {
+                this.revokeAbility();
+            }
+
         }
 
     }
@@ -119,13 +125,10 @@ public class PlayerAbilityPowerType extends PowerType {
         }
     }
 
-    public static PowerTypeFactory<?> createAbilityFactory(Identifier id, PlayerAbility ability) {
-        return new PowerTypeFactory<>(
-            id,
+    public static PowerTypeFactory<?> createFactory(Identifier id, PlayerAbility ability) {
+        return new PowerTypeFactory<>(id,
             new SerializableData(),
-            data -> (power, entity) -> new PlayerAbilityPowerType(power, entity,
-                ability
-            )
+            data -> (power, entity) -> new PlayerAbilityPowerType(power, entity, ability)
         ).allowCondition();
     }
 

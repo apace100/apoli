@@ -1,13 +1,15 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
+import io.github.apace100.apoli.condition.factory.DamageConditions;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import oshi.util.tuples.Pair;
+import net.minecraft.util.Pair;
 
 import java.util.function.Predicate;
 
@@ -31,8 +33,11 @@ public class InvulnerablePowerType extends PowerType {
                 .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION)
                 .postProcessor(data -> {
 
-                    //  TODO: Check if the damage condition is using the 'amount' type
-                    //        and throw an exception if so.
+                    ConditionTypeFactory<Pair<DamageSource, Float>>.Instance damageCondition = data.get("damage_condition");
+
+                    if (damageCondition.getFactory() == DamageConditions.AMOUNT) {
+                        throw new IllegalArgumentException("Using the 'amount' damage condition type in a power that uses the 'invulnerability' power type is not allowed!");
+                    }
 
                 }),
             data -> (power, entity) -> new InvulnerablePowerType(power, entity,

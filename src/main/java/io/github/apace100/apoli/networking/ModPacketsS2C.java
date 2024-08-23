@@ -35,9 +35,9 @@ public class ModPacketsS2C {
         ClientConfigurationNetworking.registerGlobalReceiver(VersionHandshakePacket.PACKET_ID, ModPacketsS2C::sendHandshakeReply);
 
         ClientPlayConnectionEvents.INIT.register(((handler, client) -> {
-            ClientPlayNetworking.registerReceiver(SyncPowerTypesS2CPacket.PACKET_ID, PowerManager::receive);
-            ClientPlayNetworking.registerReceiver(SyncPowerS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSync);
-            ClientPlayNetworking.registerReceiver(SyncPowersInBulkS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSyncInBulk);
+            ClientPlayNetworking.registerReceiver(SyncPowersS2CPacket.PACKET_ID, PowerManager::receive);
+            ClientPlayNetworking.registerReceiver(SyncPowerDataS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSync);
+            ClientPlayNetworking.registerReceiver(SyncBulkPowerDataS2CPacket.PACKET_ID, ModPacketsS2C::onPowerSyncInBulk);
             ClientPlayNetworking.registerReceiver(MountPlayerS2CPacket.PACKET_ID, ModPacketsS2C::onPlayerMount);
             ClientPlayNetworking.registerReceiver(DismountPlayerS2CPacket.PACKET_ID, ModPacketsS2C::onPlayerDismount);
             ClientPlayNetworking.registerReceiver(SyncAttackerS2CPacket.PACKET_ID, ModPacketsS2C::onAttackerSync);
@@ -139,7 +139,7 @@ public class ModPacketsS2C {
 
     }
 
-    private static void onPowerSync(SyncPowerS2CPacket payload, ClientPlayNetworking.Context context) {
+    private static void onPowerSync(SyncPowerDataS2CPacket payload, ClientPlayNetworking.Context context) {
 
         ClientPlayerEntity player = context.player();
         Identifier powerTypeId = payload.powerTypeId();
@@ -168,12 +168,12 @@ public class ModPacketsS2C {
         PowerType powerType = component.getPowerType(power);
 
         if (powerType != null) {
-            powerType.fromTag(payload.powerData().get("Data"), true);
+            powerType.fromTag(payload.powerData().get("Data"));
         }
 
     }
 
-    private static void onPowerSyncInBulk(SyncPowersInBulkS2CPacket payload, ClientPlayNetworking.Context context) {
+    private static void onPowerSyncInBulk(SyncBulkPowerDataS2CPacket payload, ClientPlayNetworking.Context context) {
 
         Entity entity = context.player().getWorld().getEntityById(payload.entityId());
         Map<Identifier, NbtElement> powerAndData = payload.powerAndData();
@@ -204,7 +204,7 @@ public class ModPacketsS2C {
             PowerType powerType = component.getPowerType(power);
 
             if (powerType != null) {
-                powerType.fromTag(powerTypeData, true);
+                powerType.fromTag(powerTypeData);
             }
 
         }

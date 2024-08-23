@@ -1,6 +1,7 @@
 package io.github.apace100.apoli.power.factory;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.power.type.ModifyTypeTagPowerType;
 import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.util.IdentifierAlias;
@@ -81,7 +82,7 @@ public class PowerTypes {
         register(PreventDeathPowerType::getFactory);
         register(ActionOnItemUsePowerType::getFactory);
         register(ModifyFallingPowerType::getFactory);
-        register(PlayerAbilityPowerType.createAbilityFactory(Apoli.identifier("creative_flight"), VanillaAbilities.ALLOW_FLYING));
+        register(PlayerAbilityPowerType.createFactory(Apoli.identifier("creative_flight"), VanillaAbilities.ALLOW_FLYING));
         register(ActionOnEntityUsePowerType::getFactory);
         register(ActionOnBeingUsedPowerType::getFactory);
         register(PreventEntityUsePowerType::getFactory);
@@ -133,6 +134,7 @@ public class PowerTypes {
         register(PreventEntitySelectionPowerType::getFactory);
         register(SprintingPowerType::getFactory);
         register(PosePowerType::getFactory);
+        register(ModifyTypeTagPowerType::getFactory);
     }
 
     @SuppressWarnings("unchecked")

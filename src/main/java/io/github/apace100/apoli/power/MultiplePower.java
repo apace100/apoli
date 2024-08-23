@@ -5,55 +5,51 @@ import io.github.apace100.apoli.util.PowerPayloadType;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.ApiStatus;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MultiplePower extends Power {
 
-    private final ImmutableSet<SubPower> subPowers;
-    private final ImmutableSet<Identifier> subPowerIds;
+    private ImmutableSet<Identifier> subPowerIds = ImmutableSet.of();
 
-    public MultiplePower(Power basePower, Set<Identifier> subPowerIds) {
-        super(basePower.getFactoryInstance(), basePower.getData());
-        this.subPowers = ImmutableSet.of();
+    MultiplePower(Power basePower, Set<Identifier> subPowerIds) {
+        this(basePower);
         this.subPowerIds = ImmutableSet.copyOf(subPowerIds);
     }
 
-    /**
-     *  <b>This is only used when decoding multiple powers via {@link Power#DATA_TYPE}</b>
-     */
-    @ApiStatus.Internal
-    public MultiplePower(Set<SubPower> subPowers, Power basePower) {
-        super(basePower.getFactoryInstance(), basePower.getData());
-        this.subPowers = ImmutableSet.copyOf(subPowers);
-        this.subPowerIds = ImmutableSet.copyOf(this.subPowers
-            .stream()
-            .map(Power::getId)
-            .collect(Collectors.toSet()));
+    MultiplePower(Power basePower) {
+        super(basePower.getFactoryInstance(), basePower.data);
+    }
+
+    @Override
+    public PowerPayloadType payloadType() {
+        return PowerPayloadType.MULTIPLE_POWER;
     }
 
     @Override
     public void send(RegistryByteBuf buf) {
-
-        buf.writeEnumConstant(PowerPayloadType.MULTIPLE_POWER);
-
-        super.sendInternal(buf);
-        buf.writeCollection(this.getSubPowers(), PacketByteBuf::writeIdentifier);
-
+        super.send(buf);
+        buf.writeCollection(subPowerIds, PacketByteBuf::writeIdentifier);
     }
 
-    public ImmutableSet<Identifier> getSubPowers() {
+    public ImmutableSet<Identifier> getSubPowerIds() {
         return subPowerIds;
     }
 
-    /**
-     *  @return an immutable set of {@linkplain SubPower sub-powers}. <b>This should only be used when post-processing the sub-powers after decoding the multiple power with the {@link Power#DATA_TYPE}</b>
-     */
-    @ApiStatus.Internal
-    public ImmutableSet<SubPower> getSubPowersInternal() {
-        return subPowers;
+    void setSubPowerIds(Set<Identifier> subPowerIds) {
+        this.subPowerIds = ImmutableSet.copyOf(subPowerIds);
+    }
+
+    public Set<SubPower> getSubPowers() {
+        return this.getSubPowerIds()
+            .stream()
+            .filter(PowerManager::contains)
+            .map(PowerManager::get)
+            .filter(SubPower.class::isInstance)
+            .map(SubPower.class::cast)
+            .collect(Collectors.toCollection(HashSet::new));
     }
 
 }

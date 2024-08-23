@@ -68,15 +68,7 @@ public class PowerType {
 
     }
 
-    public void onAdded(boolean onSync) {
-
-    }
-
     public void onRemoved() {
-
-    }
-
-    public void onRemoved(boolean onSync) {
 
     }
 
@@ -88,16 +80,8 @@ public class PowerType {
         return conditions.stream().allMatch(condition -> condition.test(entity));
     }
 
-    public NbtElement toTag(boolean onSync) {
-        return this.toTag();
-    }
-
     public NbtElement toTag() {
         return new NbtCompound();
-    }
-
-    public void fromTag(NbtElement tag, boolean onSync) {
-        this.fromTag(tag);
     }
 
     public void fromTag(NbtElement tag) {

@@ -1,0 +1,7 @@
+{
+    "type": "apoli:modify_type_tag",
+    "tag": "minecraft:powder_snow_walkable_mobs",
+    "condition": {
+        "type": "apoli:sprinting"
+    }
+}

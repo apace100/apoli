@@ -6,7 +6,6 @@ import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierOperation;
-import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
@@ -25,7 +24,7 @@ public class ModifyFallingPowerType extends ValueModifyingPowerType {
         this.takeFallDamage = takeFallDamage;
 
         if (velocity != null) {
-            this.addModifier(ModifierUtil.createSimpleModifier(ModifierOperation.SET_TOTAL, velocity));
+            this.addModifier(Modifier.of(ModifierOperation.SET_TOTAL, velocity));
         }
 
         else {

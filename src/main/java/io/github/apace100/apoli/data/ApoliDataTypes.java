@@ -1,16 +1,14 @@
 package io.github.apace100.apoli.data;
 
 import com.google.common.collect.ImmutableMap;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.MapLike;
+import com.mojang.serialization.*;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.factory.*;
+import io.github.apace100.apoli.condition.factory.*;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.factory.action.*;
-import io.github.apace100.apoli.power.factory.condition.*;
+import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.power.type.Active;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -70,49 +68,49 @@ public class ApoliDataTypes {
         (registry, id) -> new IllegalArgumentException("Power type \"" + id + "\" is not registered")
     ));
 
-    public static final SerializableDataType<ConditionFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditions.ALIASES, "Entity condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditions.ALIASES, "Entity condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<Entity>.Instance>> ENTITY_CONDITIONS = ENTITY_CONDITION.listOf();
+    public static final SerializableDataType<List<ConditionTypeFactory<Entity>.Instance>> ENTITY_CONDITIONS = ENTITY_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditions.ALIASES, "Bi-entity condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditions.ALIASES, "Bi-entity condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = BIENTITY_CONDITION.listOf();
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = BIENTITY_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditions.ALIASES, "Item condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditions.ALIASES, "Item condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS = ITEM_CONDITION.listOf();
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS = ITEM_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditions.ALIASES, "Block condition type");
+    public static final SerializableDataType<ConditionTypeFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditions.ALIASES, "Block condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS = BLOCK_CONDITION.listOf();
+    public static final SerializableDataType<List<ConditionTypeFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS = BLOCK_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditions.ALIASES, "Fluid condition type");
+    public static final SerializableDataType<ConditionTypeFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditions.ALIASES, "Fluid condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<FluidState>.Instance>> FLUID_CONDITIONS = FLUID_CONDITION.listOf();
+    public static final SerializableDataType<List<ConditionTypeFactory<FluidState>.Instance>> FLUID_CONDITIONS = FLUID_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditions.ALIASES, "Damage condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditions.ALIASES, "Damage condition type"));
 
-    public static final SerializableDataType<List<ConditionFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = DAMAGE_CONDITION.listOf();
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = SerializableDataType.lazy(DAMAGE_CONDITION::listOf);
 
-    public static final SerializableDataType<ConditionFactory<RegistryEntry<Biome>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditions.ALIASES, "Biome condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditions.ALIASES, "Biome condition type");
 
-    public static final SerializableDataType<List<ConditionFactory<RegistryEntry<Biome>>.Instance>> BIOME_CONDITIONS = BIOME_CONDITION.listOf();
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance>> BIOME_CONDITIONS = BIOME_CONDITION.listOf();
 
-    public static final SerializableDataType<ActionFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActions.ALIASES, "Entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActions.ALIASES, "Entity action type");
 
-    public static final SerializableDataType<List<ActionFactory<Entity>.Instance>> ENTITY_ACTIONS = ENTITY_ACTION.listOf();
+    public static final SerializableDataType<List<ActionTypeFactory<Entity>.Instance>> ENTITY_ACTIONS = ENTITY_ACTION.listOf();
 
-    public static final SerializableDataType<ActionFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActions.ALIASES, "Bi-entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActions.ALIASES, "Bi-entity action type");
 
-    public static final SerializableDataType<List<ActionFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = BIENTITY_ACTION.listOf();
+    public static final SerializableDataType<List<ActionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = BIENTITY_ACTION.listOf();
 
-    public static final SerializableDataType<ActionFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActions.ALIASES, "Block action type");
+    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActions.ALIASES, "Block action type");
 
-    public static final SerializableDataType<List<ActionFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = BLOCK_ACTION.listOf();
+    public static final SerializableDataType<List<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = BLOCK_ACTION.listOf();
 
-    public static final SerializableDataType<ActionFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActions.ALIASES, "Item action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActions.ALIASES, "Item action type");
 
-    public static final SerializableDataType<List<ActionFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = ITEM_ACTION.listOf();
+    public static final SerializableDataType<List<ActionTypeFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = ITEM_ACTION.listOf();
 
     public static final SerializableDataType<Space> SPACE = SerializableDataType.enumValue(Space.class);
 
@@ -220,30 +218,9 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = ITEM_SLOT.listOf();
 
-    @Deprecated(forRemoval = true)
-    public static final SerializableDataType<Explosion.DestructionType> BACKWARDS_COMPATIBLE_DESTRUCTION_TYPE = SerializableDataType.enumValue(Explosion.DestructionType.class, () -> ImmutableMap.of(
-        "none", Explosion.DestructionType.KEEP,
-        "break", Explosion.DestructionType.DESTROY,
-        "destroy", Explosion.DestructionType.DESTROY_WITH_DECAY,
-        "trigger", Explosion.DestructionType.TRIGGER_BLOCK
-    ));
-
     public static final SerializableDataType<Explosion.DestructionType> DESTRUCTION_TYPE = SerializableDataType.enumValue(Explosion.DestructionType.class);
 
     public static final SerializableDataType<ArgumentWrapper<EntitySelector>> ENTITIES_SELECTOR = SerializableDataType.argumentType(EntityArgumentType.entities());
-
-    @Deprecated(forRemoval = true)
-    public static final SerializableDataType<DamageSourceDescription> DAMAGE_SOURCE_DESCRIPTION = SerializableDataType.compound(
-        DamageSourceDescription.DATA,
-        DamageSourceDescription::fromData,
-        DamageSourceDescription::toData
-    );
-
-    @Deprecated(forRemoval = true)
-    public static final SerializableDataType<LegacyMaterial> LEGACY_MATERIAL = SerializableDataTypes.STRING.xmap(LegacyMaterial::new, LegacyMaterial::getMaterial);
-
-    @Deprecated(forRemoval = true)
-    public static final SerializableDataType<List<LegacyMaterial>> LEGACY_MATERIALS = LEGACY_MATERIAL.listOf();
 
     public static final SerializableDataType<AdvancementCommand.Operation> ADVANCEMENT_OPERATION = SerializableDataType.enumValue(AdvancementCommand.Operation.class);
 
@@ -281,27 +258,27 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
 
-    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, String name) {
+    public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, String name) {
         return condition(registry, null, name);
     }
 
-    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(Registry<ConditionFactory<T>> registry, IdentifierAlias aliases, String name) {
+    public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, IdentifierAlias aliases, String name) {
         return condition("type", registry, aliases, (conditionFactories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
     }
 
-    public static <T> SerializableDataType<ConditionFactory<T>.Instance> condition(String field, Registry<ConditionFactory<T>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ConditionFactory<T>>, Identifier, RuntimeException> errorHandler) {
+    public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(String field, Registry<ConditionTypeFactory<T>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ConditionTypeFactory<T>>, Identifier, RuntimeException> errorHandler) {
         return SerializableDataType.of(
             new StrictCodec<>() {
 
                 @Override
-                public <I> com.mojang.datafixers.util.Pair<ConditionFactory<T>.Instance, I> strictDecode(DynamicOps<I> ops, I input) {
+                public <I> com.mojang.datafixers.util.Pair<ConditionTypeFactory<T>.Instance, I> strictDecode(DynamicOps<I> ops, I input) {
 
                     MapLike<I> mapInput = ops.getMap(input).getOrThrow();
                     Identifier factoryId = Optional.ofNullable(mapInput.get(field))
                         .map(type -> SerializableDataTypes.IDENTIFIER.strictParse(ops, type))
                         .orElseThrow(() -> new DataException(DataException.Phase.READING, field, "Field is required, but is missing!"));
 
-                    ConditionFactory<T> factory = registry
+                    ConditionTypeFactory<T> factory = registry
                         .getOrEmpty(aliases == null ? factoryId : aliases.resolveAlias(factoryId, registry::containsId))
                         .orElseThrow(() -> errorHandler.apply(registry, factoryId));
 
@@ -311,7 +288,7 @@ public class ApoliDataTypes {
                 }
 
                 @Override
-                public <I> I strictEncode(ConditionFactory<T>.Instance input, DynamicOps<I> ops, I prefix) {
+                public <I> I strictEncode(ConditionTypeFactory<T>.Instance input, DynamicOps<I> ops, I prefix) {
 
                     Map<I, I> output = new LinkedHashMap<>();
 
@@ -328,7 +305,7 @@ public class ApoliDataTypes {
             new PacketCodec<>() {
 
                 @Override
-                public ConditionFactory<T>.Instance decode(RegistryByteBuf buf) {
+                public ConditionTypeFactory<T>.Instance decode(RegistryByteBuf buf) {
                     Identifier factoryId = buf.readIdentifier();
                     return registry.getOrEmpty(factoryId)
                         .orElseThrow(() -> errorHandler.apply(registry, factoryId))
@@ -336,7 +313,7 @@ public class ApoliDataTypes {
                 }
 
                 @Override
-                public void encode(RegistryByteBuf buf, ConditionFactory<T>.Instance instance) {
+                public void encode(RegistryByteBuf buf, ConditionTypeFactory<T>.Instance instance) {
                     instance.send(buf);
                 }
 
@@ -344,27 +321,27 @@ public class ApoliDataTypes {
         );
     }
 
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, String name) {
+    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(Registry<ActionTypeFactory<T>> registry, String name) {
         return action(registry, null, name);
     }
 
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(Registry<ActionFactory<T>> registry, IdentifierAlias aliases, String name) {
+    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(Registry<ActionTypeFactory<T>> registry, IdentifierAlias aliases, String name) {
         return action("type", registry, aliases, (factories, id) -> new IllegalArgumentException(name + " \"" + id + "\" is not registered"));
     }
 
-    public static <T> SerializableDataType<ActionFactory<T>.Instance> action(String field, Registry<ActionFactory<T>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionFactory<T>>, Identifier, RuntimeException> errorHandler) {
+    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(String field, Registry<ActionTypeFactory<T>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionTypeFactory<T>>, Identifier, RuntimeException> errorHandler) {
         return SerializableDataType.of(
             new StrictCodec<>() {
 
                 @Override
-                public <I> com.mojang.datafixers.util.Pair<ActionFactory<T>.Instance, I> strictDecode(DynamicOps<I> ops, I input) {
+                public <I> com.mojang.datafixers.util.Pair<ActionTypeFactory<T>.Instance, I> strictDecode(DynamicOps<I> ops, I input) {
 
                     MapLike<I> mapInput = ops.getMap(input).getOrThrow();
                     Identifier factoryId = Optional.ofNullable(mapInput.get(field))
                         .map(id -> SerializableDataTypes.IDENTIFIER.strictParse(ops, id))
                         .orElseThrow(() -> new DataException(DataException.Phase.READING, field, "Field is required, but is missing!"));
 
-                    ActionFactory<T> factory = registry
+                    ActionTypeFactory<T> factory = registry
                         .getOrEmpty(aliases == null ? factoryId : aliases.resolveAlias(factoryId, registry::containsId))
                         .orElseThrow(() -> errorHandler.apply(registry, factoryId));
 
@@ -374,7 +351,7 @@ public class ApoliDataTypes {
                 }
 
                 @Override
-                public <I> I strictEncode(ActionFactory<T>.Instance input, DynamicOps<I> ops, I prefix) {
+                public <I> I strictEncode(ActionTypeFactory<T>.Instance input, DynamicOps<I> ops, I prefix) {
 
                     Map<I, I> output = new LinkedHashMap<>();
 
@@ -391,7 +368,7 @@ public class ApoliDataTypes {
             new PacketCodec<>() {
 
                 @Override
-                public ActionFactory<T>.Instance decode(RegistryByteBuf buf) {
+                public ActionTypeFactory<T>.Instance decode(RegistryByteBuf buf) {
                     Identifier factoryId = buf.readIdentifier();
                     return registry.getOrEmpty(factoryId)
                         .orElseThrow(() -> errorHandler.apply(registry, factoryId))
@@ -399,7 +376,7 @@ public class ApoliDataTypes {
                 }
 
                 @Override
-                public void encode(RegistryByteBuf buf, ActionFactory<T>.Instance instance) {
+                public void encode(RegistryByteBuf buf, ActionTypeFactory<T>.Instance instance) {
                     instance.send(buf);
                 }
 

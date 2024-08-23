@@ -1,12 +1,10 @@
 package io.github.apace100.apoli.command;
 
-import com.google.gson.JsonElement;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
 import io.github.apace100.apoli.command.argument.PowerTypeArgumentType;
@@ -24,9 +22,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Identifier;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -108,13 +104,9 @@ public class PowerCommand {
 
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (!component.addPower(power, powerSource)) {
-				continue;
+			if (PowerHolderComponent.grantPower(target, power, powerSource, true)) {
+				processedTargets.add(target);
 			}
-
-			component.sync();
-			processedTargets.add(target);
 
 		}
 
@@ -167,15 +159,9 @@ public class PowerCommand {
 
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			if (!component.hasPower(power, powerSource)) {
-				continue;
+			if (PowerHolderComponent.revokePower(target, power, powerSource, true)) {
+				processedTargets.add(target);
 			}
-
-			component.removePower(power, powerSource);
-			component.sync();
-
-			processedTargets.add(target);
 
 		}
 
@@ -228,17 +214,12 @@ public class PowerCommand {
 
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			int revokedPowersFromSource = component.removeAllPowersFromSource(powerSource);
-
-			if (revokedPowersFromSource == 0) {
-				continue;
-			}
-
-			component.sync();
-			processedTargets.add(target);
-
+			int revokedPowersFromSource = PowerHolderComponent.revokeAllPowersFromSource(target, powerSource, true);
 			revokedPowers += revokedPowersFromSource;
+
+			if (revokedPowersFromSource > 0) {
+				processedTargets.add(target);
+			}
 
 		}
 
@@ -385,21 +366,14 @@ public class PowerCommand {
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
 		Power power = PowerTypeArgumentType.getPower(context, "power");
-
 		for (LivingEntity target : targets) {
 
-			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			List<Identifier> powerSources = component.getSources(power);
-			if (powerSources.isEmpty()) {
-				continue;
-			}
+			List<Identifier> powerSources = PowerHolderComponent.KEY.get(target).getSources(power);
+			int revokedPowers = PowerHolderComponent.revokeAllPowersFromSource(target, powerSources, true);
 
-			for (Identifier powerSource : component.getSources(power)) {
-				component.removePower(power, powerSource);
+			if (revokedPowers > 0) {
+				processedTargets.add(target);
 			}
-
-			component.sync();
-			processedTargets.add(target);
 
 		}
 
@@ -449,22 +423,23 @@ public class PowerCommand {
 		}
 
 		int clearedPowers = 0;
-
 		for (LivingEntity target : targets) {
 
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
-			Set<Power> powers = component.getPowers(false);
-			if (powers.isEmpty()) {
+			List<Identifier> powerSources = component.getPowers(false)
+				.stream()
+				.map(component::getSources)
+				.flatMap(Collection::stream)
+				.toList();
+
+			if (powerSources.isEmpty()) {
 				continue;
 			}
 
-			for (Power power : powers) {
-				List<Identifier> powerSources = component.getSources(power);
-				powerSources.forEach(component::removeAllPowersFromSource);
-			}
+			powerSources.forEach(component::removeAllPowersFromSource);
+			PowerHolderComponent.PacketHandlers.REVOKE_ALL_POWERS.sync(target, powerSources);
 
-			component.sync();
-			clearedPowers += powers.size();
+			clearedPowers += powerSources.size();
 			processedTargets.add(target);
 
 		}
@@ -503,9 +478,8 @@ public class PowerCommand {
 		Power power = PowerTypeArgumentType.getPower(context, "power");
 
 		String indent = Strings.repeat(' ', indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4);
-		JsonElement powerJson = Power.DATA_TYPE.strictEncodeStart(JsonOps.INSTANCE, power);
+		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(power.toJson()), false);
 
-		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(powerJson), false);
 		return 1;
 
 	}

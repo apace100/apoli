@@ -1,7 +1,5 @@
 package io.github.apace100.apoli.util;
 
-import com.google.gson.JsonSyntaxException;
-import io.github.apace100.apoli.data.DamageSourceDescription;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -9,15 +7,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageSources;
-import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -187,30 +182,4 @@ public final class MiscUtil {
         return a.and(b);
     }
 
-    public static DamageSource createDamageSource(DamageSources damageSources,
-                                                  @Nullable DamageSourceDescription damageSourceDescription,
-                                                  @Nullable RegistryKey<DamageType> damageType) {
-        if(damageSourceDescription == null && damageType == null) {
-            throw new JsonSyntaxException("Either a legacy damage source or an ID of a damage type must be specified");
-        }
-        return damageSourceDescription == null ? damageSources.create(damageType) : damageSourceDescription.create(damageSources);
-    }
-
-    public static DamageSource createDamageSource(DamageSources damageSources,
-                                                  @Nullable DamageSourceDescription damageSourceDescription,
-                                                  @Nullable RegistryKey<DamageType> damageType, Entity attacker) {
-        if(damageSourceDescription == null && damageType == null) {
-            throw new JsonSyntaxException("Either a legacy damage source or an ID of a damage type must be specified");
-        }
-        return damageSourceDescription == null ? damageSources.create(damageType, attacker) : damageSourceDescription.create(damageSources, attacker);
-    }
-
-    public static DamageSource createDamageSource(DamageSources damageSources,
-                                                  @Nullable DamageSourceDescription damageSourceDescription,
-                                                  @Nullable RegistryKey<DamageType> damageType, Entity source, Entity attacker) {
-        if(damageSourceDescription == null && damageType == null) {
-            throw new JsonSyntaxException("Either a legacy damage source or an ID of a damage type must be specified");
-        }
-        return damageSourceDescription == null ? damageSources.create(damageType, source, attacker) : damageSourceDescription.create(damageSources, source, attacker);
-    }
 }
