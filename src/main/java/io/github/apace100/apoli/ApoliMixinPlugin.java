@@ -22,7 +22,12 @@ public class ApoliMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-		return !mixinClassName.contains(".integration.appleskin.") || FabricLoader.getInstance().isModLoaded("appleskin");
+		if (mixinClassName.contains(".integration.appleskin."))
+            return FabricLoader.getInstance().isModLoaded("appleskin");
+        if (mixinClassName.contains(".integration.ears.")) {
+            return FabricLoader.getInstance().isModLoaded("ears");
+        }
+        return true;
     }
 
     @Override

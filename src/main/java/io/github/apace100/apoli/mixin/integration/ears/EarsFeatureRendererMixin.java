@@ -3,8 +3,8 @@ package io.github.apace100.apoli.mixin.integration.ears;
 import com.unascribed.ears.common.render.EarsRenderDelegate;
 import com.unascribed.ears.common.render.IndirectEarsRenderDelegate;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.InvisibilityPower;
-import io.github.apace100.apoli.power.ModelColorPower;
+import io.github.apace100.apoli.power.type.InvisibilityPowerType;
+import io.github.apace100.apoli.power.type.ModelColorPowerType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -20,10 +20,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 @Pseudo
-@Mixin(targets = "com.unascribed.ears.EarsFeatureRenderer$1", remap = false)
+@Mixin(targets = "com.unascribed.ears.EarsFeatureRenderer$1")
 public abstract class EarsFeatureRendererMixin extends IndirectEarsRenderDelegate<MatrixStack, VertexConsumerProvider, VertexConsumer, AbstractClientPlayerEntity, ModelPart>  {
     @Shadow(remap = false) protected abstract EquipmentSlot getSlot(EarsRenderDelegate.TexSource par1);
 
@@ -35,24 +34,41 @@ public abstract class EarsFeatureRendererMixin extends IndirectEarsRenderDelegat
 
     @Shadow(remap = false) private float armorA;
 
-    @Inject(method = "getVertexConsumer(Lcom/unascribed/ears/common/render/EarsRenderDelegate$TexSource;)Ljava/lang/Object;", at = @At("RETURN"), remap = false)
-    private void apoli$setRGBA(TexSource src, CallbackInfoReturnable<Object> cir) {
+    @Inject(method = "getVertexConsumer(Lcom/unascribed/ears/common/render/EarsRenderDelegate$TexSource;)Lnet/minecraft/client/render/VertexConsumer;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/SkinTextures;texture()Lnet/minecraft/util/Identifier;"))
+    private void apoli$setEarsRGBA(TexSource src, CallbackInfoReturnable<Object> cir) {
         AbstractClientPlayerEntity entity = this.peer;
         EquipmentSlot slot = this.getSlot(src);
-        if ((slot == null || PowerHolderComponent.hasPower(entity, InvisibilityPower.class, Predicate.not(InvisibilityPower::shouldRenderArmor)))) {
-            List<ModelColorPower> modelColorPowers = PowerHolderComponent.getPowers(entity, ModelColorPower.class);
+        if (PowerHolderComponent.hasPowerType(entity, InvisibilityPowerType.class, p -> p.doesApply(MinecraftClient.getInstance().player) && (slot == null || !p.shouldRenderArmor()))) {
+            this.armorA = 0.0F;
+        } else if (slot == null) {
+            List<ModelColorPowerType> modelColorPowers = PowerHolderComponent.getPowerTypes(entity, ModelColorPowerType.class);
             if (!modelColorPowers.isEmpty()) {
-                float re = modelColorPowers.stream().map(ModelColorPower::getRed).reduce((a, b) -> a * b).orElse(1.0f);
-                float gr = modelColorPowers.stream().map(ModelColorPower::getGreen).reduce((a, b) -> a * b).orElse(1.0f);
-                float bl = modelColorPowers.stream().map(ModelColorPower::getBlue).reduce((a, b) -> a * b).orElse(1.0f);
-                float al = modelColorPowers.stream().map(ModelColorPower::getAlpha).reduce((a, b) -> a * b).orElse(1.0f);
+                //  TODO: Implement custom blending modes for blending colors -eggohito
+                float newRed = modelColorPowers
+                        .stream()
+                        .map(ModelColorPowerType::getRed)
+                        .reduce(this.armorR, (a, b) -> a * b);
+                float newGreen = modelColorPowers
+                        .stream()
+                        .map(ModelColorPowerType::getGreen)
+                        .reduce(this.armorG, (a, b) -> a * b);
+                float newBlue = modelColorPowers
+                        .stream()
+                        .map(ModelColorPowerType::getBlue)
+                        .reduce(this.armorB, (a, b) -> a * b);
 
-                this.armorR *= re;
-                this.armorG *= gr;
-                this.armorB *= bl;
-                this.armorA *= al;
-            } else if (PowerHolderComponent.hasPower(entity, InvisibilityPower.class, p -> p.doesApply(MinecraftClient.getInstance().player) && (slot == null || !p.shouldRenderArmor()))) {
-                this.armorA = 0.0F;
+                float oldAlpha = this.armorA;
+                float newAlpha = modelColorPowers
+                        .stream()
+                        .map(ModelColorPowerType::getAlpha)
+                        .min(Float::compareTo)
+                        .map(alphaFactor -> oldAlpha * alphaFactor)
+                        .orElse(oldAlpha);
+
+                this.armorR *= newRed;
+                this.armorG *= newGreen;
+                this.armorB *= newBlue;
+                this.armorA *= newAlpha;
             }
         }
     }

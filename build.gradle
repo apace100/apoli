@@ -130,8 +130,8 @@ dependencies {
 	}
 	modCompileOnly "squeek.appleskin:appleskin-fabric:${appleskin_version}"
 
+	// Ears
 	modCompileOnly "maven.modrinth:ears:${project.ears_version}"
-//	modLocalRuntime "maven.modrinth:ears:${project.ears_version}"
 }
 
 processResources {

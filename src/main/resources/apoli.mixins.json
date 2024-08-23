@@ -110,7 +110,8 @@
 		"SpriteAtlasTextureAccessor",
 		"TextureManagerAccessor",
 		"ToastManagerEntryMixin",
-		"WorldRendererMixin"
+		"WorldRendererMixin",
+		"integration.ears.EarsFeatureRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
