@@ -16,32 +16,30 @@ import net.minecraft.util.Identifier;
 
 import java.util.concurrent.CompletableFuture;
 
-public class PowerTypeArgumentType implements ArgumentType<Identifier> {
+public class PowerArgumentType implements ArgumentType<Power> {
 
     public static final DynamicCommandExceptionType POWER_NOT_FOUND = new DynamicCommandExceptionType(
         o -> Text.stringifiedTranslatable("commands.apoli.power_not_found", o)
     );
 
-    public static PowerTypeArgumentType power() {
-        return new PowerTypeArgumentType();
-    }
-    
-    public Identifier parse(StringReader reader) throws CommandSyntaxException {
-        return Identifier.fromCommandInput(reader);
+    protected PowerArgumentType() {
+
     }
 
-    public static Power getPower(CommandContext<ServerCommandSource> context, String argumentName) throws CommandSyntaxException {
+    public static PowerArgumentType power() {
+        return new PowerArgumentType();
+    }
 
-        Identifier id = context.getArgument(argumentName, Identifier.class);
+    public static Power getPower(CommandContext<ServerCommandSource> context, String argumentName) {
+        return context.getArgument(argumentName, Power.class);
+    }
 
-        try {
-            return PowerManager.get(id);
-        }
-
-        catch (IllegalArgumentException e) {
-            throw POWER_NOT_FOUND.create(id);
-        }
-
+    @Override
+    public Power parse(StringReader reader) throws CommandSyntaxException {
+        Identifier id = Identifier.fromCommandInputNonEmpty(reader);
+        return PowerManager
+            .getOptional(id)
+            .orElseThrow(() -> POWER_NOT_FOUND.create(id));
     }
 
     @Override

@@ -4,9 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import io.github.apace100.apoli.command.argument.PowerArgumentType;
 import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
 import io.github.apace100.apoli.command.argument.PowerOperationArgumentType;
-import io.github.apace100.apoli.command.argument.PowerTypeArgumentType;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.type.CooldownPowerType;
@@ -31,29 +31,29 @@ public class ResourceCommand {
             literal("resource").requires(cs -> cs.hasPermissionLevel(2))
                 .then(literal("has")
                     .then(argument("target", PowerHolderArgumentType.holder())
-                        .then(argument("power", PowerTypeArgumentType.power())
+                        .then(argument("power", PowerArgumentType.power())
                             .executes((command) -> resource(command, SubCommand.HAS))))
                 )
                 .then(literal("get")
                     .then(argument("target", PowerHolderArgumentType.holder())
-                        .then(argument("power", PowerTypeArgumentType.power())
+                        .then(argument("power", PowerArgumentType.power())
                             .executes((command) -> resource(command, SubCommand.GET))))
                 )
                 .then(literal("set")
                     .then(argument("target", PowerHolderArgumentType.holder())
-                        .then(argument("power", PowerTypeArgumentType.power())
+                        .then(argument("power", PowerArgumentType.power())
                             .then(argument("value", IntegerArgumentType.integer())
                                 .executes((command) -> resource(command, SubCommand.SET)))))
                 )
                 .then(literal("change")
                     .then(argument("target", PowerHolderArgumentType.holder())
-                        .then(argument("power", PowerTypeArgumentType.power())
+                        .then(argument("power", PowerArgumentType.power())
                             .then(argument("value", IntegerArgumentType.integer())
                                 .executes((command) -> resource(command, SubCommand.CHANGE)))))
                 )
                 .then(literal("operation")
                     .then(argument("target", PowerHolderArgumentType.holder())
-                        .then(argument("power", PowerTypeArgumentType.power())
+                        .then(argument("power", PowerArgumentType.power())
                             .then(argument("operation", PowerOperationArgumentType.operation())
                                 .then(argument("entity", ScoreHolderArgumentType.scoreHolder())
                                     .then(argument("objective", ScoreboardObjectiveArgumentType.scoreboardObjective())
@@ -73,7 +73,7 @@ public class ResourceCommand {
         LivingEntity target = PowerHolderArgumentType.getHolder(context, "target");
         PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 
-        Power power = PowerTypeArgumentType.getPower(context, "power");
+        Power power = PowerArgumentType.getPower(context, "power");
         PowerType powerType = component.getPowerType(power);
 
         return switch (subCommand) {

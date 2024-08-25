@@ -2,9 +2,9 @@ package io.github.apace100.apoli.mixin;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.command.argument.PowerArgumentType;
 import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
 import io.github.apace100.apoli.command.argument.PowerOperationArgumentType;
-import io.github.apace100.apoli.command.argument.PowerTypeArgumentType;
 import net.minecraft.command.argument.ArgumentTypes;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.serialize.ArgumentSerializer;
@@ -24,7 +24,7 @@ public abstract class ArgumentTypesMixin {
     }
     @Inject(method = "register(Lnet/minecraft/registry/Registry;)Lnet/minecraft/command/argument/serialize/ArgumentSerializer;", at = @At("RETURN"))
     private static void registerApoliArgumentTypes(Registry<ArgumentSerializer<?, ?>> registry, CallbackInfoReturnable<ArgumentSerializer<?, ?>> cir) {
-        register(registry, Apoli.MODID + ":power", PowerTypeArgumentType.class, ConstantArgumentSerializer.of(PowerTypeArgumentType::power));
+        register(registry, Apoli.MODID + ":power", PowerArgumentType.class, ConstantArgumentSerializer.of(PowerArgumentType::power));
         register(registry, Apoli.MODID + ":power_operation", PowerOperationArgumentType.class, ConstantArgumentSerializer.of(PowerOperationArgumentType::operation));
         register(registry , Apoli.MODID + ":power_holder", PowerHolderArgumentType.class, new EntityArgumentType.Serializer());
     }
