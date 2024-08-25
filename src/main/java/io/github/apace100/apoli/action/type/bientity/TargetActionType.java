@@ -24,7 +24,7 @@ public class TargetActionType {
             Apoli.identifier("target_action"),
             new SerializableData()
                 .add("action", ApoliDataTypes.ENTITY_ACTION),
-            (data, actorAndTarget) -> action(actorAndTarget.getLeft(),
+            (data, actorAndTarget) -> action(actorAndTarget.getRight(),
                 data.get("action")
             )
         );
