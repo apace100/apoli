@@ -9,8 +9,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.Pair;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,13 +20,13 @@ import java.util.function.Predicate;
 
 public class BiomeConditionType {
 
-    public static boolean condition(Entity entity, @Nullable Predicate<RegistryEntry<Biome>> biomeCondition, Collection<RegistryKey<Biome>> specBiomeKeys) {
+    public static boolean condition(Entity entity, Predicate<Pair<BlockPos, RegistryEntry<Biome>>> biomeCondition, Collection<RegistryKey<Biome>> specifiedBiomeKeys) {
 
         RegistryEntry<Biome> biomeEntry = entity.getWorld().getBiome(entity.getBlockPos());
         RegistryKey<Biome> biomeKey = biomeEntry.getKey().orElseThrow();
 
-        return (!specBiomeKeys.isEmpty() && specBiomeKeys.contains(biomeKey))
-            && (biomeCondition != null && biomeCondition.test(biomeEntry));
+        return (specifiedBiomeKeys.isEmpty() || specifiedBiomeKeys.contains(biomeKey))
+            && biomeCondition.test(new Pair<>(entity.getBlockPos(), biomeEntry));
 
     }
 
@@ -38,14 +39,14 @@ public class BiomeConditionType {
                 .add("biomes", SerializableDataType.registryKey(RegistryKeys.BIOME).listOf(), null),
             (data, entity) -> {
 
-                Set<RegistryKey<Biome>> specBiomeKeys = new HashSet<>();
+                Set<RegistryKey<Biome>> specifiedBiomeKeys = new HashSet<>();
 
-                data.ifPresent("biome", specBiomeKeys::add);
-                data.ifPresent("biomes", specBiomeKeys::addAll);
+                data.ifPresent("biome", specifiedBiomeKeys::add);
+                data.ifPresent("biomes", specifiedBiomeKeys::addAll);
 
                 return condition(entity,
-                    data.get("condition"),
-                    specBiomeKeys
+                    data.getOrElse("condition", posAndBiome -> true),
+                    specifiedBiomeKeys
                 );
 
             }
