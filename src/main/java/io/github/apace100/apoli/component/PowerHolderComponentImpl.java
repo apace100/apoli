@@ -1,11 +1,16 @@
 package io.github.apace100.apoli.component;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.MultiplePower;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -248,7 +253,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
                 try {
 
-                    Power power = powerEntry.power().getReferenceStrict();
+                    Power power = powerEntry.power().getStrictReference();
                     PowerType powerType = power.create(owner);
 
                     try {

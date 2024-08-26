@@ -14,12 +14,17 @@ import io.github.apace100.apoli.condition.factory.*;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetManager;
 import io.github.apace100.apoli.integration.PowerIntegration;
+import io.github.apace100.apoli.loot.condition.ApoliLootConditionTypes;
+import io.github.apace100.apoli.loot.function.ApoliLootFunctionTypes;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.factory.PowerTypes;
 import io.github.apace100.apoli.registry.ApoliClassData;
-import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.ApoliConfig;
+import io.github.apace100.apoli.util.GainedPowerCriterion;
+import io.github.apace100.apoli.util.ModifiedCraftingRecipe;
+import io.github.apace100.apoli.util.PowerRestrictedCraftingRecipe;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.util.CalioResourceConditions;
@@ -91,10 +96,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
 		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("modified"), ModifiedCraftingRecipe.SERIALIZER);
 
-		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("add_power"), AddPowerLootFunction.TYPE);
-		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("remove_power"), RemovePowerLootFunction.TYPE);
-
-		Registry.register(Registries.LOOT_CONDITION_TYPE, Apoli.identifier("power"), PowerLootCondition.TYPE);
+		ApoliLootFunctionTypes.register();
+		ApoliLootConditionTypes.register();
 
 		ApoliClassData.registerAll();
 

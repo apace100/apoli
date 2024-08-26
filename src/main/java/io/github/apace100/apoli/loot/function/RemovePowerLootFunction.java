@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.util;
+package io.github.apace100.apoli.loot.function;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -27,11 +27,10 @@ import java.util.List;
 
 public class RemovePowerLootFunction extends ConditionalLootFunction {
 
-    public static final MapCodec<RemovePowerLootFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
+    public static final MapCodec<RemovePowerLootFunction> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
         SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT_SET.optionalFieldOf("slot", EnumSet.allOf(AttributeModifierSlot.class)).forGetter(RemovePowerLootFunction::slots),
         Identifier.CODEC.fieldOf("power").forGetter(RemovePowerLootFunction::powerId)
     )).apply(instance, RemovePowerLootFunction::new));
-    public static final LootFunctionType<RemovePowerLootFunction> TYPE = new LootFunctionType<>(CODEC);
 
     private final EnumSet<AttributeModifierSlot> slots;
     private final Identifier powerId;
@@ -44,7 +43,7 @@ public class RemovePowerLootFunction extends ConditionalLootFunction {
 
     @Override
     public LootFunctionType<? extends ConditionalLootFunction> getType() {
-        return TYPE;
+        return ApoliLootFunctionTypes.REMOVE_POWER;
     }
 
     @Override
