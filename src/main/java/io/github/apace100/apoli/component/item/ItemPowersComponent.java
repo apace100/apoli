@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.component.item;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -7,7 +9,6 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
-import io.github.apace100.apoli.util.codec.SetCodec;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
@@ -38,9 +39,9 @@ public class ItemPowersComponent {
 
     public static final ItemPowersComponent DEFAULT = new ItemPowersComponent(Set.of());
 
-    public static final Codec<ItemPowersComponent> CODEC = SetCodec.of(Entry.MAP_CODEC.codec()).xmap(
+    public static final Codec<ItemPowersComponent> CODEC = Entry.SET_CODEC.xmap(
         ItemPowersComponent::new,
-        ItemPowersComponent::entries
+		ItemPowersComponent::entries
     );
 
     public static final PacketCodec<ByteBuf, ItemPowersComponent> PACKET_CODEC = PacketCodecs.collection(ObjectLinkedOpenHashSet::new, Entry.PACKET_CODEC).xmap(
@@ -50,7 +51,7 @@ public class ItemPowersComponent {
 
     final ObjectLinkedOpenHashSet<Entry> entries;
 
-    ItemPowersComponent(Set<Entry> entries) {
+    ItemPowersComponent(Collection<Entry> entries) {
         this.entries = new ObjectLinkedOpenHashSet<>(entries);
     }
 
@@ -61,9 +62,19 @@ public class ItemPowersComponent {
 
     @Override
     public boolean equals(Object obj) {
-        return this == obj
-            || (obj instanceof ItemPowersComponent other
-            && this.entries.equals(other.entries));
+
+        if (this == obj) {
+            return true;
+        }
+
+        else if (!(obj instanceof ItemPowersComponent that)) {
+            return false;
+        }
+
+        else {
+            return Objects.equals(this.entries(), that.entries());
+        }
+
     }
 
     @Override
@@ -173,6 +184,11 @@ public class ItemPowersComponent {
             PacketCodecs.BOOL, Entry::hidden,
             PacketCodecs.BOOL, Entry::negative,
             Entry::new
+        );
+
+        public static final Codec<Set<Entry>> SET_CODEC = MAP_CODEC.codec().listOf().xmap(
+			ImmutableSet::copyOf,
+			ImmutableList::copyOf
         );
 
         @Override

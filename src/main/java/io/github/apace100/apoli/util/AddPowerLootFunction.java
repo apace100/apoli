@@ -5,6 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.condition.LootCondition;
@@ -19,7 +20,7 @@ import java.util.List;
 public class AddPowerLootFunction extends ConditionalLootFunction {
 
     public static final MapCodec<AddPowerLootFunction> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
-        ApoliCodecs.ATTRIBUTE_MODIFIER_SLOT_SET.optionalFieldOf("slot", EnumSet.of(AttributeModifierSlot.ANY)).forGetter(AddPowerLootFunction::slots),
+        SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT_SET.optionalFieldOf("slot", EnumSet.of(AttributeModifierSlot.ANY)).forGetter(AddPowerLootFunction::slots),
         Identifier.CODEC.fieldOf("power").forGetter(AddPowerLootFunction::powerId),
         Codec.BOOL.optionalFieldOf("hidden", false).forGetter(AddPowerLootFunction::hidden),
         Codec.BOOL.optionalFieldOf("negative", false).forGetter(AddPowerLootFunction::negative)
