@@ -10,6 +10,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.minecraft.component.type.AttributeModifierSlot;
@@ -26,10 +27,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -134,37 +132,35 @@ public class ItemPowersComponent {
 
     public static void onChangeEquipment(LivingEntity entity, EquipmentSlot equipmentSlot, ItemStack previousStack, ItemStack currentStack) {
 
+        Identifier sourceId = Apoli.identifier("item/" + equipmentSlot.getName());
         if (ItemStack.areEqual(previousStack, currentStack) || !PowerHolderComponent.KEY.isProvidedBy(entity)) {
             return;
         }
 
-        PowerHolderComponent powerComponent = PowerHolderComponent.KEY.get(entity);
-        Identifier sourceId = Apoli.identifier("item/" + equipmentSlot.getName());
-
-        boolean shouldSync = false;
-
+        List<Power> revokedPowers = new ObjectArrayList<>();
         ItemPowersComponent prevStackPowers = previousStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
+
         for (Entry prevEntry : prevStackPowers.entries) {
-
-            shouldSync |= PowerManager.getOptional(prevEntry.powerId())
+            PowerManager.getOptional(prevEntry.powerId())
                 .filter(power -> prevEntry.slot().matches(equipmentSlot))
-                .map(power -> powerComponent.removePower(power, sourceId))
-                .orElse(false);
-
+                .ifPresent(revokedPowers::add);
         }
 
+        List<Power> grantedPowers = new ObjectArrayList<>();
         ItemPowersComponent currStackPowers = currentStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
+
         for (Entry currEntry : currStackPowers.entries) {
-
-            shouldSync |= PowerManager.getOptional(currEntry.powerId())
+            PowerManager.getOptional(currEntry.powerId())
                 .filter(power -> currEntry.slot().matches(equipmentSlot))
-                .map(power -> powerComponent.addPower(power, sourceId))
-                .orElse(false);
-
+                .ifPresent(grantedPowers::add);
         }
 
-        if (shouldSync) {
-            powerComponent.sync();
+        if (!revokedPowers.isEmpty()) {
+            PowerHolderComponent.revokePowers(entity, Map.of(sourceId, revokedPowers), true);
+        }
+
+        if (!grantedPowers.isEmpty()) {
+            PowerHolderComponent.grantPowers(entity, Map.of(sourceId, grantedPowers), true);
         }
 
     }

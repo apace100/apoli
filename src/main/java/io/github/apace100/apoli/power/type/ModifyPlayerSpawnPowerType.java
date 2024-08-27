@@ -117,7 +117,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
         Vec3d placement = Dismounting.findRespawnPos(serverPlayer.getType(), spawnPointDimension, spawnPointPosition, true);
         if (placement == null) {
-            Apoli.LOGGER.warn("Power \"{}\" could not find a suitable spawn point for player {}! Teleporting to the found location directly...", this.getId(), entity.getName().getString());
+            Apoli.LOGGER.warn("Power \"{}\" could not find a suitable spawn point for player {}! Teleporting to the found location directly...", this.getPowerId(), entity.getName().getString());
             serverPlayer.teleport(spawnPointDimension, spawnPointPosition.getX(), spawnPointPosition.getY(), spawnPointPosition.getZ(), pitch, yaw);
         }
 
@@ -209,8 +209,8 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
                 name.append(!name.isEmpty() ? " or " : "").append("any biomes from tag \"").append(biomeTag.id()).append("\"");
             }
 
-            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getId(), entity.getName().getString(), name, dimensionKey.getValue());
-            entity.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
+            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getPowerId(), entity.getName().getString(), name, dimensionKey.getValue());
+            entity.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getPowerId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
 
             return Optional.empty();
 
@@ -260,8 +260,8 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
                 name.append(!name.isEmpty() ? " or " : "").append("any structures from tag \"").append(structureTag.id()).append("\"");
             }
 
-            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getId(), entity.getName().getString(), name, dimensionKey.getValue());
-            entity.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
+            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getPowerId(), entity.getName().getString(), name, dimensionKey.getValue());
+            entity.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getPowerId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
 
             return Optional.empty();
 
@@ -443,4 +443,3 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
     }
 
 }
-

@@ -23,7 +23,7 @@ public class RemovePowerActionType {
             .toList();
 
         if (!sources.isEmpty()) {
-            PowerHolderComponent.revokeAllPowersFromSource(entity, sources, true);
+            PowerHolderComponent.revokeAllPowersFromAllSources(entity, sources, true);
         }
 
     }

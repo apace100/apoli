@@ -9,6 +9,7 @@ import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.component.ComponentChanges;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.Entity;
@@ -21,9 +22,7 @@ import net.minecraft.loot.function.ConditionalLootFunction;
 import net.minecraft.loot.function.LootFunctionType;
 import net.minecraft.util.Identifier;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 public class RemovePowerLootFunction extends ConditionalLootFunction {
 
@@ -83,33 +82,31 @@ public class RemovePowerLootFunction extends ConditionalLootFunction {
         }
 
         PowerHolderComponent powerComponent = PowerHolderComponent.KEY.getNullable(entity);
-        boolean shouldSync = false;
-
         if (powerComponent == null) {
             return;
         }
 
-        EnumSet<EquipmentSlot> processedSlots = EnumSet.noneOf(EquipmentSlot.class);
+        Map<Identifier, Collection<Power>> revokedPowers = new HashMap<>();
         for (ItemPowersComponent.Entry entry : removedEntries) {
 
             AttributeModifierSlot modifierSlot = entry.slot();
+
             for (EquipmentSlot slot : EquipmentSlot.values()) {
 
-                if (!modifierSlot.matches(slot) || processedSlots.contains(slot)) {
-                    continue;
-                }
-
                 Identifier sourceId = Apoli.identifier("item/" + slot.getName());
-                shouldSync |= powerComponent.removePower(power, sourceId);
 
-                processedSlots.add(slot);
+                if (!revokedPowers.containsKey(sourceId) && modifierSlot.matches(slot)) {
+                    revokedPowers
+                        .computeIfAbsent(sourceId, k -> new ObjectArrayList<>())
+                        .add(power);
+                }
 
             }
 
         }
 
-        if (shouldSync) {
-            powerComponent.sync();
+        if (!revokedPowers.isEmpty()) {
+            PowerHolderComponent.revokePowers(entity, revokedPowers, true);
         }
 
     }

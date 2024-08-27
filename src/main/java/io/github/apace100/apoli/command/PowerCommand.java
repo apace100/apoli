@@ -365,7 +365,7 @@ public class PowerCommand {
 		for (LivingEntity target : targets) {
 
 			List<Identifier> powerSources = PowerHolderComponent.KEY.get(target).getSources(power);
-			int revokedPowers = PowerHolderComponent.revokeAllPowersFromSource(target, powerSources, true);
+			int revokedPowers = PowerHolderComponent.revokeAllPowersFromAllSources(target, powerSources, true);
 
 			if (revokedPowers > 0) {
 				processedTargets.add(target);

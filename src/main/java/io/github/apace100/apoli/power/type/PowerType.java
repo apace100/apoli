@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -92,7 +92,7 @@ public class PowerType {
         return power;
     }
 
-    public Identifier getId() {
+    public Identifier getPowerId() {
         return this.getPower().getId();
     }
 
