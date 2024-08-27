@@ -83,7 +83,7 @@ dependencies {
 	include(modImplementation("io.github.ladysnake:PlayerAbilityLib:${pal_version}"))
 
 	//	Calio
-	include(modImplementation("com.github.apace100:calio:${project.calio_version}"))
+	include(modImplementation("io.github.apace100:calio:${project.calio_version}"))
 
 	//	Cloth Config
 	include(modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}")) {
