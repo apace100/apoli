@@ -41,7 +41,8 @@ public class ModifyStatusEffectAmplifierPowerType extends ValueModifyingPowerTyp
     }
 
     public boolean doesApply(RegistryEntry<StatusEffect> statusEffect) {
-        return statusEffects.contains(statusEffect);
+        return statusEffects.isEmpty()
+            || statusEffects.contains(statusEffect);
     }
 
     public static PowerTypeFactory<?> getFactory() {
