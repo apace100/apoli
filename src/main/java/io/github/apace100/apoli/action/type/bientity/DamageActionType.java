@@ -2,6 +2,7 @@ package io.github.apace100.apoli.action.type.bientity;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -41,7 +42,14 @@ public class DamageActionType {
                 .add("damage_type", SerializableDataTypes.DAMAGE_TYPE)
                 .add("amount", SerializableDataTypes.FLOAT, null)
                 .add("modifier", Modifier.DATA_TYPE, null)
-                .add("modifiers", Modifier.LIST_TYPE, null),
+                .add("modifiers", Modifier.LIST_TYPE, null)
+                .postProcessor(data -> {
+
+                    if (!data.isPresent("amount") && !MiscUtil.anyPresent(data, "modifier", "modifiers")) {
+                        throw new IllegalStateException("Any of 'amount', 'modifier', or 'modifiers' fields must be defined!");
+                    }
+
+                }),
             (data, actorAndTarget) -> {
 
                 Collection<Modifier> modifiers = new LinkedList<>();
