@@ -13,7 +13,9 @@ import java.util.function.Predicate;
 public class AttackerConditionType {
 
     public static boolean condition(DamageSource damageSource, Predicate<Entity> entityCondition) {
-        return entityCondition.test(damageSource.getAttacker());
+        Entity attacker = damageSource.getAttacker();
+        return attacker != null
+            && entityCondition.test(attacker);
     }
 
     public static ConditionTypeFactory<Pair<DamageSource, Float>> getFactory() {
