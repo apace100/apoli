@@ -39,6 +39,7 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
@@ -274,12 +275,15 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
                 try {
 
+                    if (!Identifier.isPathValid(key)) {
+                        throw new InvalidIdentifierException("Non [a-z0-9/._-] character in sub-power name");
+                    }
+
                     if (!(jsonElement instanceof JsonObject subPowerJson)) {
                         throw new JsonSyntaxException("Expected a JSON object");
                     }
 
-                    assert Identifier.isPathValid(key);
-                    Identifier subPowerId = Identifier.of(powerId + "_" + key);
+                    Identifier subPowerId = powerId.withSuffixedPath("_" + key);
 
                     if (this.readSubPower(packName, powerId, subPowerId, key, subPowerJson)) {
                         subPowerIds.add(subPowerId);
