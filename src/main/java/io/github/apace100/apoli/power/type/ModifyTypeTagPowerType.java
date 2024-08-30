@@ -47,8 +47,10 @@ public class ModifyTypeTagPowerType extends PowerType {
     }
 
     public boolean doesApply(TagKey<EntityType<?>> typeTag) {
-        return Objects.equals(tag, typeTag)
-            || ENTITY_TYPE_SUB_TAGS.getOrDefault(typeTag.id(), new ObjectArrayList<>()).contains(tag.id());
+        return Objects.equals(typeTag, tag) || ENTITY_TYPE_SUB_TAGS.getOrDefault(typeTag.id(), new ObjectArrayList<>())
+            .stream()
+            .map(id -> TagKey.of(RegistryKeys.ENTITY_TYPE, id))
+            .anyMatch(this::doesApply);
     }
 
     public static boolean doesApply(Entity entity, TagKey<EntityType<?>> typeTag) {
