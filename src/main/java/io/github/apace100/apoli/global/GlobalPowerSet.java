@@ -2,16 +2,15 @@ package io.github.apace100.apoli.global;
 
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.MultiplePower;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.PowerManager;
-import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.power.*;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.TagLike;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -19,16 +18,16 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
 
     public static final CompoundSerializableDataType<GlobalPowerSet> DATA_TYPE = SerializableDataType.compound(
         new SerializableData()
-            .add("entity_types", SerializableDataTypes.ENTITY_TYPE_TAG_LIKE, null)
+            .add("entity_types", SerializableDataType.optional(SerializableDataTypes.ENTITY_TYPE_TAG_LIKE, false), Optional.empty())
             .add("powers", ApoliDataTypes.POWER_REFERENCE.listOf())
             .add("replace", SerializableDataTypes.BOOLEAN, false)
             .add("order", SerializableDataTypes.INT, 0),
@@ -40,115 +39,107 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
         ),
         (globalPowerSet, data) -> data
             .set("entity_types", globalPowerSet.getEntityTypes())
-            .set("powers", globalPowerSet.getPowers())
+            .set("powers", globalPowerSet.getPowerReferences())
             .set("replace", globalPowerSet.shouldReplace())
             .set("order", globalPowerSet.getOrder())
     );
 
-    @Nullable
-    private final TagLike<EntityType<?>> entityTypes;
+    private final Optional<TagLike<EntityType<?>>> entityTypes;
+
+    private final List<PowerReference> powerReferences;
     private final Set<Power> powers;
 
     private final boolean replace;
     private final int order;
 
-    public GlobalPowerSet(@Nullable TagLike<EntityType<?>> entityTypes, Collection<Power> powers, boolean replace, int order) {
+    public GlobalPowerSet(Optional<TagLike<EntityType<?>>> entityTypes, Collection<PowerReference> powerReferences, boolean replace, int order) {
         this.entityTypes = entityTypes;
-        this.powers = getSelvesAndSubs(powers);
+        this.powerReferences = new ObjectArrayList<>(powerReferences);
+        this.powers = getSelfAndSubPowers(powerReferences);
         this.replace = replace;
         this.order = order;
     }
 
     @Override
-    public int compareTo(@NotNull GlobalPowerSet o) {
-        return Integer.compare(order, o.order);
+    public int compareTo(@NotNull GlobalPowerSet that) {
+        return Integer.compare(this.order, that.order);
     }
 
-    private Set<Power> getSelvesAndSubs(Collection<Power> powers) {
+    private List<PowerReference> getPowerReferences() {
+        return powerReferences;
+    }
 
-        Set<Power> result = new LinkedHashSet<>();
-        for (Power power : powers) {
+    private Set<Power> getSelfAndSubPowers(Collection<PowerReference> powerReferences) {
 
-            //  Add the power to the result list
-            result.add(power);
+        Set<Power> result = new ObjectLinkedOpenHashSet<>();
 
-            //  Check whether the power is an instance of a multiple power
-            MultiplePower multiplePower = getMultiple(power);
-            if (multiplePower != null) {
-                //  Add the sub-powers of the multiple power to the result list
-                result.addAll(multiplePower.getSubPowers());
-            }
+        for (PowerReference powerReference : powerReferences) {
 
-        }
+            //  Add the reference as is to the resulting set
+            result.add(powerReference);
+
+            //  If the reference is referring to a multiple power, query its sub-powers and add those to the
+            //  resulting set
+			powerReference.getOptionalReference()
+				.filter(MultiplePower.class::isInstance)
+				.map(MultiplePower.class::cast)
+                .map(MultiplePower::getSubPowers)
+                .ifPresent(result::addAll);
+
+		}
 
         return result;
-
-    }
-
-    @Nullable
-    private MultiplePower getMultiple(Power power) {
-
-        if (power instanceof MultiplePower multiplePowerType) {
-            return multiplePowerType;
-        }
-
-        else if (power instanceof PowerReference powerRef && powerRef.getReference() instanceof MultiplePower multiplePower) {
-            return multiplePower;
-        }
-
-        else {
-            return null;
-        }
 
     }
 
     public GlobalPowerSet merge(GlobalPowerSet that) {
 
         RegistryKey<Registry<EntityType<?>>> key = RegistryKeys.ENTITY_TYPE;
-        DynamicRegistryManager.Immutable drm = Calio
-            .getDynamicRegistries()
-            .orElseThrow(() -> new IllegalStateException("Cannot merge global power set without dynamic registries!"));
+        DynamicRegistryManager.Immutable drm = Calio.getDynamicRegistries().orElseThrow(() -> new IllegalStateException("Cannot merge global power set without dynamic registries!"));
 
         TagLike.Builder<EntityType<?>> thisBuilder = new TagLike.Builder<>(key);
         TagLike.Builder<EntityType<?>> thatBuilder = new TagLike.Builder<>(key);
 
-        List<Power> powers = new LinkedList<>(this.powers);
+        this.getEntityTypes().map(TagLike::entries).ifPresent(thisBuilder::addAll);
+        that.getEntityTypes().map(TagLike::entries).ifPresent(thatBuilder::addAll);
 
-        if (this.getEntityTypes() != null) {
-            thisBuilder.addAll(this.getEntityTypes().entries());
-        }
-
-        if (that.getEntityTypes() != null) {
-            thatBuilder.addAll(that.getEntityTypes().entries());
-        }
+        Set<PowerReference> powerReferences = new ObjectLinkedOpenHashSet<>(this.getPowerReferences());
+        int order = this.getOrder();
 
         if (that.shouldReplace()) {
+
             thisBuilder.clear();
-            powers.clear();
+            powerReferences.clear();
+
+            order = that.getOrder();
+
         }
 
         thisBuilder.addAll(thatBuilder);
-        powers.addAll(that.getPowers());
+        powerReferences.addAll(that.getPowerReferences());
+
+        Optional<TagLike<EntityType<?>>> builtEntityTypes = this.getEntityTypes().isPresent() || that.getEntityTypes().isPresent()
+            ? Optional.of(thisBuilder.build(drm.getWrapperOrThrow(key)))
+            : Optional.empty();
 
         return new GlobalPowerSet(
-            thisBuilder.build(drm.getWrapperOrThrow(key)),
-            powers,
+            builtEntityTypes,
+            powerReferences,
             that.shouldReplace(),
-            that.order
+            order
         );
 
     }
 
     public boolean doesApply(EntityType<?> entityType) {
-        return entityTypes == null || entityTypes.contains(entityType);
+        return entityTypes.map(types -> types.contains(entityType)).orElse(true);
     }
 
     public boolean doesApply(Entity entity) {
         return this.doesApply(entity.getType());
     }
 
-    @Nullable
-    public TagLike<EntityType<?>> getEntityTypes() {
+    public Optional<TagLike<EntityType<?>>> getEntityTypes() {
         return entityTypes;
     }
 
@@ -174,7 +165,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
 
         List<Power> invalid = powers
             .stream()
-            .filter(pt -> !PowerManager.contains(pt.getId()))
+            .filter(p -> !PowerManager.contains(p.getId()))
             .collect(Collectors.toList());
 
         powers.removeIf(invalid::contains);
