@@ -13,7 +13,7 @@ import java.util.function.Predicate;
 public class OnBlockConditionType {
 
     public static boolean condition(Entity entity, Predicate<CachedBlockPosition> blockCondition) {
-        BlockPos pos = BlockPos.ofFloored(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getY());
+        BlockPos pos = BlockPos.ofFloored(entity.getX(), entity.getBoundingBox().minY - 0.5000001D, entity.getZ());
         return entity.isOnGround()
             && blockCondition.test(new CachedBlockPosition(entity.getWorld(), pos, true));
     }
