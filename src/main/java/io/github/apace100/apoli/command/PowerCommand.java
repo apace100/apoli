@@ -11,7 +11,6 @@ import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.util.JsonTextFormatter;
-import joptsimple.internal.Strings;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -473,8 +472,8 @@ public class PowerCommand {
 		ServerCommandSource source = context.getSource();
 		Power power = PowerArgumentType.getPower(context, "power");
 
-		String indent = Strings.repeat(' ', indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4);
-		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(power.toJson()), false);
+		int size = indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4;
+		source.sendFeedback(() -> new JsonTextFormatter(size).apply(power.toJson()), false);
 
 		return 1;
 
