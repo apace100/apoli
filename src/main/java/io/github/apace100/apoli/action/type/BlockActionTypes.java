@@ -1,5 +1,6 @@
-package io.github.apace100.apoli.action.factory;
+package io.github.apace100.apoli.action.type;
 
+import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.action.type.block.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -11,13 +12,13 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Triple;
 
-public class BlockActions {
+public class BlockActionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
 
-        MetaActions.register(ApoliDataTypes.BLOCK_ACTION, ApoliDataTypes.BLOCK_CONDITION, block -> new CachedBlockPosition(block.getLeft(), block.getMiddle(), true), BlockActions::register);
+        MetaActionTypes.register(ApoliDataTypes.BLOCK_ACTION, ApoliDataTypes.BLOCK_CONDITION, block -> new CachedBlockPosition(block.getLeft(), block.getMiddle(), true), BlockActionTypes::register);
 
         register(OffsetActionType.getFactory());
         register(SetBlockActionType.getFactory());

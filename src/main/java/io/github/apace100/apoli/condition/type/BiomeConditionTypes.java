@@ -1,7 +1,8 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.BiomeWeatherAccess;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.biome.InTagConditionType;
 import io.github.apace100.apoli.condition.type.biome.PrecipitationConditionType;
 import io.github.apace100.apoli.condition.type.biome.TemperatureConditionType;
@@ -18,12 +19,12 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.function.Predicate;
 
-public class BiomeConditions {
+public class BiomeConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
-        MetaConditions.register(ApoliDataTypes.BIOME_CONDITION, BiomeConditions::register);
+        MetaConditionTypes.register(ApoliDataTypes.BIOME_CONDITION, BiomeConditionTypes::register);
         register(createSimpleFactory(Apoli.identifier("high_humidity"), biomeEntry -> ((BiomeWeatherAccess) (Object) biomeEntry.value()).apoli$getDownfall() > 0.85F));
         register(TemperatureConditionType.getFactory());
         register(PrecipitationConditionType.getFactory());

@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;

@@ -1,7 +1,8 @@
-package io.github.apace100.apoli.action.factory;
+package io.github.apace100.apoli.action.type;
 
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.action.type.bientity.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -15,13 +16,13 @@ import net.minecraft.util.Pair;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public class BiEntityActions {
+public class BiEntityActionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
 
-        MetaActions.register(ApoliDataTypes.BIENTITY_ACTION, ApoliDataTypes.BIENTITY_CONDITION, Function.identity(), BiEntityActions::register);
+        MetaActionTypes.register(ApoliDataTypes.BIENTITY_ACTION, ApoliDataTypes.BIENTITY_CONDITION, Function.identity(), BiEntityActionTypes::register);
 
         register(InvertActionType.getFactory());
         register(ActorActionType.getFactory());

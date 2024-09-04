@@ -2,7 +2,7 @@ package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
-import io.github.apace100.apoli.condition.factory.DamageConditions;
+import io.github.apace100.apoli.condition.type.DamageConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
@@ -35,7 +35,7 @@ public class InvulnerablePowerType extends PowerType {
 
                     ConditionTypeFactory<Pair<DamageSource, Float>>.Instance damageCondition = data.get("damage_condition");
 
-                    if (damageCondition.getFactory() == DamageConditions.AMOUNT) {
+                    if (damageCondition.getFactory() == DamageConditionTypes.AMOUNT) {
                         throw new IllegalArgumentException("Using the 'amount' damage condition type in a power that uses the 'invulnerability' power type is not allowed!");
                     }
 

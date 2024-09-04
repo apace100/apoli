@@ -8,7 +8,7 @@ import com.mojang.serialization.MapLike;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.PowerPayloadType;

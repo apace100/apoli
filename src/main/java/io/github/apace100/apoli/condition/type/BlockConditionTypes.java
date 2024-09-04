@@ -1,6 +1,8 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
+import io.github.apace100.apoli.condition.factory.DistanceFromCoordinatesConditionRegistry;
 import io.github.apace100.apoli.condition.type.block.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -13,16 +15,16 @@ import net.minecraft.util.Identifier;
 
 import java.util.function.Predicate;
 
-public class BlockConditions {
+public class BlockConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
-        MetaConditions.register(ApoliDataTypes.BLOCK_CONDITION, BlockConditions::register);
+        MetaConditionTypes.register(ApoliDataTypes.BLOCK_CONDITION, BlockConditionTypes::register);
         register(OffsetConditionType.getFactory());
 
         register(HeightConditionType.getFactory());
-        DistanceFromCoordinatesConditionRegistry.registerBlockCondition(BlockConditions::register);
+        DistanceFromCoordinatesConditionRegistry.registerBlockCondition(BlockConditionTypes::register);
         register(BlockConditionType.getFactory());
         register(InTagConditionType.getFactory());
         register(AdjacentConditionType.getFactory());

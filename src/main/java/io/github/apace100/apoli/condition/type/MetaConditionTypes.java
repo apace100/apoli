@@ -1,5 +1,6 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.meta.AndConditionType;
 import io.github.apace100.apoli.condition.type.meta.ChanceConditionType;
 import io.github.apace100.apoli.condition.type.meta.ConstantConditionType;
@@ -8,7 +9,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 
 import java.util.function.Consumer;
 
-public class MetaConditions {
+public class MetaConditionTypes {
 
     public static <T> void register(SerializableDataType<ConditionTypeFactory<T>.Instance> dataType, Consumer<ConditionTypeFactory<T>> registrant) {
         registrant.accept(AndConditionType.getFactory(dataType));

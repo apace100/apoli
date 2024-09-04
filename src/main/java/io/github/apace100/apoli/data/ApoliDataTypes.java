@@ -3,12 +3,17 @@ package io.github.apace100.apoli.data;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.*;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.type.BiEntityActionTypes;
+import io.github.apace100.apoli.action.type.BlockActionTypes;
+import io.github.apace100.apoli.action.type.EntityActionTypes;
+import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.action.factory.*;
 import io.github.apace100.apoli.condition.factory.*;
+import io.github.apace100.apoli.condition.type.*;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.Active;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -68,47 +73,47 @@ public class ApoliDataTypes {
         (registry, id) -> new IllegalArgumentException("Power type \"" + id + "\" is not registered")
     ));
 
-    public static final SerializableDataType<ConditionTypeFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditions.ALIASES, "Entity condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditionTypes.ALIASES, "Entity condition type");
 
     public static final SerializableDataType<List<ConditionTypeFactory<Entity>.Instance>> ENTITY_CONDITIONS = ENTITY_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditions.ALIASES, "Bi-entity condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditionTypes.ALIASES, "Bi-entity condition type");
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = BIENTITY_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditions.ALIASES, "Item condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditionTypes.ALIASES, "Item condition type");
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS = ITEM_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionTypeFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditions.ALIASES, "Block condition type");
+    public static final SerializableDataType<ConditionTypeFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditionTypes.ALIASES, "Block condition type");
 
     public static final SerializableDataType<List<ConditionTypeFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS = BLOCK_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionTypeFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditions.ALIASES, "Fluid condition type");
+    public static final SerializableDataType<ConditionTypeFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditionTypes.ALIASES, "Fluid condition type");
 
     public static final SerializableDataType<List<ConditionTypeFactory<FluidState>.Instance>> FLUID_CONDITIONS = FLUID_CONDITION.listOf();
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditions.ALIASES, "Damage condition type"));
+    public static final SerializableDataType<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditionTypes.ALIASES, "Damage condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = SerializableDataType.lazy(DAMAGE_CONDITION::listOf);
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditions.ALIASES, "Biome condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditionTypes.ALIASES, "Biome condition type");
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance>> BIOME_CONDITIONS = BIOME_CONDITION.listOf();
 
-    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActions.ALIASES, "Entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActionTypes.ALIASES, "Entity action type");
 
     public static final SerializableDataType<List<ActionTypeFactory<Entity>.Instance>> ENTITY_ACTIONS = ENTITY_ACTION.listOf();
 
-    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActions.ALIASES, "Bi-entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActionTypes.ALIASES, "Bi-entity action type");
 
     public static final SerializableDataType<List<ActionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = BIENTITY_ACTION.listOf();
 
-    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActions.ALIASES, "Block action type");
+    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActionTypes.ALIASES, "Block action type");
 
     public static final SerializableDataType<List<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = BLOCK_ACTION.listOf();
 
-    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActions.ALIASES, "Item action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActionTypes.ALIASES, "Item action type");
 
     public static final SerializableDataType<List<ActionTypeFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = ITEM_ACTION.listOf();
 

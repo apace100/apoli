@@ -1,6 +1,7 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.item.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -15,12 +16,12 @@ import net.minecraft.world.World;
 
 import java.util.function.Predicate;
 
-public class ItemConditions {
+public class ItemConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
-        MetaConditions.register(ApoliDataTypes.ITEM_CONDITION, ItemConditions::register);
+        MetaConditionTypes.register(ApoliDataTypes.ITEM_CONDITION, ItemConditionTypes::register);
         register(createSimpleFactory(Apoli.identifier("food"), FoodConditionType::condition));
         register(SmeltableConditionType.getFactory());
         register(IngredientConditionType.getFactory());
