@@ -36,7 +36,7 @@ public class BiomeConditionType {
             new SerializableData()
                 .add("condition", ApoliDataTypes.BIOME_CONDITION, null)
                 .add("biome", SerializableDataType.registryKey(RegistryKeys.BIOME), null)
-                .add("biomes", SerializableDataType.registryKey(RegistryKeys.BIOME).listOf(), null),
+                .add("biomes", SerializableDataType.registryKey(RegistryKeys.BIOME).list(), null),
             (data, entity) -> {
 
                 Set<RegistryKey<Biome>> specifiedBiomeKeys = new HashSet<>();

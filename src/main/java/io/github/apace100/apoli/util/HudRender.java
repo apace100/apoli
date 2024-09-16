@@ -1,21 +1,24 @@
 package io.github.apace100.apoli.util;
 
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.util.hud_render.ParentHudRender;
-import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.Validatable;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.dynamic.NullOps;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +49,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
             data.getInt("icon_index"),
             data.getInt("order")
         ),
-        (hudRender, data) -> data
+        (hudRender, serializableData) -> serializableData.instance()
             .set("condition", hudRender.getCondition())
             .set("sprite_location", hudRender.getSpriteLocation())
             .set("should_render", hudRender.shouldRender())
@@ -56,30 +59,28 @@ public class HudRender implements Comparable<HudRender>, Validatable {
             .set("order", hudRender.getOrder())
     );
 
-    public static final SerializableDataType<List<HudRender>> LIST_DATA_TYPE = STRICT_DATA_TYPE.listOf(1, Integer.MAX_VALUE);
+    public static final SerializableDataType<List<HudRender>> LIST_DATA_TYPE = STRICT_DATA_TYPE.list(1, Integer.MAX_VALUE);
 
     public static final SerializableDataType<HudRender> DATA_TYPE = SerializableDataType.of(
-        new StrictCodec<>() {
+        new Codec<>() {
 
             @Override
-            public <T> Pair<HudRender, T> strictDecode(DynamicOps<T> ops, T input) {
-
-                List<HudRender> hudRenders = new LinkedList<>(LIST_DATA_TYPE.strictParse(ops, input));
-                HudRender parent = hudRenders.removeFirst();
-
-                return Pair.of(new ParentHudRender(parent, hudRenders), input);
-
+            public <T> DataResult<Pair<HudRender, T>> decode(DynamicOps<T> ops, T input) {
+                return LIST_DATA_TYPE.codec().decode(ops, input)
+                    .map(hudRendersAndInput -> hudRendersAndInput
+                        .mapFirst(ObjectArrayList::new)
+                        .mapFirst(hudRenders -> new ParentHudRender(hudRenders.removeFirst(), hudRenders)));
             }
 
             @Override
-            public <T> T strictEncode(HudRender input, DynamicOps<T> ops, T prefix) {
+            public <T> DataResult<T> encode(HudRender input, DynamicOps<T> ops, T prefix) {
 
                 if (input instanceof ParentHudRender parent) {
-                    return LIST_DATA_TYPE.strictEncode(parent.getChildren(), ops, prefix);
+                    return LIST_DATA_TYPE.codec().encode(parent.getChildren(), ops, prefix);
                 }
 
                 else {
-                    return STRICT_DATA_TYPE.strictEncode(input, ops, prefix);
+                    return STRICT_DATA_TYPE.codec().encode(input, ops, prefix);
                 }
 
             }
@@ -154,7 +155,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
 
     @Override
     public void validate() throws Exception {
-        STRICT_DATA_TYPE.toData(this).validate();
+        STRICT_DATA_TYPE.toData(this, NullOps.INSTANCE).validate();
     }
 
     @Nullable

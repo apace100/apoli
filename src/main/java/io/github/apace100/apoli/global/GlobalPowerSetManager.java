@@ -79,7 +79,7 @@ public class GlobalPowerSetManager extends IdentifiableMultiJsonDataLoader imple
                     throw new JsonSyntaxException("Expected a JSON object");
                 }
 
-                GlobalPowerSet globalPowerSet = GlobalPowerSet.DATA_TYPE.strictParse(Calio.wrapRegistryOps(JsonOps.INSTANCE), jsonObject);
+                GlobalPowerSet globalPowerSet = GlobalPowerSet.DATA_TYPE.read(Calio.wrapRegistryOps(JsonOps.INSTANCE), jsonObject);
                 int currLoadingPriority = JsonHelper.getInt(jsonObject, "loading_priority", 0);
 
                 PrioritizedEntry<GlobalPowerSet> entry = new PrioritizedEntry<>(globalPowerSet, currLoadingPriority);

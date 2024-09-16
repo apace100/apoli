@@ -21,8 +21,8 @@ import java.util.List;
 public class AddPowerLootFunction extends ConditionalLootFunction {
 
     public static final MapCodec<AddPowerLootFunction> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
-        SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT_SET.optionalFieldOf("slot", EnumSet.of(AttributeModifierSlot.ANY)).forGetter(AddPowerLootFunction::slots),
-        ApoliDataTypes.POWER_REFERENCE.fieldOf("power").forGetter(AddPowerLootFunction::power),
+        SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT_SET.codec().optionalFieldOf("slot", EnumSet.of(AttributeModifierSlot.ANY)).forGetter(AddPowerLootFunction::slots),
+        ApoliDataTypes.POWER_REFERENCE.codec().fieldOf("power").forGetter(AddPowerLootFunction::power),
         Codec.BOOL.optionalFieldOf("hidden", false).forGetter(AddPowerLootFunction::hidden),
         Codec.BOOL.optionalFieldOf("negative", false).forGetter(AddPowerLootFunction::negative)
     )).apply(instance, AddPowerLootFunction::new));

@@ -1,12 +1,12 @@
 package io.github.apace100.apoli.action.type.entity;
 
-import com.mojang.serialization.JavaOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.CustomToastViewer;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.data.CustomToastData;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.dynamic.NullOps;
 
 public class ShowToastActionType {
 
@@ -15,7 +15,7 @@ public class ShowToastActionType {
         if (!entity.getWorld().isClient && entity instanceof CustomToastViewer viewer) {
             //  Since custom toast data doesn't use the dynamic ops when being converted to serializable data instance,
             //  using any dynamic ops is fine
-            viewer.apoli$showToast(CustomToastData.DATA_TYPE.fromData(data, JavaOps.INSTANCE));
+            viewer.apoli$showToast(CustomToastData.DATA_TYPE.fromData(NullOps.INSTANCE, data));
         }
 
     }

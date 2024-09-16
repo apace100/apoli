@@ -249,7 +249,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
             try {
 
-                Power.Entry powerEntry = Power.Entry.CODEC.strictParse(lookup.getOps(NbtOps.INSTANCE), powerTag);
+                Power.Entry powerEntry = Power.Entry.CODEC.read(lookup.getOps(NbtOps.INSTANCE), powerTag);
                 Identifier powerId = powerEntry.power().getId();
 
                 try {
@@ -301,7 +301,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             PowerTypeFactory<?> typeFactory = power.getFactoryInstance().getFactory();
             PowerReference powerReference = new PowerReference(power.getId());
 
-            Power.Entry.CODEC.encodeStart(lookup.getOps(NbtOps.INSTANCE), new Power.Entry(typeFactory, powerReference, powerType.toTag(), powerSources.get(power)))
+            Power.Entry.CODEC.codec().encodeStart(lookup.getOps(NbtOps.INSTANCE), new Power.Entry(typeFactory, powerReference, powerType.toTag(), powerSources.get(power)))
                 .mapError(err -> "Error encoding power \"" + power.getId() + "\" to NBT of entity " + owner.getName().getString() + " (UUID: " + owner.getUuidAsString() + ") (skipping): " + err)
                 .resultOrPartial(Apoli.LOGGER::warn)
                 .ifPresent(powersTag::add);

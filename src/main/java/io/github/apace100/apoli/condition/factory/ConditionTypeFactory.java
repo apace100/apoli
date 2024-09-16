@@ -13,14 +13,14 @@ import java.util.function.Predicate;
 public class ConditionTypeFactory<T> implements Factory {
 
     protected final Identifier id;
-    protected final Function<SerializableData.Instance, Predicate<T>> conditionFactory;
 
     protected final SerializableData serializableData;
+    protected final Function<SerializableData.Instance, Predicate<T>> conditionFactory;
 
     public ConditionTypeFactory(Identifier id, SerializableData serializableData, BiFunction<SerializableData.Instance, T, Boolean> condition) {
         this.id = id;
-        this.conditionFactory = data -> t -> condition.apply(data, t);
         this.serializableData = serializableData.copy().add("inverted", SerializableDataTypes.BOOLEAN, false);
+        this.conditionFactory = data -> t -> condition.apply(data, t);
     }
 
     @Override

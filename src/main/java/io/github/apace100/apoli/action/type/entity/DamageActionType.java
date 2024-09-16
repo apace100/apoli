@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.action.type.entity;
 
+import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.util.MiscUtil;
@@ -38,10 +39,14 @@ public class DamageActionType {
                 .add("amount", SerializableDataTypes.FLOAT, null)
                 .add("modifier", Modifier.DATA_TYPE, null)
                 .add("modifiers", Modifier.LIST_TYPE, null)
-                .postProcessor(data -> {
+                .validate(data -> {
 
                     if (!data.isPresent("amount") && !MiscUtil.anyPresent(data, "modifier", "modifiers")) {
-                        throw new IllegalStateException("Any of 'amount', 'modifier', or 'modifiers' fields must be defined!");
+                        return DataResult.error(() -> "Any of 'amount', 'modifier', or 'modifiers' fields must be defined!");
+                    }
+
+                    else {
+                        return DataResult.success(data);
                     }
 
                 }),

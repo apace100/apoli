@@ -27,7 +27,7 @@ import java.util.*;
 public class RemovePowerLootFunction extends ConditionalLootFunction {
 
     public static final MapCodec<RemovePowerLootFunction> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
-        SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT_SET.optionalFieldOf("slot", EnumSet.allOf(AttributeModifierSlot.class)).forGetter(RemovePowerLootFunction::slots),
+        SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT_SET.codec().optionalFieldOf("slot", EnumSet.allOf(AttributeModifierSlot.class)).forGetter(RemovePowerLootFunction::slots),
         Identifier.CODEC.fieldOf("power").forGetter(RemovePowerLootFunction::powerId)
     )).apply(instance, RemovePowerLootFunction::new));
 

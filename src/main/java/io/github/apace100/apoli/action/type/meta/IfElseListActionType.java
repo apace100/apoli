@@ -39,7 +39,7 @@ public class IfElseListActionType {
                 data.get("action"),
                 data.get("condition")
             ),
-            (pair, data) -> data
+            (pair, serializableData) -> serializableData.instance()
                 .set("action", pair.getLeft())
                 .set("condition", pair.getRight())
         );
@@ -47,7 +47,7 @@ public class IfElseListActionType {
         return new ActionTypeFactory<>(
             Apoli.identifier("if_else_list"),
             new SerializableData()
-                .add("actions", dataType.listOf()),
+                .add("actions", dataType.list()),
             (data, t) -> action(t,
                 data.get("actions"),
                 actionToConditionTypeFunction

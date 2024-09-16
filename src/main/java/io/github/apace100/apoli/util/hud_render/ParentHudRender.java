@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.util.HudRender;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.dynamic.NullOps;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -36,7 +37,7 @@ public class ParentHudRender extends HudRender {
     public void validate() throws Exception {
 
         for (HudRender child : children) {
-            STRICT_DATA_TYPE.toData(child).validate();
+            STRICT_DATA_TYPE.toData(child, NullOps.INSTANCE).validate();
         }
 
     }

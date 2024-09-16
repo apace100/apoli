@@ -20,7 +20,7 @@ public class AndConditionType {
         return new ConditionTypeFactory<>(
             Apoli.identifier("and"),
             new SerializableData()
-                .add("conditions", conditionDataType.listOf()),
+                .add("conditions", conditionDataType.list()),
             (data, type) -> condition(type,
                 data.get("conditions")
             )

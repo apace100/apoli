@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.util.modifier;
 
+import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.CooldownPowerType;
@@ -96,10 +97,14 @@ public enum ModifierOperation implements IModifierOperation {
         .add("amount", SerializableDataTypes.DOUBLE, null)
         .add("resource", ApoliDataTypes.POWER_REFERENCE, null)
         .add("modifier", Modifier.LIST_TYPE, null)
-        .postProcessor(data -> {
+        .validate(data -> {
 
             if (!data.isPresent("amount") && !data.isPresent("resource")) {
-                throw new IllegalStateException("Either 'amount' or 'resource' field must be defined!");
+                return DataResult.error(() -> "Either 'amount' or 'resource' field must be defined!");
+            }
+
+            else {
+                return DataResult.success(data);
             }
 
         });

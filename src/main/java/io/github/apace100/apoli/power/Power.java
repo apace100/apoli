@@ -2,9 +2,7 @@ package io.github.apace100.apoli.power;
 
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.MapLike;
+import com.mojang.serialization.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
@@ -13,7 +11,6 @@ import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.PowerPayloadType;
 import io.github.apace100.calio.Calio;
-import io.github.apace100.calio.codec.StrictCodec;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -43,83 +40,75 @@ public class Power implements Validatable {
         .addFunctionedDefault("description", ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT, data -> createTranslatable(data.getId("id"), "description"))
         .add("hidden", SerializableDataTypes.BOOLEAN, false);
 
-    private static final StrictCodec<Power> STRICT_CODEC = new StrictCodec<>() {
+    private static final Codec<Power> STRICT_CODEC = new Codec<>() {
 
         @Override
-        public <I> Pair<Power, I> strictDecode(DynamicOps<I> ops, I input) {
-
-            MapLike<I> mapInput = ops.getMap(input).getOrThrow();
-            SerializableData.Instance powerData = Power.DATA.strictDecode(ops, mapInput);
-
-            PowerTypeFactory<?> factory = powerData.get(Power.TYPE_KEY);
-            SerializableData.Instance factoryData = factory.getSerializableData().strictDecode(ops, mapInput);
-
-            return Pair.of(new Power(factory.fromData(factoryData), powerData), input);
-
+        public <I> DataResult<Pair<Power, I>> decode(DynamicOps<I> ops, I input) {
+            return ops.getMap(input)
+                .flatMap(mapInput -> DATA.decode(ops, mapInput)
+                    .flatMap(powerData -> {
+                        PowerTypeFactory<?> factory = powerData.get(TYPE_KEY);
+                        return factory.getSerializableData().decode(ops, mapInput)
+                            .map(factory::fromData)
+                            .map(instance -> new Power(instance, powerData))
+                            .map(power -> Pair.of(power, input));
+                    }));
         }
 
         @Override
-        public <I> I strictEncode(Power input, DynamicOps<I> ops, I prefix) {
+        public <I> DataResult<I> encode(Power input, DynamicOps<I> ops, I prefix) {
 
-            Map<I, I> output = new LinkedHashMap<>();
-
+            RecordBuilder<I> mapBuilder = ops.mapBuilder();
             PowerTypeFactory<?>.Instance instance = input.getFactoryInstance();
-            SerializableData instanceSerializableData = instance.getSerializableData();
 
-            Power.DATA.getFields().forEach((name, field) -> {
+            DATA.getFields().forEach((name, field) -> {
 
-                output.put(ops.createString(name), field.dataType().strictEncodeStart(ops, input.data.get(name)));
+                mapBuilder.add(name, field.dataType().codec().encodeStart(ops, input.data.get(name)));
 
-                if (name.equals(Power.TYPE_KEY)) {
-                    ops.getMapEntries(instanceSerializableData.codec().strictEncodeStart(ops, instance.getData()))
-                        .getOrThrow()
-                        .accept(output::put);
+                if (name.equals(TYPE_KEY)) {
+                    instance.getSerializableData().encode(instance.getData(), ops, mapBuilder);
                 }
 
             });
 
-            return ops.createMap(output);
+            return mapBuilder.build(prefix);
 
         }
 
     };
 
-    public static final StrictCodec<Power> CODEC = new StrictCodec<>() {
+    public static final Codec<Power> CODEC = new Codec<>() {
 
         @Override
-        public <T> Pair<Power, T> strictDecode(DynamicOps<T> ops, T input) {
-            return STRICT_CODEC.strictDecode(ops, input);
+        public <T> DataResult<Pair<Power, T>> decode(DynamicOps<T> ops, T input) {
+            return STRICT_CODEC.decode(ops, input);
         }
 
         @Override
-        public <T> T strictEncode(Power input, DynamicOps<T> ops, T prefix) {
+        public <T> DataResult<T> encode(Power input, DynamicOps<T> ops, T prefix) {
 
-            Map<T, T> output = new LinkedHashMap<>();
-
+            RecordBuilder<T> mapBuilder = ops.mapBuilder();
             PowerTypeFactory<?>.Instance instance = input.getFactoryInstance();
-            SerializableData instanceSerializableData = instance.getSerializableData();
 
-            Power.DATA.getFields().forEach((name, field) -> {
+            DATA.getFields().forEach((name, field) -> {
 
-                output.put(ops.createString(name), field.dataType().strictEncodeStart(ops, input.data.get(name)));
+                mapBuilder.add(name, field.dataType().codec().encodeStart(ops, input.data.get(name)));
 
-                if (name.equals(Power.TYPE_KEY)) {
+                if (name.equals(TYPE_KEY)) {
 
                     if (input instanceof MultiplePower multiplePower) {
                         multiplePower
                             .getSubPowers()
-                            .forEach(subPower -> output.put(ops.createString(subPower.getSubName()), STRICT_CODEC.strictEncodeStart(ops, subPower)));
+                            .forEach(subPower -> mapBuilder.add(subPower.getSubName(), STRICT_CODEC.encodeStart(ops, subPower)));
                     }
 
-                    ops.getMapEntries(instanceSerializableData.codec().strictEncodeStart(ops, instance.getData()))
-                        .getOrThrow()
-                        .accept(output::put);
+                    instance.getSerializableData().encode(instance.getData(), ops, mapBuilder);
 
                 }
 
             });
 
-            return ops.createMap(output);
+            return mapBuilder.build(prefix);
 
         }
 
@@ -146,7 +135,7 @@ public class Power implements Validatable {
 
     public static Power fromJson(Identifier id, JsonObject jsonObject) {
         jsonObject.addProperty("id", id.toString());
-        return CODEC.strictParse(Calio.wrapRegistryOps(JsonOps.INSTANCE), jsonObject);
+        return CODEC.parse(Calio.wrapRegistryOps(JsonOps.INSTANCE), jsonObject).getOrThrow();
     }
 
     @Override
@@ -279,7 +268,9 @@ public class Power implements Validatable {
     }
 
     public JsonObject toJson() {
-        return CODEC.strictEncodeStart(JsonOps.INSTANCE, this).getAsJsonObject();
+        return CODEC.encodeStart(JsonOps.INSTANCE, this)
+            .getOrThrow()
+            .getAsJsonObject();
     }
 
     @Override
@@ -316,9 +307,9 @@ public class Power implements Validatable {
 
     public record Entry(PowerTypeFactory<?> typeFactory, PowerReference power, @Nullable NbtElement nbtData, List<Identifier> sources) {
 
-        private static final SerializableDataType<List<Identifier>> MUTABLE_IDENTIFIERS = SerializableDataTypes.IDENTIFIER.listOf(1, Integer.MAX_VALUE).xmap(LinkedList::new, Function.identity());
+        private static final SerializableDataType<List<Identifier>> MUTABLE_IDENTIFIERS = SerializableDataTypes.IDENTIFIER.list(1, Integer.MAX_VALUE).xmap(LinkedList::new, Function.identity());
 
-        public static final StrictCodec<Entry> CODEC = SerializableDataType.compound(
+        public static final SerializableDataType<Entry> CODEC = SerializableDataType.compound(
             new SerializableData()
                 .add("Factory", ApoliDataTypes.POWER_TYPE_FACTORY, null)
                 .addFunctionedDefault("type", ApoliDataTypes.POWER_TYPE_FACTORY, data -> data.get("Factory"))
@@ -328,18 +319,22 @@ public class Power implements Validatable {
                 .addFunctionedDefault("data", SerializableDataTypes.NBT_ELEMENT, data -> data.get("Data"))
                 .add("Sources", MUTABLE_IDENTIFIERS, null)
                 .addFunctionedDefault("sources", MUTABLE_IDENTIFIERS, data -> data.get("Sources"))
-                .postProcessor(data -> {
+                .validate(data -> {
 
                     if (!data.isPresent("type")) {
-                        throw Calio.createMissingRequiredFieldError("type");
+                        return Calio.createMissingRequiredFieldError("type");
                     }
 
-                    if (!data.isPresent("id")) {
-                        throw Calio.createMissingRequiredFieldError("id");
+                    else if (!data.isPresent("id")) {
+                        return Calio.createMissingRequiredFieldError("id");
                     }
 
-                    if (!data.isPresent("sources")) {
-                        throw Calio.createMissingRequiredFieldError("sources");
+                    else if (!data.isPresent("sources")) {
+                        return Calio.createMissingRequiredFieldError("sources");
+                    }
+
+                    else {
+                        return DataResult.success(data);
                     }
 
                 }),
@@ -349,7 +344,7 @@ public class Power implements Validatable {
                 data.get("data"),
                 data.get("sources")
             ),
-            (entry, data) -> data
+            (entry, serializableData) -> serializableData.instance()
                 .set("type", entry.typeFactory())
                 .set("id", entry.power())
                 .set("data", entry.nbtData())

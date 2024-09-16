@@ -28,7 +28,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
     public static final CompoundSerializableDataType<GlobalPowerSet> DATA_TYPE = SerializableDataType.compound(
         new SerializableData()
             .add("entity_types", SerializableDataType.optional(SerializableDataTypes.ENTITY_TYPE_TAG_LIKE, false), Optional.empty())
-            .add("powers", ApoliDataTypes.POWER_REFERENCE.listOf())
+            .add("powers", ApoliDataTypes.POWER_REFERENCE.list())
             .add("replace", SerializableDataTypes.BOOLEAN, false)
             .add("order", SerializableDataTypes.INT, 0),
         data -> new GlobalPowerSet(
@@ -37,7 +37,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
             data.get("replace"),
             data.get("order")
         ),
-        (globalPowerSet, data) -> data
+        (globalPowerSet, serializableData) -> serializableData.instance()
             .set("entity_types", globalPowerSet.getEntityTypes())
             .set("powers", globalPowerSet.getPowerReferences())
             .set("replace", globalPowerSet.shouldReplace())

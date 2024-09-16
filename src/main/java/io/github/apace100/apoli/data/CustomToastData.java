@@ -27,7 +27,7 @@ public record CustomToastData(Text title, Text description, Identifier texture, 
             data.get("icon"),
             data.get("duration")
         ),
-        (customToastData, data) -> data
+        (customToastData, serializableData) -> serializableData.instance()
             .set("title", customToastData.title())
             .set("description", customToastData.description())
             .set("texture", customToastData.texture())

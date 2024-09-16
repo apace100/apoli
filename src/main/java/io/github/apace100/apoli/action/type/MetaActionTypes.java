@@ -11,7 +11,7 @@ import java.util.function.Function;
 public class MetaActionTypes {
 
     public static <T, U> void register(SerializableDataType<ActionTypeFactory<T>.Instance> actionDataType, SerializableDataType<ConditionTypeFactory<U>.Instance> conditionDataType, Function<T, U> actionToCondition, Consumer<ActionTypeFactory<T>> registrant) {
-        registrant.accept(AndActionType.getFactory(actionDataType.listOf()));
+        registrant.accept(AndActionType.getFactory(actionDataType.list()));
         registrant.accept(ChanceActionType.getFactory(actionDataType));
         registrant.accept(IfElseActionType.getFactory(actionDataType, conditionDataType, actionToCondition));
         registrant.accept(ChoiceActionType.getFactory(actionDataType));

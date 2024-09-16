@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.power.type;
 
+import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
@@ -31,12 +32,16 @@ public class InvulnerablePowerType extends PowerType {
             Apoli.identifier("invulnerability"),
             new SerializableData()
                 .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION)
-                .postProcessor(data -> {
+                .validate(data -> {
 
                     ConditionTypeFactory<Pair<DamageSource, Float>>.Instance damageCondition = data.get("damage_condition");
 
                     if (damageCondition.getFactory() == DamageConditionTypes.AMOUNT) {
-                        throw new IllegalArgumentException("Using the 'amount' damage condition type in a power that uses the 'invulnerability' power type is not allowed!");
+                        return DataResult.error(() -> "Using the 'amount' damage condition type in a power that uses the 'invulnerability' power type is not allowed!");
+                    }
+
+                    else {
+                        return DataResult.success(data);
                     }
 
                 }),

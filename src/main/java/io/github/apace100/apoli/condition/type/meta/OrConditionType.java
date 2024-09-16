@@ -20,7 +20,7 @@ public class OrConditionType {
         return new ConditionTypeFactory<>(
             Apoli.identifier("or"),
             new SerializableData()
-                .add("conditions", conditionDataType.listOf()),
+                .add("conditions", conditionDataType.list()),
             (data, type) -> condition(type,
                 data.get("conditions")
             )

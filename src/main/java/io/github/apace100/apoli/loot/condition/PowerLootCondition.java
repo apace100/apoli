@@ -17,7 +17,7 @@ public record PowerLootCondition(LootContext.EntityTarget target, PowerReference
 
     public static final MapCodec<PowerLootCondition> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
         LootContext.EntityTarget.CODEC.optionalFieldOf("entity", LootContext.EntityTarget.THIS).forGetter(PowerLootCondition::target),
-        ApoliDataTypes.POWER_REFERENCE.fieldOf("power").forGetter(PowerLootCondition::power),
+        ApoliDataTypes.POWER_REFERENCE.codec().fieldOf("power").forGetter(PowerLootCondition::power),
         Identifier.CODEC.optionalFieldOf("source").forGetter(PowerLootCondition::sourceId)
     ).apply(instance, PowerLootCondition::new));
 
