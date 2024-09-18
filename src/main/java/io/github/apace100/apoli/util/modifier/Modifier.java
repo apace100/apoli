@@ -1,8 +1,7 @@
 package io.github.apace100.apoli.util.modifier;
 
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.*;
-import io.github.apace100.calio.codec.CompoundMapCodec;
-import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
@@ -12,11 +11,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class Modifier implements Comparable<Modifier> {
 
-    public static final String TYPE_KEY = "operation";
+    private static final String TYPE_KEY = "operation";
+	private static final SerializableData DATA = new SerializableData().add(TYPE_KEY, IModifierOperation.DATA_TYPE);
 
     private final IModifierOperation operation;
     private final SerializableData.Instance data;
@@ -83,89 +82,69 @@ public class Modifier implements Comparable<Modifier> {
         }
 
         else if (thisOp.getPhase() == thatOp.getPhase()) {
-            return thatOp.getOrder() - getOperation().getOrder();
+            return Integer.compare(thisOp.getOrder(), thatOp.getOrder());
         }
 
         else {
-            return thatOp.getPhase() == IModifierOperation.Phase.BASE ? 1 : -1;
+            return thisOp.getPhase().compareTo(thatOp.getPhase());
         }
 
     }
 
-    public static final SerializableDataType<Modifier> DATA_TYPE = new CompoundSerializableDataType<>(
-        new SerializableData()
-            .add(TYPE_KEY, IModifierOperation.DATA_TYPE),
-        serializableData -> new CompoundMapCodec<>() {
+    public static final SerializableDataType<Modifier> DATA_TYPE = SerializableDataType.recursive(dataType -> SerializableDataType.of(
+		new Codec<>() {
 
 			@Override
-			public <T> Modifier fromData(DynamicOps<T> ops, SerializableData.Instance data) {
-				IModifierOperation operation = data.get(TYPE_KEY);
-				return new Modifier(operation, data);
+			public <T> DataResult<Pair<Modifier, T>> decode(DynamicOps<T> ops, T input) {
+				boolean root = dataType.isRoot();
+				return ops.getMap(input)
+					.flatMap(mapInput -> DATA.setRoot(root).decode(ops, mapInput)
+						.flatMap(modifierData -> {
+							IModifierOperation operation = modifierData.get(TYPE_KEY);
+							return operation.getSerializableData().setRoot(root).decode(ops, mapInput)
+								.map(operationData -> new Modifier(operation, operationData))
+								.map(modifier -> Pair.of(modifier, input));
+						}));
 			}
 
 			@Override
-			public <T> SerializableData.Instance toData(Modifier input, DynamicOps<T> ops, SerializableData serializableData) {
+			public <T> DataResult<T> encode(Modifier input, DynamicOps<T> ops, T prefix) {
 
-				SerializableData.Instance data = serializableData.instance();
+				RecordBuilder<T> mapBuilder = ops.mapBuilder();
 				IModifierOperation operation = input.getOperation();
 
-				data.set(TYPE_KEY, operation);
-				operation.getSerializableData().getFieldNames().forEach(name -> data.set(name, input.getData().get(name)));
+				mapBuilder.add(TYPE_KEY, IModifierOperation.DATA_TYPE.write(ops, operation));
+				operation.getSerializableData().setRoot(dataType.isRoot()).encode(input.getData(), ops, mapBuilder);
 
-				return data;
-
-			}
-
-			@Override
-			public <T> Stream<T> keys(DynamicOps<T> ops) {
-				return serializableData.keys(ops);
-			}
-
-			@Override
-			public <T> DataResult<Modifier> decode(DynamicOps<T> ops, MapLike<T> mapInput) {
-				return serializableData.decode(ops, mapInput)
-					.map(modifierData -> (IModifierOperation) modifierData.get(TYPE_KEY))
-					.flatMap(operation -> operation.getSerializableData().setRoot(serializableData.isRoot()).decode(ops, mapInput)
-						.map(operationData -> new Modifier(operation, operationData)));
-			}
-
-			@Override
-			public <T> RecordBuilder<T> encode(Modifier input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
-
-				IModifierOperation operation = input.getOperation();
-
-				prefix.add(TYPE_KEY, IModifierOperation.DATA_TYPE.codec().encodeStart(ops, operation));
-				operation.getSerializableData().setRoot(serializableData.isRoot()).encode(input.getData(), ops, prefix);
-
-				return prefix;
+				return mapBuilder.build(prefix);
 
 			}
 
 		},
-        (serializableData, compoundMapCodec) -> new PacketCodec<>() {
+		new PacketCodec<>() {
 
 			@Override
 			public Modifier decode(RegistryByteBuf buf) {
 
-                IModifierOperation operation = IModifierOperation.DATA_TYPE.receive(buf);
-                SerializableData.Instance operationData = operation.getSerializableData().receive(buf);
+				IModifierOperation operation = IModifierOperation.DATA_TYPE.receive(buf);
+				SerializableData.Instance operationData = operation.getSerializableData().setRoot(dataType.isRoot()).receive(buf);
 
-                return new Modifier(operation, operationData);
+				return new Modifier(operation, operationData);
 
 			}
 
 			@Override
 			public void encode(RegistryByteBuf buf, Modifier value) {
 
-                IModifierOperation operation = value.getOperation();
+				IModifierOperation operation = value.getOperation();
 
-                IModifierOperation.DATA_TYPE.send(buf, operation);
-                operation.getSerializableData().send(buf, value.getData());
+				IModifierOperation.DATA_TYPE.send(buf, operation);
+				operation.getSerializableData().setRoot(dataType.isRoot()).send(buf, value.getData());
 
 			}
 
 		}
-    );
+	));
 
     public static final SerializableDataType<List<Modifier>> LIST_TYPE = DATA_TYPE.list();
 

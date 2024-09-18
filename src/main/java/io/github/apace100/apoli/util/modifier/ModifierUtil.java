@@ -1,7 +1,8 @@
 package io.github.apace100.apoli.util.modifier;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import io.github.apace100.calio.data.SerializableData;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 
@@ -33,42 +34,51 @@ public class ModifierUtil {
     }
 
     public static double applyModifiers(Entity entity, Collection<Modifier> modifiers, double baseValue) {
-        return applyModifiers(entity, sortModifiers(modifiers), baseValue);
+
+        if (modifiers.isEmpty()) {
+            return baseValue;
+        }
+
+        else {
+            return applyModifiers(entity, sortModifiers(modifiers), baseValue);
+        }
+
     }
 
     private static Map<IModifierOperation, List<SerializableData.Instance>> sortModifiers(Collection<Modifier> modifiers) {
 
-        Map<IModifierOperation, List<SerializableData.Instance>> buckets = new LinkedHashMap<>();
-        modifiers.forEach(mod -> buckets
-            .computeIfAbsent(mod.getOperation(), op -> new LinkedList<>())
-            .add(mod.getData()));
+        Map<IModifierOperation, List<SerializableData.Instance>> buckets = new Object2ObjectLinkedOpenHashMap<>();
+        modifiers.stream()
+            .sorted(Modifier::compareTo)
+            .forEach(mod -> buckets
+                .computeIfAbsent(mod.getOperation(), op -> new ObjectArrayList<>())
+                .add(mod.getData()));
 
         return buckets;
 
     }
 
-    private static double applyModifiers(Entity entity, Map<IModifierOperation, List<SerializableData.Instance>> modifiers, double baseValue) {
+    private static double applyModifiers(Entity entity, Map<IModifierOperation, List<SerializableData.Instance>> operations, double baseValue) {
 
-        final AtomicDouble currentBase = new AtomicDouble(baseValue);
-        final AtomicDouble currentValue = new AtomicDouble(baseValue);
+        double currentBase = baseValue;
+        double currentValue = baseValue;
 
-        modifiers.entrySet()
-            .stream()
-            .sorted(Map.Entry.comparingByKey(IModifierOperation.COMPARATOR))
-            .forEach(opAndData -> {
+        IModifierOperation.Phase prevPhase = IModifierOperation.Phase.BASE;
+        for (var operationEntry : operations.entrySet()) {
 
-                IModifierOperation operation = opAndData.getKey();
-                List<SerializableData.Instance> dataList = opAndData.getValue();
+            IModifierOperation operation = operationEntry.getKey();
+            IModifierOperation.Phase currPhase = operation.getPhase();
 
-                if (operation.getPhase() != IModifierOperation.Phase.BASE) {
-                    currentBase.set(currentValue.get());
-                }
+            if (currPhase != prevPhase) {
+                prevPhase = currPhase;
+                currentBase = currentValue;
+            }
 
-                currentValue.set(operation.apply(entity, dataList, currentBase.get(), currentValue.get()));
+            currentValue = operation.apply(entity, operationEntry.getValue(), currentBase, currentValue);
 
-            });
+        }
 
-        return currentValue.get();
+        return currentValue;
 
     }
 
