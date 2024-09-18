@@ -19,7 +19,6 @@ import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.SerializationHelper;
-import io.github.apace100.calio.codec.CompoundMapCodec;
 import io.github.apace100.calio.data.*;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import io.github.apace100.calio.util.IdentifierAlias;
@@ -57,7 +56,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class ApoliDataTypes {
@@ -266,54 +264,35 @@ public class ApoliDataTypes {
 
     @SuppressWarnings("unchecked")
     public static <E> SerializableDataType<ConditionTypeFactory<E>.Instance> condition(String fieldName, Registry<ConditionTypeFactory<E>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ConditionTypeFactory<E>>, Identifier, String> errorHandler) {
-        return new CompoundSerializableDataType<>(
-            new SerializableData()
-                .add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler)),
-            serializableData -> new CompoundMapCodec<>() {
+        SerializableData serializableData = new SerializableData().add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler));
+        return SerializableDataType.recursive(dataType -> SerializableDataType.of(
+			new Codec<>() {
 
 				@Override
-				public <T> ConditionTypeFactory<E>.Instance fromData(DynamicOps<T> ops, SerializableData.Instance data) {
-                    ConditionTypeFactory<E> factory = data.get(fieldName);
-                    return factory.fromData(data);
+				public <T> DataResult<com.mojang.datafixers.util.Pair<ConditionTypeFactory<E>.Instance, T>> decode(DynamicOps<T> ops, T input) {
+                    boolean root = dataType.isRoot();
+					return ops.getMap(input)
+                        .flatMap(mapInput -> serializableData.setRoot(root).decode(ops, mapInput)
+                            .map(factoryData -> (ConditionTypeFactory<E>) factoryData.get(fieldName))
+                            .flatMap(factory -> factory.getSerializableData().setRoot(root).decode(ops, mapInput)
+                                .map(factory::fromData)
+                                .map(instance -> com.mojang.datafixers.util.Pair.of(instance, input))));
 				}
 
 				@Override
-				public <T> SerializableData.Instance toData(ConditionTypeFactory<E>.Instance input, DynamicOps<T> ops, SerializableData serializableData) {
+				public <T> DataResult<T> encode(ConditionTypeFactory<E>.Instance input, DynamicOps<T> ops, T prefix) {
 
-                    SerializableData.Instance data = serializableData.instance();
+                    RecordBuilder<T> mapBuilder = ops.mapBuilder();
 
-                    data.set(fieldName, input.getFactory());
-                    input.getSerializableData().getFieldNames().forEach(name -> data.set(name, input.getData().get(name)));
+                    mapBuilder.add(fieldName, SerializableDataTypes.IDENTIFIER.write(ops, input.getSerializerId()));
+                    input.getSerializableData().encode(input.getData(), ops, mapBuilder);
 
-                    return data;
-
-				}
-
-				@Override
-				public <T> Stream<T> keys(DynamicOps<T> ops) {
-					return serializableData.keys(ops);
-				}
-
-				@Override
-				public <T> DataResult<ConditionTypeFactory<E>.Instance> decode(DynamicOps<T> ops, MapLike<T> mapInput) {
-					return serializableData.decode(ops, mapInput)
-                        .map(factoryData -> (ConditionTypeFactory<E>) factoryData.get(fieldName))
-                        .flatMap(factory -> factory.getSerializableData().setRoot(serializableData.isRoot()).decode(ops, mapInput)
-                            .map(factory::fromData));
-				}
-
-				@Override
-				public <T> RecordBuilder<T> encode(ConditionTypeFactory<E>.Instance input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
-
-                    prefix.add(fieldName, SerializableDataTypes.IDENTIFIER.codec().encodeStart(ops, input.getSerializerId()));
-                    input.getSerializableData().setRoot(serializableData.isRoot()).encode(input.getData(), ops, prefix);
-
-                    return prefix;
+                    return mapBuilder.build(prefix);
 
 				}
 
 			},
-            (serializableData, compoundMapCodec) -> new PacketCodec<>() {
+			new PacketCodec<>() {
 
 				@Override
 				public ConditionTypeFactory<E>.Instance decode(RegistryByteBuf buf) {
@@ -329,7 +308,7 @@ public class ApoliDataTypes {
 				}
 
 			}
-        );
+        ));
     }
 
     public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(Registry<ActionTypeFactory<T>> registry, String name) {
@@ -341,55 +320,36 @@ public class ApoliDataTypes {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E> SerializableDataType<ActionTypeFactory<E>.Instance> action(String fieldName, Registry<ActionTypeFactory<E>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionTypeFactory<E>>, Identifier, String> errorHandler) {
-        return new CompoundSerializableDataType<>(
-            new SerializableData()
-                .add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler)),
-            serializableData -> new CompoundMapCodec<>() {
+    public static <E, F extends ActionTypeFactory<E>, I extends ActionTypeFactory<E>.Instance> SerializableDataType<ActionTypeFactory<E>.Instance> action(String fieldName, Registry<ActionTypeFactory<E>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionTypeFactory<E>>, Identifier, String> errorHandler) {
+        SerializableData serializableData = new SerializableData().add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler));
+        return SerializableDataType.recursive(dataType -> SerializableDataType.of(
+            new Codec<>() {
 
                 @Override
-                public <T> ActionTypeFactory<E>.Instance fromData(DynamicOps<T> ops, SerializableData.Instance data) {
-                    ActionTypeFactory<E> factory = data.get(fieldName);
-                    return factory.fromData(data);
+                public <T> DataResult<com.mojang.datafixers.util.Pair<ActionTypeFactory<E>.Instance, T>> decode(DynamicOps<T> ops, T input) {
+                    boolean root = dataType.isRoot();
+                    return ops.getMap(input)
+                        .flatMap(mapInput -> serializableData.setRoot(root).decode(ops, mapInput)
+                            .map(factoryData -> (ActionTypeFactory<E>) factoryData.get(fieldName))
+                            .flatMap(factory -> factory.getSerializableData().setRoot(root).decode(ops, mapInput)
+                                .map(factory::fromData)
+                                .map(instance -> com.mojang.datafixers.util.Pair.of(instance, input))));
                 }
 
                 @Override
-                public <T> SerializableData.Instance toData(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, SerializableData serializableData) {
+                public <T> DataResult<T> encode(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, T prefix) {
 
-                    SerializableData.Instance data = serializableData.instance();
+                    RecordBuilder<T> mapBuilder = ops.mapBuilder();
 
-                    data.set(fieldName, input.getFactory());
-                    input.getSerializableData().getFieldNames().forEach(name -> data.set(name, input.getData().get(name)));
+                    mapBuilder.add(fieldName, SerializableDataTypes.IDENTIFIER.write(ops, input.getSerializerId()));
+                    input.getSerializableData().encode(input.getData(), ops, mapBuilder);
 
-                    return data;
-
-                }
-
-                @Override
-                public <T> Stream<T> keys(DynamicOps<T> ops) {
-                    return serializableData.keys(ops);
-                }
-
-                @Override
-                public <T> DataResult<ActionTypeFactory<E>.Instance> decode(DynamicOps<T> ops, MapLike<T> mapInput) {
-                    return serializableData.decode(ops, mapInput)
-                        .map(factoryData -> (ActionTypeFactory<E>) factoryData.get(fieldName))
-                        .flatMap(factory -> factory.getSerializableData().setRoot(serializableData.isRoot()).decode(ops, mapInput)
-                            .map(factory::fromData));
-                }
-
-                @Override
-                public <T> RecordBuilder<T> encode(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
-
-                    prefix.add(fieldName, SerializableDataTypes.IDENTIFIER.codec().encodeStart(ops, input.getSerializerId()));
-                    input.getSerializableData().setRoot(serializableData.isRoot()).encode(input.getData(), ops, prefix);
-
-                    return prefix;
+                    return mapBuilder.build(prefix);
 
                 }
 
             },
-            (serializableData, compoundMapCodec) -> new PacketCodec<>() {
+            new PacketCodec<>() {
 
                 @Override
                 public ActionTypeFactory<E>.Instance decode(RegistryByteBuf buf) {
@@ -405,7 +365,7 @@ public class ApoliDataTypes {
                 }
 
             }
-        );
+        ));
     }
 
     public static void init() {

@@ -100,7 +100,7 @@ public enum ModifierOperation implements IModifierOperation {
         .validate(data -> {
 
             if (!data.isPresent("amount") && !data.isPresent("resource")) {
-                return DataResult.error(() -> "Either 'amount' or 'resource' field must be defined!");
+                return DataResult.error(() -> "Any of \"amount\" and \"resource\" fields must be defined!");
             }
 
             else {

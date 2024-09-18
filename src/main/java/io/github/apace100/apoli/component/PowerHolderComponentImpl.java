@@ -249,7 +249,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
             try {
 
-                Power.Entry powerEntry = Power.Entry.CODEC.read(lookup.getOps(NbtOps.INSTANCE), powerTag);
+                Power.Entry powerEntry = Power.Entry.CODEC.read(lookup.getOps(NbtOps.INSTANCE), powerTag).getOrThrow();
                 Identifier powerId = powerEntry.power().getId();
 
                 try {
