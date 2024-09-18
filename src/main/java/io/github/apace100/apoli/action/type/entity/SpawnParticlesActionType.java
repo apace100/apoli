@@ -22,7 +22,7 @@ public class SpawnParticlesActionType {
             return;
         }
 
-        Vec3d delta = spread.multiply(entity.getWidth(), entity.getBoundingBox().maxY, entity.getWidth());
+        Vec3d delta = spread.multiply(entity.getWidth(), entity.getHeight(), entity.getWidth());
         Vec3d pos = entity.getPos().add(offset);
 
         for (ServerPlayerEntity player : serverWorld.getPlayers()) {
