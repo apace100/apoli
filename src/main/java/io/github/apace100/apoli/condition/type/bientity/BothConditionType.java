@@ -12,8 +12,8 @@ import java.util.function.Predicate;
 public class BothConditionType {
 
     public static boolean condition(Entity actor, Entity target, Predicate<Entity> condition) {
-        return (actor != null && condition.test(actor))
-            && (target != null && condition.test(target));
+        return condition.test(actor)
+            && condition.test(target);
     }
 
     public static ConditionTypeFactory<Pair<Entity, Entity>> getFactory() {
