@@ -311,18 +311,21 @@ public class ApoliDataTypes {
         ));
     }
 
-    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(Registry<ActionTypeFactory<T>> registry, String name) {
+    public static <E> SerializableDataType<ActionTypeFactory<E>.Instance> action(Registry<ActionTypeFactory<E>> registry, String name) {
         return action(registry, null, name);
     }
 
-    public static <T> SerializableDataType<ActionTypeFactory<T>.Instance> action(Registry<ActionTypeFactory<T>> registry, IdentifierAlias aliases, String name) {
+    public static <E> SerializableDataType<ActionTypeFactory<E>.Instance> action(Registry<ActionTypeFactory<E>> registry, IdentifierAlias aliases, String name) {
         return action("type", registry, aliases, (factories, id) -> name + " \"" + id + "\" is not registered");
     }
 
     @SuppressWarnings("unchecked")
-    public static <E, F extends ActionTypeFactory<E>, I extends ActionTypeFactory<E>.Instance> SerializableDataType<ActionTypeFactory<E>.Instance> action(String fieldName, Registry<ActionTypeFactory<E>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionTypeFactory<E>>, Identifier, String> errorHandler) {
-        SerializableData serializableData = new SerializableData().add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler));
-        return SerializableDataType.recursive(dataType -> SerializableDataType.of(
+    public static <E> SerializableDataType<ActionTypeFactory<E>.Instance> action(String fieldName, Registry<ActionTypeFactory<E>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionTypeFactory<E>>, Identifier, String> errorHandler) {
+
+        SerializableData serializableData = new SerializableData()
+            .add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler));
+
+        SerializableDataType<ActionTypeFactory<E>.Instance> strictDataType = SerializableDataType.recursive(dataType -> SerializableDataType.of(
             new Codec<>() {
 
                 @Override
@@ -342,7 +345,7 @@ public class ApoliDataTypes {
                     RecordBuilder<T> mapBuilder = ops.mapBuilder();
 
                     mapBuilder.add(fieldName, SerializableDataTypes.IDENTIFIER.write(ops, input.getSerializerId()));
-                    input.getSerializableData().encode(input.getData(), ops, mapBuilder);
+                    input.getSerializableData().setRoot(dataType.isRoot()).encode(input.getData(), ops, mapBuilder);
 
                     return mapBuilder.build(prefix);
 
@@ -366,6 +369,39 @@ public class ApoliDataTypes {
 
             }
         ));
+
+        return SerializableDataType.recursive(dataType -> SerializableDataType.of(
+            new Codec<>() {
+
+                @Override
+                public <T> DataResult<com.mojang.datafixers.util.Pair<ActionTypeFactory<E>.Instance, T>> decode(DynamicOps<T> ops, T input) {
+
+                    Optional<ActionTypeFactory<E>> optAndFactory = registry.getOrEmpty(Apoli.identifier("and"));
+                    boolean root = dataType.isRoot();
+
+                    if (ops.getList(input).isSuccess() && optAndFactory.isPresent()) {
+                        ActionTypeFactory<E> andFactory = optAndFactory.get();
+                        return strictDataType.setRoot(root).list().codec().decode(ops, input)
+                            .map(actionsAndInput -> actionsAndInput
+                                .mapFirst(actions -> andFactory.fromData(andFactory.getSerializableData().instance()
+                                    .set("actions", actions))));
+                    }
+
+                    else {
+                        return strictDataType.setRoot(root).codec().decode(ops, input);
+                    }
+
+                }
+
+                @Override
+                public <T> DataResult<T> encode(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, T prefix) {
+                    return strictDataType.setRoot(dataType.isRoot()).codec().encode(input, ops, prefix);
+                }
+
+            },
+			strictDataType.packetCodec()
+        ));
+
     }
 
     public static void init() {
