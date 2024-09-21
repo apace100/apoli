@@ -6,7 +6,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.util.math.random.Random;
 
-public class ChanceConditionType {
+public class RandomChanceConditionType {
 
     public static boolean condition(float chance) {
         return Random.create().nextFloat() < chance;
@@ -14,7 +14,7 @@ public class ChanceConditionType {
 
     public static <T> ConditionTypeFactory<T> getFactory() {
         return new ConditionTypeFactory<>(
-            Apoli.identifier("chance"),
+            Apoli.identifier("random_chance"),
             new SerializableData()
                 .add("chance", SerializableDataTypes.FLOAT),
             (data, type) -> condition(
