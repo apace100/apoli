@@ -66,7 +66,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
 
             @Override
             public <T> DataResult<Pair<HudRender, T>> decode(DynamicOps<T> ops, T input) {
-                return LIST_DATA_TYPE.codec().decode(ops, input)
+                return LIST_DATA_TYPE.setRoot(false).codec().decode(ops, input)
                     .map(hudRendersAndInput -> hudRendersAndInput
                         .mapFirst(ObjectArrayList::new)
                         .mapFirst(hudRenders -> new ParentHudRender(hudRenders.removeFirst(), hudRenders)));
@@ -76,11 +76,11 @@ public class HudRender implements Comparable<HudRender>, Validatable {
             public <T> DataResult<T> encode(HudRender input, DynamicOps<T> ops, T prefix) {
 
                 if (input instanceof ParentHudRender parent) {
-                    return LIST_DATA_TYPE.codec().encode(parent.getChildren(), ops, prefix);
+                    return LIST_DATA_TYPE.setRoot(false).codec().encode(parent.getChildren(), ops, prefix);
                 }
 
                 else {
-                    return STRICT_DATA_TYPE.codec().encode(input, ops, prefix);
+                    return STRICT_DATA_TYPE.setRoot(false).codec().encode(input, ops, prefix);
                 }
 
             }
