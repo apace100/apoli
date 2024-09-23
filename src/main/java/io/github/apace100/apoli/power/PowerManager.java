@@ -33,7 +33,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryOps;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -42,7 +41,6 @@ import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
-import org.ladysnake.cca.api.v3.component.ComponentProvider;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -100,30 +98,14 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         ServerEntityEvents.ENTITY_LOAD.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
         ServerEntityEvents.ENTITY_LOAD.register(PHASE, (entity, world) -> {
             if (!(entity instanceof PlayerEntity)) {
-                onPostLoad(entity, false);
+                updateData(entity, false);
             }
         });
 
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(PHASE, (player, joined) -> {
-
             send(player);
-
-            //  Sync power holder CCA component upon the player joining the server
-            if (joined) {
-
-                List<ServerPlayerEntity> players = player.getServerWorld().getServer().getPlayerManager().getPlayerList();
-                players.remove(player);
-
-                players.forEach(otherPlayer -> {
-                    PowerHolderComponent.KEY.syncWith(otherPlayer, (ComponentProvider) player);
-                    PowerHolderComponent.KEY.syncWith(player, (ComponentProvider) otherPlayer);
-                });
-
-            }
-
-            onPostLoad(player, joined);
-
+            updateData(player, joined);
         });
 
     }
@@ -141,7 +123,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
         if (dynamicRegistries == null) {
 
-            Apoli.LOGGER.error("Can't raed powers from data packs without access to dynamic registries!");
+            Apoli.LOGGER.error("Can't read powers from data packs without access to dynamic registries!");
             endBuilding();
 
             return;
@@ -205,19 +187,18 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         return DEPENDENCIES;
     }
 
-    private void onPostLoad(Entity entity, boolean init) {
+    private void updateData(Entity entity, boolean initialize) {
 
         RegistryOps<JsonElement> jsonOps = entity.getRegistryManager().getOps(JsonOps.INSTANCE);
-        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
+        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(entity);
 
-        if (entity.getWorld().isClient || component == null) {
+        if (component == null) {
             return;
         }
 
         boolean mismatch = false;
         for (Power oldPower : component.getPowers(true)) {
 
-            RegistryWrapper.WrapperLookup wrapperLookup = entity.getRegistryManager();
             Identifier powerId = oldPower.getId();
 
             if (!contains(powerId)) {
@@ -264,7 +245,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
         }
 
-        if (init || mismatch) {
+        if (initialize || mismatch) {
 
             if (mismatch) {
                 Apoli.LOGGER.info("Finished updating power data of entity {}.", entity.getName().getString());
