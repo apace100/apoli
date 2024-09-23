@@ -1,10 +1,12 @@
 package io.github.apace100.apoli.command;
 
+import com.google.gson.JsonElement;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.command.argument.PowerArgumentType;
 import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
@@ -472,9 +474,10 @@ public class PowerCommand {
 		ServerCommandSource source = context.getSource();
 		Power power = PowerArgumentType.getPower(context, "power");
 
+		JsonElement powerJson = Power.CODEC.encodeStart(source.getRegistryManager().getOps(JsonOps.INSTANCE), power).getOrThrow();
 		int size = indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4;
-		source.sendFeedback(() -> new JsonTextFormatter(size).apply(power.toJson()), false);
 
+		source.sendFeedback(() -> new JsonTextFormatter(size).apply(powerJson), false);
 		return 1;
 
 	}

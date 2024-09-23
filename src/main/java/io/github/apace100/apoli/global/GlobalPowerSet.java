@@ -3,7 +3,6 @@ package io.github.apace100.apoli.global;
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.*;
-import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -13,10 +12,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -27,7 +22,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
 
     public static final CompoundSerializableDataType<GlobalPowerSet> DATA_TYPE = SerializableDataType.compound(
         new SerializableData()
-            .add("entity_types", SerializableDataType.optional(SerializableDataTypes.ENTITY_TYPE_TAG_LIKE, false), Optional.empty())
+            .add("entity_types", SerializableDataTypes.ENTITY_TYPE_TAG_LIKE.optional(), Optional.empty())
             .add("powers", ApoliDataTypes.POWER_REFERENCE.list())
             .add("replace", SerializableDataTypes.BOOLEAN, false)
             .add("order", SerializableDataTypes.INT, 0),
@@ -65,10 +60,6 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
         return Integer.compare(this.order, that.order);
     }
 
-    private List<PowerReference> getPowerReferences() {
-        return powerReferences;
-    }
-
     private Set<Power> getSelfAndSubPowers(Collection<PowerReference> powerReferences) {
 
         Set<Power> result = new ObjectLinkedOpenHashSet<>();
@@ -92,45 +83,6 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
 
     }
 
-    public GlobalPowerSet merge(GlobalPowerSet that) {
-
-        RegistryKey<Registry<EntityType<?>>> key = RegistryKeys.ENTITY_TYPE;
-        DynamicRegistryManager.Immutable drm = Calio.getDynamicRegistries().orElseThrow(() -> new IllegalStateException("Cannot merge global power set without dynamic registries!"));
-
-        TagLike.Builder<EntityType<?>> thisBuilder = new TagLike.Builder<>(key);
-        TagLike.Builder<EntityType<?>> thatBuilder = new TagLike.Builder<>(key);
-
-        this.getEntityTypes().map(TagLike::entries).ifPresent(thisBuilder::addAll);
-        that.getEntityTypes().map(TagLike::entries).ifPresent(thatBuilder::addAll);
-
-        Set<PowerReference> powerReferences = new ObjectLinkedOpenHashSet<>(this.getPowerReferences());
-        int order = this.getOrder();
-
-        if (that.shouldReplace()) {
-
-            thisBuilder.clear();
-            powerReferences.clear();
-
-            order = that.getOrder();
-
-        }
-
-        thisBuilder.addAll(thatBuilder);
-        powerReferences.addAll(that.getPowerReferences());
-
-        Optional<TagLike<EntityType<?>>> builtEntityTypes = this.getEntityTypes().isPresent() || that.getEntityTypes().isPresent()
-            ? Optional.of(thisBuilder.build(drm.getWrapperOrThrow(key)))
-            : Optional.empty();
-
-        return new GlobalPowerSet(
-            builtEntityTypes,
-            powerReferences,
-            that.shouldReplace(),
-            order
-        );
-
-    }
-
     public boolean doesApply(EntityType<?> entityType) {
         return entityTypes.map(types -> types.contains(entityType)).orElse(true);
     }
@@ -141,6 +93,10 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
 
     public Optional<TagLike<EntityType<?>>> getEntityTypes() {
         return entityTypes;
+    }
+
+    public ImmutableList<PowerReference> getPowerReferences() {
+        return ImmutableList.copyOf(powerReferences);
     }
 
     public ImmutableList<Power> getPowers() {
