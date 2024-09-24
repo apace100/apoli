@@ -16,6 +16,8 @@ public class PowerTypes {
     public static final PowerTypeFactory<PowerType> SIMPLE = register(PowerType.createSimpleFactory(Apoli.identifier("simple"), PowerType::new));
     public static final PowerTypeFactory<PowerType> MULTIPLE = register(PowerType.createSimpleFactory(Apoli.identifier("multiple"), PowerType::new));
 
+    public static final PowerTypeFactory<RecipePowerType> RECIPE = register(RecipePowerType::getFactory);
+
     public static void register() {
         register(TogglePowerType::getFactory);
         register(AttributePowerType::getFactory);
@@ -73,7 +75,6 @@ public class PowerTypes {
         register(ClimbingPowerType::getFactory);
         register(PreventBlockSelectionPowerType::getFactory);
         register(SelfActionOnKillPowerType::getFactory);
-        register(RecipePowerType::getFactory);
         register(PowerType.createSimpleFactory(Apoli.identifier("ignore_water"), IgnoreWaterPowerType::new));
         register(ModifyProjectileDamagePowerType::getFactory);
         register(ActionOnWakeUpPowerType::getFactory);

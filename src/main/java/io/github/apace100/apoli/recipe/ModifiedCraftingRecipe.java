@@ -6,11 +6,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.access.PowerCraftingObject;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.CraftingInventoryAccessor;
 import io.github.apace100.apoli.mixin.CraftingScreenHandlerAccessor;
 import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
 import io.github.apace100.apoli.power.type.Prioritized;
-import io.github.apace100.apoli.util.ApoliCodecs;
 import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
@@ -171,7 +171,7 @@ public record ModifiedCraftingRecipe(Identifier id, CraftingRecipe delegate) imp
         }
 
         else {
-            throw new IllegalStateException("Recipe is not a crafting recipe.");
+            throw new IllegalStateException("Recipe is not a crafting recipe!");
         }
 
     }
@@ -180,7 +180,7 @@ public record ModifiedCraftingRecipe(Identifier id, CraftingRecipe delegate) imp
 
         public static final MapCodec<ModifiedCraftingRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Identifier.CODEC.fieldOf("id").forGetter(ModifiedCraftingRecipe::id),
-            ApoliCodecs.CRAFTING_RECIPE.fieldOf("recipe").forGetter(ModifiedCraftingRecipe::delegate)
+            ApoliDataTypes.CRAFTING_RECIPE.codec().fieldOf("recipe").forGetter(ModifiedCraftingRecipe::delegate)
         ).apply(instance, ModifiedCraftingRecipe::new));
 
         public static final PacketCodec<RegistryByteBuf, ModifiedCraftingRecipe> PACKET_CODEC = PacketCodec.of(

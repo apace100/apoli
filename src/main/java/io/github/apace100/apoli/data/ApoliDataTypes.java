@@ -19,7 +19,6 @@ import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
-import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.*;
 import io.github.apace100.calio.util.ArgumentWrapper;
@@ -38,18 +37,16 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.recipe.CraftingRecipe;
-import net.minecraft.recipe.RecipeEntry;
+import net.minecraft.recipe.*;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.DataPackContents;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
-import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
@@ -262,52 +259,55 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
 
-    public static final SerializableDataType<Identifier> POWER_CRAFTING_RECIPE_ID = SerializableDataTypes.IDENTIFIER.comapFlatMap(
-        id -> {
+	public static SerializableDataType<Recipe<?>> RECIPE = new CompoundSerializableDataType<>(
+		new SerializableData()
+			.add("type", SerializableDataType.registry(Registries.RECIPE_SERIALIZER)),
+		serializableData -> new MapCodec<>() {
 
-            DataPackContents dataPackContents = Calio.DATA_PACK_CONTENTS.get(Unit.INSTANCE);
-            if (dataPackContents != null) {
+			@Override
+			public <T> Stream<T> keys(DynamicOps<T> ops) {
+				return serializableData.keys(ops);
+			}
 
-                RecipeEntry<?> recipe = dataPackContents.getRecipeManager()
-                    .get(id)
-                    .orElse(null);
+			@Override
+			public <T> DataResult<Recipe<?>> decode(DynamicOps<T> ops, MapLike<T> input) {
+				return serializableData.decode(ops, input)
+					.map(recipeData -> (RecipeSerializer<?>) recipeData.get("type"))
+					.flatMap(recipeSerializer -> recipeSerializer.codec().decode(ops, input)
+						.map(Function.identity()));
+			}
 
-                if (recipe == null) {
-                    return DataResult.error(() -> "Recipe \"" + id + "\" doesn't exist.");
-                }
+			@SuppressWarnings("unchecked")
+			@Override
+			public <T> RecordBuilder<T> encode(Recipe<?> input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 
-                else if (recipe.value() instanceof PowerCraftingRecipe) {
-                    return DataResult.success(id);
-                }
+				RecipeSerializer<Recipe<?>> recipeSerializer = (RecipeSerializer<Recipe<?>>) input.getSerializer();
+				Identifier recipeSerializerId = Objects.requireNonNull(Registries.RECIPE_SERIALIZER.getId(recipeSerializer), "Recipe serializer " + recipeSerializer + " is not registered?");
 
-                else {
-                    return DataResult.error(() -> "Recipe \"" + id + "\" is not a power crafting recipe");
-                }
+				prefix.add("type", SerializableDataTypes.IDENTIFIER.write(ops, recipeSerializerId));
+				recipeSerializer.codec().encode(input, ops, prefix);
 
-            }
+				return prefix;
 
-            else {
-                return DataResult.success(id);
-            }
+			}
 
-        },
-        Function.identity()
-    );
+		},
+		serializableData -> Recipe.PACKET_CODEC.cast()
+	);
 
-    public static final SerializableDataType<RecipeEntry<CraftingRecipe>> CRAFTING_RECIPE = SerializableDataTypes.RECIPE.flatXmap(
-        recipeEntry -> {
+	public static SerializableDataType<CraftingRecipe> CRAFTING_RECIPE = RECIPE.comapFlatMap(
+		recipe -> recipe instanceof CraftingRecipe craftingRecipe
+			? DataResult.success(craftingRecipe)
+			: DataResult.error(() -> "Recipe is not a crafting recipe!"),
+		Function.identity()
+	);
 
-            if (recipeEntry.value() instanceof CraftingRecipe craftingRecipe) {
-                return DataResult.success(new RecipeEntry<>(recipeEntry.id(), craftingRecipe));
-            }
-
-            else {
-                return DataResult.error(() -> "Recipe \"" + recipeEntry.id() + "\" is not a crafting recipe.");
-            }
-
-        },
-        DataResult::success
-    );
+	public static SerializableDataType<CraftingRecipe> DISALLOWING_POWER_CRAFTING_RECIPE = CRAFTING_RECIPE.comapFlatMap(
+		craftingRecipe -> craftingRecipe instanceof PowerCraftingRecipe powerCraftingRecipe
+			? DataResult.error(() -> "Recipe type \"" + Registries.RECIPE_SERIALIZER.getId(powerCraftingRecipe.getSerializer()) + "\" is only used internally and cannot be used in powers!")
+			: DataResult.success(craftingRecipe),
+		Function.identity()
+	);
 
     public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, String name) {
         return condition(registry, null, name);

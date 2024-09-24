@@ -60,6 +60,7 @@
 		"PlayerScreenHandlerMixin",
 		"RecipeBookMixin",
 		"RecipeInputInventoryMixin",
+		"RecipeManagerAccessor",
 		"RecipeManagerMixin",
 		"ReloadableRegistriesLookupMixin",
 		"ScreenHandlerAccessor",

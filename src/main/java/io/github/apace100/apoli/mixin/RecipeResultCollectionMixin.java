@@ -11,10 +11,9 @@ import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
 import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.book.RecipeBook;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-
-import java.util.Objects;
 
 @Mixin(RecipeResultCollection.class)
 public abstract class RecipeResultCollectionMixin {
@@ -24,15 +23,13 @@ public abstract class RecipeResultCollectionMixin {
 
         if (original && recipeEntry.value() instanceof PowerCraftingRecipe pcr && recipeBook instanceof PowerCraftingObject pco && pco.apoli$getPlayer() != null) {
 
+            Identifier powerId = pcr.powerId();
             PowerHolderComponent component = PowerHolderComponent.KEY.get(pco.apoli$getPlayer());
-            RecipePowerType recipePowerType = PowerManager.getOptional(pcr.powerId())
-                .map(component::getPowerType)
-                .filter(RecipePowerType.class::isInstance)
-                .map(RecipePowerType.class::cast)
-                .orElse(null);
 
-            return recipePowerType != null
-                && Objects.equals(recipePowerType.getRecipeId(), recipeEntry.id());
+            return PowerManager.getOptional(powerId)
+                .map(component::getPowerType)
+                .map(RecipePowerType.class::isInstance)
+                .orElse(false);
 
         }
 

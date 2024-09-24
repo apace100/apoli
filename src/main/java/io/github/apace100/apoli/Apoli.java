@@ -13,7 +13,6 @@ import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.condition.type.*;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetManager;
-import io.github.apace100.apoli.integration.PostPowerReloadCallback;
 import io.github.apace100.apoli.integration.PowerIntegration;
 import io.github.apace100.apoli.loot.condition.ApoliLootConditionTypes;
 import io.github.apace100.apoli.loot.function.ApoliLootFunctionTypes;
@@ -22,12 +21,9 @@ import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
-import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.ApoliConfig;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
-import io.github.apace100.apoli.util.ModifiedCraftingRecipe;
-import io.github.apace100.apoli.util.PowerRestrictedCraftingRecipe;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.util.CalioResourceConditions;
@@ -41,8 +37,6 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
@@ -96,9 +90,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 			ResourceCommand.register(dispatcher);
 		});
 
-		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
-		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("modified"), ModifiedCraftingRecipe.SERIALIZER);
-
 		ApoliLootFunctionTypes.register();
 		ApoliLootConditionTypes.register();
 
@@ -129,7 +120,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GlobalPowerSetManager());
 
 		ServerEntityEvents.EQUIPMENT_CHANGE.register(ItemPowersComponent::onChangeEquipment);
-		PostPowerReloadCallback.EVENT.register(PowerCraftingRecipe::validatePowerRecipesPostReload);
 
 		CalioResourceConditions.ALIASES.addNamespaceAlias(MODID, Calio.MOD_NAMESPACE);
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);
