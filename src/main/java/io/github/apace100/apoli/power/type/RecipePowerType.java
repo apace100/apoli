@@ -43,12 +43,12 @@ public class RecipePowerType extends PowerType {
             Map<Identifier, RecipeEntry<?>> recipeEntriesById = new Object2ObjectOpenHashMap<>(((RecipeManagerAccessor) recipeManager).getRecipesById());
             for (Power power : PowerManager.values()) {
 
-                if (power.getFactoryInstance().getFactory() != PowerTypes.RECIPE) {
+                if (!(power.create(null) instanceof RecipePowerType recipePowerType)) {
                     continue;
                 }
 
                 Identifier powerId = power.getId();
-                RecipeEntry<CraftingRecipe> recipeEntry = ((RecipePowerType) power.create(null)).getRecipeEntry();
+                RecipeEntry<CraftingRecipe> recipeEntry = recipePowerType.getRecipeEntry();
 
                 //  Only register the power recipe if no other recipes have the same ID
                 if (!recipeEntriesById.containsKey(powerId)) {
