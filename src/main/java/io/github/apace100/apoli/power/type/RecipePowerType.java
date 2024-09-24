@@ -21,15 +21,15 @@ import java.util.Map;
 
 public class RecipePowerType extends PowerType {
 
-    private final CraftingRecipe recipe;
+    private final RecipeEntry<CraftingRecipe> recipeEntry;
 
     public RecipePowerType(Power power, LivingEntity entity, CraftingRecipe recipe) {
         super(power, entity);
-        this.recipe = recipe;
+        this.recipeEntry = new RecipeEntry<>(power.getId(), new PowerCraftingRecipe(power.getId(), recipe));
     }
 
-    public CraftingRecipe getRecipe() {
-        return recipe;
+    public RecipeEntry<CraftingRecipe> getRecipeEntry() {
+        return recipeEntry;
     }
 
     public static void registerPowerRecipes() {
@@ -40,7 +40,7 @@ public class RecipePowerType extends PowerType {
 
         if (recipeManager != null) {
 
-            Map<Identifier, RecipeEntry<?>> recipes = new Object2ObjectOpenHashMap<>(((RecipeManagerAccessor) recipeManager).getRecipesById());
+            Map<Identifier, RecipeEntry<?>> recipeEntriesById = new Object2ObjectOpenHashMap<>(((RecipeManagerAccessor) recipeManager).getRecipesById());
             for (Power power : PowerManager.values()) {
 
                 if (power.getFactoryInstance().getFactory() != PowerTypes.RECIPE) {
@@ -48,16 +48,16 @@ public class RecipePowerType extends PowerType {
                 }
 
                 Identifier powerId = power.getId();
-                CraftingRecipe recipe = ((RecipePowerType) power.create(null)).getRecipe();
+                RecipeEntry<CraftingRecipe> recipeEntry = ((RecipePowerType) power.create(null)).getRecipeEntry();
 
                 //  Only register the power recipe if no other recipes have the same ID
-                if (!recipes.containsKey(powerId)) {
-                    recipes.put(powerId, new RecipeEntry<>(powerId, new PowerCraftingRecipe(powerId, recipe)));
+                if (!recipeEntriesById.containsKey(powerId)) {
+                    recipeEntriesById.put(powerId, recipeEntry);
                 }
 
             }
 
-            recipeManager.setRecipes(recipes.values());
+            recipeManager.setRecipes(recipeEntriesById.values());
 
         }
 
