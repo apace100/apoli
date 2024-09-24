@@ -33,6 +33,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryOps;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -257,12 +258,12 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     }
 
-    private void readMultipleOrNormalPower(DynamicRegistryManager dynamicRegistries, String packName, Identifier powerId, JsonObject powerJson) {
+    private void readMultipleOrNormalPower(RegistryWrapper.WrapperLookup wrapperLookup, String packName, Identifier powerId, JsonObject powerJson) {
 
         powerJson.addProperty("id", powerId.toString());
 
         PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(powerId, powerJson);
-        Power basePower = Power.CODEC.parse(dynamicRegistries.getOps(JsonOps.INSTANCE), powerJson).getOrThrow(JsonParseException::new);
+        Power basePower = Power.CODEC.parse(wrapperLookup.getOps(JsonOps.INSTANCE), powerJson).getOrThrow(JsonParseException::new);
 
         if (basePower.isMultiple()) {
 
@@ -285,7 +286,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
                         Identifier subPowerId = powerId.withSuffixedPath("_" + key);
 
-                        if (this.readSubPower(dynamicRegistries, packName, powerId, subPowerId, key, subPowerJson)) {
+                        if (this.readSubPower(wrapperLookup, packName, powerId, subPowerId, key, subPowerJson)) {
                             subPowerIds.add(subPowerId);
                         }
 
@@ -319,9 +320,9 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     }
 
-    private boolean readSubPower(DynamicRegistryManager dynamicRegistries, String packName, Identifier superPowerId, Identifier subPowerId, String name, JsonObject subPowerJson) {
+    private boolean readSubPower(RegistryWrapper.WrapperLookup wrapperLookup, String packName, Identifier superPowerId, Identifier subPowerId, String name, JsonObject subPowerJson) {
 
-        if (!ResourceConditionsImpl.applyResourceConditions(subPowerJson, directoryName, subPowerId, dynamicRegistries)) {
+        if (!ResourceConditionsImpl.applyResourceConditions(subPowerJson, directoryName, subPowerId, wrapperLookup)) {
             this.onReject(packName, subPowerId);
             return false;
         }
@@ -329,7 +330,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         else {
 
             subPowerJson.addProperty("id", subPowerId.toString());
-            Power basePower = Power.CODEC.parse(dynamicRegistries.getOps(JsonOps.INSTANCE), subPowerJson).getOrThrow(JsonParseException::new);
+            Power basePower = Power.CODEC.parse(wrapperLookup.getOps(JsonOps.INSTANCE), subPowerJson).getOrThrow(JsonParseException::new);
 
             SubPower subPower = switch (this.readPower(packName, new SubPower(superPowerId, name, basePower), subPowerJson)) {
                 case SubPower selfSubPower ->
@@ -582,7 +583,11 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     }
 
     public void send(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, new SyncPowersS2CPacket(POWERS_BY_ID));
+
+        if (player.server.isDedicated()) {
+            ServerPlayNetworking.send(player, new SyncPowersS2CPacket(POWERS_BY_ID));
+        }
+
     }
 
     @Environment(EnvType.CLIENT)
