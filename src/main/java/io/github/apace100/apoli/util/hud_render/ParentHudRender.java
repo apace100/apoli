@@ -1,11 +1,8 @@
 package io.github.apace100.apoli.util.hud_render;
 
 import com.google.common.collect.ImmutableList;
-import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.util.HudRender;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.dynamic.NullOps;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -14,30 +11,25 @@ public class ParentHudRender extends HudRender {
 
     private final ImmutableList<HudRender> children;
 
-    protected ParentHudRender(Collection<HudRender> children, ConditionTypeFactory<Entity>.Instance condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
-        super(condition, spriteLocation, shouldRender, inverted, barIndex, iconIndex, order);
+    public ParentHudRender(HudRender parent, Collection<HudRender> children) {
+        super(parent.getCondition(), parent.getSpriteLocation(), parent.shouldRender(), parent.isInverted(), parent.getBarIndex(), parent.getIconIndex(), parent.getOrder());
 
         ImmutableList.Builder<HudRender> childrenBuilder = ImmutableList.builder();
+        childrenBuilder.add(parent);
 
-        childrenBuilder.add(this);
-        children
-            .stream()
-            .map(child -> child.withOrder(order))
+        children.stream()
+            .map(child -> child.withOrder(parent.getOrder()))
             .forEach(childrenBuilder::add);
 
         this.children = childrenBuilder.build();
 
     }
 
-    public ParentHudRender(HudRender parent, Collection<HudRender> children) {
-        this(children, parent.getCondition(), parent.getSpriteLocation(), parent.shouldRender(), parent.isInverted(), parent.getBarIndex(), parent.getIconIndex(), parent.getOrder());
-    }
-
     @Override
     public void validate() throws Exception {
 
         for (HudRender child : children) {
-            STRICT_DATA_TYPE.toData(child, NullOps.INSTANCE).validate();
+            child.validate();
         }
 
     }

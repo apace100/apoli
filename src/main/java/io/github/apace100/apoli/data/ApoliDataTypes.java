@@ -56,6 +56,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class ApoliDataTypes {
@@ -121,12 +122,12 @@ public class ApoliDataTypes {
     public static final SerializableDataType<AttributedEntityAttributeModifier> ATTRIBUTED_ATTRIBUTE_MODIFIER = SerializableDataType.compound(
         SerializableDataTypes.ATTRIBUTE_MODIFIER.serializableData().copy()
             .add("attribute", SerializableDataTypes.ATTRIBUTE_ENTRY),
-        (ops, data) -> new AttributedEntityAttributeModifier(
+        data -> new AttributedEntityAttributeModifier(
             data.get("attribute"),
-            SerializableDataTypes.ATTRIBUTE_MODIFIER.fromData(ops, data)
+            SerializableDataTypes.ATTRIBUTE_MODIFIER_OBJ_FACTORY.fromData(data)
         ),
-        (attributedAttributeModifier, ops, serializableData) -> SerializableDataTypes.ATTRIBUTE_MODIFIER
-            .toData(attributedAttributeModifier.modifier(), ops, serializableData)
+        (attributedAttributeModifier, serializableData) -> SerializableDataTypes.ATTRIBUTE_MODIFIER_OBJ_FACTORY
+            .toData(attributedAttributeModifier.modifier(), serializableData)
             .set("attribute", attributedAttributeModifier.attribute())
     );
 
@@ -135,12 +136,12 @@ public class ApoliDataTypes {
     public static final SerializableDataType<Pair<Integer, ItemStack>> POSITIONED_ITEM_STACK = SerializableDataType.compound(
         SerializableDataTypes.ITEM_STACK.serializableData().copy()
             .add("slot", SerializableDataTypes.INT, Integer.MIN_VALUE),
-        (ops, data) -> new Pair<>(
+        data -> new Pair<>(
             data.getInt("slot"),
-            SerializableDataTypes.ITEM_STACK.fromData(ops, data)
+            SerializableDataTypes.ITEM_STACK_OBJ_FACTORY.fromData(data)
         ),
-        (positionedStack, ops, serializableData) -> SerializableDataTypes.ITEM_STACK
-            .toData(positionedStack.getRight(), ops, serializableData)
+        (positionedStack, serializableData) -> SerializableDataTypes.ITEM_STACK_OBJ_FACTORY
+            .toData(positionedStack.getRight(), serializableData)
             .set("slot", positionedStack.getLeft())
     );
 
@@ -259,40 +260,44 @@ public class ApoliDataTypes {
     }
 
     public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, IdentifierAlias aliases, String name) {
-        return condition("type", registry, aliases, (conditionFactories, id) -> name + " \"" + id + "\" is not registered");
+        return condition("type", registry, aliases, (conditionFactories, id) -> name + " \"" + id + "\" is not registered!");
     }
 
     @SuppressWarnings("unchecked")
     public static <E> SerializableDataType<ConditionTypeFactory<E>.Instance> condition(String fieldName, Registry<ConditionTypeFactory<E>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ConditionTypeFactory<E>>, Identifier, String> errorHandler) {
-        SerializableData serializableData = new SerializableData().add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler));
-        return SerializableDataType.recursive(dataType -> SerializableDataType.of(
-			new Codec<>() {
+        return new CompoundSerializableDataType<>(
+            new SerializableData()
+                .add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler)),
+            serializableData -> {
+				boolean root = serializableData.isRoot();
+				return new MapCodec<>() {
 
-				@Override
-				public <T> DataResult<com.mojang.datafixers.util.Pair<ConditionTypeFactory<E>.Instance, T>> decode(DynamicOps<T> ops, T input) {
-                    boolean root = dataType.isRoot();
-					return ops.getMap(input)
-                        .flatMap(mapInput -> serializableData.setRoot(root).decode(ops, mapInput)
-                            .map(factoryData -> (ConditionTypeFactory<E>) factoryData.get(fieldName))
-                            .flatMap(factory -> factory.getSerializableData().setRoot(root).decode(ops, mapInput)
-                                .map(factory::fromData)
-                                .map(instance -> com.mojang.datafixers.util.Pair.of(instance, input))));
-				}
+					@Override
+					public <T> Stream<T> keys(DynamicOps<T> ops) {
+						return serializableData.keys(ops);
+					}
 
-				@Override
-				public <T> DataResult<T> encode(ConditionTypeFactory<E>.Instance input, DynamicOps<T> ops, T prefix) {
+					@Override
+					public <T> DataResult<ConditionTypeFactory<E>.Instance> decode(DynamicOps<T> ops, MapLike<T> input) {
+						return serializableData.decode(ops, input)
+							.map(factoryData -> (ConditionTypeFactory<E>) factoryData.get(fieldName))
+							.flatMap(factory -> factory.getSerializableData().setRoot(root).decode(ops, input)
+								.map(factory::fromData));
+					}
 
-                    RecordBuilder<T> mapBuilder = ops.mapBuilder();
+					@Override
+					public <T> RecordBuilder<T> encode(ConditionTypeFactory<E>.Instance input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 
-                    mapBuilder.add(fieldName, SerializableDataTypes.IDENTIFIER.write(ops, input.getSerializerId()));
-                    input.getSerializableData().encode(input.getData(), ops, mapBuilder);
+						prefix.add(fieldName, SerializableDataTypes.IDENTIFIER.write(ops, input.getSerializerId()));
+						input.getSerializableData().setRoot(root).encode(input.getData(), ops, prefix);
 
-                    return mapBuilder.build(prefix);
+						return prefix;
 
-				}
+					}
 
+				};
 			},
-			new PacketCodec<>() {
+            serializableData -> new PacketCodec<>() {
 
 				@Override
 				public ConditionTypeFactory<E>.Instance decode(RegistryByteBuf buf) {
@@ -308,7 +313,7 @@ public class ApoliDataTypes {
 				}
 
 			}
-        ));
+        );
     }
 
     public static <E> SerializableDataType<ActionTypeFactory<E>.Instance> action(Registry<ActionTypeFactory<E>> registry, String name) {
@@ -316,95 +321,99 @@ public class ApoliDataTypes {
     }
 
     public static <E> SerializableDataType<ActionTypeFactory<E>.Instance> action(Registry<ActionTypeFactory<E>> registry, IdentifierAlias aliases, String name) {
-        return action("type", registry, aliases, (factories, id) -> name + " \"" + id + "\" is not registered");
+        return action("type", registry, aliases, (factories, id) -> name + " \"" + id + "\" is not registered!");
     }
 
     @SuppressWarnings("unchecked")
     public static <E> SerializableDataType<ActionTypeFactory<E>.Instance> action(String fieldName, Registry<ActionTypeFactory<E>> registry, @Nullable IdentifierAlias aliases, BiFunction<Registry<ActionTypeFactory<E>>, Identifier, String> errorHandler) {
 
-        SerializableData serializableData = new SerializableData()
-            .add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler));
+        CompoundSerializableDataType<ActionTypeFactory<E>.Instance> dataType = new CompoundSerializableDataType<>(
+            new SerializableData()
+                .add(fieldName, SerializableDataType.registry(registry, Apoli.MODID, aliases, errorHandler)),
+            serializableData -> {
+				boolean root = serializableData.isRoot();
+				return new MapCodec<>() {
 
-        SerializableDataType<ActionTypeFactory<E>.Instance> strictDataType = SerializableDataType.recursive(dataType -> SerializableDataType.of(
-            new Codec<>() {
+					@Override
+					public <T> Stream<T> keys(DynamicOps<T> ops) {
+						return serializableData.keys(ops);
+					}
 
-                @Override
-                public <T> DataResult<com.mojang.datafixers.util.Pair<ActionTypeFactory<E>.Instance, T>> decode(DynamicOps<T> ops, T input) {
-                    boolean root = dataType.isRoot();
-                    return ops.getMap(input)
-                        .flatMap(mapInput -> serializableData.setRoot(root).decode(ops, mapInput)
-                            .map(factoryData -> (ActionTypeFactory<E>) factoryData.get(fieldName))
-                            .flatMap(factory -> factory.getSerializableData().setRoot(root).decode(ops, mapInput)
-                                .map(factory::fromData)
-                                .map(instance -> com.mojang.datafixers.util.Pair.of(instance, input))));
-                }
+					@Override
+					public <T> DataResult<ActionTypeFactory<E>.Instance> decode(DynamicOps<T> ops, MapLike<T> input) {
+						return serializableData.decode(ops, input)
+							.map(factoryData -> (ActionTypeFactory<E>) factoryData.get(fieldName))
+							.flatMap(factory -> factory.getSerializableData().setRoot(root).decode(ops, input)
+								.map(factory::fromData));
+					}
 
-                @Override
-                public <T> DataResult<T> encode(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, T prefix) {
+					@Override
+					public <T> RecordBuilder<T> encode(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 
-                    RecordBuilder<T> mapBuilder = ops.mapBuilder();
+						prefix.add(fieldName, SerializableDataTypes.IDENTIFIER.write(ops, input.getSerializerId()));
+						input.getSerializableData().setRoot(root).encode(input.getData(), ops, prefix);
 
-                    mapBuilder.add(fieldName, SerializableDataTypes.IDENTIFIER.write(ops, input.getSerializerId()));
-                    input.getSerializableData().setRoot(dataType.isRoot()).encode(input.getData(), ops, mapBuilder);
+						return prefix;
 
-                    return mapBuilder.build(prefix);
+					}
 
-                }
+				};
+			},
+            serializableData -> new PacketCodec<>() {
 
-            },
-            new PacketCodec<>() {
-
-                @Override
-                public ActionTypeFactory<E>.Instance decode(RegistryByteBuf buf) {
-                    Identifier factoryId = buf.readIdentifier();
+				@Override
+				public ActionTypeFactory<E>.Instance decode(RegistryByteBuf buf) {
+					Identifier factoryId = buf.readIdentifier();
                     return registry.getOrEmpty(factoryId)
                         .map(factory -> factory.receive(buf))
                         .orElseThrow(() -> new IllegalStateException(errorHandler.apply(registry, factoryId)));
-                }
+				}
 
-                @Override
-                public void encode(RegistryByteBuf buf, ActionTypeFactory<E>.Instance value) {
+				@Override
+				public void encode(RegistryByteBuf buf, ActionTypeFactory<E>.Instance value) {
                     value.send(buf);
-                }
+				}
 
-            }
-        ));
+			}
+        );
 
-        return SerializableDataType.recursive(dataType -> SerializableDataType.of(
-            new Codec<>() {
+        return SerializableDataType.recursive(self -> {
 
-                @Override
-                public <T> DataResult<com.mojang.datafixers.util.Pair<ActionTypeFactory<E>.Instance, T>> decode(DynamicOps<T> ops, T input) {
+			SerializableDataType<ActionTypeFactory<E>.Instance> singleDataType = dataType.setRoot(self.isRoot());
+			SerializableDataType<List<ActionTypeFactory<E>.Instance>> listDataType = singleDataType.list();
 
-                    Optional<ActionTypeFactory<E>> optAndFactory = registry.getOrEmpty(Apoli.identifier("and"));
-                    boolean root = dataType.isRoot();
+			return SerializableDataType.of(
+				new Codec<>() {
 
-                    if (ops.getList(input).isSuccess() && optAndFactory.isPresent()) {
-                        ActionTypeFactory<E> andFactory = optAndFactory.get();
-                        return strictDataType.setRoot(root).list().codec().decode(ops, input)
-                            .map(actionsAndInput -> actionsAndInput
-                                .mapFirst(actions -> andFactory.fromData(andFactory.getSerializableData().instance()
-                                    .set("actions", actions))));
-                    }
+					@Override
+					public <T> DataResult<com.mojang.datafixers.util.Pair<ActionTypeFactory<E>.Instance, T>> decode(DynamicOps<T> ops, T input) {
 
-                    else {
-                        return strictDataType.setRoot(root).codec().decode(ops, input);
-                    }
+						Optional<ActionTypeFactory<E>> optAndFactory = registry.getOrEmpty(Apoli.identifier("and"));
 
-                }
+						if (ops.getList(input).isSuccess() && optAndFactory.isPresent()) {
+							ActionTypeFactory<E> andFactory = optAndFactory.get();
+							return listDataType.codec().decode(ops, input)
+								.map(actionsAndInput -> actionsAndInput
+									.mapFirst(actions -> andFactory.fromData(andFactory.getSerializableData().instance()
+										.set("actions", actions))));
+						}
 
-                @Override
-                public <T> DataResult<T> encode(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, T prefix) {
-                    return strictDataType.setRoot(dataType.isRoot()).codec().encode(input, ops, prefix);
-                }
+						else {
+							return singleDataType.codec().decode(ops, input);
+						}
 
-            },
-			strictDataType.packetCodec()
-        ));
+					}
 
-    }
+					@Override
+					public <T> DataResult<T> encode(ActionTypeFactory<E>.Instance input, DynamicOps<T> ops, T prefix) {
+						return singleDataType.codec().encode(input, ops, prefix);
+					}
 
-    public static void init() {
+				},
+				singleDataType.packetCodec()
+			);
+
+		});
 
     }
 

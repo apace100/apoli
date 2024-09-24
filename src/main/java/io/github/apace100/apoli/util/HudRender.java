@@ -12,13 +12,14 @@ import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.registry.DataObjectFactory;
+import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import io.github.apace100.calio.util.Validatable;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.dynamic.NullOps;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +32,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
     public static final Identifier DEFAULT_SPRITE = Apoli.identifier("textures/gui/resource_bar.png");
     public static final HudRender DONT_RENDER = new HudRender(null, DEFAULT_SPRITE, false, false, 0, 0, 0);
 
-    public static final CompoundSerializableDataType<HudRender> STRICT_DATA_TYPE = SerializableDataType.compound(
+    public static final DataObjectFactory<HudRender> FACTORY = new SimpleDataObjectFactory<>(
         new SerializableData()
             .add("condition", ApoliDataTypes.ENTITY_CONDITION, null)
             .add("sprite_location", SerializableDataTypes.IDENTIFIER, DEFAULT_SPRITE)
@@ -59,70 +60,77 @@ public class HudRender implements Comparable<HudRender>, Validatable {
             .set("order", hudRender.getOrder())
     );
 
+    public static final CompoundSerializableDataType<HudRender> STRICT_DATA_TYPE = SerializableDataType.compound(FACTORY);
     public static final SerializableDataType<List<HudRender>> LIST_DATA_TYPE = STRICT_DATA_TYPE.list(1, Integer.MAX_VALUE);
+    public static final SerializableDataType<HudRender> DATA_TYPE = SerializableDataType.recursive(self -> {
 
-    public static final SerializableDataType<HudRender> DATA_TYPE = SerializableDataType.of(
-        new Codec<>() {
+        SerializableDataType<List<HudRender>> listDataType = LIST_DATA_TYPE.setRoot(self.isRoot());
+        SerializableDataType<HudRender> singleDataType = STRICT_DATA_TYPE.setRoot(self.isRoot());
 
-            @Override
-            public <T> DataResult<Pair<HudRender, T>> decode(DynamicOps<T> ops, T input) {
-                return LIST_DATA_TYPE.setRoot(false).codec().decode(ops, input)
-                    .map(hudRendersAndInput -> hudRendersAndInput
-                        .mapFirst(ObjectArrayList::new)
-                        .mapFirst(hudRenders -> new ParentHudRender(hudRenders.removeFirst(), hudRenders)));
+        return SerializableDataType.of(
+            new Codec<>() {
+
+                @Override
+                public <T> DataResult<Pair<HudRender, T>> decode(DynamicOps<T> ops, T input) {
+                    return listDataType.codec().decode(ops, input)
+                        .map(hudRendersAndInput -> hudRendersAndInput
+                            .mapFirst(ObjectArrayList::new)
+                            .mapFirst(hudRenders -> new ParentHudRender(hudRenders.removeFirst(), hudRenders)));
+                }
+
+                @Override
+                public <T> DataResult<T> encode(HudRender input, DynamicOps<T> ops, T prefix) {
+
+                    if (input instanceof ParentHudRender parent) {
+                        return listDataType.codec().encode(parent.getChildren(), ops, prefix);
+                    }
+
+                    else {
+                        return singleDataType.codec().encode(input, ops, prefix);
+                    }
+
+                }
+
+            },
+            new PacketCodec<>() {
+
+                @Override
+                public HudRender decode(RegistryByteBuf buf) {
+
+                    if (buf.readBoolean()) {
+
+                        List<HudRender> children = new LinkedList<>(listDataType.packetCodec().decode(buf));
+                        HudRender parent = children.removeFirst();
+
+                        return new ParentHudRender(parent, children);
+
+                    }
+
+                    else {
+                        return singleDataType.packetCodec().decode(buf);
+                    }
+
+                }
+
+                @Override
+                public void encode(RegistryByteBuf buf, HudRender hudRender) {
+
+                    if (hudRender instanceof ParentHudRender parent) {
+                        buf.writeBoolean(true);
+                        listDataType.packetCodec().encode(buf, parent.getChildren());
+                    }
+
+                    else {
+                        buf.writeBoolean(false);
+                        singleDataType.packetCodec().encode(buf, hudRender);
+                    }
+
+                }
+
             }
+        );
 
-            @Override
-            public <T> DataResult<T> encode(HudRender input, DynamicOps<T> ops, T prefix) {
-
-                if (input instanceof ParentHudRender parent) {
-                    return LIST_DATA_TYPE.setRoot(false).codec().encode(parent.getChildren(), ops, prefix);
-                }
-
-                else {
-                    return STRICT_DATA_TYPE.setRoot(false).codec().encode(input, ops, prefix);
-                }
-
-            }
-
-        },
-        new PacketCodec<>() {
-
-            @Override
-            public HudRender decode(RegistryByteBuf buf) {
-
-                if (buf.readBoolean()) {
-
-                    List<HudRender> children = new LinkedList<>(LIST_DATA_TYPE.packetCodec().decode(buf));
-                    HudRender parent = children.removeFirst();
-
-                    return new ParentHudRender(parent, children);
-
-                }
-
-                else {
-                    return STRICT_DATA_TYPE.packetCodec().decode(buf);
-                }
-
-            }
-
-            @Override
-            public void encode(RegistryByteBuf buf, HudRender hudRender) {
-
-                if (hudRender instanceof ParentHudRender parent) {
-                    buf.writeBoolean(true);
-                    LIST_DATA_TYPE.packetCodec().encode(buf, parent.getChildren());
-                }
-
-                else {
-                    buf.writeBoolean(false);
-                    STRICT_DATA_TYPE.packetCodec().encode(buf, hudRender);
-                }
-
-            }
-
-        }
-    );
+    });
 
     @Nullable
     private final ConditionTypeFactory<Entity>.Instance condition;
@@ -155,7 +163,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
 
     @Override
     public void validate() throws Exception {
-        STRICT_DATA_TYPE.toData(this, NullOps.INSTANCE).validate();
+        FACTORY.toData(this).validate();
     }
 
     @Nullable
