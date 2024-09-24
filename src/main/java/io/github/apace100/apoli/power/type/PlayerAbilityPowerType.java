@@ -23,7 +23,7 @@ public class PlayerAbilityPowerType extends PowerType {
     public PlayerAbilityPowerType(Power power, LivingEntity entity, PlayerAbility playerAbility) {
         super(power, entity);
         this.ability = playerAbility;
-        this.source = Pal.getAbilitySource(this.getId());
+        this.source = Pal.getAbilitySource(this.getPowerId());
     }
 
     @Override

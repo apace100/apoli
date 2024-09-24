@@ -6,26 +6,9 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
 
-import java.util.Comparator;
 import java.util.List;
 
 public interface IModifierOperation {
-
-    Comparator<IModifierOperation> COMPARATOR = (o1, o2) -> {
-
-        if (o1 == o2) {
-            return 0;
-        }
-
-        else if (o1.getPhase() == o2.getPhase()) {
-            return Integer.compare(o1.getOrder(), o2.getOrder());
-        }
-
-        else {
-            return o1.getPhase().compareTo(o2.getPhase());
-        }
-
-    };
 
     SerializableDataType<IModifierOperation> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.MODIFIER_OPERATION, Apoli.MODID, true);
 

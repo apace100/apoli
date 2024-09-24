@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.component.item;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -7,8 +9,8 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
-import io.github.apace100.apoli.util.codec.SetCodec;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import net.minecraft.component.type.AttributeModifierSlot;
@@ -25,10 +27,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -38,9 +37,9 @@ public class ItemPowersComponent {
 
     public static final ItemPowersComponent DEFAULT = new ItemPowersComponent(Set.of());
 
-    public static final Codec<ItemPowersComponent> CODEC = SetCodec.of(Entry.MAP_CODEC.codec()).xmap(
+    public static final Codec<ItemPowersComponent> CODEC = Entry.SET_CODEC.xmap(
         ItemPowersComponent::new,
-        ItemPowersComponent::entries
+		ItemPowersComponent::entries
     );
 
     public static final PacketCodec<ByteBuf, ItemPowersComponent> PACKET_CODEC = PacketCodecs.collection(ObjectLinkedOpenHashSet::new, Entry.PACKET_CODEC).xmap(
@@ -50,7 +49,7 @@ public class ItemPowersComponent {
 
     final ObjectLinkedOpenHashSet<Entry> entries;
 
-    ItemPowersComponent(Set<Entry> entries) {
+    ItemPowersComponent(Collection<Entry> entries) {
         this.entries = new ObjectLinkedOpenHashSet<>(entries);
     }
 
@@ -61,9 +60,19 @@ public class ItemPowersComponent {
 
     @Override
     public boolean equals(Object obj) {
-        return this == obj
-            || (obj instanceof ItemPowersComponent other
-            && this.entries.equals(other.entries));
+
+        if (this == obj) {
+            return true;
+        }
+
+        else if (!(obj instanceof ItemPowersComponent that)) {
+            return false;
+        }
+
+        else {
+            return Objects.equals(this.entries(), that.entries());
+        }
+
     }
 
     @Override
@@ -123,37 +132,35 @@ public class ItemPowersComponent {
 
     public static void onChangeEquipment(LivingEntity entity, EquipmentSlot equipmentSlot, ItemStack previousStack, ItemStack currentStack) {
 
+        Identifier sourceId = Apoli.identifier("item/" + equipmentSlot.getName());
         if (ItemStack.areEqual(previousStack, currentStack) || !PowerHolderComponent.KEY.isProvidedBy(entity)) {
             return;
         }
 
-        PowerHolderComponent powerComponent = PowerHolderComponent.KEY.get(entity);
-        Identifier sourceId = Apoli.identifier("item/" + equipmentSlot.getName());
-
-        boolean shouldSync = false;
-
+        List<Power> revokedPowers = new ObjectArrayList<>();
         ItemPowersComponent prevStackPowers = previousStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
+
         for (Entry prevEntry : prevStackPowers.entries) {
-
-            shouldSync |= PowerManager.getOptional(prevEntry.powerId())
+            PowerManager.getOptional(prevEntry.powerId())
                 .filter(power -> prevEntry.slot().matches(equipmentSlot))
-                .map(power -> powerComponent.removePower(power, sourceId))
-                .orElse(false);
-
+                .ifPresent(revokedPowers::add);
         }
 
+        List<Power> grantedPowers = new ObjectArrayList<>();
         ItemPowersComponent currStackPowers = currentStack.getOrDefault(ApoliDataComponentTypes.POWERS, DEFAULT);
+
         for (Entry currEntry : currStackPowers.entries) {
-
-            shouldSync |= PowerManager.getOptional(currEntry.powerId())
+            PowerManager.getOptional(currEntry.powerId())
                 .filter(power -> currEntry.slot().matches(equipmentSlot))
-                .map(power -> powerComponent.addPower(power, sourceId))
-                .orElse(false);
-
+                .ifPresent(grantedPowers::add);
         }
 
-        if (shouldSync) {
-            powerComponent.sync();
+        if (!revokedPowers.isEmpty()) {
+            PowerHolderComponent.revokePowers(entity, Map.of(sourceId, revokedPowers), true);
+        }
+
+        if (!grantedPowers.isEmpty()) {
+            PowerHolderComponent.grantPowers(entity, Map.of(sourceId, grantedPowers), true);
         }
 
     }
@@ -173,6 +180,11 @@ public class ItemPowersComponent {
             PacketCodecs.BOOL, Entry::hidden,
             PacketCodecs.BOOL, Entry::negative,
             Entry::new
+        );
+
+        public static final Codec<Set<Entry>> SET_CODEC = MAP_CODEC.codec().listOf().xmap(
+			ImmutableSet::copyOf,
+			ImmutableList::copyOf
         );
 
         @Override

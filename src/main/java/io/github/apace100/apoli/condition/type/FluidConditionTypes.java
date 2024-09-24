@@ -1,6 +1,7 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.fluid.FluidConditionType;
 import io.github.apace100.apoli.condition.type.fluid.InTagConditionType;
 import io.github.apace100.apoli.data.ApoliDataTypes;
@@ -13,12 +14,12 @@ import net.minecraft.util.Identifier;
 
 import java.util.function.Predicate;
 
-public class FluidConditions {
+public class FluidConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
-        MetaConditions.register(ApoliDataTypes.FLUID_CONDITION, FluidConditions::register);
+        MetaConditionTypes.register(ApoliDataTypes.FLUID_CONDITION, FluidConditionTypes::register);
         register(createSimpleFactory(Apoli.identifier("empty"), FluidState::isEmpty));
         register(createSimpleFactory(Apoli.identifier("still"), FluidState::isStill));
         register(InTagConditionType.getFactory());

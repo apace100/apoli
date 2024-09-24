@@ -69,7 +69,7 @@ public class RemoveEnchantmentActionType {
             Apoli.identifier("remove_enchantment"),
             new SerializableData()
                 .add("enchantment", SerializableDataTypes.ENCHANTMENT, null)
-                .add("enchantments", SerializableDataTypes.ENCHANTMENT.listOf(), null)
+                .add("enchantments", SerializableDataTypes.ENCHANTMENT.list(), null)
                 .add("levels", SerializableDataTypes.INT, null)
                 .add("reset_repair_cost", SerializableDataTypes.BOOLEAN, false),
             (data, worldAndStack) -> {

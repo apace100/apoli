@@ -76,8 +76,9 @@
 		"StatusEffectInstanceMixin",
 		"StatusEffectMixin",
 		"TagGroupLoaderMixin",
-		"VibrationsListenerDataMixin",
-		"VibrationsTickerMixin",
+		"VibrationsMixin",
+		"VibrationsMixin$CallbackMixin",
+		"VibrationsMixin$TickerMixin",
 		"WeightedListEntryAccessor",
 		"integration.appleskin.FoodHelperMixin"
 	],

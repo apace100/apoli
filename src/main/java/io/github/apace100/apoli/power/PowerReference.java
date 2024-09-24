@@ -1,12 +1,14 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public class PowerReference extends Power {
 
@@ -29,7 +31,7 @@ public class PowerReference extends Power {
 
     @Override
     public PowerTypeFactory<? extends PowerType>.Instance getFactoryInstance() {
-        return this.getReferenceStrict().getFactoryInstance();
+        return this.getStrictReference().getFactoryInstance();
     }
 
     @Nullable
@@ -43,18 +45,20 @@ public class PowerReference extends Power {
 
     @Nullable
     public Power getReference() {
-        return PowerManager
-            .getOptional(this.getId())
-            .orElse(null);
+        return getOptionalReference().orElse(null);
     }
 
-    public Power getReferenceStrict() {
+    public Optional<Power> getOptionalReference() {
+        return PowerManager.getOptional(this.getId());
+    }
+
+    public Power getStrictReference() {
         return PowerManager.get(this.getId());
     }
 
     @Override
     public void validate() throws Exception {
-        this.getReferenceStrict();
+        this.getStrictReference();
     }
 
 }

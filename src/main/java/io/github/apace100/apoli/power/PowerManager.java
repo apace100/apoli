@@ -1,27 +1,23 @@
 package io.github.apace100.apoli.power;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowersS2CPacket;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.calio.Calio;
+import io.github.apace100.calio.CalioServer;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -35,14 +31,17 @@ import net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.RegistryOps;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
-import org.ladysnake.cca.api.v3.component.ComponentProvider;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -100,30 +99,14 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         ServerEntityEvents.ENTITY_LOAD.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
         ServerEntityEvents.ENTITY_LOAD.register(PHASE, (entity, world) -> {
             if (!(entity instanceof PlayerEntity)) {
-                onPostLoad(entity, false);
+                updateData(entity, false);
             }
         });
 
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(PHASE, (player, joined) -> {
-
             send(player);
-
-            //  Sync power holder CCA component upon the player joining the server
-            if (joined) {
-
-                List<ServerPlayerEntity> players = player.getServerWorld().getServer().getPlayerManager().getPlayerList();
-                players.remove(player);
-
-                players.forEach(otherPlayer -> {
-                    PowerHolderComponent.KEY.syncWith(otherPlayer, (ComponentProvider) player);
-                    PowerHolderComponent.KEY.syncWith(player, (ComponentProvider) otherPlayer);
-                });
-
-            }
-
-            onPostLoad(player, joined);
-
+            updateData(player, joined);
         });
 
     }
@@ -131,11 +114,22 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     @Override
     protected void apply(MultiJsonDataContainer prepared, ResourceManager manager, Profiler profiler) {
 
-        LOADING_PRIORITIES.clear();
-        startBuilding();
+        Apoli.LOGGER.info("Reading powers from data packs...");
 
         PowerReloadCallback.EVENT.invoker().onPowerReload();
         PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
+
+        startBuilding();
+        DynamicRegistryManager dynamicRegistries = CalioServer.getDynamicRegistries().orElse(null);
+
+        if (dynamicRegistries == null) {
+
+            Apoli.LOGGER.error("Can't read powers from data packs without access to dynamic registries!");
+            endBuilding();
+
+            return;
+
+        }
 
         prepared.forEach((packName, id, jsonElement) -> {
 
@@ -144,12 +138,13 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
                 SerializableData.CURRENT_NAMESPACE = id.getNamespace();
                 SerializableData.CURRENT_PATH = id.getPath();
 
-                if (!(jsonElement instanceof JsonObject jsonObject)) {
-                    throw new JsonSyntaxException("Expected a JSON object");
+                if (jsonElement instanceof JsonObject jsonObject) {
+                    this.readMultipleOrNormalPower(dynamicRegistries, packName, id, jsonObject);
                 }
 
-                PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(id, jsonObject);
-                this.readMultipleOrNormalPower(packName, id, jsonObject);
+                else {
+                    throw new JsonSyntaxException("Not a JSON object: " + jsonElement);
+                }
 
             }
 
@@ -159,18 +154,17 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
         });
 
-        LOADING_PRIORITIES.clear();
-
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
 
         endBuilding();
-        validate();
+        Apoli.LOGGER.info("Finished reading powers from data packs. Registry contains {} powers.", size());
 
+        validate();
         PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
 
         if (validated) {
-            Apoli.LOGGER.info("Finished validating powers from data files. Registry contains {} powers.", size());
+            Apoli.LOGGER.info("Finished validating powers from data packs. Registry contains {} powers.", size());
         }
 
     }
@@ -194,20 +188,23 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         return DEPENDENCIES;
     }
 
-    private void onPostLoad(Entity entity, boolean init) {
+    private void updateData(Entity entity, boolean initialize) {
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        if (entity.getWorld().isClient || component == null) {
+        RegistryOps<JsonElement> jsonOps = entity.getRegistryManager().getOps(JsonOps.INSTANCE);
+        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(entity);
+
+        if (component == null) {
             return;
         }
 
         boolean mismatch = false;
         for (Power oldPower : component.getPowers(true)) {
 
-            Identifier oldPowerId = oldPower.getId();
-            if (!contains(oldPowerId)) {
+            Identifier powerId = oldPower.getId();
 
-                Apoli.LOGGER.error("Removed unregistered power \"{}\" from entity {}!", oldPowerId, entity.getName().getString());
+            if (!contains(powerId)) {
+
+                Apoli.LOGGER.error("Removed unregistered power \"{}\" from entity {}!", powerId, entity.getName().getString());
                 mismatch = true;
 
                 for (Identifier sourceId : component.getSources(oldPower)) {
@@ -218,14 +215,17 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
             }
 
-            Power newPower = get(oldPowerId);
+            Power newPower = get(powerId);
             PowerType oldPowerType = component.getPowerType(oldPower);
 
-            if (oldPower.toJson().equals(newPower.toJson())) {
+            JsonElement oldPowerJson = Power.CODEC.encodeStart(jsonOps, oldPower).getOrThrow(JsonParseException::new);
+            JsonElement newPowerJson = Power.CODEC.encodeStart(jsonOps, newPower).getOrThrow(JsonParseException::new);
+
+            if (oldPowerJson.equals(newPowerJson)) {
                 continue;
             }
 
-            Apoli.LOGGER.warn("Mismatched data fields of power \"{}\" from entity {}! Updating...", oldPowerId, entity.getName().getString());
+            Apoli.LOGGER.warn("Mismatched data fields of power \"{}\" from entity {}! Updating...", powerId, entity.getName().getString());
             mismatch = true;
 
             for (Identifier source : component.getSources(oldPower)) {
@@ -236,17 +236,17 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             PowerType newPowerType = component.getPowerType(newPower);
             if (oldPowerType.getClass().isAssignableFrom(newPowerType.getClass())) {
                 //  Transfer the data of the old power to the new power if the old power is an instance of the new power
-                Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", oldPowerId);
+                Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", powerId);
                 newPowerType.fromTag(oldPowerType.toTag());
             } else {
                 //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
                 //  occurs if the power no longer uses the same power type as it used to
-                Apoli.LOGGER.warn("Couldn't transfer old data of power \"{}\", as it's using a different power type!", oldPowerId);
+                Apoli.LOGGER.warn("Couldn't transfer old data of power \"{}\", as it's using a different power type!", powerId);
             }
 
         }
 
-        if (init || mismatch) {
+        if (initialize || mismatch) {
 
             if (mismatch) {
                 Apoli.LOGGER.info("Finished updating power data of entity {}.", entity.getName().getString());
@@ -258,9 +258,13 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     }
 
-    private void readMultipleOrNormalPower(String packName, Identifier powerId, JsonObject powerJson) {
+    private void readMultipleOrNormalPower(RegistryWrapper.WrapperLookup wrapperLookup, String packName, Identifier powerId, JsonObject powerJson) {
 
-        Power basePower = Power.fromJson(powerId, powerJson);
+        powerJson.addProperty("id", powerId.toString());
+
+        PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(powerId, powerJson);
+        Power basePower = Power.CODEC.parse(wrapperLookup.getOps(JsonOps.INSTANCE), powerJson).getOrThrow(JsonParseException::new);
+
         if (basePower.isMultiple()) {
 
             Power supposedMultiplePower = this.readPower(packName, new MultiplePower(basePower), powerJson);
@@ -274,15 +278,22 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
                 try {
 
-                    if (!(jsonElement instanceof JsonObject subPowerJson)) {
-                        throw new JsonSyntaxException("Expected a JSON object");
+                    if (!Identifier.isPathValid(key)) {
+                        throw new InvalidIdentifierException("Non [a-z0-9/._-] character in sub-power name \"" + key + "\"!");
                     }
 
-                    assert Identifier.isPathValid(key);
-                    Identifier subPowerId = Identifier.of(powerId + "_" + key);
+                    else if (jsonElement instanceof JsonObject subPowerJson) {
 
-                    if (this.readSubPower(packName, powerId, subPowerId, key, subPowerJson)) {
-                        subPowerIds.add(subPowerId);
+                        Identifier subPowerId = powerId.withSuffixedPath("_" + key);
+
+                        if (this.readSubPower(wrapperLookup, packName, powerId, subPowerId, key, subPowerJson)) {
+                            subPowerIds.add(subPowerId);
+                        }
+
+                    }
+
+                    else {
+                        throw new JsonSyntaxException("Not a JSON object: " + jsonElement);
                     }
 
                 }
@@ -309,16 +320,19 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     }
 
-    private boolean readSubPower(String packName, Identifier superPowerId, Identifier subPowerId, String name, JsonObject subPowerJson) {
+    private boolean readSubPower(RegistryWrapper.WrapperLookup wrapperLookup, String packName, Identifier superPowerId, Identifier subPowerId, String name, JsonObject subPowerJson) {
 
-        if (!ResourceConditionsImpl.applyResourceConditions(subPowerJson, directoryName, subPowerId, Calio.getDynamicRegistries().orElse(null))) {
+        if (!ResourceConditionsImpl.applyResourceConditions(subPowerJson, directoryName, subPowerId, wrapperLookup)) {
             this.onReject(packName, subPowerId);
             return false;
         }
 
         else {
 
-            SubPower subPower = switch (this.readPower(packName, new SubPower(superPowerId, name, Power.fromJson(subPowerId, subPowerJson)), subPowerJson)) {
+            subPowerJson.addProperty("id", subPowerId.toString());
+            Power basePower = Power.CODEC.parse(wrapperLookup.getOps(JsonOps.INSTANCE), subPowerJson).getOrThrow(JsonParseException::new);
+
+            SubPower subPower = switch (this.readPower(packName, new SubPower(superPowerId, name, basePower), subPowerJson)) {
                 case SubPower selfSubPower ->
                     selfSubPower;
                 case Power power ->
@@ -560,23 +574,20 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         POWERS_BY_ID.clear();
         DISABLED_POWERS.clear();
 
+        LOADING_PRIORITIES.clear();
+
     }
 
     private static void endBuilding() {
-
-        if (!building) {
-            return;
-        }
-
         building = false;
-        if (Apoli.onServerSide()) {
-            Apoli.LOGGER.info("Finished loading powers from data files. Registry contains {} powers", size());
-        }
-
     }
 
     public void send(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, new SyncPowersS2CPacket(POWERS_BY_ID));
+
+        if (player.server.isDedicated()) {
+            ServerPlayNetworking.send(player, new SyncPowersS2CPacket(POWERS_BY_ID));
+        }
+
     }
 
     @Environment(EnvType.CLIENT)

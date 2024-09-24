@@ -19,7 +19,8 @@ public class PowerIntegration {
         ServerEntityEvents.ENTITY_UNLOAD.register(EntitySetPowerType::integrateUnloadCallback);
         ServerEntityEvents.ENTITY_LOAD.register(EntitySetPowerType::integrateLoadCallback);
 
-        ServerLifecycleEvents.START_DATA_PACK_RELOAD.register(ModifyTypeTagPowerType::registerStartServerReloadCallback);
+        ServerLifecycleEvents.START_DATA_PACK_RELOAD.register(ModifyTypeTagPowerType::resetTagCache);
+        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(ModifyTypeTagPowerType::sendTagCache);
 
     }
 

@@ -1,17 +1,18 @@
 package io.github.apace100.apoli.command;
 
+import com.google.gson.JsonElement;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.command.argument.PowerArgumentType;
 import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
-import io.github.apace100.apoli.command.argument.PowerTypeArgumentType;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.util.JsonTextFormatter;
-import joptsimple.internal.Strings;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -22,7 +23,9 @@ import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Identifier;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -36,27 +39,21 @@ public class PowerCommand {
 			literal("power").requires(scs -> scs.hasPermissionLevel(2))
 				.then(literal("grant")
 					.then(argument("targets", PowerHolderArgumentType.holders())
-						.then(argument("power", PowerTypeArgumentType.power())
+						.then(argument("power", PowerArgumentType.power())
 							.executes(context -> grantPower(context, false))
                             .then(argument("source", IdentifierArgumentType.identifier())
                                 .executes(context -> grantPower(context, true)))))
 				)
 				.then(literal("revoke")
 					.then(argument("targets", PowerHolderArgumentType.holders())
-						.then(argument("power", PowerTypeArgumentType.power())
+						.then(argument("power", PowerArgumentType.power())
 							.executes(context -> revokePower(context, false))
 							.then(argument("source", IdentifierArgumentType.identifier())
-								.executes(context -> revokePower(context, true)))))
+								.executes(context -> revokePower(context, true))))
+						.then(literal("all")
+							.then(argument("source", IdentifierArgumentType.identifier())
+								.executes(PowerCommand::revokeAllPowers))))
 				)
-				.then(literal("revokeall")	//	TODO: Remove this! -eggohito
-					.then(argument("targets", PowerHolderArgumentType.holders())
-						.then(argument("source", IdentifierArgumentType.identifier())
-							.executes(PowerCommand::revokeAllPowers)))
-				)
-				.then(literal("revoke_all")
-					.then(argument("targets", PowerHolderArgumentType.holders())
-						.then(argument("source", IdentifierArgumentType.identifier())
-							.executes(PowerCommand::revokeAllPowers))))
 				.then(literal("list")
 					.then(argument("target", PowerHolderArgumentType.holder())
 						.executes(context -> listPowers(context, false))
@@ -65,17 +62,17 @@ public class PowerCommand {
 				)
 				.then(literal("has")
 					.then(argument("targets", PowerHolderArgumentType.holders())
-						.then(argument("power", PowerTypeArgumentType.power())
+						.then(argument("power", PowerArgumentType.power())
 							.executes(PowerCommand::hasPower)))
 				)
 				.then(literal("sources")
 					.then(argument("target", PowerHolderArgumentType.holder())
-						.then(argument("power", PowerTypeArgumentType.power())
+						.then(argument("power", PowerArgumentType.power())
 							.executes(PowerCommand::getSourcesFromPower)))
 				)
 				.then(literal("remove")
 					.then(argument("targets", PowerHolderArgumentType.holders())
-						.then(argument("power", PowerTypeArgumentType.power())
+						.then(argument("power", PowerArgumentType.power())
 							.executes(PowerCommand::removePower)))
 				)
 				.then(literal("clear")
@@ -84,7 +81,7 @@ public class PowerCommand {
 						.executes(context -> clearAllPowers(context, false)))
 				)
 				.then(literal("dump")
-					.then(argument("power", PowerTypeArgumentType.power())
+					.then(argument("power", PowerArgumentType.power())
 						.executes(context -> dumpPowerJson(context, false))
 						.then(argument("indent", IntegerArgumentType.integer(0))
 							.executes(context -> dumpPowerJson(context, true))))
@@ -99,7 +96,7 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		Power power = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerArgumentType.getPower(context, "power");
 		Identifier powerSource = isSourceSpecified ? IdentifierArgumentType.getIdentifier(context, "source") : Apoli.identifier("command");
 
 		for (LivingEntity target : targets) {
@@ -154,7 +151,7 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		Power power = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerArgumentType.getPower(context, "power");
 		Identifier powerSource = isSourceSpecified ? IdentifierArgumentType.getIdentifier(context, "source") : POWER_SOURCE;
 
 		for (LivingEntity target : targets) {
@@ -296,7 +293,7 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		Power power = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerArgumentType.getPower(context, "power");
 
 		for (LivingEntity target : targets) {
 			PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
@@ -331,7 +328,7 @@ public class PowerCommand {
 		ServerCommandSource source = context.getSource();
 
 		LivingEntity target = PowerHolderArgumentType.getHolder(context, "target");
-		Power power = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerArgumentType.getPower(context, "power");
 
 		PowerHolderComponent component = PowerHolderComponent.KEY.get(target);
 		StringBuilder powerSources = new StringBuilder();
@@ -365,11 +362,11 @@ public class PowerCommand {
 		List<LivingEntity> targets = PowerHolderArgumentType.getHolders(context, "targets");
 		List<LivingEntity> processedTargets = new LinkedList<>();
 
-		Power power = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerArgumentType.getPower(context, "power");
 		for (LivingEntity target : targets) {
 
 			List<Identifier> powerSources = PowerHolderComponent.KEY.get(target).getSources(power);
-			int revokedPowers = PowerHolderComponent.revokeAllPowersFromSource(target, powerSources, true);
+			int revokedPowers = PowerHolderComponent.revokeAllPowersFromAllSources(target, powerSources, true);
 
 			if (revokedPowers > 0) {
 				processedTargets.add(target);
@@ -472,14 +469,15 @@ public class PowerCommand {
 
 	}
 
-	private static int dumpPowerJson(CommandContext<ServerCommandSource> context, boolean indentSpecified) throws CommandSyntaxException {
+	private static int dumpPowerJson(CommandContext<ServerCommandSource> context, boolean indentSpecified) {
 
 		ServerCommandSource source = context.getSource();
-		Power power = PowerTypeArgumentType.getPower(context, "power");
+		Power power = PowerArgumentType.getPower(context, "power");
 
-		String indent = Strings.repeat(' ', indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4);
-		source.sendFeedback(() -> new JsonTextFormatter(indent).apply(power.toJson()), false);
+		JsonElement powerJson = Power.CODEC.encodeStart(source.getRegistryManager().getOps(JsonOps.INSTANCE), power).getOrThrow();
+		int size = indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4;
 
+		source.sendFeedback(() -> new JsonTextFormatter(size).apply(powerJson), false);
 		return 1;
 
 	}

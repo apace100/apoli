@@ -3,8 +3,8 @@ package io.github.apace100.apoli.component;
 import com.google.common.collect.Lists;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.integration.ModifyValueCallback;
-import io.github.apace100.apoli.networking.packet.s2c.SyncPowerDataS2CPacket;
 import io.github.apace100.apoli.networking.packet.s2c.SyncBulkPowerDataS2CPacket;
+import io.github.apace100.apoli.networking.packet.s2c.SyncPowerDataS2CPacket;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.PowerReference;
@@ -76,10 +76,10 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static boolean grantPower(@NotNull Entity entity, Power power, Identifier source, boolean sync) {
-        return grantPower(entity, Map.of(source, List.of(power)), sync);
+        return grantPowers(entity, Map.of(source, List.of(power)), sync);
     }
 
-    static boolean grantPower(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
+    static boolean grantPowers(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
         if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
 
@@ -104,10 +104,10 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static boolean revokePower(@NotNull Entity entity, Power power, Identifier source, boolean sync) {
-        return revokePower(entity, Map.of(source, List.of(power)), sync);
+        return revokePowers(entity, Map.of(source, List.of(power)), sync);
     }
 
-    static boolean revokePower(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
+    static boolean revokePowers(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
         if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
 
@@ -132,10 +132,10 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static int revokeAllPowersFromSource(@NotNull Entity entity, Identifier source, boolean sync) {
-        return revokeAllPowersFromSource(entity, List.of(source), sync);
+        return revokeAllPowersFromAllSources(entity, List.of(source), sync);
     }
 
-    static int revokeAllPowersFromSource(@NotNull Entity entity, Collection<Identifier> sources, boolean sync) {
+    static int revokeAllPowersFromAllSources(@NotNull Entity entity, Collection<Identifier> sources, boolean sync) {
 
         if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
 

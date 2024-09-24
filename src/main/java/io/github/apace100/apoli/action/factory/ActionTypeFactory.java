@@ -14,13 +14,13 @@ public class ActionTypeFactory<T> implements Factory {
 
     protected final Identifier id;
 
-    protected final Function<SerializableData.Instance, Consumer<T>> effectFactory;
     protected final SerializableData serializableData;
+    protected final Function<SerializableData.Instance, Consumer<T>> effectFactory;
 
     public ActionTypeFactory(Identifier id, SerializableData serializableData, @NotNull BiConsumer<SerializableData.Instance, T> effect) {
         this.id = id;
-        this.effectFactory = data -> t -> effect.accept(data, t);
         this.serializableData = serializableData.copy();
+        this.effectFactory = data -> t -> effect.accept(data, t);
     }
 
     @Override

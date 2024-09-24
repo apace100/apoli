@@ -8,19 +8,19 @@ import io.github.apace100.calio.data.SerializableDataType;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-public class OrConditionType {
+public class AllOfConditionType {
 
     public static <T> boolean condition(T type, Collection<Predicate<T>> conditions) {
         return conditions
             .stream()
-            .anyMatch(condition -> condition.test(type));
+            .allMatch(condition -> condition.test(type));
     }
 
     public static <T> ConditionTypeFactory<T> getFactory(SerializableDataType<ConditionTypeFactory<T>.Instance> conditionDataType) {
         return new ConditionTypeFactory<>(
-            Apoli.identifier("or"),
+            Apoli.identifier("all_of"),
             new SerializableData()
-                .add("conditions", conditionDataType.listOf()),
+                .add("conditions", conditionDataType.list()),
             (data, type) -> condition(type,
                 data.get("conditions")
             )

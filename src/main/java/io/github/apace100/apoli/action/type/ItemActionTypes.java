@@ -1,5 +1,6 @@
-package io.github.apace100.apoli.action.factory;
+package io.github.apace100.apoli.action.type;
 
+import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.action.type.item.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -9,13 +10,13 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 
-public class ItemActions {
+public class ItemActionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
 
-        MetaActions.register(ApoliDataTypes.ITEM_ACTION, ApoliDataTypes.ITEM_CONDITION, worldAndStackRef -> new Pair<>(worldAndStackRef.getLeft(), worldAndStackRef.getRight().get()), ItemActions::register);
+        MetaActionTypes.register(ApoliDataTypes.ITEM_ACTION, ApoliDataTypes.ITEM_CONDITION, worldAndStackRef -> new Pair<>(worldAndStackRef.getLeft(), worldAndStackRef.getRight().get()), ItemActionTypes::register);
 
         register(ConsumeActionType.getFactory());
         register(ModifyActionType.getFactory());

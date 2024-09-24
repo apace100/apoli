@@ -41,12 +41,13 @@ public class ModifyStatusEffectDurationPowerType extends ValueModifyingPowerType
     }
 
     public boolean doesApply(RegistryEntry<StatusEffect> statusEffect) {
-        return statusEffects.contains(statusEffect);
+        return statusEffects.isEmpty()
+            || statusEffects.contains(statusEffect);
     }
 
     public static PowerTypeFactory<?> getFactory() {
         return new PowerTypeFactory<>(
-            Apoli.identifier("modify_status_effect_amplifier"),
+            Apoli.identifier("modify_status_effect_duration"),
             new SerializableData()
                 .add("status_effect", SerializableDataTypes.STATUS_EFFECT_ENTRY, null)
                 .add("status_effects", SerializableDataTypes.STATUS_EFFECT_ENTRIES, null)

@@ -7,6 +7,7 @@ import io.github.apace100.apoli.networking.packet.VersionHandshakePacket;
 import io.github.apace100.apoli.networking.packet.s2c.*;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.type.ModifyTypeTagPowerType;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.SyncStatusEffectsUtil;
 import net.fabricmc.api.EnvType;
@@ -43,6 +44,7 @@ public class ModPacketsS2C {
             ClientPlayNetworking.registerReceiver(SyncAttackerS2CPacket.PACKET_ID, ModPacketsS2C::onAttackerSync);
             ClientPlayNetworking.registerReceiver(SyncStatusEffectS2CPacket.PACKET_ID, ModPacketsS2C::onStatusEffectSync);
             ClientPlayNetworking.registerReceiver(ShowToastS2CPacket.PACKET_ID, ModPacketsS2C::onShowToast);
+            ClientPlayNetworking.registerReceiver(SyncEntityTypeTagCacheS2CPacket.PACKET_ID, ModifyTypeTagPowerType::receiveTagCache);
         }));
 
     }

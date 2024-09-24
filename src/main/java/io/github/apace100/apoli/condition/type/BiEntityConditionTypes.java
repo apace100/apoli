@@ -1,6 +1,7 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.bientity.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -14,12 +15,12 @@ import net.minecraft.util.Pair;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 
-public class BiEntityConditions {
+public class BiEntityConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
-        MetaConditions.register(ApoliDataTypes.BIENTITY_CONDITION, BiEntityConditions::register);
+        MetaConditionTypes.register(ApoliDataTypes.BIENTITY_CONDITION, BiEntityConditionTypes::register);
         register(InvertConditionType.getFactory());
         register(ActorConditionType.getFactory());
         register(TargetConditionType.getFactory());

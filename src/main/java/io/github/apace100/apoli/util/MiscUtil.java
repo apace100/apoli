@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.util;
 
+import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -183,6 +184,34 @@ public final class MiscUtil {
             return a;
         }
         return a.and(b);
+    }
+
+    public static boolean allPresent(SerializableData.Instance data, String... fieldNames) {
+
+        for (String field : fieldNames) {
+
+            if (!data.isPresent(field)) {
+                return false;
+            }
+
+        }
+
+        return true;
+
+    }
+
+    public static boolean anyPresent(SerializableData.Instance data, String... fields) {
+
+        for (String field : fields) {
+
+            if (data.isPresent(field)) {
+                return true;
+            }
+
+        }
+
+        return false;
+
     }
 
     public static boolean hasSpaceInInventory(PlayerEntity player, ItemStack stack) {

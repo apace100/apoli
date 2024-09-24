@@ -1,6 +1,7 @@
-package io.github.apace100.apoli.action.factory;
+package io.github.apace100.apoli.action.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.action.type.entity.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -13,13 +14,13 @@ import net.minecraft.util.Identifier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class EntityActions {
+public class EntityActionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
 
-        MetaActions.register(ApoliDataTypes.ENTITY_ACTION, ApoliDataTypes.ENTITY_CONDITION, Function.identity(), EntityActions::register);
+        MetaActionTypes.register(ApoliDataTypes.ENTITY_ACTION, ApoliDataTypes.ENTITY_CONDITION, Function.identity(), EntityActionTypes::register);
 
         register(DamageActionType.getFactory());
         register(HealActionType.getFactory());

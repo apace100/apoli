@@ -18,6 +18,7 @@ public class PowerHolderArgumentType extends EntityArgumentType {
     public static final SimpleCommandExceptionType HOLDERS_NOT_FOUND = new SimpleCommandExceptionType(
         Text.translatable("argument.apoli.power_holder.not_found.multiple")
     );
+
     public static final DynamicCommandExceptionType HOLDER_NOT_FOUND = new DynamicCommandExceptionType(
         o -> Text.translatable("argument.apoli.power_holder.not_found.single", o)
     );

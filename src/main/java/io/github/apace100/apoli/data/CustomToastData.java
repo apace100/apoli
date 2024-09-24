@@ -5,6 +5,8 @@ import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import io.github.apace100.calio.registry.DataObjectFactory;
+import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -13,7 +15,7 @@ public record CustomToastData(Text title, Text description, Identifier texture, 
 
     public static final Identifier DEFAULT_TEXTURE = Apoli.identifier("toast/custom");
 
-    public static final CompoundSerializableDataType<CustomToastData> DATA_TYPE = SerializableDataType.compound(
+    public static final DataObjectFactory<CustomToastData> FACTORY = new SimpleDataObjectFactory<>(
         new SerializableData()
             .add("title", SerializableDataTypes.TEXT)
             .add("description", SerializableDataTypes.TEXT)
@@ -27,12 +29,14 @@ public record CustomToastData(Text title, Text description, Identifier texture, 
             data.get("icon"),
             data.get("duration")
         ),
-        (customToastData, data) -> data
+        (customToastData, serializableData) -> serializableData.instance()
             .set("title", customToastData.title())
             .set("description", customToastData.description())
             .set("texture", customToastData.texture())
             .set("icon", customToastData.iconStack())
             .set("duration", customToastData.duration())
     );
+
+    public static final CompoundSerializableDataType<CustomToastData> DATA_TYPE = SerializableDataType.compound(FACTORY);
 
 }

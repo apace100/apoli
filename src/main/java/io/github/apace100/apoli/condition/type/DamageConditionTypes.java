@@ -1,6 +1,7 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.damage.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -10,14 +11,14 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.util.Pair;
 
-public class DamageConditions {
+public class DamageConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static final ConditionTypeFactory<Pair<DamageSource, Float>> AMOUNT = register(AmountConditionType.getFactory());
 
     public static void register() {
-        MetaConditions.register(ApoliDataTypes.DAMAGE_CONDITION, DamageConditions::register);
+        MetaConditionTypes.register(ApoliDataTypes.DAMAGE_CONDITION, DamageConditionTypes::register);
         register(NameConditionType.getFactory());
         register(ProjectileConditionType.getFactory());
         register(AttackerConditionType.getFactory());

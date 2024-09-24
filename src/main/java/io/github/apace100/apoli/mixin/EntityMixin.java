@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import io.github.apace100.apoli.access.EntityLinkedType;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
@@ -43,7 +42,6 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.event.listener.EntityGameEventHandler;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -101,6 +99,8 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @Shadow public abstract EntityPose getPose();
 
     @Shadow public abstract boolean isSwimming();
+
+    @Shadow public abstract EntityType<?> getType();
 
     @ModifyReturnValue(method = "isFireImmune", at = @At("RETURN"))
     private boolean apoli$makeFullyFireImmune(boolean original) {
@@ -372,14 +372,20 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
 
     }
 
-    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;type:Lnet/minecraft/entity/EntityType;", opcode = Opcodes.GETFIELD))
-    private EntityType<?> apoli$cacheToType(EntityType<?> original) {
+    @ModifyReturnValue(method = "getType", at = @At("RETURN"))
+    private EntityType<?> apoli$modifyTypeTag(EntityType<?> original) {
 
         if (original instanceof EntityLinkedType linkedType) {
             linkedType.apoli$setEntity((Entity) (Object) this);
         }
 
         return original;
+
+    }
+
+    @WrapOperation(method = "handleFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityType;isIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
+    private boolean apoli$fixEntityTypeCalls(EntityType<?> instance, TagKey<EntityType<?>> tag, Operation<Boolean> original) {
+        return this.getType().isIn(tag);
     }
 
     @Unique

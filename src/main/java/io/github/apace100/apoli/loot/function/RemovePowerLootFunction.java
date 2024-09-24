@@ -1,4 +1,4 @@
-package io.github.apace100.apoli.util;
+package io.github.apace100.apoli.loot.function;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -8,6 +8,8 @@ import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.calio.data.SerializableDataTypes;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.component.ComponentChanges;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.Entity;
@@ -20,17 +22,14 @@ import net.minecraft.loot.function.ConditionalLootFunction;
 import net.minecraft.loot.function.LootFunctionType;
 import net.minecraft.util.Identifier;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 public class RemovePowerLootFunction extends ConditionalLootFunction {
 
-    public static final MapCodec<RemovePowerLootFunction> CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
-        ApoliCodecs.ATTRIBUTE_MODIFIER_SLOT_SET.optionalFieldOf("slot", EnumSet.allOf(AttributeModifierSlot.class)).forGetter(RemovePowerLootFunction::slots),
+    public static final MapCodec<RemovePowerLootFunction> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> addConditionsField(instance).and(instance.group(
+        SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT_SET.codec().optionalFieldOf("slot", EnumSet.allOf(AttributeModifierSlot.class)).forGetter(RemovePowerLootFunction::slots),
         Identifier.CODEC.fieldOf("power").forGetter(RemovePowerLootFunction::powerId)
     )).apply(instance, RemovePowerLootFunction::new));
-    public static final LootFunctionType<RemovePowerLootFunction> TYPE = new LootFunctionType<>(CODEC);
 
     private final EnumSet<AttributeModifierSlot> slots;
     private final Identifier powerId;
@@ -43,7 +42,7 @@ public class RemovePowerLootFunction extends ConditionalLootFunction {
 
     @Override
     public LootFunctionType<? extends ConditionalLootFunction> getType() {
-        return TYPE;
+        return ApoliLootFunctionTypes.REMOVE_POWER;
     }
 
     @Override
@@ -83,33 +82,31 @@ public class RemovePowerLootFunction extends ConditionalLootFunction {
         }
 
         PowerHolderComponent powerComponent = PowerHolderComponent.KEY.getNullable(entity);
-        boolean shouldSync = false;
-
         if (powerComponent == null) {
             return;
         }
 
-        EnumSet<EquipmentSlot> processedSlots = EnumSet.noneOf(EquipmentSlot.class);
+        Map<Identifier, Collection<Power>> revokedPowers = new HashMap<>();
         for (ItemPowersComponent.Entry entry : removedEntries) {
 
             AttributeModifierSlot modifierSlot = entry.slot();
+
             for (EquipmentSlot slot : EquipmentSlot.values()) {
 
-                if (!modifierSlot.matches(slot) || processedSlots.contains(slot)) {
-                    continue;
-                }
-
                 Identifier sourceId = Apoli.identifier("item/" + slot.getName());
-                shouldSync |= powerComponent.removePower(power, sourceId);
 
-                processedSlots.add(slot);
+                if (!revokedPowers.containsKey(sourceId) && modifierSlot.matches(slot)) {
+                    revokedPowers
+                        .computeIfAbsent(sourceId, k -> new ObjectArrayList<>())
+                        .add(power);
+                }
 
             }
 
         }
 
-        if (shouldSync) {
-            powerComponent.sync();
+        if (!revokedPowers.isEmpty()) {
+            PowerHolderComponent.revokePowers(entity, revokedPowers, true);
         }
 
     }

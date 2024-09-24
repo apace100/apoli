@@ -1,28 +1,33 @@
 package io.github.apace100.apoli;
 
-import io.github.apace100.apoli.action.factory.BiEntityActions;
-import io.github.apace100.apoli.action.factory.BlockActions;
-import io.github.apace100.apoli.action.factory.EntityActions;
-import io.github.apace100.apoli.action.factory.ItemActions;
+import io.github.apace100.apoli.action.type.BiEntityActionTypes;
+import io.github.apace100.apoli.action.type.BlockActionTypes;
+import io.github.apace100.apoli.action.type.EntityActionTypes;
+import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.command.PowerCommand;
 import io.github.apace100.apoli.command.ResourceCommand;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
-import io.github.apace100.apoli.condition.factory.*;
+import io.github.apace100.apoli.condition.type.*;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetManager;
 import io.github.apace100.apoli.integration.PostPowerReloadCallback;
 import io.github.apace100.apoli.integration.PowerIntegration;
+import io.github.apace100.apoli.loot.condition.ApoliLootConditionTypes;
+import io.github.apace100.apoli.loot.function.ApoliLootFunctionTypes;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
-import io.github.apace100.apoli.power.factory.PowerTypes;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
 import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.apoli.registry.ApoliClassData;
-import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.ApoliConfig;
+import io.github.apace100.apoli.util.GainedPowerCriterion;
+import io.github.apace100.apoli.util.ModifiedCraftingRecipe;
+import io.github.apace100.apoli.util.PowerRestrictedCraftingRecipe;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.util.CalioResourceConditions;
@@ -91,10 +96,11 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 			ResourceCommand.register(dispatcher);
 		});
 
-		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("add_power"), AddPowerLootFunction.TYPE);
-		Registry.register(Registries.LOOT_FUNCTION_TYPE, Apoli.identifier("remove_power"), RemovePowerLootFunction.TYPE);
+		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
+		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("modified"), ModifiedCraftingRecipe.SERIALIZER);
 
-		Registry.register(Registries.LOOT_CONDITION_TYPE, Apoli.identifier("power"), PowerLootCondition.TYPE);
+		ApoliLootFunctionTypes.register();
+		ApoliLootConditionTypes.register();
 
 		ApoliClassData.registerAll();
 
@@ -102,18 +108,19 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ApoliDataComponentTypes.register();
 		ApoliRecipeSerializers.register();
 
+		EntityConditionTypes.register();
+		BiEntityConditionTypes.register();
+		ItemConditionTypes.register();
+		BlockConditionTypes.register();
+		DamageConditionTypes.register();
+		FluidConditionTypes.register();
+		BiomeConditionTypes.register();
+		EntityActionTypes.register();
+		ItemActionTypes.register();
+		BlockActionTypes.register();
+		BiEntityActionTypes.register();
+
 		PowerTypes.register();
-		EntityConditions.register();
-		BiEntityConditions.register();
-		ItemConditions.register();
-		BlockConditions.register();
-		DamageConditions.register();
-		FluidConditions.register();
-		BiomeConditions.register();
-		EntityActions.register();
-		ItemActions.register();
-		BlockActions.register();
-		BiEntityActions.register();
 		PowerIntegration.register();
 
 		ApoliDataHandlers.register();

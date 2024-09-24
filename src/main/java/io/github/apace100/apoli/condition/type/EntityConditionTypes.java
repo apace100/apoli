@@ -1,6 +1,8 @@
-package io.github.apace100.apoli.condition.factory;
+package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
+import io.github.apace100.apoli.condition.factory.DistanceFromCoordinatesConditionRegistry;
 import io.github.apace100.apoli.condition.type.entity.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
@@ -19,12 +21,12 @@ import net.minecraft.util.Identifier;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public class EntityConditions {
+public class EntityConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
 
     public static void register() {
-        MetaConditions.register(ApoliDataTypes.ENTITY_CONDITION, EntityConditions::register);
+        MetaConditionTypes.register(ApoliDataTypes.ENTITY_CONDITION, EntityConditionTypes::register);
         register(BlockCollisionConditionType.getFactory());
         register(BrightnessConditionType.getFactory());
         register(createSimpleFactory(Apoli.identifier("daytime"), entity -> TimeOfDayConditionType.condition(entity.getWorld(), Comparison.LESS_THAN, 13000)));
@@ -51,7 +53,7 @@ public class EntityConditions {
         register(AirConditionType.getFactory());
         register(InBlockConditionType.getFactory());
         register(BlockInRadiusConditionType.getFactory());
-        DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditions::register);
+        DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditionTypes::register);
         register(DimensionConditionType.getFactory());
         register(XpLevelsConditionType.getFactory());
         register(XpPointsConditionType.getFactory());
