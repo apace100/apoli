@@ -39,7 +39,7 @@ public abstract class RecipeManagerMixin {
     }
 
     @ModifyExpressionValue(method = "apply(Ljava/util/Map;Lnet/minecraft/resource/ResourceManager;Lnet/minecraft/util/profiler/Profiler;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/util/Identifier;Lnet/minecraft/recipe/Recipe;)Lnet/minecraft/recipe/RecipeEntry;"))
-    private RecipeEntry<?> apoli$modifyCraftingRecipe(RecipeEntry<?> original, @Local Identifier id, @Local Recipe<?> recipe) {
+    private RecipeEntry<?> apoli$validateRecipe(RecipeEntry<?> original, @Local Identifier id, @Local Recipe<?> recipe) {
         return switch (recipe) {
             case ModifiedCraftingRecipe modifiedCraftingRecipe ->
                 throw apoli$createNotAllowedError(modifiedCraftingRecipe.getSerializer());
