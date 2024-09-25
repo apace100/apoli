@@ -4,14 +4,12 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.recipe.ModifiedCraftingRecipe;
-import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
+import io.github.apace100.apoli.util.MiscUtil;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.input.RecipeInput;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Optional;
@@ -39,20 +37,10 @@ public abstract class RecipeManagerMixin {
     }
 
     @ModifyExpressionValue(method = "apply(Ljava/util/Map;Lnet/minecraft/resource/ResourceManager;Lnet/minecraft/util/profiler/Profiler;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/util/Identifier;Lnet/minecraft/recipe/Recipe;)Lnet/minecraft/recipe/RecipeEntry;"))
-    private RecipeEntry<?> apoli$validateRecipe(RecipeEntry<?> original, @Local Identifier id, @Local Recipe<?> recipe) {
-        return switch (recipe) {
-            case ModifiedCraftingRecipe modifiedCraftingRecipe ->
-                throw apoli$createNotAllowedError(modifiedCraftingRecipe.getSerializer());
-            case PowerCraftingRecipe powerCraftingRecipe ->
-                throw apoli$createNotAllowedError(powerCraftingRecipe.getSerializer());
-            default ->
-                original;
-        };
-    }
-
-    @Unique
-    private RuntimeException apoli$createNotAllowedError(RecipeSerializer<?> serializer) {
-        return new IllegalStateException("Recipe type \"" + Registries.RECIPE_SERIALIZER.getId(serializer) + "\" is only used internally and cannot be used in recipes!");
+    private RecipeEntry<?> apoli$validateRecipe(RecipeEntry<?> original, @Local Recipe<?> recipe) {
+        return MiscUtil.validateRecipe(recipe)
+            .map(r -> original)
+            .getOrThrow();
     }
 
 }

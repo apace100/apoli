@@ -180,7 +180,7 @@ public record ModifiedCraftingRecipe(Identifier id, CraftingRecipe delegate) imp
 
         public static final MapCodec<ModifiedCraftingRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Identifier.CODEC.fieldOf("id").forGetter(ModifiedCraftingRecipe::id),
-            ApoliDataTypes.CRAFTING_RECIPE.codec().fieldOf("recipe").forGetter(ModifiedCraftingRecipe::delegate)
+            ApoliDataTypes.DISALLOWING_INTERNAL_CRAFTING_RECIPE.codec().fieldOf("recipe").forGetter(ModifiedCraftingRecipe::delegate)
         ).apply(instance, ModifiedCraftingRecipe::new));
 
         public static final PacketCodec<RegistryByteBuf, ModifiedCraftingRecipe> PACKET_CODEC = PacketCodec.of(

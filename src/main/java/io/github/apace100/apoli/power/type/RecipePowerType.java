@@ -67,7 +67,7 @@ public class RecipePowerType extends PowerType {
         return new PowerTypeFactory<>(
             Apoli.identifier("recipe"),
             new SerializableData()
-                .add("recipe", ApoliDataTypes.DISALLOWING_POWER_CRAFTING_RECIPE),
+                .add("recipe", ApoliDataTypes.DISALLOWING_INTERNAL_CRAFTING_RECIPE),
             data -> (power, entity) -> new RecipePowerType(power, entity,
                 data.get("recipe")
             )

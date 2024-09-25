@@ -16,7 +16,6 @@ import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.Active;
 import io.github.apace100.apoli.power.type.PowerType;
-import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
 import io.github.apace100.calio.SerializationHelper;
@@ -295,19 +294,7 @@ public class ApoliDataTypes {
 		serializableData -> Recipe.PACKET_CODEC.cast()
 	);
 
-	public static SerializableDataType<CraftingRecipe> CRAFTING_RECIPE = RECIPE.comapFlatMap(
-		recipe -> recipe instanceof CraftingRecipe craftingRecipe
-			? DataResult.success(craftingRecipe)
-			: DataResult.error(() -> "Recipe is not a crafting recipe!"),
-		Function.identity()
-	);
-
-	public static SerializableDataType<CraftingRecipe> DISALLOWING_POWER_CRAFTING_RECIPE = CRAFTING_RECIPE.comapFlatMap(
-		craftingRecipe -> craftingRecipe instanceof PowerCraftingRecipe powerCraftingRecipe
-			? DataResult.error(() -> "Recipe type \"" + Registries.RECIPE_SERIALIZER.getId(powerCraftingRecipe.getSerializer()) + "\" is only used internally and cannot be used in powers!")
-			: DataResult.success(craftingRecipe),
-		Function.identity()
-	);
+	public static SerializableDataType<CraftingRecipe> DISALLOWING_INTERNAL_CRAFTING_RECIPE = RECIPE.comapFlatMap(MiscUtil::validateCraftingRecipe, Function.identity());
 
     public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, String name) {
         return condition(registry, null, name);

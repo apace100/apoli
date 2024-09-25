@@ -121,7 +121,7 @@ public record PowerCraftingRecipe(Identifier powerId, CraftingRecipe delegate) i
 
         public static final MapCodec<PowerCraftingRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Identifier.CODEC.fieldOf("power").forGetter(PowerCraftingRecipe::powerId),
-            ApoliDataTypes.DISALLOWING_POWER_CRAFTING_RECIPE.codec().fieldOf("recipe").forGetter(PowerCraftingRecipe::delegate)
+            ApoliDataTypes.DISALLOWING_INTERNAL_CRAFTING_RECIPE.codec().fieldOf("recipe").forGetter(PowerCraftingRecipe::delegate)
         ).apply(instance, PowerCraftingRecipe::new));
 
         public static final PacketCodec<RegistryByteBuf, PowerCraftingRecipe> PACKET_CODEC = PacketCodec.of(
