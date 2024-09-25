@@ -11,22 +11,23 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public class HasPowerConditionType {
 
-    public static boolean condition(ItemStack stack, @Nullable AttributeModifierSlot slot, Identifier powerId) {
+    public static boolean condition(ItemStack stack, Optional<AttributeModifierSlot> modifierSlot, Identifier powerId) {
         return stack.getOrDefault(ApoliDataComponentTypes.POWERS, ItemPowersComponent.DEFAULT)
             .stream()
             .anyMatch(entry -> entry.powerId().equals(powerId)
-                && (slot == null || entry.slot().equals(slot)));
+                && modifierSlot.map(entry.slot()::equals).orElse(true));
     }
 
     public static ConditionTypeFactory<Pair<World, ItemStack>> getFactory() {
         return new ConditionTypeFactory<>(
             Apoli.identifier("has_power"),
             new SerializableData()
-                .add("slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT)
+                .add("slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT.optional(), Optional.empty())
                 .add("power", SerializableDataTypes.IDENTIFIER),
             (data, worldAndStack) -> condition(worldAndStack.getRight(),
                 data.get("slot"),

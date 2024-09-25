@@ -12,27 +12,19 @@ import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public class PowerCountConditionType {
 
-    public static boolean condition(ItemStack stack, @Nullable AttributeModifierSlot slot, Comparison comparison, int compareTo) {
+    public static boolean condition(ItemStack stack, Optional<AttributeModifierSlot> modifierSlot, Comparison comparison, int compareTo) {
 
         ItemPowersComponent itemPowers = stack.getOrDefault(ApoliDataComponentTypes.POWERS, ItemPowersComponent.DEFAULT);
-        int powers;
+        int powerCount = modifierSlot
+            .map(itemPowers::matchingSlots)
+            .orElseGet(itemPowers::size);
 
-        if (slot != null) {
-            powers = (int) itemPowers
-                .stream()
-                .filter(entry -> entry.slot().equals(slot))
-                .count();
-        }
-
-        else {
-            powers = itemPowers.size();
-        }
-
-        return comparison.compare(powers, compareTo);
+        return comparison.compare(powerCount, compareTo);
 
     }
 
@@ -40,7 +32,7 @@ public class PowerCountConditionType {
         return new ConditionTypeFactory<>(
             Apoli.identifier("power_count"),
             new SerializableData()
-                .add("slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT)
+                .add("slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT.optional(), Optional.empty())
                 .add("comparison", ApoliDataTypes.COMPARISON)
                 .add("compare_to", SerializableDataTypes.INT),
             (data, worldAndStack) -> condition(worldAndStack.getRight(),

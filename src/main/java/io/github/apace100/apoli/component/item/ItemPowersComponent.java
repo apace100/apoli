@@ -115,6 +115,14 @@ public class ItemPowersComponent {
 
     }
 
+    public int matchingSlots(AttributeModifierSlot modifierSlot) {
+        return (int) entries
+            .stream()
+            .map(Entry::slot)
+            .filter(modifierSlot::equals)
+            .count();
+    }
+
     public boolean containsSlot(AttributeModifierSlot modifierSlot) {
         return entries
             .stream()
