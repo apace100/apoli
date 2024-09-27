@@ -37,7 +37,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.recipe.*;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.AdvancementCommand;
@@ -258,43 +257,7 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
 
-	public static SerializableDataType<Recipe<?>> RECIPE = new CompoundSerializableDataType<>(
-		new SerializableData()
-			.add("type", SerializableDataType.registry(Registries.RECIPE_SERIALIZER)),
-		serializableData -> new MapCodec<>() {
-
-			@Override
-			public <T> Stream<T> keys(DynamicOps<T> ops) {
-				return serializableData.keys(ops);
-			}
-
-			@Override
-			public <T> DataResult<Recipe<?>> decode(DynamicOps<T> ops, MapLike<T> input) {
-				return serializableData.decode(ops, input)
-					.map(recipeData -> (RecipeSerializer<?>) recipeData.get("type"))
-					.flatMap(recipeSerializer -> recipeSerializer.codec().decode(ops, input)
-						.map(Function.identity()));
-			}
-
-			@SuppressWarnings("unchecked")
-			@Override
-			public <T> RecordBuilder<T> encode(Recipe<?> input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
-
-				RecipeSerializer<Recipe<?>> recipeSerializer = (RecipeSerializer<Recipe<?>>) input.getSerializer();
-				Identifier recipeSerializerId = Objects.requireNonNull(Registries.RECIPE_SERIALIZER.getId(recipeSerializer), "Recipe serializer " + recipeSerializer + " is not registered?");
-
-				prefix.add("type", SerializableDataTypes.IDENTIFIER.write(ops, recipeSerializerId));
-				recipeSerializer.codec().encode(input, ops, prefix);
-
-				return prefix;
-
-			}
-
-		},
-		serializableData -> Recipe.PACKET_CODEC.cast()
-	);
-
-	public static SerializableDataType<CraftingRecipe> DISALLOWING_INTERNAL_CRAFTING_RECIPE = RECIPE.comapFlatMap(MiscUtil::validateCraftingRecipe, Function.identity());
+	public static SerializableDataType<CraftingRecipe> DISALLOWING_INTERNAL_CRAFTING_RECIPE = SerializableDataTypes.RECIPE.comapFlatMap(RecipeUtil::validateCraftingRecipe, Function.identity());
 
     public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, String name) {
         return condition(registry, null, name);

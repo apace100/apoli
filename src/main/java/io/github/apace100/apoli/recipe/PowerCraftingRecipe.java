@@ -34,13 +34,12 @@ public record PowerCraftingRecipe(Identifier powerId, CraftingRecipe delegate) i
             return false;
         }
 
-        RecipePowerType recipePowerType = PowerHolderComponent.KEY.maybeGet(pco.apoli$getPlayer())
-            .flatMap(component -> PowerManager.getOptional(powerId).map(component::getPowerType))
-            .filter(RecipePowerType.class::isInstance)
-            .map(RecipePowerType.class::cast)
-            .orElse(null);
+        boolean matchingPowerType = PowerHolderComponent.KEY.maybeGet(pco.apoli$getPlayer())
+            .flatMap(component -> PowerManager.getOptional(powerId()).map(component::getPowerType))
+            .map(RecipePowerType.class::isInstance)
+            .orElse(false);
 
-        return recipePowerType != null && world.getRecipeManager().get(powerId)
+        return matchingPowerType && world.getRecipeManager().get(powerId())
             .filter(entry -> Objects.equals(this, entry.value()))
             .map(entry -> delegate().matches(input, world))
             .orElse(false);

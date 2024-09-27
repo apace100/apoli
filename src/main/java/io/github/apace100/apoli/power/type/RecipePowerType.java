@@ -21,15 +21,15 @@ import java.util.Map;
 
 public class RecipePowerType extends PowerType {
 
-    private final RecipeEntry<CraftingRecipe> recipeEntry;
+    private final CraftingRecipe recipe;
 
     public RecipePowerType(Power power, LivingEntity entity, CraftingRecipe recipe) {
         super(power, entity);
-        this.recipeEntry = new RecipeEntry<>(power.getId(), new PowerCraftingRecipe(power.getId(), recipe));
+        this.recipe = recipe;
     }
 
-    public RecipeEntry<CraftingRecipe> getRecipeEntry() {
-        return recipeEntry;
+    public CraftingRecipe getRecipe() {
+        return recipe;
     }
 
     public static void registerPowerRecipes() {
@@ -48,11 +48,11 @@ public class RecipePowerType extends PowerType {
                 }
 
                 Identifier powerId = power.getId();
-                RecipeEntry<CraftingRecipe> recipeEntry = recipePowerType.getRecipeEntry();
+                CraftingRecipe craftingRecipe = recipePowerType.getRecipe();
 
                 //  Only register the power recipe if no other recipes have the same ID
                 if (!recipeEntriesById.containsKey(powerId)) {
-                    recipeEntriesById.put(powerId, recipeEntry);
+                    recipeEntriesById.put(powerId, new RecipeEntry<>(powerId, new PowerCraftingRecipe(powerId, craftingRecipe)));
                 }
 
             }

@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.recipe.ModifiedCraftingRecipe;
-import io.github.apace100.apoli.util.MiscUtil;
+import io.github.apace100.apoli.util.RecipeUtil;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.input.RecipeInput;
 import net.minecraft.util.Identifier;
@@ -38,7 +38,7 @@ public abstract class RecipeManagerMixin {
 
     @ModifyExpressionValue(method = "apply(Ljava/util/Map;Lnet/minecraft/resource/ResourceManager;Lnet/minecraft/util/profiler/Profiler;)V", at = @At(value = "NEW", target = "(Lnet/minecraft/util/Identifier;Lnet/minecraft/recipe/Recipe;)Lnet/minecraft/recipe/RecipeEntry;"))
     private RecipeEntry<?> apoli$validateRecipe(RecipeEntry<?> original, @Local Recipe<?> recipe) {
-        return MiscUtil.validateRecipe(recipe)
+        return RecipeUtil.validateRecipe(recipe)
             .map(r -> original)
             .getOrThrow();
     }

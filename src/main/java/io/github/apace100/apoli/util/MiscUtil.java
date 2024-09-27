@@ -1,8 +1,5 @@
 package io.github.apace100.apoli.util;
 
-import com.mojang.serialization.DataResult;
-import io.github.apace100.apoli.recipe.ModifiedCraftingRecipe;
-import io.github.apace100.apoli.recipe.PowerCraftingRecipe;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -19,9 +16,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.recipe.CraftingRecipe;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -33,7 +27,6 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -225,27 +218,6 @@ public final class MiscUtil {
         PlayerInventory inventory = player.getInventory();
         return inventory.getOccupiedSlotWithRoomForStack(stack) != -1
             || inventory.getEmptySlot() != -1;
-    }
-
-    public static <R extends Recipe<?>> DataResult<R> validateRecipe(@NotNull R recipe) {
-        return switch (recipe) {
-            case ModifiedCraftingRecipe modifiedCraftingRecipe ->
-                createInternalOnlyError(modifiedCraftingRecipe.getSerializer());
-            case PowerCraftingRecipe powerCraftingRecipe ->
-                createInternalOnlyError(powerCraftingRecipe.getSerializer());
-            default ->
-                DataResult.success(recipe);
-        };
-    }
-
-    public static <R extends Recipe<?>> DataResult<CraftingRecipe> validateCraftingRecipe(@NotNull R recipe) {
-        return validateRecipe(recipe).flatMap(r -> r instanceof CraftingRecipe craftingRecipe
-            ? DataResult.success(craftingRecipe)
-            : DataResult.error(() -> "Recipe is not a crafting recipe!"));
-    }
-
-    private static <R> DataResult<R> createInternalOnlyError(RecipeSerializer<?> serializer) {
-        return DataResult.error(() -> "Recipe type \"" + Registries.RECIPE_SERIALIZER.getId(serializer) + "\" is only used internally and cannot be used manually!");
     }
 
 }
