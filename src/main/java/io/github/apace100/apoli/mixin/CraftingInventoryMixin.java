@@ -7,23 +7,31 @@ import net.minecraft.inventory.CraftingInventory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
+import java.util.Collection;
+import java.util.LinkedList;
+
 @Mixin(CraftingInventory.class)
 public abstract class CraftingInventoryMixin implements PowerCraftingInventory {
 
     @Unique
-    private PowerType apoli$CachedPowerType;
+    private Collection<? extends PowerType> apoli$CachedPowerTypes = new LinkedList<>();
 
     @Unique
     private PlayerEntity apoli$cachedPlayer;
 
     @Override
-    public void apoli$setPowerType(PowerType powerType) {
-        apoli$CachedPowerType = powerType;
+    public Collection<? extends PowerType> apoli$getPowerTypes() {
+        return apoli$CachedPowerTypes;
     }
 
     @Override
-    public PowerType apoli$getPowerType() {
-        return apoli$CachedPowerType;
+    public void apoli$setPowerTypes(Collection<? extends PowerType> powerTypes) {
+        apoli$CachedPowerTypes = powerTypes;
+    }
+
+    @Override
+    public CraftingInventory apoli$getInventory() {
+        return (CraftingInventory) (Object) this;
     }
 
     @Override

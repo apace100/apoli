@@ -81,7 +81,7 @@ public class PreventItemPickupPowerType extends PowerType implements Prioritized
         boolean prevented = false;
         for (int i = pippci.getMaxPriority(); i >= pippci.getMinPriority(); i--) {
 
-            if (!pippci.hasPowers(i)) {
+            if (!pippci.hasPowerTypes(i)) {
                 continue;
             }
 

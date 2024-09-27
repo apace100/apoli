@@ -1,10 +1,7 @@
 package io.github.apace100.apoli.integration;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.type.EntitySetPowerType;
-import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
-import io.github.apace100.apoli.power.type.ModifyTypeTagPowerType;
-import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.power.type.*;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
@@ -21,6 +18,8 @@ public class PowerIntegration {
 
         ServerLifecycleEvents.START_DATA_PACK_RELOAD.register(ModifyTypeTagPowerType::resetTagCache);
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(ModifyTypeTagPowerType::sendTagCache);
+
+        PostPowerReloadCallback.EVENT.register(RecipePowerType::registerPowerRecipes);
 
     }
 

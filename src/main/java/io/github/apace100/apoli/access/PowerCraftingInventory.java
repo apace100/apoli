@@ -1,14 +1,22 @@
 package io.github.apace100.apoli.access;
 
 import io.github.apace100.apoli.power.type.PowerType;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.CraftingInventory;
 
-public interface PowerCraftingInventory {
+import java.util.Collection;
 
-    void apoli$setPowerType(PowerType powerType);
-    PowerType apoli$getPowerType();
+public interface PowerCraftingInventory extends PowerCraftingObject {
 
-    void apoli$setPlayer(PlayerEntity player);
-    PlayerEntity apoli$getPlayer();
+    Collection<? extends PowerType> apoli$getPowerTypes();
+
+    void apoli$setPowerTypes(Collection<? extends PowerType> powerType);
+
+    default CraftingInventory apoli$getInventory() {
+        return null;
+    }
+
+    default void apoli$setInventory(CraftingInventory inventory) {
+
+    }
 
 }

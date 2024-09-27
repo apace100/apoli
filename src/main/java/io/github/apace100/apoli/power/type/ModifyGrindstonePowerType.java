@@ -66,18 +66,10 @@ public class ModifyGrindstonePowerType extends PowerType {
         return bottomItemCondition == null || bottomItemCondition.test(new Pair<>(entity.getWorld(), stack));
     }
 
-    public void applyAfterGrindingItemAction(StackReference outputStackRef) {
-
-        if (lateItemAction != null) {
-            lateItemAction.accept(new Pair<>(entity.getWorld(), outputStackRef));
-        }
-
-    }
-
-    public boolean doesApply(ItemStack topStack, ItemStack buttomStack, ItemStack originalOutput, @Nullable BlockPos grindstonePos) {
+    public boolean doesApply(ItemStack topStack, ItemStack bottomStack, ItemStack originalOutput, @Nullable BlockPos grindstonePos) {
         World world = entity.getWorld();
         return (topItemCondition == null || topItemCondition.test(new Pair<>(world, topStack)))
-            && (bottomItemCondition == null || bottomItemCondition.test(new Pair<>(world, buttomStack)))
+            && (bottomItemCondition == null || bottomItemCondition.test(new Pair<>(world, bottomStack)))
             && (outputItemCondition == null || outputItemCondition.test(new Pair<>(world, originalOutput)))
             && (blockCondition == null || (grindstonePos != null && blockCondition.test(new CachedBlockPosition(world, grindstonePos, true))));
     }
@@ -103,6 +95,11 @@ public class ModifyGrindstonePowerType extends PowerType {
 
     }
 
+    public void executeActions(@Nullable BlockPos pos, StackReference outputStackRef) {
+        executeActions(pos);
+        applyAfterGrindingItemAction(outputStackRef);
+    }
+
     public void executeActions(@Nullable BlockPos pos) {
 
         if (entityAction != null) {
@@ -111,6 +108,14 @@ public class ModifyGrindstonePowerType extends PowerType {
 
         if (pos != null && blockAction != null) {
             blockAction.accept(Triple.of(entity.getWorld(), pos, Direction.UP));
+        }
+
+    }
+
+    public void applyAfterGrindingItemAction(StackReference outputStackRef) {
+
+        if (lateItemAction != null) {
+            lateItemAction.accept(new Pair<>(entity.getWorld(), outputStackRef));
         }
 
     }

@@ -5,12 +5,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public interface Prioritized<T extends PowerType & Prioritized<T>> {
 
@@ -42,16 +40,25 @@ public interface Prioritized<T extends PowerType & Prioritized<T>> {
             return maxPriority;
         }
 
-        public boolean hasPowers(int priority) {
+        public boolean hasPowerTypes(int priority) {
             return buckets.containsKey(priority);
         }
 
-        public List<T> getPowers(int priority) {
+        public List<T> getPowerTypes(int priority) {
             return buckets.getOrDefault(priority, new LinkedList<>());
         }
 
+        public List<T> getAllPowerTypes() {
+            return buckets.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey(Integer::compareTo))
+                .map(Map.Entry::getValue)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toCollection(LinkedList::new));
+        }
+
         public void forEach(int priority, Consumer<T> action) {
-            this.getPowers(priority).forEach(action);
+            this.getPowerTypes(priority).forEach(action);
         }
 
         public void add(T t) {

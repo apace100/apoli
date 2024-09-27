@@ -5,15 +5,12 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.apace100.apoli.access.PowerCraftingInventory;
 import io.github.apace100.apoli.access.ScreenHandlerUsabilityOverride;
-import io.github.apace100.apoli.access.SlotState;
 import io.github.apace100.apoli.power.type.ModifyCraftingPowerType;
-import io.github.apace100.apoli.util.InventoryUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.CraftingResultInventory;
 import net.minecraft.inventory.RecipeInputInventory;
-import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.RecipeEntry;
@@ -22,7 +19,6 @@ import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.screen.slot.CraftingResultSlot;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +31,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.LinkedList;
+
 @Mixin(CraftingScreenHandler.class)
 public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHandler<CraftingRecipeInput, CraftingRecipe> implements ScreenHandlerUsabilityOverride {
 
@@ -42,6 +40,7 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
     @Final
     private RecipeInputInventory input;
 
+    @Shadow @Final private PlayerEntity player;
     @Unique
     private boolean apoli$canUse = false;
 
@@ -74,7 +73,7 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
     private static void apoli$clearPowerCraftingInventory(ScreenHandler handler, World world, PlayerEntity player, RecipeInputInventory craftingInventory, CraftingResultInventory resultInventory, @Nullable RecipeEntry<CraftingRecipe> recipe, CallbackInfo ci) {
 
         if (craftingInventory instanceof PowerCraftingInventory pci) {
-            pci.apoli$setPowerType(null);
+            pci.apoli$setPowerTypes(new LinkedList<>());
         }
 
     }
@@ -84,34 +83,9 @@ public abstract class CraftingScreenHandlerMixin extends AbstractRecipeScreenHan
         return original || this.apoli$canUse();
     }
 
-    @ModifyVariable(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;", shift = At.Shift.AFTER), ordinal = 1)
-    private ItemStack apoli$modifyResultStackOnQuickMove(ItemStack itemStack2, PlayerEntity player, int slotIndex, @Local Slot slot) {
-
-        if (!(input instanceof PowerCraftingInventory pci && pci.apoli$getPowerType() instanceof ModifyCraftingPowerType mcp)) {
-            return itemStack2;
-        }
-
-        //  Check if the player's inventory have room for the item stack
-        int availableSlotIndex = player.getInventory().getOccupiedSlotWithRoomForStack(itemStack2);
-
-        //  If the player's inventory don't have room for the item stack, check for empty slots
-        if (availableSlotIndex == -1) {
-            availableSlotIndex = player.getInventory().getEmptySlot();
-        }
-
-        StackReference reference = InventoryUtil.createStackReference(itemStack2);
-
-        //  If there's either room for the item stack in the player's inventory or if the item stack
-        //  can be inserted into the player's inventory, execute the item action
-        if (availableSlotIndex != -1 && slot instanceof CraftingResultSlot) {
-
-            ((SlotState) slot).apoli$setState(ModifyCraftingPowerType.MODIFIED_RESULT_STACK);
-            mcp.applyAfterCraftingItemAction(reference);
-
-        }
-
-        return reference.get();
-
+    @ModifyVariable(method = "quickMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/CraftingScreenHandler;insertItem(Lnet/minecraft/item/ItemStack;IIZ)Z", ordinal = 0), ordinal = 1)
+    private ItemStack apoli$modifyResultStackOnQuickMove(ItemStack original, PlayerEntity player, int slotId, @Local Slot slot) {
+        return ModifyCraftingPowerType.executeAfterCraftingAction(player, input, slot, original);
     }
 
 }

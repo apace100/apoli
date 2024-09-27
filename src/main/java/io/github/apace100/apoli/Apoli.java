@@ -20,11 +20,10 @@ import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.type.PowerTypes;
+import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
 import io.github.apace100.apoli.registry.ApoliClassData;
 import io.github.apace100.apoli.util.ApoliConfig;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
-import io.github.apace100.apoli.util.ModifiedCraftingRecipe;
-import io.github.apace100.apoli.util.PowerRestrictedCraftingRecipe;
 import io.github.apace100.apoli.util.modifier.ModifierOperations;
 import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.util.CalioResourceConditions;
@@ -38,8 +37,6 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
@@ -93,9 +90,6 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 			ResourceCommand.register(dispatcher);
 		});
 
-		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("power_restricted"), PowerRestrictedCraftingRecipe.SERIALIZER);
-		Registry.register(Registries.RECIPE_SERIALIZER, Apoli.identifier("modified"), ModifiedCraftingRecipe.SERIALIZER);
-
 		ApoliLootFunctionTypes.register();
 		ApoliLootConditionTypes.register();
 
@@ -103,6 +97,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 
 		ModifierOperations.registerAll();
 		ApoliDataComponentTypes.register();
+		ApoliRecipeSerializers.register();
 
 		EntityConditionTypes.register();
 		BiEntityConditionTypes.register();
@@ -130,6 +125,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		Criteria.register(GainedPowerCriterion.ID.toString(), GainedPowerCriterion.INSTANCE);
 
 		LOGGER.info("Apoli " + VERSION + " has initialized. Ready to power up your game!");
+
 	}
 
 	public static Identifier identifier(String path) {
