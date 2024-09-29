@@ -218,8 +218,8 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             Power newPower = get(powerId);
             PowerType oldPowerType = component.getPowerType(oldPower);
 
-            JsonElement oldPowerJson = Power.CODEC.encodeStart(jsonOps, oldPower).getOrThrow(JsonParseException::new);
-            JsonElement newPowerJson = Power.CODEC.encodeStart(jsonOps, newPower).getOrThrow(JsonParseException::new);
+            JsonElement oldPowerJson = Power.DATA_TYPE.write(jsonOps, oldPower).getOrThrow(JsonParseException::new);
+            JsonElement newPowerJson = Power.DATA_TYPE.write(jsonOps, newPower).getOrThrow(JsonParseException::new);
 
             if (oldPowerJson.equals(newPowerJson)) {
                 continue;
@@ -263,7 +263,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         powerJson.addProperty("id", powerId.toString());
 
         PrePowerLoadCallback.EVENT.invoker().onPrePowerLoad(powerId, powerJson);
-        Power basePower = Power.CODEC.parse(wrapperLookup.getOps(JsonOps.INSTANCE), powerJson).getOrThrow(JsonParseException::new);
+        Power basePower = Power.DATA_TYPE.read(wrapperLookup.getOps(JsonOps.INSTANCE), powerJson).getOrThrow(JsonParseException::new);
 
         if (basePower.isMultiple()) {
 
@@ -330,7 +330,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         else {
 
             subPowerJson.addProperty("id", subPowerId.toString());
-            Power basePower = Power.CODEC.parse(wrapperLookup.getOps(JsonOps.INSTANCE), subPowerJson).getOrThrow(JsonParseException::new);
+            Power basePower = Power.DATA_TYPE.read(wrapperLookup.getOps(JsonOps.INSTANCE), subPowerJson).getOrThrow(JsonParseException::new);
 
             SubPower subPower = switch (this.readPower(packName, new SubPower(superPowerId, name, basePower), subPowerJson)) {
                 case SubPower selfSubPower ->
@@ -677,7 +677,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             || field.startsWith("$")
             || FIELDS_TO_IGNORE.contains(field)
             || ADDITIONAL_DATA.containsKey(field)
-            || Power.DATA.containsField(field);
+            || Power.DATA_TYPE.serializableData().containsField(field);
     }
 
 }

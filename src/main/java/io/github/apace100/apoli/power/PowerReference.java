@@ -1,10 +1,8 @@
 package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,12 +11,7 @@ import java.util.Optional;
 public class PowerReference extends Power {
 
     public PowerReference(Identifier id) {
-        super(null, DATA.instance()
-            .set("id", id)
-            .set(TYPE_KEY, PowerTypes.SIMPLE)
-            .set("name", Text.empty())
-            .set("description", Text.empty())
-            .set("hidden", true));
+        super(id, null, null, null, true);
     }
 
     public static PowerReference of(String namespace, String path) {

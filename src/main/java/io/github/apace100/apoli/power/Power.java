@@ -4,106 +4,176 @@ import com.mojang.serialization.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
-import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.apoli.util.PowerPayloadType;
+import io.github.apace100.apoli.power.type.PowerTypes;
+import io.github.apace100.apoli.util.TextUtil;
 import io.github.apace100.calio.Calio;
-import io.github.apace100.calio.data.*;
+import io.github.apace100.calio.data.CompoundSerializableDataType;
+import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
+import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.Validatable;
+import io.netty.handler.codec.DecoderException;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class Power implements Validatable {
 
-    public static final String TYPE_KEY = "type";
+    public static final CompoundSerializableDataType<Power> DATA_TYPE = new CompoundSerializableDataType<>(
+        new SerializableData()
+            .add("id", SerializableDataTypes.IDENTIFIER)
+            .add("type", ApoliDataTypes.POWER_TYPE_FACTORY)
+            .add("name", SerializableDataTypes.TEXT, null)
+            .add("description", SerializableDataTypes.TEXT, null)
+            .add("hidden", SerializableDataTypes.BOOLEAN, false),
+        serializableData -> {
+            boolean root = serializableData.isRoot();
+            return MapCodec.recursive("Power", self -> new MapCodec<>() {
 
-    public static final SerializableData DATA = new SerializableData()
-        .add("id", SerializableDataTypes.IDENTIFIER)
-        .add(TYPE_KEY, ApoliDataTypes.POWER_TYPE_FACTORY)
-        .addFunctionedDefault("name", ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT, data -> createTranslatable(data.getId("id"), "name"))
-        .addFunctionedDefault("description", ApoliDataTypes.DEFAULT_TRANSLATABLE_TEXT, data -> createTranslatable(data.getId("id"), "description"))
-        .add("hidden", SerializableDataTypes.BOOLEAN, false);
+				@Override
+				public <T> Stream<T> keys(DynamicOps<T> ops) {
+					return serializableData.keys(ops);
+				}
 
-    public static final Codec<Power> CODEC = Codec.recursive("Power", powerCodec -> new MapCodec<Power>() {
+				@Override
+				public <T> DataResult<Power> decode(DynamicOps<T> ops, MapLike<T> input) {
 
-        @Override
-        public <T> DataResult<Power> decode(DynamicOps<T> ops, MapLike<T> input) {
+                    DataResult<SerializableData.Instance> powerDataResult = serializableData.decode(ops, input);
+                    DataResult<PowerTypeFactory<?>.Instance> instanceResult = powerDataResult
+                        .map(powerData -> (PowerTypeFactory<?>) powerData.get("type"))
+                        .flatMap(factory -> factory.getSerializableData().setRoot(root).decode(ops, input)
+                            .map(factory::fromData));
 
-            DataResult<SerializableData.Instance> powerDataResult = DATA.decode(ops, input);
-            DataResult<PowerTypeFactory<?>> factoryResult = powerDataResult.map(powerData -> powerData.get(TYPE_KEY));
+                    return powerDataResult
+                        .flatMap(powerData -> instanceResult
+                            .map(instance -> new Power(instance, powerData)));
 
-            return powerDataResult
-                .flatMap(powerData -> factoryResult
-                    .flatMap(factory -> factory.getSerializableData().decode(ops, input)
-                        .map(factory::fromData)
-                        .map(instance -> new Power(instance, powerData))));
+				}
 
-        }
+				@Override
+				public <T> RecordBuilder<T> encode(Power input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 
-        @Override
-        public <T> RecordBuilder<T> encode(Power input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
+                    PowerTypeFactory<?>.Instance instance = input.getFactoryInstance();
+					prefix.add("type", ApoliDataTypes.POWER_TYPE_FACTORY.write(ops, instance.getFactory()));
 
-            PowerTypeFactory<?>.Instance instance = input.getFactoryInstance();
-
-            DATA.getFields().forEach((name, field) -> {
-
-                prefix.add(name, field.write(ops, input.data.get(name)));
-
-                if (name.equals(TYPE_KEY)) {
-
-                    if (input instanceof MultiplePower multiplePower) {
-                        multiplePower
-                            .getSubPowers()
-                            .forEach(subPower -> prefix.add(subPower.getSubName(), powerCodec.encodeStart(ops, subPower)));
-                    }
+					if (input instanceof MultiplePower multiplePower) {
+						multiplePower
+							.getSubPowers()
+							.forEach(subPower -> prefix.add(subPower.getSubName(), self.encodeStart(ops, subPower)));
+					}
 
                     instance.getSerializableData().encode(instance.getData(), ops, prefix);
 
+					prefix.add("name", SerializableDataTypes.TEXT.write(ops, input.getName()));
+					prefix.add("description", SerializableDataTypes.TEXT.write(ops, input.getDescription()));
+					prefix.add("hidden", ops.createBoolean(input.isHidden()));
+
+					return prefix;
+
+				}
+
+			});
+        },
+        serializableData -> PacketCodec.ofStatic(
+			(buf, value) -> {
+
+                PowerTypeFactory<?>.Instance instance = value.getFactoryInstance();
+                if (instance == null) {
+                    return;
                 }
 
-            });
+                buf.writeIdentifier(value.getId());
+                serializableData.send(buf, serializableData.instance()
+                    .set("id", value.getId())
+                    .set("type", instance.getFactory())
+                    .set("name", value.getName())
+                    .set("description", value.getDescription())
+                    .set("hidden", value.isHidden()));
 
-            return prefix;
+                instance.getSerializableData().send(buf, instance.getData());
+                switch (value) {
+                    case MultiplePower multiplePower -> {
+                        buf.writeByte(0);
+                        MultiplePower.PACKET_CODEC.apply(multiplePower).encode(buf, multiplePower);
+                    }
+                    case SubPower subPower -> {
+                        buf.writeByte(1);
+                        SubPower.PACKET_CODEC.apply(subPower).encode(buf, subPower);
+                    }
+                    default ->
+                        buf.writeByte(Byte.MAX_VALUE);
+                }
 
-        }
+            },
+            buf -> {
 
-        @Override
-        public <T> Stream<T> keys(DynamicOps<T> ops) {
-            return DATA.keys(ops);
-        }
+                Identifier powerId = buf.readIdentifier();
+                SerializableData.Instance powerData = serializableData.receive(buf);
 
-    }.codec());
+                try {
 
-    protected final SerializableData.Instance data;
+                    PowerTypeFactory<?> factory = powerData.get("type");
+                    Power basePower = new Power(factory.receive(buf), powerData);
 
-    private final PowerTypeFactory<? extends PowerType>.Instance factoryInstance;
+                    return switch (buf.readByte()) {
+                        case 0 ->
+                            MultiplePower.PACKET_CODEC.apply(basePower).decode(buf);
+                        case 1 ->
+                            SubPower.PACKET_CODEC.apply(basePower).decode(buf);
+                        default ->
+                            basePower;
+                    };
+
+                }
+
+                catch (Exception e) {
+                    throw new DecoderException("Couldn't receive power \"" + powerId + "\": " + e);
+                }
+
+            }
+        )
+    );
+
     private final Identifier id;
+    private final PowerTypeFactory<? extends PowerType>.Instance factoryInstance;
 
     private final Text name;
     private final Text description;
 
     private final boolean hidden;
 
-    protected Power(PowerTypeFactory<? extends PowerType>.Instance factoryInstance, SerializableData.Instance data) {
+    protected Power(Identifier id, PowerTypeFactory<? extends PowerType>.Instance factoryInstance, @Nullable Text name, @Nullable Text description, boolean hidden) {
+
+        this.id = id;
+        String baseTranslationKey = Util.createTranslationKey("power", id);
+
         this.factoryInstance = factoryInstance;
-        this.data = data;
-        this.id = data.getId("id");
-        this.name = data.get("name");
-        this.description = data.get("description");
-        this.hidden = data.getBoolean("hidden");
+        this.name = TextUtil.forceTranslatable(baseTranslationKey + ".name", Optional.ofNullable(name));
+        this.description = TextUtil.forceTranslatable(baseTranslationKey + ".description", Optional.ofNullable(description));
+        this.hidden = hidden;
+
+    }
+
+    protected Power(PowerTypeFactory<?>.Instance instance, SerializableData.Instance data) {
+        this(data.get("id"), instance, data.get("name"), data.get("description"), data.get("hidden"));
+    }
+
+    protected Power(Power basePower) {
+        this(basePower.getId(), basePower.getFactoryInstance(), basePower.getName(), basePower.getDescription(), basePower.isHidden());
     }
 
     @Override
@@ -113,7 +183,7 @@ public class Power implements Validatable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(getId());
     }
 
     @Override
@@ -133,16 +203,11 @@ public class Power implements Validatable {
 
     }
 
-    @Override
-    public String toString() {
-        return "Power{data=" + data + ", factoryInstance=" + factoryInstance + '}';
-    }
-
     public Identifier getId() {
         return id;
     }
 
-    public PowerTypeFactory<? extends PowerType>.Instance getFactoryInstance() {
+    public PowerTypeFactory<?>.Instance getFactoryInstance() {
         return factoryInstance;
     }
 
@@ -155,12 +220,12 @@ public class Power implements Validatable {
             || this.hidden;
     }
 
-    public final boolean isMultiple() {
+    public boolean isMultiple() {
         return this.getFactoryInstance().getFactory() == PowerTypes.MULTIPLE
             || this instanceof MultiplePower;
     }
 
-    public final boolean isSubPower() {
+    public boolean isSubPower() {
         return this instanceof SubPower;
     }
 
@@ -189,82 +254,6 @@ public class Power implements Validatable {
 
     public MutableText getDescription() {
         return description.copy();
-    }
-
-    public PowerPayloadType payloadType() {
-        return PowerPayloadType.POWER;
-    }
-
-    public void send(RegistryByteBuf buf) {
-
-        buf.writeEnumConstant(this.payloadType());
-        buf.writeIdentifier(this.getId());
-
-        if (this.getFactoryInstance() != null) {
-
-            buf.writeBoolean(true);
-            this.getFactoryInstance().send(buf);
-
-            SerializableDataTypes.TEXT.send(buf, this.getName());
-            SerializableDataTypes.TEXT.send(buf, this.getDescription());
-
-            buf.writeBoolean(this.isHidden());
-
-        }
-
-        else {
-            buf.writeBoolean(false);
-        }
-
-    }
-
-    public static Power receive(RegistryByteBuf buf) {
-
-        PowerPayloadType payloadType = buf.readEnumConstant(PowerPayloadType.class);
-        Identifier id = buf.readIdentifier();
-
-        try {
-
-            SerializableData.Instance data = DATA.instance().set("id", id);
-            if (buf.readBoolean()) {
-
-                PowerTypeFactory<?>.Instance powerType = ApoliRegistries.POWER_FACTORY
-                    .getOrEmpty(buf.readIdentifier())
-                    .orElseThrow()
-                    .receive(buf);
-
-                data.set(TYPE_KEY, powerType.getFactory());
-                data.set("name", SerializableDataTypes.TEXT.receive(buf));
-                data.set("description", SerializableDataTypes.TEXT.receive(buf));
-                data.set("hidden", buf.readBoolean());
-
-                Power basePower = new Power(powerType, data);
-                return switch (payloadType) {
-                    case MULTIPLE_POWER ->
-                        new MultiplePower(basePower, buf.readCollection(LinkedHashSet::new, PacketByteBuf::readIdentifier));
-                    case SUB_POWER ->
-                        new SubPower(buf.readIdentifier(), buf.readString(), basePower);
-                    default ->
-                        basePower;
-                };
-
-            }
-
-            else {
-                throw new IllegalStateException("Missing power type!");
-            }
-
-        }
-
-        catch (Exception e) {
-            throw new IllegalStateException("Couldn't receive power \"" + id + "\": " + e.getMessage());
-        }
-
-    }
-
-    private static Text createTranslatable(Identifier id, String type) {
-        String translationKey = Util.createTranslationKey("power", id) + "." + type;
-        return Text.translatable(translationKey);
     }
 
     public record Entry(PowerTypeFactory<?> typeFactory, PowerReference power, @Nullable NbtElement nbtData, List<Identifier> sources) {

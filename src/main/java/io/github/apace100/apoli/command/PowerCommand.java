@@ -474,7 +474,7 @@ public class PowerCommand {
 		ServerCommandSource source = context.getSource();
 		Power power = PowerArgumentType.getPower(context, "power");
 
-		JsonElement powerJson = Power.CODEC.encodeStart(source.getRegistryManager().getOps(JsonOps.INSTANCE), power).getOrThrow();
+		JsonElement powerJson = Power.DATA_TYPE.write(source.getRegistryManager().getOps(JsonOps.INSTANCE), power).getOrThrow();
 		int size = indentSpecified ? IntegerArgumentType.getInteger(context, "indent") : 4;
 
 		source.sendFeedback(() -> new JsonTextFormatter(size).apply(powerJson), false);

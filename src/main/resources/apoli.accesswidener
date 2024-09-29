@@ -24,3 +24,6 @@ accessible class net/minecraft/screen/slot/ArmorSlot
 accessible class net/minecraft/client/MinecraftClient$LoadingContext
 accessible method net/minecraft/registry/entry/RegistryEntryList$ListBacked getEntries ()Ljava/util/List;
 accessible class net/minecraft/registry/tag/TagGroupLoader$TagDependencies
+extendable method net/minecraft/text/TranslatableTextContent updateTranslations ()V
+accessible field net/minecraft/text/TranslatableTextContent languageCache Lnet/minecraft/util/Language;
+accessible field net/minecraft/text/TranslatableTextContent translations Ljava/util/List;
