@@ -243,7 +243,33 @@ public class ApoliDataTypes {
     public static final SerializableDataType<GameMode> GAME_MODE = SerializableDataType.enumValue(GameMode.class);
 
     //  This is for keeping backwards compatibility to fields that used to accept strings as translation keys
-    public static final SerializableDataType<Text> DEFAULT_TRANSLATABLE_TEXT = SerializableDataType.of(TextCodecs.CODEC, TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC);
+    public static final SerializableDataType<Text> DEFAULT_TRANSLATABLE_TEXT = SerializableDataType.of(
+		new Codec<>() {
+
+			@Override
+			public <T> DataResult<com.mojang.datafixers.util.Pair<Text, T>> decode(DynamicOps<T> ops, T input) {
+
+				DataResult<String> inputString = ops.getStringValue(input);
+				if (inputString.isSuccess()) {
+					return inputString
+						.map(Text::translatable)
+						.map(text -> com.mojang.datafixers.util.Pair.of(text, input));
+				}
+
+				else {
+					return SerializableDataTypes.TEXT.codec().decode(ops, input);
+				}
+
+			}
+
+			@Override
+			public <T> DataResult<T> encode(Text input, DynamicOps<T> ops, T prefix) {
+				return SerializableDataTypes.TEXT.codec().encode(input, ops, prefix);
+			}
+
+		},
+		TextCodecs.UNLIMITED_REGISTRY_PACKET_CODEC
+	);
   
     public static final SerializableDataType<StackClickPhase> STACK_CLICK_PHASE = SerializableDataType.enumValue(StackClickPhase.class);
 
