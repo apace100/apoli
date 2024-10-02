@@ -12,8 +12,6 @@
 		"ArmorSlotMixin",
 		"ArmorStandEntityMixin",
 		"AttributeContainerMixin",
-		"BiomeBuilderMixin",
-		"BiomeMixin",
 		"BlockCollisionSpliteratorMixin",
 		"BlockItemMixin",
 		"ComponentSubPredicateMixin",

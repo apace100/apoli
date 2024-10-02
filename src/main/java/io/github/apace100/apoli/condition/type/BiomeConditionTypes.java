@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.BiomeWeatherAccess;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.biome.InTagConditionType;
 import io.github.apace100.apoli.condition.type.biome.PrecipitationConditionType;
@@ -25,7 +24,7 @@ public class BiomeConditionTypes {
 
     public static void register() {
         MetaConditionTypes.register(ApoliDataTypes.BIOME_CONDITION, BiomeConditionTypes::register);
-        register(createSimpleFactory(Apoli.identifier("high_humidity"), biomeEntry -> ((BiomeWeatherAccess) (Object) biomeEntry.value()).apoli$getDownfall() > 0.85F));
+        register(createSimpleFactory(Apoli.identifier("high_humidity"), biomeEntry -> biomeEntry.value().weather.downfall() > 0.85F));
         register(TemperatureConditionType.getFactory());
         register(PrecipitationConditionType.getFactory());
         register(InTagConditionType.getFactory());
