@@ -92,7 +92,7 @@ public class ItemPowersComponent {
 
         for (Entry entry : entries) {
 
-            Power power = PowerManager.getOptional(entry.powerId()).orElse(null);
+            Power power = PowerManager.getNullable(entry.powerId());
             if (power == null || entry.hidden() || !entry.slot().equals(modifierSlot)) {
                 continue;
             }
@@ -176,7 +176,7 @@ public class ItemPowersComponent {
     public record Entry(Identifier powerId, AttributeModifierSlot slot, boolean hidden, boolean negative) {
 
         public static final MapCodec<Entry> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            PowerManager.VALIDATING_CODEC.fieldOf("power").forGetter(Entry::powerId),
+            Identifier.CODEC.fieldOf("power").forGetter(Entry::powerId),
             AttributeModifierSlot.CODEC.fieldOf("slot").forGetter(Entry::slot),
             Codec.BOOL.optionalFieldOf("hidden", false).forGetter(Entry::hidden),
             Codec.BOOL.optionalFieldOf("negative", false).forGetter(Entry::negative)

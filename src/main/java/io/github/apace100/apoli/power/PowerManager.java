@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.power;
 
 import com.google.gson.*;
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import io.github.apace100.apoli.Apoli;
@@ -9,14 +8,16 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowersS2CPacket;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.CalioServer;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
-import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -44,12 +45,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public class PowerManager extends IdentifiableMultiJsonDataLoader implements IdentifiableResourceReloadListener {
-
-    public static final Codec<Identifier> VALIDATING_CODEC = Identifier.CODEC.comapFlatMap(id -> contains(id) ? DataResult.success(id) : DataResult.error(() -> "Couldn't get power from ID \"" + id + "\", as it wasn't registered!"), Function.identity());
 
     public static final Set<Identifier> DEPENDENCIES = new HashSet<>();
     public static final Identifier ID = Apoli.identifier("powers");
@@ -564,23 +562,22 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     }
 
     public static DataResult<Power> getResult(Identifier id) {
-
-        try {
-            return DataResult.success(get(id));
-        }
-
-        catch (Exception e) {
-            return DataResult.error(e::getMessage);
-        }
-
+        return contains(id)
+            ? DataResult.success(POWERS_BY_ID.get(id))
+            : DataResult.error(() -> "Couldn't get power from ID \"" + id + "\", as it wasn't registered!");
     }
 
     public static Optional<Power> getOptional(Identifier id) {
-        return Optional.ofNullable(POWERS_BY_ID.get(id));
+        return getResult(id).result();
+    }
+
+    @Nullable
+    public static Power getNullable(Identifier id) {
+        return POWERS_BY_ID.get(id);
     }
 
     public static Power get(Identifier id) {
-        return getOptional(id).orElseThrow(() -> new IllegalArgumentException("Couldn't get power from ID \"" + id + "\", as it wasn't registered!"));
+        return getResult(id).getOrThrow();
     }
 
     public static Set<Map.Entry<Identifier, Power>> entrySet() {
