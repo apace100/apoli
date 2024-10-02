@@ -44,7 +44,7 @@ public class PowerArgumentType implements ArgumentType<Power> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestIdentifiers(PowerManager.streamIds(), builder);
+        return CommandSource.suggestIdentifiers(PowerManager.keySet().stream(), builder);
     }
 
 }

@@ -91,20 +91,22 @@ public class Power implements Validatable {
         serializableData -> PacketCodec.ofStatic(
 			(buf, value) -> {
 
-                PowerTypeFactory<?>.Instance instance = value.getFactoryInstance();
-                if (instance == null) {
+                PowerTypeFactory<?>.Instance factoryInstance = value.getFactoryInstance();
+                if (factoryInstance == null) {
                     return;
                 }
 
                 buf.writeIdentifier(value.getId());
                 serializableData.send(buf, serializableData.instance()
                     .set("id", value.getId())
-                    .set("type", instance.getFactory())
+                    .set("type", factoryInstance.getFactory())
                     .set("name", value.getName())
                     .set("description", value.getDescription())
                     .set("hidden", value.isHidden()));
 
-                instance.getSerializableData().send(buf, instance.getData());
+                SerializableData.Instance factoryInstanceData = factoryInstance.getData();
+                factoryInstance.getSerializableData().send(buf, factoryInstanceData);
+
                 switch (value) {
                     case MultiplePower multiplePower -> {
                         buf.writeByte(0);
@@ -127,7 +129,10 @@ public class Power implements Validatable {
                 try {
 
                     PowerTypeFactory<?> factory = powerData.get("type");
-                    Power basePower = new Power(factory.receive(buf), powerData);
+                    SerializableData.Instance factoryInstanceData = factory.getSerializableData().receive(buf);
+
+                    PowerTypeFactory<?>.Instance factoryInstance = factory.fromData(factoryInstanceData);
+                    Power basePower = new Power(factoryInstance, powerData);
 
                     return switch (buf.readByte()) {
                         case 0 ->

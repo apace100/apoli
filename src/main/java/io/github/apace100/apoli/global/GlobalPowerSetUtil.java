@@ -16,7 +16,7 @@ public class GlobalPowerSetUtil {
     public static final Identifier POWER_SOURCE = Apoli.identifier("global");
 
     public static List<GlobalPowerSet> getApplicableSets(EntityType<?> type) {
-        return GlobalPowerSetManager.ALL.values()
+        return GlobalPowerSetManager.values()
             .stream()
             .filter(gps -> gps.doesApply(type))
             .sorted(GlobalPowerSet::compareTo)

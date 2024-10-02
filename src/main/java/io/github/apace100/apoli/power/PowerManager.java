@@ -16,7 +16,6 @@ import io.github.apace100.calio.CalioServer;
 import io.github.apace100.calio.data.IdentifiableMultiJsonDataLoader;
 import io.github.apace100.calio.data.MultiJsonDataContainer;
 import io.github.apace100.calio.data.SerializableData;
-import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -30,7 +29,6 @@ import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
@@ -41,43 +39,26 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class PowerManager extends IdentifiableMultiJsonDataLoader implements IdentifiableResourceReloadListener {
 
-    public static final Codec<Identifier> VALIDATING_CODEC = Identifier.CODEC.comapFlatMap(
-        id -> contains(id)
-            ? DataResult.success(id)
-            : DataResult.error(() -> "Couldn't get power from ID \"" + id + "\", as it wasn't registered!"),
-        Function.identity()
-    );
-
-    public static final Codec<Power> DISPATCH_CODEC = Identifier.CODEC.comapFlatMap(
-        PowerManager::getResult,
-        Power::getId
-    );
-
-    public static final PacketCodec<ByteBuf, Power> DISPATCH_PACKET_CODEC = Identifier.PACKET_CODEC.xmap(
-        PowerManager::get,
-        Power::getId
-    );
+    public static final Codec<Identifier> VALIDATING_CODEC = Identifier.CODEC.comapFlatMap(id -> contains(id) ? DataResult.success(id) : DataResult.error(() -> "Couldn't get power from ID \"" + id + "\", as it wasn't registered!"), Function.identity());
 
     public static final Set<Identifier> DEPENDENCIES = new HashSet<>();
-
     public static final Identifier ID = Apoli.identifier("powers");
-    public static final Identifier PHASE = Apoli.identifier("phase/power_types");
 
     private static final Gson GSON = new GsonBuilder()
         .disableHtmlEscaping()
         .setPrettyPrinting()
         .create();
+
     private static final Set<String> FIELDS_TO_IGNORE = Set.of(
         "condition",
         "loading_priority",
@@ -87,24 +68,21 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     private static final Map<Identifier, Integer> LOADING_PRIORITIES = new HashMap<>();
     private static final Map<String, AdditionalPowerDataCallback> ADDITIONAL_DATA = new HashMap<>();
 
-    private static final Map<Identifier, Power> POWERS_BY_ID = new HashMap<>();
-    private static final Set<Identifier> DISABLED_POWERS = new HashSet<>();
-
-    private static boolean building;
-    private static boolean validated;
+    private static final Object2ObjectOpenHashMap<Identifier, Power> POWERS_BY_ID = new Object2ObjectOpenHashMap<>();
+    private static final ObjectOpenHashSet<Identifier> DISABLED_POWERS = new ObjectOpenHashSet<>();
 
     public PowerManager() {
         super(GSON, "powers", ResourceType.SERVER_DATA);
 
-        ServerEntityEvents.ENTITY_LOAD.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
-        ServerEntityEvents.ENTITY_LOAD.register(PHASE, (entity, world) -> {
+        ServerEntityEvents.ENTITY_LOAD.addPhaseOrdering(Event.DEFAULT_PHASE, ID);
+        ServerEntityEvents.ENTITY_LOAD.register(ID, (entity, world) -> {
             if (!(entity instanceof PlayerEntity)) {
                 updateData(entity, false);
             }
         });
 
-        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(Event.DEFAULT_PHASE, PHASE);
-        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(PHASE, (player, joined) -> {
+        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(Event.DEFAULT_PHASE, ID);
+        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(ID, (player, joined) -> {
             send(player);
             updateData(player, joined);
         });
@@ -119,8 +97,8 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         PowerReloadCallback.EVENT.invoker().onPowerReload();
         PrePowerReloadCallback.EVENT.invoker().onPrePowerReload();
 
-        startBuilding();
         DynamicRegistryManager dynamicRegistries = CalioServer.getDynamicRegistries().orElse(null);
+        startBuilding();
 
         if (dynamicRegistries == null) {
 
@@ -157,15 +135,10 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         SerializableData.CURRENT_NAMESPACE = null;
         SerializableData.CURRENT_PATH = null;
 
-        endBuilding();
         Apoli.LOGGER.info("Finished reading powers from data packs. Registry contains {} powers.", size());
 
         validate();
-        PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
-
-        if (validated) {
-            Apoli.LOGGER.info("Finished validating powers from data packs. Registry contains {} powers.", size());
-        }
+        endBuilding();
 
     }
 
@@ -197,64 +170,77 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             return;
         }
 
-        boolean mismatch = false;
+        int mismatches = 0;
+
         for (Power oldPower : component.getPowers(true)) {
 
-            Identifier powerId = oldPower.getId();
+            StringBuilder oldPowerString = new StringBuilder();
+            if (oldPower instanceof SubPower subPower) {
+                oldPowerString.append("sub-power \"")
+                    .append(subPower.getSubName())
+                    .append("\" of power \"")
+                    .append(subPower.getSuperPowerId())
+                    .append("\"");
+            }
 
-            if (!contains(powerId)) {
+            else {
+                oldPowerString.append("power \"")
+                    .append(oldPower.getId())
+                    .append("\"");
+            }
 
-                Apoli.LOGGER.error("Removed unregistered power \"{}\" from entity {}!", powerId, entity.getName().getString());
-                mismatch = true;
+            if (!contains(oldPower)) {
+
+                Apoli.LOGGER.error("Removed unregistered {} from entity {}!", oldPowerString, entity.getName().getString());
 
                 for (Identifier sourceId : component.getSources(oldPower)) {
                     component.removePower(oldPower, sourceId);
                 }
 
-                continue;
-
             }
 
-            Power newPower = get(powerId);
-            PowerType oldPowerType = component.getPowerType(oldPower);
+            else {
 
-            JsonElement oldPowerJson = Power.DATA_TYPE.write(jsonOps, oldPower).getOrThrow(JsonParseException::new);
-            JsonElement newPowerJson = Power.DATA_TYPE.write(jsonOps, newPower).getOrThrow(JsonParseException::new);
+                Power newPower = get(oldPower.getId());
+                PowerType oldPowerType = component.getPowerType(oldPower);
 
-            if (oldPowerJson.equals(newPowerJson)) {
-                continue;
-            }
+                JsonElement oldPowerJson = Power.DATA_TYPE.write(jsonOps, oldPower).getOrThrow(JsonParseException::new);
+                JsonElement newPowerJson = Power.DATA_TYPE.write(jsonOps, newPower).getOrThrow(JsonParseException::new);
 
-            Apoli.LOGGER.warn("Mismatched data fields of power \"{}\" from entity {}! Updating...", powerId, entity.getName().getString());
-            mismatch = true;
+                if (oldPowerJson.equals(newPowerJson)) {
+                    continue;
+                }
 
-            for (Identifier source : component.getSources(oldPower)) {
-                component.removePower(oldPower, source);
-                component.addPower(newPower, source);
-            }
+                Apoli.LOGGER.warn("{} from entity {} has mismatched data fields! Updating...", StringUtils.capitalize(oldPowerString.toString()), entity.getName().getString());
+                mismatches++;
 
-            PowerType newPowerType = component.getPowerType(newPower);
-            if (oldPowerType.getClass().isAssignableFrom(newPowerType.getClass())) {
-                //  Transfer the data of the old power to the new power if the old power is an instance of the new power
-                Apoli.LOGGER.info("Successfully transferred old data of power \"{}\"!", powerId);
-                newPowerType.fromTag(oldPowerType.toTag());
-            } else {
-                //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
-                //  occurs if the power no longer uses the same power type as it used to
-                Apoli.LOGGER.warn("Couldn't transfer old data of power \"{}\", as it's using a different power type!", powerId);
+                for (Identifier source : component.getSources(oldPower)) {
+                    component.removePower(oldPower, source);
+                    component.addPower(newPower, source);
+                }
+
+                PowerType newPowerType = component.getPowerType(newPower);
+                if (oldPowerType.getClass().isAssignableFrom(newPowerType.getClass())) {
+                    //  Transfer the data of the old power to the new power if the old power is an instance of the new power
+                    Apoli.LOGGER.info("Successfully transferred old data of {}!", oldPowerString);
+                    newPowerType.fromTag(oldPowerType.toTag());
+                }
+
+                else {
+                    //  Output a warning that the data of the old power couldn't be transferred to the new power. This usually
+                    //  occurs if the power no longer uses the same power type as it used to
+                    Apoli.LOGGER.warn("Couldn't transfer old data of {}, as it's using a different power type!", oldPowerString);
+                }
+
             }
 
         }
 
-        if (initialize || mismatch) {
-
-            if (mismatch) {
-                Apoli.LOGGER.info("Finished updating power data of entity {}.", entity.getName().getString());
-            }
-
-            component.sync();
-
+        if (mismatches > 0) {
+            Apoli.LOGGER.info("Finished updating {} powers with mismatched data fields from entity {}!", mismatches, entity.getName().getString());
         }
+
+        component.sync();
 
     }
 
@@ -358,8 +344,8 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
         Identifier powerId = power.getId();
 
+        int previousPriority = LOADING_PRIORITIES.getOrDefault(powerId, 0);
         int priority = JsonHelper.getInt(powerJson, "loading_priority", 0);
-        int previousPriority = LOADING_PRIORITIES.computeIfAbsent(powerId, k -> priority);
 
         if (!contains(powerId)) {
             return this.finishReadingPower(PowerManager::register, powerId, power, powerJson, priority);
@@ -446,11 +432,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     private static Power register(Identifier id, Power power) {
 
-        if (!building) {
-            return power;
-        }
-
-        else if (POWERS_BY_ID.containsKey(id)) {
+        if (contains(id)) {
             throw new IllegalArgumentException("Tried to register duplicate power with ID \"" + id + "\"");
         }
 
@@ -467,36 +449,20 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     private static Power update(Identifier id, Power power) {
 
-        if (!building) {
-            return power;
+        if (remove(id) instanceof MultiplePower removedMultiplePower) {
+            removedMultiplePower.getSubPowers()
+                .stream()
+                .map(Power::getId)
+                .forEach(PowerManager::remove);
         }
 
-        else {
-
-            if (remove(id) instanceof MultiplePower removedMultiplePower) {
-                removedMultiplePower.getSubPowers()
-                    .stream()
-                    .map(Power::getId)
-                    .forEach(PowerManager::remove);
-            }
-
-            PowerOverrideCallback.EVENT.invoker().onPowerOverride(id);
-            return register(id, power);
-
-        }
+        PowerOverrideCallback.EVENT.invoker().onPowerOverride(id);
+        return register(id, power);
 
     }
 
     private static Power remove(Identifier id) {
-
-        if (building) {
-            return POWERS_BY_ID.remove(id);
-        }
-
-        else {
-            return null;
-        }
-
+        return POWERS_BY_ID.remove(id);
     }
 
     public static void disable(Identifier id) {
@@ -514,9 +480,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
         }
 
         Apoli.LOGGER.info("Validating {} powers...", size());
-
         Iterator<Map.Entry<Identifier, Power>> powerTypeIterator = POWERS_BY_ID.entrySet().iterator();
-        validated = true;
 
         while (powerTypeIterator.hasNext()) {
 
@@ -558,28 +522,30 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
         }
 
+        Apoli.LOGGER.info("Finished validating powers from data packs. Registry contains {} powers.", size());
+
     }
 
     private static void startBuilding() {
 
-        if (building) {
-            return;
-        }
-
-        PowerClearCallback.EVENT.invoker().onPowerClear();
-
-        building = true;
-        validated = false;
+        LOADING_PRIORITIES.clear();
 
         POWERS_BY_ID.clear();
         DISABLED_POWERS.clear();
 
-        LOADING_PRIORITIES.clear();
+        PowerClearCallback.EVENT.invoker().onPowerClear();
 
     }
 
     private static void endBuilding() {
-        building = false;
+
+        LOADING_PRIORITIES.clear();
+
+        POWERS_BY_ID.trim();
+        DISABLED_POWERS.trim();
+
+        PostPowerReloadCallback.EVENT.invoker().onPostPowerReload();
+
     }
 
     public void send(ServerPlayerEntity player) {
@@ -618,23 +584,23 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
     }
 
     public static Set<Map.Entry<Identifier, Power>> entrySet() {
-        return new ObjectArraySet<>(POWERS_BY_ID.entrySet());
+        return new ObjectOpenHashSet<>(POWERS_BY_ID.entrySet());
+    }
+
+    public static Set<Identifier> keySet() {
+        return new ObjectOpenHashSet<>(POWERS_BY_ID.keySet());
     }
 
     public static Collection<Power> values() {
-        return new ObjectArrayList<>(POWERS_BY_ID.values());
-    }
-
-    public static Stream<Identifier> streamIds() {
-        return new ObjectArraySet<>(POWERS_BY_ID.keySet()).stream();
-    }
-
-    public static void forEach(BiConsumer<Identifier, Power> biConsumer) {
-        POWERS_BY_ID.forEach(biConsumer);
+        return new ObjectOpenHashSet<>(POWERS_BY_ID.values());
     }
 
     public static boolean isDisabled(Identifier id) {
         return DISABLED_POWERS.contains(id);
+    }
+
+    public static boolean contains(Power power) {
+        return contains(power.getId());
     }
 
     public static boolean contains(Identifier id) {
