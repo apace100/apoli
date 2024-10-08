@@ -5,8 +5,8 @@ import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.type.CooldownPowerType;
-import io.github.apace100.apoli.power.type.VariableIntPowerType;
+import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.util.PowerUtil;
 import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -16,51 +16,25 @@ public class ChangeResourceActionType {
 
     public static void action(Entity entity, PowerReference power, ResourceOperation operation, int change) {
 
-        int oldValue = 0;
-        int newValue = 0;
+        PowerType powerType = power.getType(entity);
+        boolean modified = switch (operation) {
+            case ADD ->
+                PowerUtil.changeResourceValue(powerType, change);
+            case SET ->
+                PowerUtil.setResourceValue(powerType, change);
+        };
 
-        switch (power.getType(entity)) {
-            case VariableIntPowerType varInt -> {
-
-                oldValue = varInt.getValue();
-                newValue = processValue(operation, oldValue, change);
-
-                varInt.setValue(newValue);
-
-            }
-            case CooldownPowerType cooldown -> {
-
-                oldValue = cooldown.getRemainingTicks();
-                newValue = processValue(operation, oldValue, change);
-
-                cooldown.setCooldown(newValue);
-
-            }
-            case null, default -> {
-
-            }
-        }
-
-        if (oldValue != newValue) {
+        if (modified) {
             PowerHolderComponent.syncPower(entity, power);
         }
 
-    }
-
-    private static int processValue(ResourceOperation operation, int oldValue, int newValue) {
-        return switch (operation) {
-            case ADD ->
-                oldValue + newValue;
-            case SET ->
-                newValue;
-        };
     }
 
     public static ActionTypeFactory<Entity> getFactory() {
         return new ActionTypeFactory<>(
             Apoli.identifier("change_resource"),
             new SerializableData()
-                .add("resource", ApoliDataTypes.POWER_REFERENCE)
+                .add("resource", ApoliDataTypes.RESOURCE_REFERENCE)
                 .add("operation", ApoliDataTypes.RESOURCE_OPERATION, ResourceOperation.ADD)
                 .add("change", SerializableDataTypes.INT),
             (data, entity) -> action(entity,

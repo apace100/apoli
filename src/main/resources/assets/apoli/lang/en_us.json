@@ -33,6 +33,7 @@
     "commands.apoli.revoke_from_source.success.single": "Entity %s had the power %s revoked from source %s.",
     "commands.apoli.sources.fail": "Entity %s did not have the power %s.",
     "commands.apoli.sources.pass": "Entity %s has %s sources of power %s: [%s]",
+    "commands.apoli.resource.fail": "Entity %s did not have the power %s.",
     "death.attack.genericDamageOverTime": "%1$s died to a damage over time effect",
     "death.attack.genericDamageOverTime.player": "%1$s died to a damage over time effect whilst fighting %2$s",
     "key.apoli.usability_hint.show_powers": "Show Powers in Usability Hints",

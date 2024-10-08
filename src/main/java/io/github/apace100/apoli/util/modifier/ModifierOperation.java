@@ -49,7 +49,7 @@ public enum ModifierOperation implements IModifierOperation {
 
     public static final SerializableData DATA = new SerializableData()
         .add("amount", SerializableDataTypes.DOUBLE, null)
-        .add("resource", ApoliDataTypes.POWER_REFERENCE, null)
+        .add("resource", ApoliDataTypes.RESOURCE_REFERENCE, null)
         .add("modifier", Modifier.LIST_TYPE, null)
         .validate(data -> {
 

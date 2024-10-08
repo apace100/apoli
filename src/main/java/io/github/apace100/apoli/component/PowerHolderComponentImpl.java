@@ -299,7 +299,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         powers.forEach((power, powerType) -> {
 
             PowerTypeFactory<?> typeFactory = power.getFactoryInstance().getFactory();
-            PowerReference powerReference = new PowerReference(power.getId());
+            PowerReference powerReference = PowerReference.of(power.getId());
 
             Power.Entry.CODEC.codec().encodeStart(lookup.getOps(NbtOps.INSTANCE), new Power.Entry(typeFactory, powerReference, powerType.toTag(), powerSources.get(power)))
                 .mapError(err -> "Error encoding power \"" + power.getId() + "\" to NBT of entity " + owner.getName().getString() + " (UUID: " + owner.getUuidAsString() + ") (skipping): " + err)

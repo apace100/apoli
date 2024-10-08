@@ -2,7 +2,9 @@ package io.github.apace100.apoli.power;
 
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.util.PowerUtil;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,16 +12,28 @@ import java.util.Optional;
 
 public class PowerReference extends Power {
 
-    public PowerReference(Identifier id) {
+    protected PowerReference(Identifier id) {
         super(id, null, null, null, true);
     }
 
-    public static PowerReference of(String namespace, String path) {
-        return new PowerReference(Identifier.of(namespace, path));
+    public static PowerReference of(Identifier id) {
+        return new PowerReference(id);
     }
 
-    public static PowerReference of(String str) {
-        return new PowerReference(Identifier.of(str));
+    public static PowerReference resource(Identifier id) {
+        return new PowerReference(id) {
+
+            @Override
+            public void validate() throws Exception {
+                PowerUtil.validateResource(create(null)).getOrThrow();
+            }
+
+        };
+    }
+
+    @Override
+    public PowerType create(@Nullable LivingEntity entity) {
+        return getFactoryInstance().apply(getStrictReference(), entity);
     }
 
     @Override
@@ -51,7 +65,7 @@ public class PowerReference extends Power {
 
     @Override
     public void validate() throws Exception {
-        this.getStrictReference();
+        getStrictReference();
     }
 
 }

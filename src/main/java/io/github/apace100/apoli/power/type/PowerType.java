@@ -16,8 +16,8 @@ import java.util.function.Predicate;
 
 public class PowerType {
 
-    protected LivingEntity entity;
-    protected Power power;
+    protected final LivingEntity entity;
+    protected final Power power;
 
     private boolean shouldTick = false;
     private boolean shouldTickWhenInactive = false;
@@ -90,6 +90,10 @@ public class PowerType {
 
     public Power getPower() {
         return power;
+    }
+
+    public LivingEntity getHolder() {
+        return entity;
     }
 
     public Identifier getPowerId() {

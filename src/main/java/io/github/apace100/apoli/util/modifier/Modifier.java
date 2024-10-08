@@ -1,7 +1,10 @@
 package io.github.apace100.apoli.util.modifier;
 
 import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.*;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.RecordBuilder;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
@@ -32,7 +35,7 @@ public class Modifier implements Comparable<Modifier> {
      *  <p>e.g:</p>
      *  <pre>
      *      Modifier modifier = Modifier.of({@linkplain ModifierOperation#SET_TOTAL}, data -> data
-     *          .set("resource", {@linkplain io.github.apace100.apoli.power.PowerReference#of(String, String) PowerReference.of("example", "resource")})
+     *          .set("resource", {@linkplain io.github.apace100.apoli.power.PowerReference#of(net.minecraft.util.Identifier) PowerReference.of(Identifier.of("example:resource"))})
      *          .set("modifier", {@linkplain #of(ModifierOperation, double) Modifier.of(}{@linkplain ModifierOperation#ADD_BASE_EARLY}{@linkplain #of(ModifierOperation, double), 1.0)});
      *  </pre>
      *
