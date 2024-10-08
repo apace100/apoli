@@ -17,7 +17,6 @@ import java.util.function.Predicate;
 
 public class ModifyDamageTakenPowerType extends ValueModifyingPowerType {
 
-
     private final Consumer<Entity> selfAction;
     private final Consumer<Entity> attackerAction;
     private final Consumer<Pair<Entity, Entity>> biEntityAction;
@@ -81,7 +80,7 @@ public class ModifyDamageTakenPowerType extends ValueModifyingPowerType {
             selfAction.accept(entity);
         }
 
-        if (attackerAction != null) {
+        if (attackerAction != null && attacker != null) {
             attackerAction.accept(attacker);
         }
 
@@ -92,7 +91,8 @@ public class ModifyDamageTakenPowerType extends ValueModifyingPowerType {
     }
 
     public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(Apoli.identifier("modify_damage_taken"),
+        return new PowerTypeFactory<>(
+            Apoli.identifier("modify_damage_taken"),
             new SerializableData()
                 .add("self_action", ApoliDataTypes.ENTITY_ACTION, null)
                 .add("attacker_action", ApoliDataTypes.ENTITY_ACTION, null)
