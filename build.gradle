@@ -111,7 +111,7 @@ dependencies {
 	include(modApi("io.github.ladysnake:PlayerAbilityLib:${project.pal_version}"))
 	
 	//	Calio
-	include(modApi("io.github.apace100:calio:${project.calio_version}"))
+	include(modApi("io.github.skycatminepokie:calio:${project.calio_version}"))
 
 	//	Cloth Config
 	include(modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") {
