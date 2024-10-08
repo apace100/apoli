@@ -62,6 +62,9 @@ repositories {
 	maven {
 		url "https://maven.ryanliptak.com/"
 	}
+	maven {
+		url 'https://jitpack.io'
+	}
 }
 
 loom {
