@@ -108,25 +108,19 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     protected boolean removePower(Power power, Identifier source, Consumer<Power> adder) {
 
         Identifier powerId = power.getId();
-        StringBuilder errorMessage= new StringBuilder("Cannot remove a non-existing power with ID \"")
-            .append(powerId)
-            .append("\"");
-
-        if (power instanceof PowerReference powerTypeReference) {
-            power = powerTypeReference.getReference();
+        if (power instanceof PowerReference powerReference) {
+            power = powerReference.getReference();
         }
 
         if (power == null) {
-            Apoli.LOGGER.error(errorMessage.append(" from entity ").append(owner.getName().getString()));
+            Apoli.LOGGER.error("Cannot remove a non-existing power with ID \"{}\" from entity {}! (UUID: {})", powerId, owner.getName().getString(), owner.getUuidAsString());
             return false;
         }
 
-        if (!powerSources.containsKey(power)) {
+        List<Identifier> sources = powerSources.getOrDefault(power, new ArrayList<>());
+        if (!sources.remove(source)) {
             return false;
         }
-
-        List<Identifier> sources = powerSources.get(power);
-        sources.remove(source);
 
         if (sources.isEmpty() && powers.containsKey(power)) {
 
@@ -189,16 +183,12 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     protected boolean addPower(Power power, Identifier source, BiConsumer<Power, PowerType> adder) {
 
         Identifier powerId = power.getId();
-        StringBuilder errorMessage = new StringBuilder("Cannot add a non-existing power with ID \"")
-            .append(powerId)
-            .append("\"");
-
         if (power instanceof PowerReference powerReference) {
             power = powerReference.getReference();
         }
 
         if (power == null) {
-            Apoli.LOGGER.error(errorMessage.append(" to entity ").append(owner.getName().getString()));
+            Apoli.LOGGER.error("Cannot add a non-existing power with ID \"{}\" to entity {} (UUID: {})!", powerId, owner.getName().getString(), owner.getUuidAsString());
             return false;
         }
 
