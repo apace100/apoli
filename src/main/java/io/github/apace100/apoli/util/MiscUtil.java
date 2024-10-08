@@ -29,8 +29,10 @@ import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -218,6 +220,13 @@ public final class MiscUtil {
         PlayerInventory inventory = player.getInventory();
         return inventory.getOccupiedSlotWithRoomForStack(stack) != -1
             || inventory.getEmptySlot() != -1;
+    }
+
+    public static <E, C extends Collection<E>> BinaryOperator<C> mergeCollections() {
+        return (coll1, coll2) -> {
+            coll1.addAll(coll2);
+            return coll1;
+        };
     }
 
 }
