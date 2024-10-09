@@ -86,8 +86,8 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ModPacketsC2S.register();
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-			PowerCommand.register(dispatcher);
-			ResourceCommand.register(dispatcher);
+			PowerCommand.register(dispatcher.getRoot());
+			ResourceCommand.register(dispatcher.getRoot());
 		});
 
 		ApoliLootFunctionTypes.register();

@@ -9,12 +9,13 @@ import io.github.apace100.apoli.power.type.VariableIntPowerType;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
 public class PowerUtil {
 
-	public static DataResult<PowerType> validateResource(PowerType powerType) {
+	public static DataResult<PowerType> validateResource(@Nullable PowerType powerType) {
 		return switch (powerType) {
 			case VariableIntPowerType varInt ->
 				DataResult.success(varInt);
@@ -39,10 +40,12 @@ public class PowerUtil {
 					powerString.append("Power \"").append(power.getId()).append("\"");
 				}
 
-				yield DataResult.error(() -> powerString
+				DataResult<PowerType> result = DataResult.error(() -> powerString
 					.append(" is using power type \"").append(powerTypeId).append("\"")
 					.append(", which is not considered a resource!")
 					.toString());
+
+				yield result.setPartial(powerType);
 
 			}
 		};
