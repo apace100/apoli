@@ -22,6 +22,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -39,6 +40,10 @@ import java.util.stream.Collectors;
 
 public interface PowerHolderComponent extends AutoSyncedComponent, ServerTickingComponent {
 
+    /**
+     *  <b>Use {@link #getOptional(Entity)} or {@link #getNullable(Entity)} wherever possible.</b>
+     */
+    @ApiStatus.Internal
     ComponentKey<PowerHolderComponent> KEY = ComponentRegistry.getOrCreate(Apoli.identifier("powers"), PowerHolderComponent.class);
 
     boolean removePower(Power power, Identifier source);
@@ -67,12 +72,42 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     void sync();
 
-    static void sync(Entity entity) {
+    /**
+     *  Queries the {@link PowerHolderComponent} from an {@link Entity}. This is safer and preferred than directly using
+     *  {@link #KEY} as it handles certain scenarios where unexpected errors may occur.
+     *
+     *  @param entity   the entity to get the component from
+     *  @return         the power component, or {@link Optional#empty()} if the entity is either null, its component
+     *                  container hasn't been initialized yet, or if the entity doesn't/can't have the power component
+     */
+    @SuppressWarnings("ConstantValue")
+	static Optional<PowerHolderComponent> getOptional(@Nullable Entity entity) {
 
-        if (KEY.isProvidedBy(entity)) {
-            KEY.sync(entity);
+        if (entity != null && entity.asComponentProvider().getComponentContainer() != null) {
+            return KEY.maybeGet(entity);
         }
 
+        else {
+            return Optional.empty();
+        }
+
+    }
+
+    /**
+     *  An alternative version of {@link #getOptional(Entity)} that returns a <b>nullable</b>
+     *  {@link PowerHolderComponent} instead.
+     *
+     *  @param entity   the entity to get the power component from
+     *  @return         the power component, or {@code null} if the entity is either null, its component container
+     *                  hasn't been initialized yet, or if the entity doesn't/can't have the power component
+     */
+    @Nullable
+    static PowerHolderComponent getNullable(@Nullable Entity entity) {
+        return getOptional(entity).orElse(null);
+    }
+
+    static void sync(Entity entity) {
+        getOptional(entity).ifPresent(PowerHolderComponent::sync);
     }
 
     static boolean grantPower(@NotNull Entity entity, Power power, Identifier source, boolean sync) {
@@ -81,12 +116,14 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static boolean grantPowers(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
-        if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
+        PowerHolderComponent powerComponent = getNullable(entity);
+        if (!entity.getWorld().isClient() && powerComponent != null) {
 
-            PowerHolderComponent component = KEY.get(entity);
             boolean granted = powersBySource.entrySet()
                 .stream()
-                .flatMap(e -> e.getValue().stream().map(power -> component.addPower(power, e.getKey())))
+                .flatMap(e -> e.getValue()
+                    .stream()
+                    .map(power -> powerComponent.addPower(power, e.getKey())))
                 .reduce(false, Boolean::logicalOr);
 
             if (granted && sync) {
@@ -109,12 +146,14 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static boolean revokePowers(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
-        if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
+        PowerHolderComponent powerComponent = getNullable(entity);
+        if (!entity.getWorld().isClient() && powerComponent != null) {
 
-            PowerHolderComponent component = KEY.get(entity);
             boolean revoked = powersBySource.entrySet()
                 .stream()
-                .flatMap(e -> e.getValue().stream().map(power -> component.removePower(power, e.getKey())))
+                .flatMap(e -> e.getValue()
+                    .stream()
+                    .map(power -> powerComponent.removePower(power, e.getKey())))
                 .reduce(false, Boolean::logicalOr);
 
             if (revoked && sync) {
@@ -137,12 +176,12 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static int revokeAllPowersFromAllSources(@NotNull Entity entity, Collection<Identifier> sources, boolean sync) {
 
-        if (KEY.isProvidedBy(entity) && !entity.getWorld().isClient) {
+        PowerHolderComponent powerComponent = getNullable(entity);
+        if (!entity.getWorld().isClient() && powerComponent != null) {
 
-            PowerHolderComponent component = KEY.get(entity);
             int revokedPowers = sources
                 .stream()
-                .map(component::removeAllPowersFromSource)
+                .map(powerComponent::removeAllPowersFromSource)
                 .reduce(0, Integer::sum);
 
             if (revokedPowers > 0 && sync) {
@@ -161,7 +200,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static void syncPower(Entity entity, Power power) {
 
-        if (entity == null || entity.getWorld().isClient) {
+        if (entity == null || entity.getWorld().isClient()) {
             return;
         }
 
@@ -200,11 +239,11 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static void syncPowers(Entity entity, Collection<? extends Power> powers) {
 
-        if (entity == null || entity.getWorld().isClient || powers.isEmpty()) {
+        if (entity == null || entity.getWorld().isClient() || powers.isEmpty()) {
             return;
         }
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.getNullable(entity);
+        PowerHolderComponent component = getNullable(entity);
         Map<Identifier, NbtElement> powersToSync = new HashMap<>();
 
         if (component == null) {
@@ -245,23 +284,24 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static <T extends PowerType> boolean withPowerType(@Nullable Entity entity, Class<T> powerClass, @NotNull Predicate<T> filter, Consumer<T> action) {
 
-        Optional<T> power = KEY.maybeGet(entity)
+        Optional<T> powerType = getOptional(entity)
             .stream()
-            .map(pc-> pc.getPowerTypes(powerClass))
+            .map(powerComponent -> powerComponent.getPowerTypes(powerClass))
             .flatMap(Collection::stream)
             .filter(filter)
             .findFirst();
 
-        power.ifPresent(action);
-        return power.isPresent();
+        powerType.ifPresent(action);
+        return powerType.isPresent();
 
     }
 
     static <T extends PowerType> boolean withPowerTypes(@Nullable Entity entity, Class<T> powerClass, @NotNull Predicate<T> filter, @NotNull Consumer<T> action) {
 
-        List<T> powerTypes = KEY.maybeGet(entity)
+        List<T> powerTypes = getOptional(entity)
             .stream()
-            .flatMap(pc -> pc.getPowerTypes(powerClass).stream())
+            .map(pc -> pc.getPowerTypes(powerClass))
+            .flatMap(Collection::stream)
             .filter(filter)
             .toList();
 
@@ -275,8 +315,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     }
 
     static <T extends PowerType> List<T> getPowerTypes(Entity entity, Class<T> powerClass, boolean includeInactive) {
-        return KEY.maybeGet(entity)
-            .map(pc -> pc.getPowerTypes(powerClass, includeInactive))
+        return getOptional(entity)
+            .map(powerComponent -> powerComponent.getPowerTypes(powerClass, includeInactive))
             .orElse(Lists.newArrayList());
     }
 
@@ -284,14 +324,15 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
         return hasPowerType(entity, powerClass, p -> true);
     }
 
-    static <T extends PowerType> boolean hasPowerType(Entity entity, Class<T> typeClass, @NotNull Predicate<T> typeFilter) {
-        return KEY.maybeGet(entity)
+	static <T extends PowerType> boolean hasPowerType(Entity entity, Class<T> typeClass, @NotNull Predicate<T> typeFilter) {
+        return getOptional(entity)
             .stream()
             .map(PowerHolderComponent::getPowerTypes)
             .flatMap(Collection::stream)
             .filter(typeClass::isInstance)
             .map(typeClass::cast)
-            .anyMatch(type -> type.isActive() && typeFilter.test(type));
+            .filter(PowerType::isActive)
+            .anyMatch(typeFilter);
     }
 
     static <T extends ValueModifyingPowerType> float modify(Entity entity, Class<T> powerClass, float baseValue) {
@@ -312,17 +353,17 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue, @NotNull Predicate<T> powerFilter, @NotNull Consumer<T> powerAction) {
 
-        if (entity != null && KEY.isProvidedBy(entity)) {
+        PowerHolderComponent powerComponent = getNullable(entity);
+        if (powerComponent != null) {
 
-            PowerHolderComponent component = KEY.get(entity);
-            List<Modifier> modifiers = component.getPowerTypes(powerClass)
+            List<Modifier> modifiers = powerComponent.getPowerTypes(powerClass)
                 .stream()
                 .filter(powerFilter)
                 .peek(powerAction)
                 .flatMap(p -> p.getModifiers().stream())
                 .collect(Collectors.toCollection(ArrayList::new));
 
-            component.getPowerTypes(AttributeModifyTransferPowerType.class)
+            powerComponent.getPowerTypes(AttributeModifyTransferPowerType.class)
                 .stream()
                 .filter(p -> p.doesApply(powerClass))
                 .forEach(p -> p.addModifiers(modifiers));
@@ -392,7 +433,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
         public final void sync(Entity powerHolder, T type) {
 
-            if (KEY.isProvidedBy(powerHolder)) {
+            if (getNullable(powerHolder) != null) {
 
                 KEY.sync(powerHolder, (buf, recipient) -> {
 

@@ -329,7 +329,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void sync() {
-        PowerHolderComponent.sync(this.owner);
+        KEY.sync(this.owner);
     }
 
     @Override
