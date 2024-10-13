@@ -30,9 +30,13 @@ public class ItemConditionTypes {
     public static final ConditionConfiguration<AmountItemConditionType> AMOUNT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("amount"), AmountItemConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<ArmorValueItemConditionType> ARMOR_VALUE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("armor_value"), ArmorValueItemConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<CustomDataItemConditionType> CUSTOM_DATA = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("custom_data"), CustomDataItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<DamageableItemConditionType> DAMAGEABLE = register(ConditionConfiguration.simple(Apoli.identifier("damageable"), DamageableItemConditionType::new));
     public static final ConditionConfiguration<DurabilityItemConditionType> DURABILITY = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("durability"), DurabilityItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<EmptyItemConditionType> EMPTY = register(ConditionConfiguration.simple(Apoli.identifier("empty"), EmptyItemConditionType::new));
+    public static final ConditionConfiguration<EnchantableItemConditionType> ENCHANTABLE = register(ConditionConfiguration.simple(Apoli.identifier("enchantable"), EnchantableItemConditionType::new));
     public static final ConditionConfiguration<EnchantmentItemConditionType> ENCHANTMENT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("enchantment"), EnchantmentItemConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<EquippableItemConditionType> EQUIPPABLE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("equippable"), EquippableItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<FireResistantItemConditionType> FIRE_RESISTANT = register(ConditionConfiguration.simple(Apoli.identifier("fire_resistant"), FireResistantItemConditionType::new));
     public static final ConditionConfiguration<FoodItemConditionType> FOOD = register(ConditionConfiguration.simple(Apoli.identifier("food"), FoodItemConditionType::new));
     public static final ConditionConfiguration<FuelItemConditionType> FUEL = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("fuel"), FuelItemConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<HasPowerItemConditionType> HAS_POWER = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("has_power"), HasPowerItemConditionType.DATA_FACTORY));
