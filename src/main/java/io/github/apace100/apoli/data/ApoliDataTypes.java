@@ -8,6 +8,8 @@ import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import io.github.apace100.apoli.action.type.BlockActionTypes;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.action.type.ItemActionTypes;
+import io.github.apace100.apoli.condition.AbstractCondition;
+import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.*;
 import io.github.apace100.apoli.power.Power;
@@ -79,7 +81,7 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<ConditionTypeFactory<Entity>.Instance>> ENTITY_CONDITIONS = ENTITY_CONDITION.list();
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditionTypes.ALIASES, "Bi-entity condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditionTypes.ALIASES, "Bi-entity condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = BIENTITY_CONDITION.list();
 
@@ -99,7 +101,7 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = SerializableDataType.lazy(DAMAGE_CONDITION::list);
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditionTypes.ALIASES, "Biome condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.BIOME_CONDITION, BiomeConditionTypes.ALIASES, "Biome condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance>> BIOME_CONDITIONS = BIOME_CONDITION.list();
 
@@ -454,5 +456,83 @@ public class ApoliDataTypes {
 		});
 
     }
+
+	@SuppressWarnings("unchecked")
+	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> CompoundSerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
+		return new CompoundSerializableDataType<>(
+			new SerializableData()
+				.add(typeField, registryDataType)
+				.add("inverted", SerializableDataTypes.BOOLEAN, false),
+			serializableData -> {
+				boolean root = serializableData.isRoot();
+				return new MapCodec<>() {
+
+					@Override
+					public <I> Stream<I> keys(DynamicOps<I> ops) {
+						return serializableData.keys(ops);
+					}
+
+					@Override
+					public <I> DataResult<C> decode(DynamicOps<I> ops, MapLike<I> input) {
+
+						DataResult<SerializableData.Instance> conditionDataResult = serializableData.decode(ops, input);
+						DataResult<CT> conditionTypeResult = conditionDataResult
+							.map(conditionData -> (ConditionConfiguration<CT>) conditionData.get(typeField))
+							.flatMap(config -> config.mapCodec(root).decode(ops, input));
+
+						return conditionDataResult
+							.flatMap(conditionData -> conditionTypeResult
+								.map(conditionType -> constructor.apply(conditionType, conditionData.getBoolean("inverted"))));
+
+					}
+
+					@Override
+					public <I> RecordBuilder<I> encode(C input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
+
+						CT conditionType = input.getConditionType();
+						ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.configuration();
+
+						prefix.add(typeField, registryDataType.setRoot(root).write(ops, config));
+						config.mapCodec(root).encode(conditionType, ops, prefix);
+
+						prefix.add("inverted", ops.createBoolean(input.isInverted()));
+						return prefix;
+
+					}
+
+				};
+			},
+			serializableData -> new PacketCodec<>() {
+
+				@Override
+				public C decode(RegistryByteBuf buf) {
+
+					SerializableData.Instance conditionData = serializableData.receive(buf);
+
+					ConditionConfiguration<CT> config = conditionData.get(typeField);
+					boolean inverted = conditionData.getBoolean("inverted");
+
+					return constructor.apply(config.dataType().receive(buf), inverted);
+
+				}
+
+				@Override
+				public void encode(RegistryByteBuf buf, C value) {
+
+					CT conditionType = value.getConditionType();
+					ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.configuration();
+
+					SerializableData.Instance conditionData = serializableData.instance()
+						.set(typeField, config)
+						.set("inverted", value.isInverted());
+
+					serializableData.send(buf, conditionData);
+					config.dataType().send(buf, conditionType);
+
+				}
+
+			}
+		);
+	}
 
 }

@@ -96,6 +96,7 @@
 		"ClientPlayerEntityMixin",
 		"ClientPlayerInteractionManagerAccessor",
 		"ClientPlayerInteractionManagerMixin",
+		"ClientWorldMixin",
 		"ConfigScreenProviderMixin",
 		"ElytraFeatureRendererMixin",
 		"EntityMixinClient",

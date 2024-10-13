@@ -1,11 +1,13 @@
 package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.item.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
@@ -19,6 +21,7 @@ import java.util.function.Predicate;
 public class ItemConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
+    public static final SerializableDataType<ConditionConfiguration<ItemConditionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.ITEM_CONDITION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Item condition type \"" + id + "\" is undefined!");
 
     public static void register() {
         MetaConditionTypes.register(ApoliDataTypes.ITEM_CONDITION, ItemConditionTypes::register);
@@ -49,6 +52,16 @@ public class ItemConditionTypes {
 
     public static <F extends ConditionTypeFactory<Pair<World, ItemStack>>> F register(F conditionFactory) {
         return Registry.register(ApoliRegistries.ITEM_CONDITION, conditionFactory.getSerializerId(), conditionFactory);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <CT extends ItemConditionType> ConditionConfiguration<CT> register(ConditionConfiguration<CT> configuration) {
+
+        ConditionConfiguration<ItemConditionType> casted = (ConditionConfiguration<ItemConditionType>) configuration;
+        Registry.register(ApoliRegistries.ITEM_CONDITION_TYPE, casted.id(), casted);
+
+        return configuration;
+
     }
 
 }

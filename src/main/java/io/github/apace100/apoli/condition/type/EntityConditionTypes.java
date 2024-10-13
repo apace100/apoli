@@ -1,14 +1,17 @@
 package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.factory.DistanceFromCoordinatesConditionRegistry;
+import io.github.apace100.apoli.condition.type.entity.BiomeConditionType;
 import io.github.apace100.apoli.condition.type.entity.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -24,6 +27,7 @@ import java.util.function.Predicate;
 public class EntityConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
+    public static final SerializableDataType<ConditionConfiguration<EntityConditionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.ENTITY_CONDITION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Entity condition type \"" + id + "\" is not undefined!");
 
     public static void register() {
         MetaConditionTypes.register(ApoliDataTypes.ENTITY_CONDITION, EntityConditionTypes::register);
@@ -105,6 +109,16 @@ public class EntityConditionTypes {
 
     public static <F extends ConditionTypeFactory<Entity>> F register(F conditionFactory) {
         return Registry.register(ApoliRegistries.ENTITY_CONDITION, conditionFactory.getSerializerId(), conditionFactory);
+    }
+
+    @SuppressWarnings("unchecked")
+	public static <CT extends EntityConditionType> ConditionConfiguration<CT> register(ConditionConfiguration<CT> configuration) {
+
+        ConditionConfiguration<EntityConditionType> casted = (ConditionConfiguration<EntityConditionType>) configuration;
+        Registry.register(ApoliRegistries.ENTITY_CONDITION_TYPE, casted.id(), casted);
+
+        return configuration;
+
     }
 
 }

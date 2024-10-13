@@ -1,10 +1,12 @@
 package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.damage.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.registry.Registry;
@@ -14,6 +16,7 @@ import net.minecraft.util.Pair;
 public class DamageConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
+    public static final SerializableDataType<ConditionConfiguration<DamageConditionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.DAMAGE_CONDITION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Damage condition type \"" + id + "\" is undefined!");
 
     public static final ConditionTypeFactory<Pair<DamageSource, Float>> AMOUNT = register(AmountConditionType.getFactory());
 
@@ -39,6 +42,16 @@ public class DamageConditionTypes {
 
     public static <F extends ConditionTypeFactory<Pair<DamageSource, Float>>> F register(F conditionFactory) {
         return Registry.register(ApoliRegistries.DAMAGE_CONDITION, conditionFactory.getSerializerId(), conditionFactory);
+    }
+
+    @SuppressWarnings("unchecked")
+	public static <CT extends DamageConditionType> ConditionConfiguration<CT> register(ConditionConfiguration<CT> configuration) {
+
+        ConditionConfiguration<DamageConditionType> casted = (ConditionConfiguration<DamageConditionType>) configuration;
+        Registry.register(ApoliRegistries.DAMAGE_CONDITION_TYPE, casted.id(), casted);
+
+        return configuration;
+
     }
 
 }
