@@ -2,56 +2,49 @@ package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
+import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.condition.type.item.*;
-import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.condition.type.item.meta.AllOfItemConditionType;
+import io.github.apace100.apoli.condition.type.item.meta.AnyOfItemConditionType;
+import io.github.apace100.apoli.condition.type.item.meta.ConstantItemConditionType;
+import io.github.apace100.apoli.condition.type.item.meta.RandomChanceItemConditionType;
+import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
+import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
+import io.github.apace100.apoli.condition.type.meta.ConstantMetaConditionType;
+import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
-import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
-
-import java.util.function.Predicate;
 
 public class ItemConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
     public static final SerializableDataType<ConditionConfiguration<ItemConditionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.ITEM_CONDITION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Item condition type \"" + id + "\" is undefined!");
 
+    public static final ConditionConfiguration<AllOfItemConditionType> ALL_OF = register(AllOfMetaConditionType.createConfiguration(ItemCondition.DATA_TYPE, AllOfItemConditionType::new));
+    public static final ConditionConfiguration<AnyOfItemConditionType> ANY_OF = register(AnyOfMetaConditionType.createConfiguration(ItemCondition.DATA_TYPE, AnyOfItemConditionType::new));
+    public static final ConditionConfiguration<ConstantItemConditionType> CONSTANT = register(ConstantMetaConditionType.createConfiguration(ConstantItemConditionType::new));
+    public static final ConditionConfiguration<RandomChanceItemConditionType> RANDOM_CHANCE = register(RandomChanceMetaConditionType.createConfiguration(RandomChanceItemConditionType::new));
+
+    public static final ConditionConfiguration<AmountItemConditionType> AMOUNT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("amount"), AmountItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<ArmorValueItemConditionType> ARMOR_VALUE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("armor_value"), ArmorValueItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<CustomDataItemConditionType> CUSTOM_DATA = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("custom_data"), CustomDataItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<DurabilityItemConditionType> DURABILITY = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("durability"), DurabilityItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<EnchantmentItemConditionType> ENCHANTMENT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("enchantment"), EnchantmentItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<EquippableItemConditionType> EQUIPPABLE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("equippable"), EquippableItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<FoodItemConditionType> FOOD = register(ConditionConfiguration.simple(Apoli.identifier("food"), FoodItemConditionType::new));
+    public static final ConditionConfiguration<FuelItemConditionType> FUEL = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("fuel"), FuelItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<HasPowerItemConditionType> HAS_POWER = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("has_power"), HasPowerItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<IngredientItemConditionType> INGREDIENT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("ingredient"), IngredientItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<ItemCooldownItemConditionType> ITEM_COOLDOWN = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("item_cooldown"), ItemCooldownItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<PowerCountItemConditionType> POWER_COUNT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("power_count"), PowerCountItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<RelativeDurabilityItemConditionType> RELATIVE_DURABILITY = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("relative_durability"), RelativeDurabilityItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<RelativeItemCooldownItemConditionType> RELATIVE_ITEM_COOLDOWN = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("relative_item_cooldown"), RelativeItemCooldownItemConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<SmeltableItemConditionType> SMELTABLE = register(ConditionConfiguration.simple(Apoli.identifier("smeltable"), SmeltableItemConditionType::new));
+
     public static void register() {
-        MetaConditionTypes.register(ApoliDataTypes.ITEM_CONDITION, ItemConditionTypes::register);
-        register(createSimpleFactory(Apoli.identifier("food"), FoodConditionType::condition));
-        register(SmeltableConditionType.getFactory());
-        register(IngredientConditionType.getFactory());
-        register(ArmorValueConditionType.getFactory());
-        register(EnchantmentConditionType.getFactory());
-        register(CustomDataConditionType.getFactory());
-        register(createSimpleFactory(Apoli.identifier("fire_resistant"), stack -> stack.contains(DataComponentTypes.FIRE_RESISTANT)));
-        register(createSimpleFactory(Apoli.identifier("enchantable"), ItemStack::isEnchantable));
-        register(PowerCountConditionType.getFactory());
-        register(HasPowerConditionType.getFactory());
-        register(createSimpleFactory(Apoli.identifier("empty"), ItemStack::isEmpty));
-        register(AmountConditionType.getFactory());
-        register(createSimpleFactory(Apoli.identifier("damageable"), ItemStack::isDamageable));
-        register(DurabilityConditionType.getFactory());
-        register(RelativeDurabilityConditionType.getFactory());
-        register(EquippableConditionType.getFactory());
-        register(FuelConditionType.getFactory());
-        register(ItemCooldownConditionType.getFactory());
-        register(RelativeItemCooldownConditionType.getFactory());
-    }
 
-    public static ConditionTypeFactory<Pair<World, ItemStack>> createSimpleFactory(Identifier id, Predicate<ItemStack> predicate) {
-        return new ConditionTypeFactory<>(id, new SerializableData(), (data, worldAndStack) -> predicate.test(worldAndStack.getRight()));
-    }
-
-    public static <F extends ConditionTypeFactory<Pair<World, ItemStack>>> F register(F conditionFactory) {
-        return Registry.register(ApoliRegistries.ITEM_CONDITION, conditionFactory.getSerializerId(), conditionFactory);
     }
 
     @SuppressWarnings("unchecked")
