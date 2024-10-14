@@ -4,12 +4,12 @@ import io.github.apace100.apoli.condition.context.BiEntityContext;
 import io.github.apace100.apoli.condition.type.BiEntityConditionType;
 import io.github.apace100.apoli.condition.type.BiEntityConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.calio.data.CompoundSerializableDataType;
+import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
 
 public final class BiEntityCondition extends AbstractCondition<BiEntityContext, BiEntityConditionType> {
 
-	public static final CompoundSerializableDataType<BiEntityCondition> DATA_TYPE = ApoliDataTypes.condition("type", BiEntityConditionTypes.DATA_TYPE, BiEntityCondition::new);
+	public static final SerializableDataType<BiEntityCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", BiEntityConditionTypes.DATA_TYPE, BiEntityCondition::new));
 
 	public BiEntityCondition(BiEntityConditionType conditionType, boolean inverted) {
 		super(conditionType, inverted);

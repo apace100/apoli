@@ -4,13 +4,13 @@ import io.github.apace100.apoli.condition.context.ItemContext;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.calio.data.CompoundSerializableDataType;
+import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public class ItemCondition extends AbstractCondition<ItemContext, ItemConditionType> {
 
-	public static final CompoundSerializableDataType<ItemCondition> DATA_TYPE = ApoliDataTypes.condition("type", ItemConditionTypes.DATA_TYPE, ItemCondition::new);
+	public static final SerializableDataType<ItemCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", ItemConditionTypes.DATA_TYPE, ItemCondition::new));
 
 	public ItemCondition(ItemConditionType conditionType, boolean inverted) {
 		super(conditionType, inverted);
