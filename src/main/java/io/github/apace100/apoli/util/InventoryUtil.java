@@ -2,6 +2,7 @@ package io.github.apace100.apoli.util;
 
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.mixin.SlotRangesAccessor;
 import io.github.apace100.apoli.power.type.InventoryPowerType;
 import io.github.apace100.calio.data.SerializableData;
@@ -20,16 +21,16 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class InventoryUtil {
 
@@ -68,22 +69,18 @@ public class InventoryUtil {
 
     }
 
-    public static int checkInventory(SerializableData.Instance data, Entity entity, @Nullable InventoryPowerType inventoryPower, Function<ItemStack, Integer> processor) {
+    public static int checkInventory(Entity entity, Collection<Integer> slots, Optional<InventoryPowerType> inventoryPowerType, Optional<ItemCondition> itemCondition, ProcessMode processMode) {
 
-        Predicate<Pair<World, ItemStack>> itemCondition = data.get("item_condition");
-        Set<Integer> slots = getSlots(data);
-        deduplicateSlots(entity, slots);
-
+        Set<Integer> slotSet = prepSlots(slots, entity, inventoryPowerType);
         int matches = 0;
-        slots.removeIf(slot -> slotNotWithinBounds(entity, inventoryPower, slot));
 
-        for (int slot : slots) {
+        for (int slot : slotSet) {
 
-            StackReference stackReference = getStackReference(entity, inventoryPower, slot);
+            StackReference stackReference = getStackReference(entity, inventoryPowerType, slot);
             ItemStack stack = stackReference.get();
 
-            if ((itemCondition == null && !stack.isEmpty()) || (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))) {
-                matches += processor.apply(stack);
+            if (itemCondition.map(condition -> condition.test(entity.getWorld(), stack)).orElse(true)) {
+                matches += processMode.getProcessor().apply(stack);
             }
 
         }
@@ -381,6 +378,21 @@ public class InventoryUtil {
     }
 
     /**
+     *  <p>Checks whether the specified {@code slot} index is within the bounds of the specified {@link InventoryPowerType},
+     *  or the entity's {@link StackReference}, in that order.</p>
+     *
+     *  @param entity               the entity to check the bounds of its {@link StackReference}
+     *  @param inventoryPowerType   the {@link InventoryPowerType} to check the bounds of (if present)
+     *  @param slot                 the slot index
+     *  @return                     {@code true} if the slot index is within the bounds
+     */
+    public static boolean slotNotWithinBounds(Entity entity, Optional<InventoryPowerType> inventoryPowerType, int slot) {
+        return inventoryPowerType
+            .map(powerType -> slot < 0 || slot >= powerType.size())
+            .orElseGet(() -> entity.getStackReference(slot) == StackReference.EMPTY);
+    }
+
+    /**
      *      <p>Get the stack reference from the entity or frin the inventory of the specified {@link InventoryPowerType} (if it's not null).</p>
      *
      *      <p><b>Make sure to only call this method after you filter out the slots that aren't within the bounds
@@ -394,6 +406,12 @@ public class InventoryUtil {
      */
     public static StackReference getStackReference(Entity entity, @Nullable InventoryPowerType inventoryPower, int slot) {
         return inventoryPower == null ? entity.getStackReference(slot) : StackReference.of(inventoryPower, slot);
+    }
+
+    public static StackReference getStackReference(@NotNull Entity entity, Optional<InventoryPowerType> inventoryPowerType, int slot) {
+        return inventoryPowerType
+            .map(powerType -> StackReference.of(powerType, slot))
+            .orElseGet(() -> entity.getStackReference(slot));
     }
 
     /**
@@ -464,12 +482,26 @@ public class InventoryUtil {
         };
     }
 
-    public static List<Integer> getAllSlots() {
+    public static Set<Integer> getAllSlots() {
         return SlotRangesAccessor.getSlotRanges()
             .stream()
             .flatMapToInt(slotRange -> slotRange.getSlotIds().intStream())
             .boxed()
-            .toList();
+            .collect(Collectors.toSet());
+    }
+
+    public static Set<Integer> prepSlots(Collection<Integer> slots, Entity entity, Optional<InventoryPowerType> inventoryPowerType) {
+
+        Stream<Integer> slotStream = slots.isEmpty()
+            ? SlotRangesAccessor.getSlotRanges().stream().flatMapToInt(slotRange -> slotRange.getSlotIds().intStream()).boxed()
+            : slots.stream();
+        Set<Integer> slotSet = slotStream
+            .filter(slot -> slotNotWithinBounds(entity, inventoryPowerType, slot))
+            .collect(Collectors.toSet());
+
+        deduplicateSlots(entity, slotSet);
+        return slotSet;
+
     }
 
     @Nullable

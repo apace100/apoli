@@ -25,26 +25,25 @@ public abstract class AbstractCondition<T, CT extends AbstractConditionType<T, ?
 
 	}
 
-	@Nullable
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> C setPowerType(@Nullable C condition, Optional<PowerType> powerType) {
+	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> Optional<C> setPowerType(Optional<C> condition, Optional<PowerType> powerType) {
+		return condition.map(c -> {
+			c.setPowerType(powerType);
+			return c;
+		});
+	}
 
-		if (condition != null) {
-			condition.setPowerType(powerType);
-		}
-
-		return condition;
-
+	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> Optional<C> setPowerType(Optional<C> condition, PowerType powerType) {
+		return setPowerType(condition, Optional.ofNullable(powerType));
 	}
 
 	@Nullable
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> C setPowerType(@Nullable C condition, PowerType powerType) {
+	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> C setPowerType(C condition, Optional<PowerType> powerType) {
+		return setPowerType(Optional.ofNullable(condition), powerType).orElse(null);
+	}
 
-		if (condition != null) {
-			condition.setPowerType(powerType);
-		}
-
-		return condition;
-
+	@Nullable
+	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> C setPowerType(C condition, PowerType powerType) {
+		return setPowerType(Optional.ofNullable(condition), powerType).orElse(null);
 	}
 
 	@Override
@@ -61,12 +60,8 @@ public abstract class AbstractCondition<T, CT extends AbstractConditionType<T, ?
 		return powerType;
 	}
 
-	public final void setPowerType(Optional<PowerType> powerType) {
+	protected final void setPowerType(Optional<PowerType> powerType) {
 		this.powerType = powerType;
-	}
-
-	public final void setPowerType(PowerType powerType) {
-		setPowerType(Optional.ofNullable(powerType));
 	}
 
 	public final CT getConditionType() {

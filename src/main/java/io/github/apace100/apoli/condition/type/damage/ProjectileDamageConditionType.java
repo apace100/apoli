@@ -36,7 +36,7 @@ public class ProjectileDamageConditionType extends DamageConditionType {
 
     public ProjectileDamageConditionType(Optional<EntityType<?>> projectile, Optional<EntityCondition> projectileCondition) {
         this.projectile = projectile;
-        this.projectileCondition = projectileCondition.map(entityCondition -> AbstractCondition.setPowerType(entityCondition, getPowerType()));
+        this.projectileCondition = AbstractCondition.setPowerType(projectileCondition, getPowerType());
     }
 
     @Override
