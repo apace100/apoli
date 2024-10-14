@@ -15,7 +15,6 @@ public class BiomeCondition extends AbstractCondition<BiomeContext, BiomeConditi
 
 	public BiomeCondition(BiomeConditionType conditionType, boolean inverted) {
 		super(conditionType, inverted);
-		conditionType.setCondition(this);
 	}
 
 	public BiomeCondition(BiomeConditionType conditionType) {

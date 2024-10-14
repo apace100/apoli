@@ -6,16 +6,18 @@ import io.github.apace100.apoli.condition.context.DamageContext;
 import io.github.apace100.apoli.condition.type.DamageConditionType;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
+import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.entity.damage.DamageSource;
 
 import java.util.List;
+import java.util.Optional;
 
 public class AnyOfDamageConditionType extends DamageConditionType implements AnyOfMetaConditionType<DamageContext, DamageCondition> {
 
 	private final List<DamageCondition> conditions;
 
 	public AnyOfDamageConditionType(List<DamageCondition> conditions) {
-		this.conditions = prepareConditions(this, conditions);
+		this.conditions = conditions;
 	}
 
 	@Override
@@ -31,6 +33,12 @@ public class AnyOfDamageConditionType extends DamageConditionType implements Any
 	@Override
 	public List<DamageCondition> conditions() {
 		return conditions;
+	}
+
+	@Override
+	public void setPowerType(Optional<PowerType> powerType) {
+		super.setPowerType(powerType);
+		propagatePowerType(powerType);
 	}
 
 }

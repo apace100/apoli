@@ -13,23 +13,18 @@ public abstract class AbstractCondition<T, CT extends AbstractConditionType<T, ?
 	private final CT conditionType;
 	private final boolean inverted;
 
-	private Optional<PowerType> powerType;
-
 	public AbstractCondition(CT conditionType, boolean inverted) {
 
 		this.conditionType = conditionType;
 		this.inverted = inverted;
 
 		//noinspection unchecked
-		((AbstractConditionType<T, AbstractCondition<T, CT>>) this.conditionType).setCondition(this);
+		((AbstractConditionType<T, AbstractCondition<T, CT>>) this.conditionType).setCondition(Optional.of(this));
 
 	}
 
 	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> Optional<C> setPowerType(Optional<C> condition, Optional<PowerType> powerType) {
-		return condition.map(c -> {
-			c.setPowerType(powerType);
-			return c;
-		});
+		return condition.map(c -> c.setPowerType(powerType));
 	}
 
 	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> Optional<C> setPowerType(Optional<C> condition, PowerType powerType) {
@@ -57,11 +52,17 @@ public abstract class AbstractCondition<T, CT extends AbstractConditionType<T, ?
 	}
 
 	public final Optional<PowerType> getPowerType() {
-		return powerType;
+		return getConditionType().getPowerType();
 	}
 
-	protected final void setPowerType(Optional<PowerType> powerType) {
-		this.powerType = powerType;
+	@SuppressWarnings("unchecked")
+	public <C extends AbstractCondition<T, CT>> C setPowerType(Optional<PowerType> powerType) {
+		getConditionType().setPowerType(powerType);
+		return (C) this;
+	}
+
+	public <C extends AbstractCondition<T, CT>> C setPowerType(PowerType powerType) {
+		return setPowerType(Optional.ofNullable(powerType));
 	}
 
 	public final CT getConditionType() {

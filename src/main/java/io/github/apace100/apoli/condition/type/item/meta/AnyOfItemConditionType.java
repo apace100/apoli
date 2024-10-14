@@ -6,17 +6,19 @@ import io.github.apace100.apoli.condition.context.ItemContext;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
+import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import java.util.List;
+import java.util.Optional;
 
 public class AnyOfItemConditionType extends ItemConditionType implements AnyOfMetaConditionType<ItemContext, ItemCondition> {
 
 	private final List<ItemCondition> conditions;
 
 	public AnyOfItemConditionType(List<ItemCondition> conditions) {
-		this.conditions = prepareConditions(this, conditions);
+		this.conditions = conditions;
 	}
 
 	@Override
@@ -32,6 +34,12 @@ public class AnyOfItemConditionType extends ItemConditionType implements AnyOfMe
 	@Override
 	public List<ItemCondition> conditions() {
 		return conditions;
+	}
+
+	@Override
+	public void setPowerType(Optional<PowerType> powerType) {
+		super.setPowerType(powerType);
+		propagatePowerType(powerType);
 	}
 
 }

@@ -5,11 +5,13 @@ import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -17,11 +19,8 @@ public interface AllOfMetaConditionType<T, C extends AbstractCondition<T, ? exte
 
     List<C> conditions();
 
-    default <CT extends AbstractConditionType<T, C>> List<C> prepareConditions(CT base, Collection<C> conditions) {
-        return conditions
-            .stream()
-            .peek(condition -> condition.setPowerType(base.getPowerType()))
-            .toList();
+    default void propagatePowerType(Optional<PowerType> powerType) {
+        conditions().forEach(condition -> condition.setPowerType(powerType));
     }
 
     static <T, C extends Predicate<T>> boolean condition(T type, Collection<C> conditions) {
