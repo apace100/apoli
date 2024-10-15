@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.bientity.meta;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.condition.type.BiEntityConditionType;
@@ -25,7 +24,7 @@ public class BothBiEntityConditionType extends BiEntityConditionType {
     private final EntityCondition entityCondition;
 
     public BothBiEntityConditionType(EntityCondition entityCondition) {
-        this.entityCondition = AbstractCondition.setPowerType(entityCondition, getPowerType());
+        this.entityCondition = entityCondition;
     }
 
     @Override

@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BiEntityCondition;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
@@ -93,9 +92,9 @@ public class RaycastEntityConditionType extends EntityConditionType {
     private final boolean block;
 
     public RaycastEntityConditionType(Optional<BiEntityCondition> matchBiEntityCondition, Optional<BiEntityCondition> hitBiEntityCondition, Optional<BlockCondition> blockCondition, RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling, Optional<Vec3d> direction, Space space, Optional<Double> entityDistance, Optional<Double> blockDistance, Optional<Double> distance, boolean entity, boolean block) {
-        this.matchBiEntityCondition = AbstractCondition.setPowerType(matchBiEntityCondition, getPowerType());
-        this.hitBiEntityCondition = AbstractCondition.setPowerType(hitBiEntityCondition, getPowerType());
-        this.blockCondition = AbstractCondition.setPowerType(blockCondition, getPowerType());
+        this.matchBiEntityCondition = matchBiEntityCondition;
+        this.hitBiEntityCondition = hitBiEntityCondition;
+        this.blockCondition = blockCondition;
         this.shapeType = shapeType;
         this.fluidHandling = fluidHandling;
         this.direction = direction;

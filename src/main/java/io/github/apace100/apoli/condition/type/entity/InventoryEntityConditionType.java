@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -77,7 +76,7 @@ public class InventoryEntityConditionType extends EntityConditionType {
         this.processMode = processMode;
 
         this.power = power;
-        this.itemCondition = AbstractCondition.setPowerType(itemCondition, getPowerType());
+        this.itemCondition = itemCondition;
 
         this.slots = slots;
         this.slot = slot;
@@ -89,6 +88,7 @@ public class InventoryEntityConditionType extends EntityConditionType {
 
         this.comparison = comparison;
         this.compareTo = compareTo;
+
     }
 
     @Override

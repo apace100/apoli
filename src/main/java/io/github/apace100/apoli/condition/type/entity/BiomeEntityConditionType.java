@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BiomeCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -42,7 +41,7 @@ public class BiomeEntityConditionType extends EntityConditionType {
     private final Optional<List<RegistryKey<Biome>>> biomes;
 
     public BiomeEntityConditionType(Optional<BiomeCondition> biomeCondition, Optional<RegistryKey<Biome>> biome, Optional<List<RegistryKey<Biome>>> biomes) {
-        this.biomeCondition = AbstractCondition.setPowerType(biomeCondition, getPowerType());
+        this.biomeCondition = biomeCondition;
         this.biome = biome;
         this.biomes = biomes;
     }

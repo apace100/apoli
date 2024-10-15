@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -30,7 +29,7 @@ public class UsingItemEntityConditionType extends EntityConditionType {
     private final Optional<ItemCondition> itemCondition;
 
     public UsingItemEntityConditionType(Optional<ItemCondition> itemCondition) {
-        this.itemCondition = AbstractCondition.setPowerType(itemCondition, getPowerType());
+        this.itemCondition = itemCondition;
     }
 
     @Override

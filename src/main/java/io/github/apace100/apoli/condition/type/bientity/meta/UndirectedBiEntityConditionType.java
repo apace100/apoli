@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.condition.type.bientity.meta;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BiEntityCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
@@ -31,7 +30,7 @@ public class UndirectedBiEntityConditionType extends BiEntityConditionType {
     private final BiEntityCondition biEntityCondition;
 
     public UndirectedBiEntityConditionType(BiEntityCondition biEntityCondition) {
-        this.biEntityCondition = AbstractCondition.setPowerType(biEntityCondition, getPowerType());
+        this.biEntityCondition = biEntityCondition;
     }
 
     @Override

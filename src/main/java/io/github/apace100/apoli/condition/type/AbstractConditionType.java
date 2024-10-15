@@ -2,7 +2,6 @@ package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.registry.DataObjectFactory;
 import io.github.apace100.calio.util.Validatable;
@@ -13,7 +12,6 @@ import java.util.function.Predicate;
 public abstract class AbstractConditionType<T, C extends AbstractCondition<T, ?>> implements Predicate<T>, Validatable {
 
 	private Optional<C> condition = Optional.empty();
-	private Optional<PowerType> powerType = Optional.empty();
 
 	@Override
 	public abstract boolean test(T context);
@@ -30,14 +28,6 @@ public abstract class AbstractConditionType<T, C extends AbstractCondition<T, ?>
 	}
 
 	public abstract ConditionConfiguration<?> configuration();
-
-	public final Optional<PowerType> getPowerType() {
-		return powerType;
-	}
-
-	public void setPowerType(Optional<PowerType> powerType) {
-		this.powerType = powerType;
-	}
 
 	public final Optional<C> getCondition() {
 		return condition;

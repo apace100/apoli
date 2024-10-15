@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.block.meta;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
@@ -40,7 +39,7 @@ public class OffsetBlockConditionType extends BlockConditionType {
     private final Vec3i offset;
 
     public OffsetBlockConditionType(BlockCondition blockCondition, Vec3i offset) {
-        this.blockCondition = AbstractCondition.setPowerType(blockCondition, getPowerType());
+        this.blockCondition = blockCondition;
         this.offset = offset;
     }
 

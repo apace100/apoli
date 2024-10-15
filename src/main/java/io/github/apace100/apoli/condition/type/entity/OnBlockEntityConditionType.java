@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -28,7 +27,7 @@ public class OnBlockEntityConditionType extends EntityConditionType {
     private final Optional<BlockCondition> blockCondition;
 
     public OnBlockEntityConditionType(Optional<BlockCondition> blockCondition) {
-        this.blockCondition = AbstractCondition.setPowerType(blockCondition, getPowerType());
+        this.blockCondition = blockCondition;
     }
 
     @Override

@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BiEntityCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -39,7 +38,7 @@ public class PassengerEntityConditionType extends EntityConditionType {
     private final int compareTo;
 
     public PassengerEntityConditionType(Optional<BiEntityCondition> biEntityCondition, Comparison comparison, int compareTo) {
-        this.biEntityCondition = AbstractCondition.setPowerType(biEntityCondition, getPowerType());
+        this.biEntityCondition = biEntityCondition;
         this.comparison = comparison;
         this.compareTo = compareTo;
     }

@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.damage;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.condition.type.DamageConditionType;
@@ -26,7 +25,7 @@ public class AttackerDamageConditionType extends DamageConditionType {
     private final EntityCondition entityCondition;
 
     public AttackerDamageConditionType(EntityCondition entityCondition) {
-        this.entityCondition = AbstractCondition.setPowerType(entityCondition, getPowerType());
+        this.entityCondition = entityCondition;
     }
 
     @Override

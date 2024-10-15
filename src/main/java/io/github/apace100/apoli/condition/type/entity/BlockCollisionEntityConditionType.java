@@ -1,7 +1,6 @@
 package io.github.apace100.apoli.condition.type.entity;
 
 import io.github.apace100.apoli.access.BlockCollisionSpliteratorAccess;
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -46,7 +45,7 @@ public class BlockCollisionEntityConditionType extends EntityConditionType {
     private final Vec3d offset;
 
     public BlockCollisionEntityConditionType(Optional<BlockCondition> blockCondition, Vec3d offset) {
-        this.blockCondition = AbstractCondition.setPowerType(blockCondition, getPowerType());
+        this.blockCondition = blockCondition;
         this.offset = offset;
     }
 

@@ -1,9 +1,7 @@
 package io.github.apace100.apoli.condition;
 
 import io.github.apace100.apoli.condition.type.AbstractConditionType;
-import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.calio.util.Validatable;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -23,24 +21,6 @@ public abstract class AbstractCondition<T, CT extends AbstractConditionType<T, ?
 
 	}
 
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> Optional<C> setPowerType(Optional<C> condition, Optional<PowerType> powerType) {
-		return condition.map(c -> c.setPowerType(powerType));
-	}
-
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> Optional<C> setPowerType(Optional<C> condition, PowerType powerType) {
-		return setPowerType(condition, Optional.ofNullable(powerType));
-	}
-
-	@Nullable
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> C setPowerType(C condition, Optional<PowerType> powerType) {
-		return setPowerType(Optional.ofNullable(condition), powerType).orElse(null);
-	}
-
-	@Nullable
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> C setPowerType(C condition, PowerType powerType) {
-		return setPowerType(Optional.ofNullable(condition), powerType).orElse(null);
-	}
-
 	@Override
 	public boolean test(T operand) {
 		return isInverted() != getConditionType().test(operand);
@@ -49,20 +29,6 @@ public abstract class AbstractCondition<T, CT extends AbstractConditionType<T, ?
 	@Override
 	public void validate() throws Exception {
 		getConditionType().validate();
-	}
-
-	public final Optional<PowerType> getPowerType() {
-		return getConditionType().getPowerType();
-	}
-
-	@SuppressWarnings("unchecked")
-	public <C extends AbstractCondition<T, CT>> C setPowerType(Optional<PowerType> powerType) {
-		getConditionType().setPowerType(powerType);
-		return (C) this;
-	}
-
-	public <C extends AbstractCondition<T, CT>> C setPowerType(PowerType powerType) {
-		return setPowerType(Optional.ofNullable(powerType));
 	}
 
 	public final CT getConditionType() {

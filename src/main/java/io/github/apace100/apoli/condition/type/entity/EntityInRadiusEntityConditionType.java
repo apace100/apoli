@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BiEntityCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -49,7 +48,7 @@ public class EntityInRadiusEntityConditionType extends EntityConditionType {
     private final int threshold;
 
     public EntityInRadiusEntityConditionType(BiEntityCondition biEntityCondition, Shape shape, Comparison comparison, int compareTo, double radius) {
-        this.biEntityCondition = AbstractCondition.setPowerType(biEntityCondition, getPowerType());
+        this.biEntityCondition = biEntityCondition;
         this.shape = shape;
         this.comparison = comparison;
         this.compareTo = compareTo;

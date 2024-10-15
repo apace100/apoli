@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.block;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
@@ -39,7 +38,7 @@ public class AdjacentBlockConditionType extends BlockConditionType {
     private final int compareTo;
 
     public AdjacentBlockConditionType(BlockCondition adjacentCondition, Comparison comparison, int compareTo) {
-        this.adjacentCondition = AbstractCondition.setPowerType(adjacentCondition, getPowerType());
+        this.adjacentCondition = adjacentCondition;
         this.comparison = comparison;
         this.compareTo = compareTo;
     }

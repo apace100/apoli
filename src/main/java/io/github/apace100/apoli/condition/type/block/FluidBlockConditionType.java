@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.block;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.FluidCondition;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
@@ -26,7 +25,7 @@ public class FluidBlockConditionType extends BlockConditionType {
     private final FluidCondition fluidCondition;
 
     public FluidBlockConditionType(FluidCondition fluidCondition) {
-        this.fluidCondition = AbstractCondition.setPowerType(fluidCondition, getPowerType());
+        this.fluidCondition = fluidCondition;
     }
 
     @Override

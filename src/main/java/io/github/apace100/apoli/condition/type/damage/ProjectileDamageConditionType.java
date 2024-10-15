@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.damage;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.condition.type.DamageConditionType;
@@ -36,7 +35,7 @@ public class ProjectileDamageConditionType extends DamageConditionType {
 
     public ProjectileDamageConditionType(Optional<EntityType<?>> projectile, Optional<EntityCondition> projectileCondition) {
         this.projectile = projectile;
-        this.projectileCondition = AbstractCondition.setPowerType(projectileCondition, getPowerType());
+        this.projectileCondition = projectileCondition;
     }
 
     @Override
