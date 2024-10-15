@@ -1,11 +1,13 @@
 package io.github.apace100.apoli.action.type;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.action.type.entity.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registry;
@@ -17,6 +19,7 @@ import java.util.function.Function;
 public class EntityActionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
+    public static final SerializableDataType<ActionConfiguration<EntityActionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.ENTITY_ACTION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Entity action type \"" + id + "\" is undefined!");
 
     public static void register() {
 

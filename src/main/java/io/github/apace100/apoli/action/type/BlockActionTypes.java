@@ -1,9 +1,12 @@
 package io.github.apace100.apoli.action.type;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.action.type.block.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.registry.Registry;
@@ -15,6 +18,7 @@ import org.apache.commons.lang3.tuple.Triple;
 public class BlockActionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
+    public static final SerializableDataType<ActionConfiguration<BlockActionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.BLOCK_ACTION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Block action type \"" + id + "\" is undefined!");
 
     public static void register() {
 

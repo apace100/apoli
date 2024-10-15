@@ -3,11 +3,10 @@ package io.github.apace100.apoli.data;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.*;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.AbstractAction;
+import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
-import io.github.apace100.apoli.action.type.BiEntityActionTypes;
-import io.github.apace100.apoli.action.type.BlockActionTypes;
-import io.github.apace100.apoli.action.type.EntityActionTypes;
-import io.github.apace100.apoli.action.type.ItemActionTypes;
+import io.github.apace100.apoli.action.type.*;
 import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
@@ -458,7 +457,7 @@ public class ApoliDataTypes {
     }
 
 	@SuppressWarnings("unchecked")
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> CompoundSerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
+	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> SerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
 		return new CompoundSerializableDataType<>(
 			new SerializableData()
 				.add(typeField, registryDataType)
@@ -492,7 +491,7 @@ public class ApoliDataTypes {
 						CT conditionType = input.getConditionType();
 						ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.configuration();
 
-						prefix.add(typeField, registryDataType.setRoot(root).write(ops, config));
+						prefix.add(typeField, registryDataType.write(ops, config));
 						config.mapCodec(root).encode(conditionType, ops, prefix);
 
 						prefix.add("inverted", ops.createBoolean(input.isInverted()));
@@ -528,6 +527,73 @@ public class ApoliDataTypes {
 
 					serializableData.send(buf, conditionData);
 					config.dataType().send(buf, conditionType);
+
+				}
+
+			}
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>> SerializableDataType<A> action(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<AT, A> constructor) {
+		return new CompoundSerializableDataType<>(
+			new SerializableData()
+				.add(typeField, registryDataType),
+			serializableData -> {
+				boolean root = serializableData.isRoot();
+				return new MapCodec<>() {
+
+					@Override
+					public <I> Stream<I> keys(DynamicOps<I> ops) {
+						return serializableData.keys(ops);
+					}
+
+					@Override
+					public <I> DataResult<A> decode(DynamicOps<I> ops, MapLike<I> input) {
+						return serializableData.decode(ops, input)
+							.map(actionData -> (ActionConfiguration<AT>) actionData.get(typeField))
+							.flatMap(config -> config.mapCodec(root).decode(ops, input)
+								.map(constructor));
+					}
+
+					@Override
+					public <I> RecordBuilder<I> encode(A input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
+
+						AT actionType = input.getActionType();
+						ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.configuration();
+
+						prefix.add(typeField, registryDataType.write(ops, config));
+						config.mapCodec(root).encode(actionType, ops, prefix);
+
+						return prefix;
+
+					}
+
+				};
+			},
+			serializableData -> new PacketCodec<>() {
+
+				@Override
+				public A decode(RegistryByteBuf buf) {
+
+					SerializableData.Instance actionData = serializableData.receive(buf);
+					ActionConfiguration<AT> config = actionData.get(typeField);
+
+					return constructor.apply(config.dataType().receive(buf));
+
+				}
+
+				@Override
+				public void encode(RegistryByteBuf buf, A value) {
+
+					AT actionType = value.getActionType();
+					ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.configuration();
+
+					SerializableData.Instance actionData = serializableData.instance()
+						.set(typeField, config);
+
+					serializableData.send(buf, actionData);
+					config.dataType().send(buf, actionType);
 
 				}
 

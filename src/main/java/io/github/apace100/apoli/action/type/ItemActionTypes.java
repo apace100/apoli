@@ -1,9 +1,12 @@
 package io.github.apace100.apoli.action.type;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
 import io.github.apace100.apoli.action.type.item.*;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
+import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.registry.Registry;
@@ -13,6 +16,7 @@ import net.minecraft.world.World;
 public class ItemActionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
+    public static final SerializableDataType<ActionConfiguration<ItemActionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.ITEM_ACTION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Item action type \"" + id + "\" is undefined!");
 
     public static void register() {
 

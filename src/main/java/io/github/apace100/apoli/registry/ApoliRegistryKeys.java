@@ -1,7 +1,12 @@
 package io.github.apace100.apoli.registry;
 
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
+import io.github.apace100.apoli.action.type.BiEntityActionType;
+import io.github.apace100.apoli.action.type.BlockActionType;
+import io.github.apace100.apoli.action.type.EntityActionType;
+import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.*;
@@ -48,6 +53,11 @@ public class ApoliRegistryKeys {
     public static final RegistryKey<Registry<ActionTypeFactory<Pair<World, StackReference>>>> ITEM_ACTION = create("item_action");
     public static final RegistryKey<Registry<ActionTypeFactory<Triple<World, BlockPos, Direction>>>> BLOCK_ACTION = create("block_action");
     public static final RegistryKey<Registry<ActionTypeFactory<Pair<Entity, Entity>>>> BIENTITY_ACTION = create("bientity_action");
+
+    public static final RegistryKey<Registry<ActionConfiguration<BiEntityActionType>>> BIENTITY_ACTION_TYPE = create("bientity_action_type");
+    public static final RegistryKey<Registry<ActionConfiguration<BlockActionType>>> BLOCK_ACTION_TYPE = create("block_action_type");
+    public static final RegistryKey<Registry<ActionConfiguration<EntityActionType>>> ENTITY_ACTION_TYPE = create("entity_action_type");
+    public static final RegistryKey<Registry<ActionConfiguration<ItemActionType>>> ITEM_ACTION_TYPE = create("item_action_type");
 
     public static final RegistryKey<Registry<IModifierOperation>> MODIFIER_OPERATION = create("modifier_operation");
 

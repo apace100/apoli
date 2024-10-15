@@ -20,12 +20,12 @@ public record ConditionConfiguration<T extends AbstractConditionType<?, ?>>(Iden
 		return fromDataFactory(id, dataFactory);
 	}
 
-	public static <T extends AbstractConditionType<?, ?>> ConditionConfiguration<T> fromDataFactory(Identifier id, DataObjectFactory<T> dataFactory) {
-		return new ConditionConfiguration<>(id, SerializableDataType.compound(dataFactory), dataFactory);
-	}
-
 	public static <T extends AbstractConditionType<?, ?>> ConditionConfiguration<T> simple(Identifier id, Supplier<T> constructor) {
 		return of(id, new SerializableData(), data -> constructor.get(), (t, serializableData) -> serializableData.instance());
+	}
+
+	public static <T extends AbstractConditionType<?, ?>> ConditionConfiguration<T> fromDataFactory(Identifier id, DataObjectFactory<T> dataFactory) {
+		return new ConditionConfiguration<>(id, SerializableDataType.compound(dataFactory), dataFactory);
 	}
 
 }
