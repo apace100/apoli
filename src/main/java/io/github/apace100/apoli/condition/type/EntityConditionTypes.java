@@ -8,10 +8,7 @@ import io.github.apace100.apoli.condition.type.entity.meta.AllOfEntityConditionT
 import io.github.apace100.apoli.condition.type.entity.meta.AnyOfEntityConditionType;
 import io.github.apace100.apoli.condition.type.entity.meta.ConstantEntityConditionType;
 import io.github.apace100.apoli.condition.type.entity.meta.RandomChanceEntityConditionType;
-import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
-import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
-import io.github.apace100.apoli.condition.type.meta.ConstantMetaConditionType;
-import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
+import io.github.apace100.apoli.condition.type.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
@@ -41,6 +38,7 @@ public class EntityConditionTypes {
     public static final ConditionConfiguration<CreativeFlyingEntityConditionType> CREATIVE_FLYING = register(ConditionConfiguration.simple(Apoli.identifier("creative_flying"), CreativeFlyingEntityConditionType::new));
     public static final ConditionConfiguration<DayTimeEntityConditionType> DAY_TIME = register(ConditionConfiguration.simple(Apoli.identifier("daytime"), DayTimeEntityConditionType::new));
     public static final ConditionConfiguration<DimensionEntityConditionType> DIMENSION = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("dimension"), DimensionEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<DistanceFromCoordinatesEntityConditionType> DISTANCE_FROM_COORDINATES = register(DistanceFromCoordinatesMetaConditionType.createConfiguration(DistanceFromCoordinatesEntityConditionType::new));
     public static final ConditionConfiguration<ElytraFlightPossibleEntityConditionType> ELYTRA_FLIGHT_POSSIBLE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("elytra_flight_possible"), ElytraFlightPossibleEntityConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<EnchantmentEntityConditionType> ENCHANTMENT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("enchantment"), EnchantmentEntityConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<EntityInRadiusEntityConditionType> ENTITY_IN_RADIUS = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("entity_in_radius"), EntityInRadiusEntityConditionType.DATA_FACTORY));
@@ -97,7 +95,7 @@ public class EntityConditionTypes {
     public static final ConditionConfiguration<XpLevelsEntityConditionType> XP_LEVELS = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("xp_levels"), XpLevelsEntityConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<XpPointsEntityConditionType> XP_POINTS = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("xp_points"), XpPointsEntityConditionType.DATA_FACTORY));
 
-    public static void register() {
+	public static void register() {
 //        DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditionTypes::register);
     }
 

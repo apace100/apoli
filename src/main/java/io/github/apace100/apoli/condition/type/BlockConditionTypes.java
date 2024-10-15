@@ -5,10 +5,7 @@ import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.block.*;
 import io.github.apace100.apoli.condition.type.block.meta.*;
-import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
-import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
-import io.github.apace100.apoli.condition.type.meta.ConstantMetaConditionType;
-import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
+import io.github.apace100.apoli.condition.type.meta.*;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
@@ -24,6 +21,7 @@ public class BlockConditionTypes {
     public static final ConditionConfiguration<ConstantBlockConditionType> CONSTANT = ConstantMetaConditionType.createConfiguration(ConstantBlockConditionType::new);
     public static final ConditionConfiguration<RandomChanceBlockConditionType> RANDOM_CHANCE = RandomChanceMetaConditionType.createConfiguration(RandomChanceBlockConditionType::new);
 
+    public static final ConditionConfiguration<DistanceFromCoordinatesBlockConditionType> DISTANCE_FROM_COORDINATES = register(DistanceFromCoordinatesMetaConditionType.createConfiguration(DistanceFromCoordinatesBlockConditionType::new));
     public static final ConditionConfiguration<OffsetBlockConditionType> OFFSET = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("offset"), OffsetBlockConditionType.DATA_FACTORY));
 
     public static final ConditionConfiguration<AdjacentBlockConditionType> ADJACENT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("adjacent"), AdjacentBlockConditionType.DATA_FACTORY));
@@ -46,7 +44,7 @@ public class BlockConditionTypes {
     public static final ConditionConfiguration<SlipperinessBlockConditionType> SLIPPERINESS = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("slipperiness"), SlipperinessBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<WaterLoggableBlockConditionType> WATER_LOGGABLE = ConditionConfiguration.simple(Apoli.identifier("water_loggable"), WaterLoggableBlockConditionType::new);
 
-    public static void register() {
+	public static void register() {
 
     }
 
