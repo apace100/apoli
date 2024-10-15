@@ -4,13 +4,14 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.action.AbstractAction;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.AbstractActionType;
+import io.github.apace100.apoli.util.context.TypeActionContext;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.util.collection.WeightedList;
 
 import java.util.function.Function;
 
-public interface ChoiceMetaActionType<T, A extends AbstractAction<T, ? extends AbstractActionType<T, A>>> {
+public interface ChoiceMetaActionType<T extends TypeActionContext<?>, A extends AbstractAction<T, ? extends AbstractActionType<T, A>>> {
 
     WeightedList<A> actions();
 
@@ -24,7 +25,7 @@ public interface ChoiceMetaActionType<T, A extends AbstractAction<T, ? extends A
 
     }
 
-    static <T, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & ChoiceMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, Function<WeightedList<A>, M> constructor) {
+    static <T extends TypeActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & ChoiceMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, Function<WeightedList<A>, M> constructor) {
         return ActionConfiguration.of(
             Apoli.identifier("choice"),
             new SerializableData()

@@ -2,6 +2,7 @@ package io.github.apace100.apoli.action.type;
 
 import io.github.apace100.apoli.action.AbstractAction;
 import io.github.apace100.apoli.action.ActionConfiguration;
+import io.github.apace100.apoli.util.context.TypeActionContext;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.registry.DataObjectFactory;
 import io.github.apace100.calio.util.Validatable;
@@ -9,7 +10,7 @@ import io.github.apace100.calio.util.Validatable;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public abstract class AbstractActionType<T, A extends AbstractAction<T, ?>> implements Consumer<T>, Validatable {
+public abstract class AbstractActionType<T extends TypeActionContext<?>, A extends AbstractAction<T, ?>> implements Consumer<T>, Validatable {
 
 	private Optional<A> action = Optional.empty();
 

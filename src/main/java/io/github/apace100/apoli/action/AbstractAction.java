@@ -1,12 +1,13 @@
 package io.github.apace100.apoli.action;
 
 import io.github.apace100.apoli.action.type.AbstractActionType;
+import io.github.apace100.apoli.util.context.TypeActionContext;
 import io.github.apace100.calio.util.Validatable;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public abstract class AbstractAction<T, AT extends AbstractActionType<T, ?>> implements Consumer<T>, Validatable {
+public abstract class AbstractAction<T extends TypeActionContext<?>, AT extends AbstractActionType<T, ?>> implements Consumer<T>, Validatable {
 
 	private final AT actionType;
 

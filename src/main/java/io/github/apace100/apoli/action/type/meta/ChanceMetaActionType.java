@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.action.AbstractAction;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.AbstractActionType;
+import io.github.apace100.apoli.util.context.TypeActionContext;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -12,7 +13,7 @@ import org.apache.commons.lang3.function.TriFunction;
 
 import java.util.Optional;
 
-public interface ChanceMetaActionType<T, A extends AbstractAction<T, ? extends AbstractActionType<T, A>>> {
+public interface ChanceMetaActionType<T extends TypeActionContext<?>, A extends AbstractAction<T, ? extends AbstractActionType<T, A>>> {
 
     A successAction();
 
@@ -32,7 +33,7 @@ public interface ChanceMetaActionType<T, A extends AbstractAction<T, ? extends A
 
     }
 
-    static <T, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & ChanceMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, TriFunction<A, Optional<A>, Float, M> constructor) {
+    static <T extends TypeActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & ChanceMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, TriFunction<A, Optional<A>, Float, M> constructor) {
         return ActionConfiguration.of(
             Apoli.identifier("chance"),
             new SerializableData()
