@@ -17,7 +17,7 @@ public class RandomChanceItemConditionType extends ItemConditionType implements 
 
 	@Override
 	public boolean test(World world, ItemStack stack) {
-		return RandomChanceMetaConditionType.condition(chance());
+		return testCondition();
 	}
 
 	@Override

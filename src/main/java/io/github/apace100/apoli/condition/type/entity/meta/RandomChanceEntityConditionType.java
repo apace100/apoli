@@ -16,7 +16,7 @@ public class RandomChanceEntityConditionType extends EntityConditionType impleme
 
 	@Override
 	public boolean test(Entity entity) {
-		return RandomChanceMetaConditionType.condition(chance());
+		return testCondition();
 	}
 
 	@Override

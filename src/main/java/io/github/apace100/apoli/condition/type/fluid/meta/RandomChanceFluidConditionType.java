@@ -16,7 +16,7 @@ public class RandomChanceFluidConditionType extends FluidConditionType implement
 
 	@Override
 	public boolean test(FluidState fluidState) {
-		return RandomChanceMetaConditionType.condition(chance());
+		return testCondition();
 	}
 
 	@Override

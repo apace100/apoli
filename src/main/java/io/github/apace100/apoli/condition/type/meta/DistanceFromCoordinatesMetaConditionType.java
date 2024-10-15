@@ -45,7 +45,7 @@ public interface DistanceFromCoordinatesMetaConditionType {
 	boolean ignoreY();
 	boolean ignoreZ();
 
-	default boolean condition(Either<BlockContext, EntityContext> context) {
+	default boolean testCondition(Either<BlockContext, EntityContext> context) {
 
 		World world = context.map(BlockContext::world, EntityContext::world);
 		BlockPos pos = context.map(BlockContext::pos, EntityContext::blockPos);

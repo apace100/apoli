@@ -17,7 +17,7 @@ public class RandomChanceBlockConditionType extends BlockConditionType implement
 
 	@Override
 	public boolean test(World world, BlockPos pos) {
-		return RandomChanceMetaConditionType.condition(chance());
+		return testCondition();
 	}
 
 	@Override

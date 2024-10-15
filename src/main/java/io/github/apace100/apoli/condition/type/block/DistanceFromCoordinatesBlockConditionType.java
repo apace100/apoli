@@ -51,7 +51,7 @@ public class DistanceFromCoordinatesBlockConditionType extends BlockConditionTyp
 
 	@Override
 	public boolean test(World world, BlockPos pos) {
-		return condition(Either.left(new BlockContext(world, pos)));
+		return testCondition(Either.left(new BlockContext(world, pos)));
 	}
 
 	@Override

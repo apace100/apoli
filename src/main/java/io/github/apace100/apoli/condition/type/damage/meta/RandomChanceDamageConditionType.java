@@ -16,7 +16,7 @@ public class RandomChanceDamageConditionType extends DamageConditionType impleme
 
 	@Override
 	public boolean test(DamageSource source, float amount) {
-		return RandomChanceMetaConditionType.condition(chance());
+		return testCondition();
 	}
 
 	@Override

@@ -47,7 +47,7 @@ public class DistanceFromCoordinatesEntityConditionType extends EntityConditionT
 
 	@Override
 	public boolean test(Entity entity) {
-		return condition(Either.right(new EntityContext(entity)));
+		return testCondition(Either.right(new EntityContext(entity)));
 	}
 
 	@Override

@@ -6,11 +6,9 @@ import io.github.apace100.apoli.condition.context.FluidContext;
 import io.github.apace100.apoli.condition.type.FluidConditionType;
 import io.github.apace100.apoli.condition.type.FluidConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
-import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.fluid.FluidState;
 
 import java.util.List;
-import java.util.Optional;
 
 public class AllOfFluidConditionType extends FluidConditionType implements AllOfMetaConditionType<FluidContext, FluidCondition> {
 
@@ -22,7 +20,7 @@ public class AllOfFluidConditionType extends FluidConditionType implements AllOf
 
 	@Override
 	public boolean test(FluidState fluidState) {
-		return AllOfMetaConditionType.condition(new FluidContext(fluidState), conditions());
+		return testConditions(new FluidContext(fluidState));
 	}
 
 	@Override
@@ -33,12 +31,6 @@ public class AllOfFluidConditionType extends FluidConditionType implements AllOf
 	@Override
 	public List<FluidCondition> conditions() {
 		return conditions;
-	}
-
-	@Override
-	public void setPowerType(Optional<PowerType> powerType) {
-		super.setPowerType(powerType);
-		propagatePowerType(powerType);
 	}
 
 }

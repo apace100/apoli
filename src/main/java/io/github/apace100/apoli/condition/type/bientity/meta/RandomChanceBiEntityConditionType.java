@@ -21,7 +21,7 @@ public class RandomChanceBiEntityConditionType extends BiEntityConditionType imp
 
 	@Override
 	public boolean test(Entity actor, Entity target) {
-		return RandomChanceMetaConditionType.condition(chance());
+		return testCondition();
 	}
 
 	@Override

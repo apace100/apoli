@@ -18,7 +18,7 @@ public class RandomChanceBiomeConditionType extends BiomeConditionType implement
 
 	@Override
 	public boolean test(BlockPos pos, RegistryEntry<Biome> biomeEntry) {
-		return RandomChanceMetaConditionType.condition(chance());
+		return testCondition();
 	}
 
 	@Override

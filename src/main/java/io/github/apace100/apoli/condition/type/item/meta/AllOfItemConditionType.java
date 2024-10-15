@@ -6,12 +6,10 @@ import io.github.apace100.apoli.condition.context.ItemContext;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
-import io.github.apace100.apoli.power.type.PowerType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.Optional;
 
 public class AllOfItemConditionType extends ItemConditionType implements AllOfMetaConditionType<ItemContext, ItemCondition> {
 
@@ -23,7 +21,7 @@ public class AllOfItemConditionType extends ItemConditionType implements AllOfMe
 
 	@Override
 	public boolean test(World world, ItemStack stack) {
-		return AllOfMetaConditionType.condition(new ItemContext(world, stack), conditions());
+		return testConditions(new ItemContext(world, stack));
 	}
 
 	@Override
@@ -34,12 +32,6 @@ public class AllOfItemConditionType extends ItemConditionType implements AllOfMe
 	@Override
 	public List<ItemCondition> conditions() {
 		return conditions;
-	}
-
-	@Override
-	public void setPowerType(Optional<PowerType> powerType) {
-		super.setPowerType(powerType);
-		propagatePowerType(powerType);
 	}
 
 }
