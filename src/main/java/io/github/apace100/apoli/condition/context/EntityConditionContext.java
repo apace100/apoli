@@ -4,7 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public record EntityContext(Entity entity) {
+public record EntityConditionContext(Entity entity) {
 
 	public World world() {
 		return entity().getWorld();

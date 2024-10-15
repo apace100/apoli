@@ -2,7 +2,7 @@ package io.github.apace100.apoli.condition.type.block;
 
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.context.BlockContext;
+import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
 import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.DistanceFromCoordinatesMetaConditionType;
@@ -51,7 +51,7 @@ public class DistanceFromCoordinatesBlockConditionType extends BlockConditionTyp
 
 	@Override
 	public boolean test(World world, BlockPos pos) {
-		return testCondition(Either.left(new BlockContext(world, pos)));
+		return testCondition(Either.left(new BlockConditionContext(world, pos)));
 	}
 
 	@Override

@@ -2,7 +2,7 @@ package io.github.apace100.apoli.condition.type.biome.meta;
 
 import io.github.apace100.apoli.condition.BiomeCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.context.BiomeContext;
+import io.github.apace100.apoli.condition.context.BiomeConditionContext;
 import io.github.apace100.apoli.condition.type.BiomeConditionType;
 import io.github.apace100.apoli.condition.type.BiomeConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
@@ -12,7 +12,7 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.List;
 
-public class AnyOfBiomeConditionType extends BiomeConditionType implements AnyOfMetaConditionType<BiomeContext, BiomeCondition> {
+public class AnyOfBiomeConditionType extends BiomeConditionType implements AnyOfMetaConditionType<BiomeConditionContext, BiomeCondition> {
 
 	private final List<BiomeCondition> conditions;
 
@@ -22,7 +22,7 @@ public class AnyOfBiomeConditionType extends BiomeConditionType implements AnyOf
 
 	@Override
 	public boolean test(BlockPos pos, RegistryEntry<Biome> biomeEntry) {
-		return testConditions(new BiomeContext(pos, biomeEntry));
+		return testConditions(new BiomeConditionContext(pos, biomeEntry));
 	}
 
 	@Override

@@ -2,7 +2,7 @@ package io.github.apace100.apoli.condition.type.item.meta;
 
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.ItemCondition;
-import io.github.apace100.apoli.condition.context.ItemContext;
+import io.github.apace100.apoli.condition.context.ItemConditionContext;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
@@ -11,7 +11,7 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-public class AllOfItemConditionType extends ItemConditionType implements AllOfMetaConditionType<ItemContext, ItemCondition> {
+public class AllOfItemConditionType extends ItemConditionType implements AllOfMetaConditionType<ItemConditionContext, ItemCondition> {
 
 	private final List<ItemCondition> conditions;
 
@@ -21,7 +21,7 @@ public class AllOfItemConditionType extends ItemConditionType implements AllOfMe
 
 	@Override
 	public boolean test(World world, ItemStack stack) {
-		return testConditions(new ItemContext(world, stack));
+		return testConditions(new ItemConditionContext(world, stack));
 	}
 
 	@Override

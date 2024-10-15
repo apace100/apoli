@@ -4,6 +4,6 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
-public record BiomeContext(BlockPos pos, RegistryEntry<Biome> biomeEntry) {
+public record BiomeConditionContext(BlockPos pos, RegistryEntry<Biome> biomeEntry) {
 
 }

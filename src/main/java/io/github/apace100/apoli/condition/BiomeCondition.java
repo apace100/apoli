@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.condition;
 
-import io.github.apace100.apoli.condition.context.BiomeContext;
+import io.github.apace100.apoli.condition.context.BiomeConditionContext;
 import io.github.apace100.apoli.condition.type.BiomeConditionType;
 import io.github.apace100.apoli.condition.type.BiomeConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
@@ -9,7 +9,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
-public class BiomeCondition extends AbstractCondition<BiomeContext, BiomeConditionType> {
+public class BiomeCondition extends AbstractCondition<BiomeConditionContext, BiomeConditionType> {
 
 	public static final SerializableDataType<BiomeCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", BiomeConditionTypes.DATA_TYPE, BiomeCondition::new));
 
@@ -22,7 +22,7 @@ public class BiomeCondition extends AbstractCondition<BiomeContext, BiomeConditi
 	}
 
 	public boolean test(BlockPos pos, RegistryEntry<Biome> biomeEntry) {
-		return test(new BiomeContext(pos, biomeEntry));
+		return test(new BiomeConditionContext(pos, biomeEntry));
 	}
 
 }

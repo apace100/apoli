@@ -2,7 +2,7 @@ package io.github.apace100.apoli.condition.type.entity;
 
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.context.EntityContext;
+import io.github.apace100.apoli.condition.context.EntityConditionContext;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.DistanceFromCoordinatesMetaConditionType;
@@ -47,7 +47,7 @@ public class DistanceFromCoordinatesEntityConditionType extends EntityConditionT
 
 	@Override
 	public boolean test(Entity entity) {
-		return testCondition(Either.right(new EntityContext(entity)));
+		return testCondition(Either.right(new EntityConditionContext(entity)));
 	}
 
 	@Override

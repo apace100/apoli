@@ -2,7 +2,7 @@ package io.github.apace100.apoli.condition.type.block.meta;
 
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.context.BlockContext;
+import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
 import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
@@ -11,7 +11,7 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-public class AnyOfBlockConditionType extends BlockConditionType implements AnyOfMetaConditionType<BlockContext, BlockCondition> {
+public class AnyOfBlockConditionType extends BlockConditionType implements AnyOfMetaConditionType<BlockConditionContext, BlockCondition> {
 
 	private final List<BlockCondition> conditions;
 
@@ -21,7 +21,7 @@ public class AnyOfBlockConditionType extends BlockConditionType implements AnyOf
 
 	@Override
 	public boolean test(World world, BlockPos pos) {
-		return testConditions(new BlockContext(world, pos));
+		return testConditions(new BlockConditionContext(world, pos));
 	}
 
 	@Override

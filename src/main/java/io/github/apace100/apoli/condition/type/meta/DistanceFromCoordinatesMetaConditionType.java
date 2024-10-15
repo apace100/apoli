@@ -4,8 +4,8 @@ import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.context.BlockContext;
-import io.github.apace100.apoli.condition.context.EntityContext;
+import io.github.apace100.apoli.condition.context.BlockConditionContext;
+import io.github.apace100.apoli.condition.context.EntityConditionContext;
 import io.github.apace100.apoli.condition.type.AbstractConditionType;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.util.Comparison;
@@ -45,10 +45,10 @@ public interface DistanceFromCoordinatesMetaConditionType {
 	boolean ignoreY();
 	boolean ignoreZ();
 
-	default boolean testCondition(Either<BlockContext, EntityContext> context) {
+	default boolean testCondition(Either<BlockConditionContext, EntityConditionContext> context) {
 
-		World world = context.map(BlockContext::world, EntityContext::world);
-		BlockPos pos = context.map(BlockContext::pos, EntityContext::blockPos);
+		World world = context.map(BlockConditionContext::world, EntityConditionContext::world);
+		BlockPos pos = context.map(BlockConditionContext::pos, EntityConditionContext::blockPos);
 
 		double coordinateScale = world.getDimension().coordinateScale();
 
