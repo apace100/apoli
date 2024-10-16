@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.util.context.TypeConditionContext;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 
@@ -13,7 +14,7 @@ public interface ConstantMetaConditionType {
 
     boolean value();
 
-    static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>, M extends AbstractConditionType<T, C> & ConstantMetaConditionType> ConditionConfiguration<M> createConfiguration(Function<Boolean, M> constructor) {
+    static <T extends TypeConditionContext, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>, M extends AbstractConditionType<T, C> & ConstantMetaConditionType> ConditionConfiguration<M> createConfiguration(Function<Boolean, M> constructor) {
         return ConditionConfiguration.of(
             Apoli.identifier("constant"),
             new SerializableData()

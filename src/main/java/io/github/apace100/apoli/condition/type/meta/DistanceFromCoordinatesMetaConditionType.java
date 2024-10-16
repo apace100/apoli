@@ -10,6 +10,7 @@ import io.github.apace100.apoli.condition.type.AbstractConditionType;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
+import io.github.apace100.apoli.util.context.TypeConditionContext;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -121,7 +122,7 @@ public interface DistanceFromCoordinatesMetaConditionType {
 
 	}
 
-	static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>, M extends AbstractConditionType<T, C> & DistanceFromCoordinatesMetaConditionType> ConditionConfiguration<M> createConfiguration(Constructor<M> constructor) {
+	static <T extends TypeConditionContext, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>, M extends AbstractConditionType<T, C> & DistanceFromCoordinatesMetaConditionType> ConditionConfiguration<M> createConfiguration(Constructor<M> constructor) {
 		return ConditionConfiguration.of(
 			Apoli.identifier("distance_from_coordinates"),
 			new SerializableData()

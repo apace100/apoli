@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.util.context.TypeConditionContext;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -19,7 +20,7 @@ public interface RandomChanceMetaConditionType {
         return Random.create().nextFloat() < chance();
     }
 
-    static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>, M extends AbstractConditionType<T, C> & RandomChanceMetaConditionType> ConditionConfiguration<M> createConfiguration(Function<Float, M> constructor) {
+    static <T extends TypeConditionContext, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>, M extends AbstractConditionType<T, C> & RandomChanceMetaConditionType> ConditionConfiguration<M> createConfiguration(Function<Float, M> constructor) {
         return ConditionConfiguration.of(
             Apoli.identifier("random_chance"),
             new SerializableData()
