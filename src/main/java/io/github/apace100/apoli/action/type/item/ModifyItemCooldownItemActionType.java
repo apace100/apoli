@@ -38,7 +38,7 @@ public class ModifyItemCooldownItemActionType extends ItemActionType {
     }
 
     @Override
-    public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 
         ItemStack stack = stackReference.get();
         if (stack.isEmpty() || modifiers.isEmpty() || !(((EntityLinkedItemStack) stack).apoli$getEntity(true) instanceof PlayerEntity player)) {

@@ -9,7 +9,7 @@ import net.minecraft.entity.Entity;
 public class NothingBiEntityActionType extends BiEntityActionType implements NothingMetaActionType {
 
 	@Override
-	public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
 	}
 

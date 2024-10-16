@@ -10,7 +10,7 @@ import net.minecraft.entity.player.PlayerEntity;
 public class SetInLoveBiEntityActionType extends BiEntityActionType {
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
         if (target instanceof AnimalEntity targetAnimal && actor instanceof PlayerEntity actorPlayer) {
             targetAnimal.lovePlayer(actorPlayer);

@@ -31,7 +31,7 @@ public class RemoveFromEntitySetBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
         if (set.getType(actor) instanceof EntitySetPowerType entitySet && entitySet.remove(target)) {
             PowerHolderComponent.syncPower(actor, set);

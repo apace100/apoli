@@ -27,7 +27,7 @@ public class IfElseItemActionType extends ItemActionType implements IfElseMetaAc
 	}
 
 	@Override
-	public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 		executeAction(new ItemActionContext(world, stackReference));
 	}
 

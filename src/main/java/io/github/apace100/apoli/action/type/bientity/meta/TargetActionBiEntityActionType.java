@@ -28,7 +28,7 @@ public class TargetActionBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
         if (target != null) {
             action.execute(target);

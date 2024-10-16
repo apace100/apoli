@@ -53,7 +53,7 @@ public class AreaOfEffectBlockActionType extends BlockActionType {
     }
 
     @Override
-    public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 
         Collection<BlockPos> affectedPositions = Shape.getPositions(pos, shape, radius);
 

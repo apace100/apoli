@@ -20,7 +20,7 @@ public class AndItemActionType extends ItemActionType implements AndMetaActionTy
 	}
 
 	@Override
-	public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 		executeActions(new ItemActionContext(world, stackReference));
 	}
 

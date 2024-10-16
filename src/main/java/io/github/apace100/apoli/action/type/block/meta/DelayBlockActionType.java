@@ -23,7 +23,7 @@ public class DelayBlockActionType extends BlockActionType implements DelayMetaAc
 	}
 
 	@Override
-	public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 		executeAction(new BlockActionContext(world, pos, direction));
 	}
 

@@ -13,7 +13,7 @@ import java.util.Optional;
 public class NothingBlockActionType extends BlockActionType implements NothingMetaActionType {
 
 	@Override
-	public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 
 	}
 

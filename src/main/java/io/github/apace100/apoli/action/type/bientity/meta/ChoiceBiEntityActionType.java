@@ -18,7 +18,7 @@ public class ChoiceBiEntityActionType extends BiEntityActionType implements Choi
 	}
 
 	@Override
-	public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 		executeActions(new BiEntityActionContext(actor, target));
 	}
 

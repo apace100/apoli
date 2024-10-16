@@ -24,7 +24,7 @@ public class ChanceBiEntityActionType extends BiEntityActionType implements Chan
 	}
 
 	@Override
-	public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 		executeAction(new BiEntityActionContext(actor, target));
 	}
 

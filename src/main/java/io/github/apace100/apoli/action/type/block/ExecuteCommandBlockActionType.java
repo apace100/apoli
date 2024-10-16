@@ -36,7 +36,7 @@ public class ExecuteCommandBlockActionType extends BlockActionType {
     }
 
     @Override
-    public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 
         MinecraftServer server = world.getServer();
         if (server == null) {

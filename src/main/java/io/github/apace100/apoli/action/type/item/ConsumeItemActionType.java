@@ -29,7 +29,7 @@ public class ConsumeItemActionType extends ItemActionType {
     }
 
     @Override
-    public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
         stackReference.get().decrement(amount);
     }
 

@@ -55,7 +55,7 @@ public class AddVelocityBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
         if (actor == null || target == null) {
             return;

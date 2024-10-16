@@ -25,7 +25,7 @@ public class ChanceItemActionType extends ItemActionType implements ChanceMetaAc
 	}
 
 	@Override
-	public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 		executeAction(new ItemActionContext(world, stackReference));
 	}
 

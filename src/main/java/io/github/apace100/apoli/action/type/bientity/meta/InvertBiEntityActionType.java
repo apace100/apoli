@@ -28,7 +28,7 @@ public class InvertBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
         action.execute(target, actor);
     }
 

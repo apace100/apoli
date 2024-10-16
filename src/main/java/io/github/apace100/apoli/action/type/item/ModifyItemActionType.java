@@ -64,7 +64,7 @@ public class ModifyItemActionType extends ItemActionType {
     }
 
     @Override
-    public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 
         if (!(world instanceof ServerWorld serverWorld)) {
             return;

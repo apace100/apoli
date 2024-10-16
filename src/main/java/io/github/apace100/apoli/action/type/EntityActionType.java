@@ -11,6 +11,6 @@ public abstract class EntityActionType extends AbstractActionType<EntityActionCo
 		execute(context.entity());
 	}
 
-	public abstract void execute(Entity entity);
+	protected abstract void execute(Entity entity);
 
 }

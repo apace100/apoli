@@ -26,7 +26,7 @@ public class IfElseBiEntityActionType extends BiEntityActionType implements IfEl
 	}
 
 	@Override
-	public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 		executeAction(new BiEntityActionContext(actor, target));
 	}
 

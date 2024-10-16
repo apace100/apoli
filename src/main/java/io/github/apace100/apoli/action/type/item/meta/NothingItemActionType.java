@@ -10,7 +10,7 @@ import net.minecraft.world.World;
 public class NothingItemActionType extends ItemActionType implements NothingMetaActionType {
 
 	@Override
-	public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 
 	}
 

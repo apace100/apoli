@@ -31,7 +31,7 @@ public class HolderActionItemActionType extends ItemActionType {
     }
 
     @Override
-    public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 
         Entity holder = ((EntityLinkedItemStack) stackReference.get()).apoli$getEntity(true);
 

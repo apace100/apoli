@@ -19,7 +19,7 @@ public class ChoiceItemActionType extends ItemActionType implements ChoiceMetaAc
 	}
 
 	@Override
-	public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 		executeActions(new ItemActionContext(world, stackReference));
 	}
 

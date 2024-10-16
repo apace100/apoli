@@ -15,6 +15,6 @@ public abstract class BlockActionType extends AbstractActionType<BlockActionCont
 		execute(context.world(), context.pos(), context.direction());
 	}
 
-	public abstract void execute(World world, BlockPos pos, Optional<Direction> direction);
+	protected abstract void execute(World world, BlockPos pos, Optional<Direction> direction);
 
 }

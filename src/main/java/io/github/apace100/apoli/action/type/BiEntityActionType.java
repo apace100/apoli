@@ -11,6 +11,6 @@ public abstract class BiEntityActionType extends AbstractActionType<BiEntityActi
 		execute(context.actor(), context.target());
 	}
 
-	public abstract void execute(Entity actor, Entity target);
+	protected abstract void execute(Entity actor, Entity target);
 
 }

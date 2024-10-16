@@ -69,7 +69,7 @@ public class ModifyBlockStateBlockActionType extends BlockActionType {
     }
 
     @Override
-    public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 
         BlockState blockState = world.getBlockState(pos);
         Property<?> blockProperty = blockState.getProperties()

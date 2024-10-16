@@ -34,6 +34,6 @@ public abstract class ItemActionType extends AbstractActionType<ItemActionContex
 
 	}
 
-	public abstract void execute(World world, StackReference stackReference);
+	protected abstract void execute(World world, StackReference stackReference);
 
 }

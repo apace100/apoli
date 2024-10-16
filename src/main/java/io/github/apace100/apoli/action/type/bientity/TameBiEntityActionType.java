@@ -11,7 +11,7 @@ import net.minecraft.entity.player.PlayerEntity;
 public class TameBiEntityActionType extends BiEntityActionType {
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
         if (actor instanceof PlayerEntity actorPlayer) {
 

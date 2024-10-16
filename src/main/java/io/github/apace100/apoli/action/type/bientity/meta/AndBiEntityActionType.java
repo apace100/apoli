@@ -19,7 +19,7 @@ public class AndBiEntityActionType extends BiEntityActionType implements AndMeta
 	}
 
 	@Override
-	public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 		executeActions(new BiEntityActionContext(actor, target));
 	}
 

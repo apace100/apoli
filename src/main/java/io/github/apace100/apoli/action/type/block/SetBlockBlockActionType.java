@@ -33,7 +33,7 @@ public class SetBlockBlockActionType extends BlockActionType {
     }
 
     @Override
-    public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
         world.setBlockState(pos, blockState);
     }
 

@@ -48,7 +48,7 @@ public class SpawnEntityBlockActionType extends BlockActionType {
     }
 
     @Override
-    public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
         MiscUtil.getEntityWithPassengers(world, entityType, tag, pos.toCenterPos(), Optional.empty(), Optional.empty()).ifPresent(entity -> {
 
             if (world instanceof ServerWorld serverWorld) {

@@ -36,7 +36,7 @@ public class BoneMealBlockActionType extends BlockActionType {
     }
 
     @Override
-    public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 
         if (BoneMealItem.useOnFertilizable(ItemStack.EMPTY, world, pos)) {
 

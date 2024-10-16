@@ -10,7 +10,7 @@ import net.minecraft.entity.Leashable;
 public class LeashBiEntityActionType extends BiEntityActionType {
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
         if (actor == null || !(target instanceof Leashable leashable) || !(target instanceof CustomLeashable customLeashable)) {
             return;

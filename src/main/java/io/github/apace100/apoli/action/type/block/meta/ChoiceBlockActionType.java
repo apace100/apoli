@@ -22,7 +22,7 @@ public class ChoiceBlockActionType extends BlockActionType implements ChoiceMeta
 	}
 
 	@Override
-	public void execute(World world, BlockPos pos, Optional<Direction> direction) {
+	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 		executeActions(new BlockActionContext(world, pos, direction));
 	}
 

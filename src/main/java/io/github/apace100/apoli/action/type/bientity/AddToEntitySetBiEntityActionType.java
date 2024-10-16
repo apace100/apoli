@@ -39,7 +39,7 @@ public class AddToEntitySetBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 
         if (set.getType(actor) instanceof EntitySetPowerType entitySet && entitySet.add(target, timeLimit)) {
             PowerHolderComponent.syncPower(actor, set);

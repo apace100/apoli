@@ -32,7 +32,7 @@ public class MergeCustomDataItemActionType extends ItemActionType {
     }
 
     @Override
-    public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
         NbtComponent.set(DataComponentTypes.CUSTOM_DATA, stackReference.get(), oldNbt -> oldNbt.copyFrom(nbt));
     }
 

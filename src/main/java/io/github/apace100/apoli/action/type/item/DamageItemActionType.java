@@ -36,7 +36,7 @@ public class DamageItemActionType extends ItemActionType {
     }
 
     @Override
-    public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 
         ItemStack stack = stackReference.get();
         if (world instanceof ServerWorld serverWorld) {

@@ -19,7 +19,7 @@ public class DelayBiEntityActionType extends BiEntityActionType implements Delay
 	}
 
 	@Override
-	public void execute(Entity actor, Entity target) {
+	protected void execute(Entity actor, Entity target) {
 		executeAction(new BiEntityActionContext(actor, target));
 	}
 

@@ -68,7 +68,7 @@ public class RemoveEnchantmentItemActionType extends ItemActionType {
     }
 
     @Override
-    public void execute(World world, StackReference stackReference) {
+	protected void execute(World world, StackReference stackReference) {
 
         ItemStack stack = stackReference.get();
         DynamicRegistryManager dynamicRegistries = world.getRegistryManager();
