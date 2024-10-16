@@ -19,6 +19,8 @@ import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.context.TypeActionContext;
+import io.github.apace100.apoli.util.context.TypeConditionContext;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
@@ -104,19 +106,19 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance>> BIOME_CONDITIONS = BIOME_CONDITION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActionTypes.ALIASES, "Entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.ENTITY_ACTION, EntityActionTypes.ALIASES, "Entity action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Entity>.Instance>> ENTITY_ACTIONS = ENTITY_ACTION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActionTypes.ALIASES, "Bi-entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.BIENTITY_ACTION, BiEntityActionTypes.ALIASES, "Bi-entity action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = BIENTITY_ACTION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActionTypes.ALIASES, "Block action type");
+    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.BLOCK_ACTION, BlockActionTypes.ALIASES, "Block action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = BLOCK_ACTION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActionTypes.ALIASES, "Item action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.ITEM_ACTION, ItemActionTypes.ALIASES, "Item action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = ITEM_ACTION.list();
 
@@ -457,7 +459,7 @@ public class ApoliDataTypes {
     }
 
 	@SuppressWarnings("unchecked")
-	public static <T, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> SerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
+	public static <T extends TypeConditionContext, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> SerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
 		return new CompoundSerializableDataType<>(
 			new SerializableData()
 				.add(typeField, registryDataType)
@@ -535,7 +537,7 @@ public class ApoliDataTypes {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>> SerializableDataType<A> action(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<AT, A> constructor) {
+	public static <T extends TypeActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>> SerializableDataType<A> action(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<AT, A> constructor) {
 		return new CompoundSerializableDataType<>(
 			new SerializableData()
 				.add(typeField, registryDataType),
