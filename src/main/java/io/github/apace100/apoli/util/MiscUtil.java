@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.util;
 
+import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 
@@ -89,6 +91,32 @@ public final class MiscUtil {
             @Override
             public boolean canDestroyBlock(Explosion explosion, BlockView blockView, BlockPos pos, BlockState state, float power) {
                 return !indestructibleCondition.test(new CachedBlockPosition(world, pos, true));
+            }
+
+        };
+    }
+
+    @Nullable
+    public static ExplosionBehavior createExplosionBehavior(@Nullable Predicate<BlockConditionContext> indestructibleCondition, float resistance) {
+        return indestructibleCondition == null ? null : new ExplosionBehavior() {
+
+            @Override
+            public Optional<Float> getBlastResistance(Explosion explosion, BlockView world, BlockPos pos, BlockState blockState, FluidState fluidState) {
+
+                Optional<Float> defaultValue = super.getBlastResistance(explosion, world, pos, blockState, fluidState);
+                Optional<Float> newValue = indestructibleCondition.test(new BlockConditionContext((World) world, pos))
+                    ? Optional.of(resistance)
+                    : Optional.empty();
+
+                return defaultValue
+                    .flatMap(defVal -> newValue
+                        .map(newVal -> defVal > newVal ? defVal : newVal));
+
+            }
+
+            @Override
+            public boolean canDestroyBlock(Explosion explosion, BlockView world, BlockPos pos, BlockState state, float power) {
+                return !indestructibleCondition.test(new BlockConditionContext((World) world, pos));
             }
 
         };

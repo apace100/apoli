@@ -148,10 +148,10 @@ public class EntitySetPowerType extends PowerType {
     }
 
     public boolean add(Entity entity) {
-        return add(entity, null);
+        return add(entity, Optional.empty());
     }
 
-    public boolean add(Entity entity, @Nullable Integer time) {
+    public boolean add(Entity entity, Optional<Integer> time) {
 
         if (entity == null || entity.isRemoved() || entity.getWorld().isClient) {
             return false;
@@ -160,9 +160,9 @@ public class EntitySetPowerType extends PowerType {
         UUID uuid = entity.getUuid();
         boolean addedToSet = false;
 
-        if (time != null) {
+        if (time.isPresent()) {
             addedToSet |= tempUuids.add(uuid);
-            tempEntities.compute(uuid, (prevUuid, prevTime) -> entity.getWorld().getTime() + time);
+            tempEntities.compute(uuid, (prevUuid, prevTime) -> entity.getWorld().getTime() + time.get());
         }
 
         if (!entityUuids.contains(uuid)) {
