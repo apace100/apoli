@@ -8,19 +8,17 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.registry.DataObjectFactory;
 import io.github.apace100.calio.registry.SimpleDataObjectFactory;
+import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 
-/**
- *  TODO: Use {@link SerializableDataTypes#ATTRIBUTE_MODIFIER_SLOT} for the {@code equipment_slot} field -eggohito
- */
 public class EquippedItemEntityConditionType extends EntityConditionType {
 
     public static final DataObjectFactory<EquippedItemEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
         new SerializableData()
             .add("item_condition", ItemCondition.DATA_TYPE)
-            .add("equipment_slot", SerializableDataTypes.EQUIPMENT_SLOT),
+            .add("equipment_slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT),
         data -> new EquippedItemEntityConditionType(
             data.get("item_condition"),
             data.get("equipment_slot")
@@ -31,17 +29,30 @@ public class EquippedItemEntityConditionType extends EntityConditionType {
     );
 
     private final ItemCondition itemCondition;
-    private final EquipmentSlot equipmentSlot;
+    private final AttributeModifierSlot equipmentSlot;
 
-    public EquippedItemEntityConditionType(ItemCondition itemCondition, EquipmentSlot equipmentSlot) {
+    public EquippedItemEntityConditionType(ItemCondition itemCondition, AttributeModifierSlot equipmentSlot) {
         this.itemCondition = itemCondition;
         this.equipmentSlot = equipmentSlot;
     }
 
     @Override
     public boolean test(Entity entity) {
-        return entity instanceof LivingEntity livingEntity
-            && itemCondition.test(livingEntity.getWorld(), livingEntity.getEquippedStack(equipmentSlot));
+
+        if (!(entity instanceof LivingEntity livingEntity)) {
+            return false;
+        }
+
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+
+            if (equipmentSlot.matches(slot) && itemCondition.test(livingEntity.getWorld(), livingEntity.getEquippedStack(slot))) {
+                return true;
+            }
+
+        }
+
+        return false;
+
     }
 
     @Override

@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-//  TODO: Refactor this to follow the format of other condition types -eggohito
 public class InventoryEntityConditionType extends EntityConditionType {
 
     public static final DataObjectFactory<InventoryEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
@@ -83,8 +82,8 @@ public class InventoryEntityConditionType extends EntityConditionType {
 
         this.unwrappedSlots = new ObjectOpenHashSet<>();
 
-        this.slots.ifPresent(wrappedSlots -> wrappedSlots.stream().map(ArgumentWrapper::argument).forEach(this.unwrappedSlots::add));
-        this.slot.ifPresent(wrappedSlot -> this.unwrappedSlots.add(wrappedSlot.argument()));
+        this.slot.map(ArgumentWrapper::argument).ifPresent(this.unwrappedSlots::add);
+        this.slots.map(args -> args.stream().map(ArgumentWrapper::argument).toList()).ifPresent(this.unwrappedSlots::addAll);
 
         this.comparison = comparison;
         this.compareTo = compareTo;

@@ -8,7 +8,13 @@ public abstract class EntityActionType extends AbstractActionType<EntityActionCo
 
 	@Override
 	public final void accept(EntityActionContext context) {
-		execute(context.entity());
+
+		Entity entity = context.entity();
+
+		if (entity != null) {
+			execute(entity);
+		}
+
 	}
 
 	protected abstract void execute(Entity entity);
