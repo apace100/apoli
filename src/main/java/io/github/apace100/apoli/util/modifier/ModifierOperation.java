@@ -97,7 +97,8 @@ public enum ModifierOperation implements IModifierOperation {
 
             double amount = resource
                 .map(powerReference -> PowerUtil.getResourceValue(powerReference.getType(entity)))
-                .orElseGet(() -> data.get("amount"));
+                .map(Integer::doubleValue)
+                .orElseGet(() -> data.getDouble("amount"));
 
             return ModifierUtil.applyModifiers(entity, modifiers, amount);
 
