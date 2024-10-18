@@ -149,6 +149,6 @@ public class Modifier implements Comparable<Modifier> {
 		}
 	));
 
-    public static final SerializableDataType<List<Modifier>> LIST_TYPE = DATA_TYPE.list();
+    public static final SerializableDataType<List<Modifier>> LIST_TYPE = DATA_TYPE.list(1, Integer.MAX_VALUE);
 
 }

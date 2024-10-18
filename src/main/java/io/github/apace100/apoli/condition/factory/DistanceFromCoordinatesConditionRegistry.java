@@ -22,6 +22,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
+//  TODO: Refactor this!    -eggohito
 /**
  * @author Alluysl
  * Handles the registry of the distance_from_spawn condition in both block and entity conditions to avoid duplicating code.
