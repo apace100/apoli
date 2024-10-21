@@ -12,6 +12,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 
 public class ExecuteCommandEntityActionType extends EntityActionType {
 
@@ -34,19 +35,23 @@ public class ExecuteCommandEntityActionType extends EntityActionType {
     @Override
     protected void execute(Entity entity) {
 
-        MinecraftServer server = entity.getServer();
-        if (server == null) {
+        if (!(entity.getWorld() instanceof ServerWorld serverWorld)) {
             return;
         }
 
+        MinecraftServer server = serverWorld.getServer();
         ServerCommandSource commandSource = entity.getCommandSource()
-            .withOutput(CommandOutput.DUMMY)
-            .withLevel(Apoli.config.executeCommand.permissionLevel);
+            .withLevel(Apoli.config.executeCommand.permissionLevel)
+            .withOutput(CommandOutput.DUMMY);
 
         if (Apoli.config.executeCommand.showOutput) {
-            commandSource = commandSource.withOutput(entity instanceof ServerPlayerEntity serverPlayer && serverPlayer.networkHandler != null
+
+            CommandOutput output = entity instanceof ServerPlayerEntity serverPlayer && serverPlayer.networkHandler != null
                 ? serverPlayer
-                : server);
+                : server;
+
+            commandSource = commandSource.withOutput(output);
+
         }
 
         server.getCommandManager().executeWithPrefix(commandSource, command);

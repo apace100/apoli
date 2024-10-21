@@ -14,6 +14,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,22 +50,26 @@ public class CommandEntityConditionType extends EntityConditionType {
     @Override
     public boolean test(Entity entity) {
 
-        MinecraftServer server = entity.getServer();
-        AtomicInteger result = new AtomicInteger();
-
-        if (server == null) {
+        if (!(entity.getWorld() instanceof ServerWorld serverWorld)) {
             return false;
         }
 
+        MinecraftServer server = serverWorld.getServer();
+        AtomicInteger result = new AtomicInteger();
+
         ServerCommandSource commandSource = entity.getCommandSource()
-            .withOutput(CommandOutput.DUMMY)
+            .withReturnValueConsumer((successful, returnValue) -> result.set(returnValue))
             .withLevel(Apoli.config.executeCommand.permissionLevel)
-            .withReturnValueConsumer((successful, returnValue) -> result.set(returnValue));
+            .withOutput(CommandOutput.DUMMY);
 
         if (Apoli.config.executeCommand.showOutput) {
-            commandSource = commandSource.withOutput(entity instanceof ServerPlayerEntity serverPlayer && serverPlayer.networkHandler != null
+
+            CommandOutput output = entity instanceof ServerPlayerEntity serverPlayer && serverPlayer.networkHandler != null
                 ? serverPlayer
-                : server);
+                : server;
+
+            commandSource = commandSource.withOutput(output);
+
         }
 
         server.getCommandManager().executeWithPrefix(commandSource, command);

@@ -7,13 +7,15 @@ import io.github.apace100.apoli.action.type.BlockActionTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
+import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.World;
 
 import java.util.Optional;
@@ -39,15 +41,25 @@ public class ExecuteCommandBlockActionType extends BlockActionType {
     @Override
 	protected void execute(World world, BlockPos pos, Optional<Direction> direction) {
 
-        MinecraftServer server = world.getServer();
-        if (server == null) {
+        if (!(world instanceof ServerWorld serverWorld)) {
             return;
         }
 
-        ServerCommandSource commandSource = server.getCommandSource()
-            .withOutput(Apoli.config.executeCommand.showOutput ? server : CommandOutput.DUMMY)
-            .withPosition(pos.toCenterPos())
-            .withLevel(Apoli.config.executeCommand.permissionLevel);
+        BlockState blockState = world.getBlockState(pos);
+        String blockTranslationKey = blockState.getBlock().getTranslationKey();
+
+        MinecraftServer server = serverWorld.getServer();
+        ServerCommandSource commandSource = new ServerCommandSource(
+            Apoli.config.executeCommand.showOutput ? server : CommandOutput.DUMMY,
+            pos.toCenterPos(),
+            Vec2f.ZERO,
+            serverWorld,
+            Apoli.config.executeCommand.permissionLevel,
+            blockTranslationKey,
+            Text.translatable(blockTranslationKey),
+            server,
+            null
+        );
 
         server.getCommandManager().executeWithPrefix(commandSource, command);
 

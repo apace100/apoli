@@ -9,12 +9,14 @@ import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
+import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.World;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,19 +53,31 @@ public class CommandBlockConditionType extends BlockConditionType {
     @Override
     public boolean test(World world, BlockPos pos) {
 
-        MinecraftServer server = world.getServer();
-        if (server == null) {
+        if (!(world instanceof ServerWorld serverWorld)) {
             return false;
         }
 
+        MinecraftServer server = serverWorld.getServer();
         AtomicInteger result = new AtomicInteger();
-        ServerCommandSource source = server.getCommandSource()
-            .withOutput(Apoli.config.executeCommand.showOutput ? server : CommandOutput.DUMMY)
-            .withPosition(pos.toCenterPos())
-            .withLevel(Apoli.config.executeCommand.permissionLevel)
-            .withReturnValueConsumer((successful, returnValue) -> result.set(returnValue));
 
-        server.getCommandManager().executeWithPrefix(source, command);
+        BlockState blockState = world.getBlockState(pos);
+        String blockTranslationKey = blockState.getBlock().getTranslationKey();
+
+        ServerCommandSource commandSource = new ServerCommandSource(
+            Apoli.config.executeCommand.showOutput ? server : CommandOutput.DUMMY,
+            pos.toCenterPos(),
+            Vec2f.ZERO,
+            serverWorld,
+            Apoli.config.executeCommand.permissionLevel,
+            blockTranslationKey,
+            Text.translatable(blockTranslationKey),
+            server,
+            null
+        );
+
+        commandSource = commandSource.withReturnValueConsumer((successful, returnValue) -> result.set(returnValue));
+        server.getCommandManager().executeWithPrefix(commandSource, command);
+
         return comparison.compare(result.get(), compareTo);
 
     }
