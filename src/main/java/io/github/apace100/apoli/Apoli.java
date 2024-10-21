@@ -99,13 +99,14 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ApoliDataComponentTypes.register();
 		ApoliRecipeSerializers.register();
 
-		EntityConditionTypes.register();
 		BiEntityConditionTypes.register();
-		ItemConditionTypes.register();
+		BiomeConditionTypes.register();
 		BlockConditionTypes.register();
 		DamageConditionTypes.register();
+		EntityConditionTypes.register();
 		FluidConditionTypes.register();
-		BiomeConditionTypes.register();
+		ItemConditionTypes.register();
+
 		EntityActionTypes.register();
 		ItemActionTypes.register();
 		BlockActionTypes.register();

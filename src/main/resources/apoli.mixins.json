@@ -3,7 +3,7 @@
 	"minVersion": "0.8",
 	"package": "io.github.apace100.apoli.mixin",
 	"plugin": "io.github.apace100.apoli.ApoliMixinPlugin",
-	"compatibilityLevel": "JAVA_16",
+	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"AbstractBlockMixin",
 		"AbstractBlockStateMixin",
@@ -96,6 +96,7 @@
 		"ClientPlayerEntityMixin",
 		"ClientPlayerInteractionManagerAccessor",
 		"ClientPlayerInteractionManagerMixin",
+		"ClientWorldMixin",
 		"ConfigScreenProviderMixin",
 		"ElytraFeatureRendererMixin",
 		"EntityMixinClient",

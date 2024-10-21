@@ -3,11 +3,12 @@ package io.github.apace100.apoli.data;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.*;
 import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.AbstractAction;
+import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.factory.ActionTypeFactory;
-import io.github.apace100.apoli.action.type.BiEntityActionTypes;
-import io.github.apace100.apoli.action.type.BlockActionTypes;
-import io.github.apace100.apoli.action.type.EntityActionTypes;
-import io.github.apace100.apoli.action.type.ItemActionTypes;
+import io.github.apace100.apoli.action.type.*;
+import io.github.apace100.apoli.condition.AbstractCondition;
+import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.*;
 import io.github.apace100.apoli.power.Power;
@@ -18,6 +19,8 @@ import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.*;
+import io.github.apace100.apoli.util.context.TypeActionContext;
+import io.github.apace100.apoli.util.context.TypeConditionContext;
 import io.github.apace100.calio.SerializationHelper;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
@@ -75,47 +78,47 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<PowerTypeFactory<? extends PowerType>> POWER_TYPE_FACTORY = SerializableDataType.lazy(() -> SerializableDataType.registry(ApoliRegistries.POWER_FACTORY, Apoli.MODID, PowerTypes.ALIASES, (registry, id) -> "Power type \"" + id + "\" is not registered"));
 
-    public static final SerializableDataType<ConditionTypeFactory<Entity>.Instance> ENTITY_CONDITION = condition(ApoliRegistries.ENTITY_CONDITION, EntityConditionTypes.ALIASES, "Entity condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Entity>.Instance> ENTITY_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.ENTITY_CONDITION, EntityConditionTypes.ALIASES, "Entity condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<Entity>.Instance>> ENTITY_CONDITIONS = ENTITY_CONDITION.list();
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditionTypes.ALIASES, "Bi-entity condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.BIENTITY_CONDITION, BiEntityConditionTypes.ALIASES, "Bi-entity condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_CONDITIONS = BIENTITY_CONDITION.list();
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = condition(ApoliRegistries.ITEM_CONDITION, ItemConditionTypes.ALIASES, "Item condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<World, ItemStack>>.Instance> ITEM_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.ITEM_CONDITION, ItemConditionTypes.ALIASES, "Item condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<World, ItemStack>>.Instance>> ITEM_CONDITIONS = ITEM_CONDITION.list();
 
-    public static final SerializableDataType<ConditionTypeFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = condition(ApoliRegistries.BLOCK_CONDITION, BlockConditionTypes.ALIASES, "Block condition type");
+    public static final SerializableDataType<ConditionTypeFactory<CachedBlockPosition>.Instance> BLOCK_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.BLOCK_CONDITION, BlockConditionTypes.ALIASES, "Block condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<CachedBlockPosition>.Instance>> BLOCK_CONDITIONS = BLOCK_CONDITION.list();
 
-    public static final SerializableDataType<ConditionTypeFactory<FluidState>.Instance> FLUID_CONDITION = condition(ApoliRegistries.FLUID_CONDITION, FluidConditionTypes.ALIASES, "Fluid condition type");
+    public static final SerializableDataType<ConditionTypeFactory<FluidState>.Instance> FLUID_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.FLUID_CONDITION, FluidConditionTypes.ALIASES, "Fluid condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<FluidState>.Instance>> FLUID_CONDITIONS = FLUID_CONDITION.list();
 
     public static final SerializableDataType<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance> DAMAGE_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.DAMAGE_CONDITION, DamageConditionTypes.ALIASES, "Damage condition type"));
 
-    public static final SerializableDataType<List<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = SerializableDataType.lazy(DAMAGE_CONDITION::list);
+    public static final SerializableDataType<List<ConditionTypeFactory<Pair<DamageSource, Float>>.Instance>> DAMAGE_CONDITIONS = DAMAGE_CONDITION.list();
 
-    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = condition(ApoliRegistries.BIOME_CONDITION, BiomeConditionTypes.ALIASES, "Biome condition type");
+    public static final SerializableDataType<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance> BIOME_CONDITION = SerializableDataType.lazy(() -> condition(ApoliRegistries.BIOME_CONDITION, BiomeConditionTypes.ALIASES, "Biome condition type"));
 
     public static final SerializableDataType<List<ConditionTypeFactory<Pair<BlockPos, RegistryEntry<Biome>>>.Instance>> BIOME_CONDITIONS = BIOME_CONDITION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = action(ApoliRegistries.ENTITY_ACTION, EntityActionTypes.ALIASES, "Entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Entity>.Instance> ENTITY_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.ENTITY_ACTION, EntityActionTypes.ALIASES, "Entity action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Entity>.Instance>> ENTITY_ACTIONS = ENTITY_ACTION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = action(ApoliRegistries.BIENTITY_ACTION, BiEntityActionTypes.ALIASES, "Bi-entity action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<Entity, Entity>>.Instance> BIENTITY_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.BIENTITY_ACTION, BiEntityActionTypes.ALIASES, "Bi-entity action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Pair<Entity, Entity>>.Instance>> BIENTITY_ACTIONS = BIENTITY_ACTION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = action(ApoliRegistries.BLOCK_ACTION, BlockActionTypes.ALIASES, "Block action type");
+    public static final SerializableDataType<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance> BLOCK_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.BLOCK_ACTION, BlockActionTypes.ALIASES, "Block action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Triple<World, BlockPos, Direction>>.Instance>> BLOCK_ACTIONS = BLOCK_ACTION.list();
 
-    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = action(ApoliRegistries.ITEM_ACTION, ItemActionTypes.ALIASES, "Item action type");
+    public static final SerializableDataType<ActionTypeFactory<Pair<World, StackReference>>.Instance> ITEM_ACTION = SerializableDataType.lazy(() -> action(ApoliRegistries.ITEM_ACTION, ItemActionTypes.ALIASES, "Item action type"));
 
     public static final SerializableDataType<List<ActionTypeFactory<Pair<World, StackReference>>.Instance>> ITEM_ACTIONS = ITEM_ACTION.list();
 
@@ -454,5 +457,150 @@ public class ApoliDataTypes {
 		});
 
     }
+
+	@SuppressWarnings("unchecked")
+	public static <T extends TypeConditionContext, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> SerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
+		return new CompoundSerializableDataType<>(
+			new SerializableData()
+				.add(typeField, registryDataType)
+				.add("inverted", SerializableDataTypes.BOOLEAN, false),
+			serializableData -> {
+				boolean root = serializableData.isRoot();
+				return new MapCodec<>() {
+
+					@Override
+					public <I> Stream<I> keys(DynamicOps<I> ops) {
+						return serializableData.keys(ops);
+					}
+
+					@Override
+					public <I> DataResult<C> decode(DynamicOps<I> ops, MapLike<I> input) {
+
+						DataResult<SerializableData.Instance> conditionDataResult = serializableData.decode(ops, input);
+						DataResult<CT> conditionTypeResult = conditionDataResult
+							.map(conditionData -> (ConditionConfiguration<CT>) conditionData.get(typeField))
+							.flatMap(config -> config.mapCodec(root).decode(ops, input));
+
+						return conditionDataResult
+							.flatMap(conditionData -> conditionTypeResult
+								.map(conditionType -> constructor.apply(conditionType, conditionData.getBoolean("inverted"))));
+
+					}
+
+					@Override
+					public <I> RecordBuilder<I> encode(C input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
+
+						CT conditionType = input.getConditionType();
+						ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.configuration();
+
+						prefix.add(typeField, registryDataType.write(ops, config));
+						config.mapCodec(root).encode(conditionType, ops, prefix);
+
+						prefix.add("inverted", ops.createBoolean(input.isInverted()));
+						return prefix;
+
+					}
+
+				};
+			},
+			serializableData -> new PacketCodec<>() {
+
+				@Override
+				public C decode(RegistryByteBuf buf) {
+
+					SerializableData.Instance conditionData = serializableData.receive(buf);
+
+					ConditionConfiguration<CT> config = conditionData.get(typeField);
+					boolean inverted = conditionData.getBoolean("inverted");
+
+					return constructor.apply(config.dataType().receive(buf), inverted);
+
+				}
+
+				@Override
+				public void encode(RegistryByteBuf buf, C value) {
+
+					CT conditionType = value.getConditionType();
+					ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.configuration();
+
+					SerializableData.Instance conditionData = serializableData.instance()
+						.set(typeField, config)
+						.set("inverted", value.isInverted());
+
+					serializableData.send(buf, conditionData);
+					config.dataType().send(buf, conditionType);
+
+				}
+
+			}
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends TypeActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>> SerializableDataType<A> action(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<AT, A> constructor) {
+		return new CompoundSerializableDataType<>(
+			new SerializableData()
+				.add(typeField, registryDataType),
+			serializableData -> {
+				boolean root = serializableData.isRoot();
+				return new MapCodec<>() {
+
+					@Override
+					public <I> Stream<I> keys(DynamicOps<I> ops) {
+						return serializableData.keys(ops);
+					}
+
+					@Override
+					public <I> DataResult<A> decode(DynamicOps<I> ops, MapLike<I> input) {
+						return serializableData.decode(ops, input)
+							.map(actionData -> (ActionConfiguration<AT>) actionData.get(typeField))
+							.flatMap(config -> config.mapCodec(root).decode(ops, input)
+								.map(constructor));
+					}
+
+					@Override
+					public <I> RecordBuilder<I> encode(A input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
+
+						AT actionType = input.getActionType();
+						ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.configuration();
+
+						prefix.add(typeField, registryDataType.write(ops, config));
+						config.mapCodec(root).encode(actionType, ops, prefix);
+
+						return prefix;
+
+					}
+
+				};
+			},
+			serializableData -> new PacketCodec<>() {
+
+				@Override
+				public A decode(RegistryByteBuf buf) {
+
+					SerializableData.Instance actionData = serializableData.receive(buf);
+					ActionConfiguration<AT> config = actionData.get(typeField);
+
+					return constructor.apply(config.dataType().receive(buf));
+
+				}
+
+				@Override
+				public void encode(RegistryByteBuf buf, A value) {
+
+					AT actionType = value.getActionType();
+					ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.configuration();
+
+					SerializableData.Instance actionData = serializableData.instance()
+						.set(typeField, config);
+
+					serializableData.send(buf, actionData);
+					config.dataType().send(buf, actionType);
+
+				}
+
+			}
+		);
+	}
 
 }
