@@ -23,7 +23,8 @@ import java.math.RoundingMode;
 import java.util.Optional;
 
 /**
- *	@author Alluysl (refactored by eggohito)
+ *	@author Alluysl
+ * 	@author (refactored by) eggohito
  */
 public interface DistanceFromCoordinatesMetaConditionType {
 

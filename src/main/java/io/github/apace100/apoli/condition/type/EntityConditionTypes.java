@@ -96,7 +96,7 @@ public class EntityConditionTypes {
     public static final ConditionConfiguration<XpPointsEntityConditionType> XP_POINTS = register(ConditionConfiguration.of(Apoli.identifier("xp_points"), XpPointsEntityConditionType.DATA_FACTORY));
 
 	public static void register() {
-//        DistanceFromCoordinatesConditionRegistry.registerEntityCondition(EntityConditionTypes::register);
+
     }
 
     @SuppressWarnings("unchecked")
