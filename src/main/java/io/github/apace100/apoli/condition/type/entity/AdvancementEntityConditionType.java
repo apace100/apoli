@@ -4,11 +4,10 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.mixin.ClientAdvancementManagerAccessor;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.client.network.ClientAdvancementManager;
@@ -23,7 +22,7 @@ import java.util.Map;
 
 public class AdvancementEntityConditionType extends EntityConditionType {
 
-    public static final DataObjectFactory<AdvancementEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<AdvancementEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("advancement", SerializableDataTypes.IDENTIFIER),
         data -> new AdvancementEntityConditionType(

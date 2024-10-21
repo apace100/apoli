@@ -26,13 +26,13 @@ public class ItemActionTypes {
     public static final ActionConfiguration<NothingItemActionType> NOTHING = register(NothingMetaActionType.createConfiguration(NothingItemActionType::new));
     public static final ActionConfiguration<SideItemActionType> SIDE = register(SideMetaActionType.createConfiguration(ItemAction.DATA_TYPE, SideItemActionType::new));
 
-    public static final ActionConfiguration<ConsumeItemActionType> CONSUME = register(ActionConfiguration.fromDataFactory(Apoli.identifier("consume"), ConsumeItemActionType.DATA_FACTORY));
-    public static final ActionConfiguration<DamageItemActionType> DAMAGE = register(ActionConfiguration.fromDataFactory(Apoli.identifier("damage"), DamageItemActionType.DATA_FACTORY));
-    public static final ActionConfiguration<HolderActionItemActionType> HOLDER = register(ActionConfiguration.fromDataFactory(Apoli.identifier("holder_action"), HolderActionItemActionType.DATA_FACTORY));
-    public static final ActionConfiguration<MergeCustomDataItemActionType> MERGE_CUSTOM_DATA = register(ActionConfiguration.fromDataFactory(Apoli.identifier("merge_custom_data"), MergeCustomDataItemActionType.DATA_FACTORY));
-    public static final ActionConfiguration<ModifyItemActionType> MODIFY = register(ActionConfiguration.fromDataFactory(Apoli.identifier("modify"), ModifyItemActionType.DATA_FACTORY));
-    public static final ActionConfiguration<ModifyItemCooldownItemActionType> MODIFY_ITEM_COOLDOWN = register(ActionConfiguration.fromDataFactory(Apoli.identifier("modify_item_cooldown"), ModifyItemCooldownItemActionType.DATA_FACTORY));
-    public static final ActionConfiguration<RemoveEnchantmentItemActionType> REMOVE_ENCHANTMENT = register(ActionConfiguration.fromDataFactory(Apoli.identifier("remove_enchantment"), RemoveEnchantmentItemActionType.DATA_FACTORY));
+    public static final ActionConfiguration<ConsumeItemActionType> CONSUME = register(ActionConfiguration.of(Apoli.identifier("consume"), ConsumeItemActionType.DATA_FACTORY));
+    public static final ActionConfiguration<DamageItemActionType> DAMAGE = register(ActionConfiguration.of(Apoli.identifier("damage"), DamageItemActionType.DATA_FACTORY));
+    public static final ActionConfiguration<HolderActionItemActionType> HOLDER = register(ActionConfiguration.of(Apoli.identifier("holder_action"), HolderActionItemActionType.DATA_FACTORY));
+    public static final ActionConfiguration<MergeCustomDataItemActionType> MERGE_CUSTOM_DATA = register(ActionConfiguration.of(Apoli.identifier("merge_custom_data"), MergeCustomDataItemActionType.DATA_FACTORY));
+    public static final ActionConfiguration<ModifyItemActionType> MODIFY = register(ActionConfiguration.of(Apoli.identifier("modify"), ModifyItemActionType.DATA_FACTORY));
+    public static final ActionConfiguration<ModifyItemCooldownItemActionType> MODIFY_ITEM_COOLDOWN = register(ActionConfiguration.of(Apoli.identifier("modify_item_cooldown"), ModifyItemCooldownItemActionType.DATA_FACTORY));
+    public static final ActionConfiguration<RemoveEnchantmentItemActionType> REMOVE_ENCHANTMENT = register(ActionConfiguration.of(Apoli.identifier("remove_enchantment"), RemoveEnchantmentItemActionType.DATA_FACTORY));
 
     public static void register() {
 

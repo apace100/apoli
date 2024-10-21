@@ -5,12 +5,11 @@ import io.github.apace100.apoli.action.BlockAction;
 import io.github.apace100.apoli.action.type.BlockActionType;
 import io.github.apace100.apoli.action.type.BlockActionTypes;
 import io.github.apace100.apoli.condition.BlockCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.Shape;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
@@ -20,7 +19,7 @@ import java.util.Optional;
 
 public class AreaOfEffectBlockActionType extends BlockActionType {
 
-    public static final DataObjectFactory<AreaOfEffectBlockActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<AreaOfEffectBlockActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("block_action", BlockAction.DATA_TYPE)
             .add("block_condition", BlockCondition.DATA_TYPE.optional(), Optional.empty())

@@ -4,12 +4,11 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
@@ -21,7 +20,7 @@ import java.util.Optional;
 
 public class EnchantmentItemConditionType extends ItemConditionType {
 
-    public static final DataObjectFactory<EnchantmentItemConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<EnchantmentItemConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("enchantment", SerializableDataTypes.ENCHANTMENT.optional(), Optional.empty())
             .add("use_modifications", SerializableDataTypes.BOOLEAN, true)

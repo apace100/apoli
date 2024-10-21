@@ -26,16 +26,16 @@ public class BlockActionTypes {
     public static final ActionConfiguration<NothingBlockActionType> NOTHING = register(NothingMetaActionType.createConfiguration(NothingBlockActionType::new));
     public static final ActionConfiguration<SideBlockActionType> SIDE = register(SideMetaActionType.createConfiguration(BlockAction.DATA_TYPE, SideBlockActionType::new));
 
-    public static final ActionConfiguration<OffsetBlockActionType> OFFSET = register(ActionConfiguration.fromDataFactory(Apoli.identifier("offset"), OffsetBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<OffsetBlockActionType> OFFSET = register(ActionConfiguration.of(Apoli.identifier("offset"), OffsetBlockActionType.DATA_FACTORY));
 
-    public static final ActionConfiguration<AddBlockBlockActionType> ADD_BLOCK = register(ActionConfiguration.fromDataFactory(Apoli.identifier("add_block"), AddBlockBlockActionType.DATA_FACTORY));
-    public static final ActionConfiguration<AreaOfEffectBlockActionType> AREA_OF_EFFECT = register(ActionConfiguration.fromDataFactory(Apoli.identifier("area_of_effect"), AreaOfEffectBlockActionType.DATA_FACTORY));
-    public static final ActionConfiguration<BoneMealBlockActionType> BONE_MEAL = register(ActionConfiguration.fromDataFactory(Apoli.identifier("bonemeal"), BoneMealBlockActionType.DATA_FACTORY));
-    public static final ActionConfiguration<ExecuteCommandBlockActionType> EXECUTE_COMMAND = register(ActionConfiguration.fromDataFactory(Apoli.identifier("execute_command"), ExecuteCommandBlockActionType.DATA_FACTORY));
-    public static final ActionConfiguration<ExplodeBlockActionType> EXPLODE = register(ActionConfiguration.fromDataFactory(Apoli.identifier("explode"), ExplodeBlockActionType.DATA_FACTORY));
-    public static final ActionConfiguration<ModifyBlockStateBlockActionType> MODIFY_BLOCK_STATE = register(ActionConfiguration.fromDataFactory(Apoli.identifier("modify_block_state"), ModifyBlockStateBlockActionType.DATA_FACTORY));
-    public static final ActionConfiguration<SetBlockBlockActionType> SET_BLOCK = register(ActionConfiguration.fromDataFactory(Apoli.identifier("set_block"), SetBlockBlockActionType.DATA_FACTORY));
-    public static final ActionConfiguration<SpawnEntityBlockActionType> SPAWN_ENTITY = register(ActionConfiguration.fromDataFactory(Apoli.identifier("spawn_entity"), SpawnEntityBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<AddBlockBlockActionType> ADD_BLOCK = register(ActionConfiguration.of(Apoli.identifier("add_block"), AddBlockBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<AreaOfEffectBlockActionType> AREA_OF_EFFECT = register(ActionConfiguration.of(Apoli.identifier("area_of_effect"), AreaOfEffectBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<BoneMealBlockActionType> BONE_MEAL = register(ActionConfiguration.of(Apoli.identifier("bonemeal"), BoneMealBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<ExecuteCommandBlockActionType> EXECUTE_COMMAND = register(ActionConfiguration.of(Apoli.identifier("execute_command"), ExecuteCommandBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<ExplodeBlockActionType> EXPLODE = register(ActionConfiguration.of(Apoli.identifier("explode"), ExplodeBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<ModifyBlockStateBlockActionType> MODIFY_BLOCK_STATE = register(ActionConfiguration.of(Apoli.identifier("modify_block_state"), ModifyBlockStateBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<SetBlockBlockActionType> SET_BLOCK = register(ActionConfiguration.of(Apoli.identifier("set_block"), SetBlockBlockActionType.DATA_FACTORY));
+    public static final ActionConfiguration<SpawnEntityBlockActionType> SPAWN_ENTITY = register(ActionConfiguration.of(Apoli.identifier("spawn_entity"), SpawnEntityBlockActionType.DATA_FACTORY));
 
     public static void register() {
 

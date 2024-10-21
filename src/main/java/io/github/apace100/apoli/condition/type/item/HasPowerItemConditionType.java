@@ -6,11 +6,10 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -19,7 +18,7 @@ import java.util.Optional;
 
 public class HasPowerItemConditionType extends ItemConditionType {
 
-    public static final DataObjectFactory<HasPowerItemConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<HasPowerItemConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT.optional(), Optional.empty())
             .add("power", ApoliDataTypes.POWER_REFERENCE),

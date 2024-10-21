@@ -2,9 +2,9 @@ package io.github.apace100.apoli.action.type;
 
 import io.github.apace100.apoli.action.AbstractAction;
 import io.github.apace100.apoli.action.ActionConfiguration;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.context.TypeActionContext;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
 import io.github.apace100.calio.util.Validatable;
 
 import java.util.Optional;
@@ -21,7 +21,7 @@ public abstract class AbstractActionType<T extends TypeActionContext<?>, A exten
 	@Override
 	public void validate() throws Exception {
 
-		DataObjectFactory<AbstractActionType<T, A>> dataFactory = (DataObjectFactory<AbstractActionType<T,A>>) configuration().dataFactory();
+		TypedDataObjectFactory<AbstractActionType<T, A>> dataFactory = (TypedDataObjectFactory<AbstractActionType<T,A>>) configuration().dataFactory();
 		SerializableData.Instance data = dataFactory.toData(this);
 
 		data.validate();

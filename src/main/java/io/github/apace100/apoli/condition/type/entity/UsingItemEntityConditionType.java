@@ -4,9 +4,8 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
@@ -16,7 +15,7 @@ import java.util.Optional;
 
 public class UsingItemEntityConditionType extends EntityConditionType {
 
-    public static final DataObjectFactory<UsingItemEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<UsingItemEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty()),
         data -> new UsingItemEntityConditionType(

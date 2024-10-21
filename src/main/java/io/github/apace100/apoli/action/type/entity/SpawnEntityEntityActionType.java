@@ -5,11 +5,10 @@ import io.github.apace100.apoli.action.BiEntityAction;
 import io.github.apace100.apoli.action.EntityAction;
 import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.NbtCompound;
@@ -19,7 +18,7 @@ import java.util.Optional;
 
 public class SpawnEntityEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<SpawnEntityEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<SpawnEntityEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("entity_type", SerializableDataTypes.ENTITY_TYPE)
             .add("entity_action", EntityAction.DATA_TYPE.optional(), Optional.empty())

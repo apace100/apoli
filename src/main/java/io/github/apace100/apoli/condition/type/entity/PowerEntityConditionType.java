@@ -5,11 +5,10 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 
@@ -17,7 +16,7 @@ import java.util.Optional;
 
 public class PowerEntityConditionType extends EntityConditionType {
 
-    public static final DataObjectFactory<PowerEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<PowerEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("power", ApoliDataTypes.POWER_REFERENCE)
             .add("source", SerializableDataTypes.IDENTIFIER.optional(), Optional.empty()),

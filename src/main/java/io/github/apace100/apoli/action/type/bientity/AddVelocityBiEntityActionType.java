@@ -3,12 +3,11 @@ package io.github.apace100.apoli.action.type.bientity;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.BiEntityActionType;
 import io.github.apace100.apoli.action.type.BiEntityActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -19,7 +18,7 @@ import java.util.function.BiFunction;
 
 public class AddVelocityBiEntityActionType extends BiEntityActionType {
 
-    public static final DataObjectFactory<AddVelocityBiEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<AddVelocityBiEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("reference", SerializableDataType.enumValue(Reference.class), Reference.POSITION)
             .add("x", SerializableDataTypes.FLOAT, 0F)

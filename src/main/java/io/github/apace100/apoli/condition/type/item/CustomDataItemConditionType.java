@@ -3,10 +3,9 @@ package io.github.apace100.apoli.condition.type.item;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
@@ -15,7 +14,7 @@ import net.minecraft.world.World;
 
 public class CustomDataItemConditionType extends ItemConditionType {
 
-    public static final DataObjectFactory<CustomDataItemConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<CustomDataItemConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("nbt", SerializableDataTypes.NBT_COMPOUND),
         data -> new CustomDataItemConditionType(

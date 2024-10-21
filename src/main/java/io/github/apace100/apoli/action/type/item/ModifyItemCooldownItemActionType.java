@@ -4,11 +4,10 @@ import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.action.type.ItemActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.player.ItemCooldownManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
@@ -20,7 +19,7 @@ import java.util.Optional;
 
 public class ModifyItemCooldownItemActionType extends ItemActionType {
 
-    public static final DataObjectFactory<ModifyItemCooldownItemActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ModifyItemCooldownItemActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("modifier", Modifier.DATA_TYPE.optional(), Optional.empty())
             .addFunctionedDefault("modifiers", Modifier.LIST_TYPE.optional(), data -> data.<Optional<Modifier>>get("modifier").map(List::of)),

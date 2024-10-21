@@ -3,16 +3,15 @@ package io.github.apace100.apoli.condition.type.fluid;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.FluidConditionType;
 import io.github.apace100.apoli.condition.type.FluidConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 
 public class FluidFluidConditionType extends FluidConditionType {
 
-    public static final DataObjectFactory<FluidFluidConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<FluidFluidConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("fluid", SerializableDataTypes.FLUID),
         data -> new FluidFluidConditionType(

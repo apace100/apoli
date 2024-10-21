@@ -5,11 +5,10 @@ import io.github.apace100.apoli.action.type.BlockActionType;
 import io.github.apace100.apoli.action.type.BlockActionTypes;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.context.BlockConditionContext;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
@@ -20,7 +19,7 @@ import java.util.function.Predicate;
 
 public class ExplodeBlockActionType extends BlockActionType {
 
-    public static final DataObjectFactory<ExplodeBlockActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ExplodeBlockActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("destructible", BlockCondition.DATA_TYPE, null)
             .add("indestructible", BlockCondition.DATA_TYPE, null)

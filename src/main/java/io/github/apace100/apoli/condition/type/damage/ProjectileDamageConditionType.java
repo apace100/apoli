@@ -4,10 +4,9 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.condition.type.DamageConditionType;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.damage.DamageSource;
@@ -17,7 +16,7 @@ import java.util.Optional;
 
 public class ProjectileDamageConditionType extends DamageConditionType {
 
-    public static final DataObjectFactory<ProjectileDamageConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ProjectileDamageConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("projectile", SerializableDataTypes.ENTITY_TYPE.optional(), Optional.empty())
             .add("projectile_condition", EntityCondition.DATA_TYPE.optional(), Optional.empty()),

@@ -3,10 +3,9 @@ package io.github.apace100.apoli.condition.type.entity;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -18,7 +17,7 @@ import net.minecraft.item.Items;
 
 public class ElytraFlightPossibleEntityConditionType extends EntityConditionType {
 
-    public static final DataObjectFactory<ElytraFlightPossibleEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ElytraFlightPossibleEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("check_state", SerializableDataTypes.BOOLEAN, false)
             .add("check_ability", SerializableDataTypes.BOOLEAN, true),

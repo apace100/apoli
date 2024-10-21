@@ -4,10 +4,9 @@ import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.ItemAction;
 import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -16,7 +15,7 @@ import net.minecraft.inventory.StackReference;
 
 public class EquippedItemActionEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<EquippedItemActionEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<EquippedItemActionEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("equipment_slot", SerializableDataTypes.ATTRIBUTE_MODIFIER_SLOT)
             .add("item_action", ItemAction.DATA_TYPE),

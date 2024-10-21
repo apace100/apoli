@@ -3,16 +3,15 @@ package io.github.apace100.apoli.action.type.entity;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 
 public class ModifyDeathTicksEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<ModifyDeathTicksEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ModifyDeathTicksEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("modifier", Modifier.DATA_TYPE),
         data -> new ModifyDeathTicksEntityActionType(

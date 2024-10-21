@@ -6,17 +6,16 @@ import io.github.apace100.apoli.action.EntityAction;
 import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.condition.BiEntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 
 import java.util.Optional;
 
 public class RidingActionEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<RidingActionEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<RidingActionEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("action", EntityAction.DATA_TYPE.optional(), Optional.empty())
             .add("bientity_action", BiEntityAction.DATA_TYPE.optional(), Optional.empty())

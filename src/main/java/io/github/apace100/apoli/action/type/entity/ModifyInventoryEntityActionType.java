@@ -7,14 +7,13 @@ import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.InventoryPowerType;
 import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import io.github.apace100.apoli.util.InventoryUtil.ProcessMode;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.entity.Entity;
@@ -28,7 +27,7 @@ import static io.github.apace100.apoli.util.InventoryUtil.modifyInventory;
 
 public class ModifyInventoryEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<ModifyInventoryEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ModifyInventoryEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("inventory_type", ApoliDataTypes.INVENTORY_TYPE, InventoryType.INVENTORY)
             .add("process_mode", ApoliDataTypes.PROCESS_MODE, ProcessMode.STACKS)

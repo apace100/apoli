@@ -22,26 +22,26 @@ public class BlockConditionTypes {
     public static final ConditionConfiguration<RandomChanceBlockConditionType> RANDOM_CHANCE = register(RandomChanceMetaConditionType.createConfiguration(RandomChanceBlockConditionType::new));
 
     public static final ConditionConfiguration<DistanceFromCoordinatesBlockConditionType> DISTANCE_FROM_COORDINATES = register(DistanceFromCoordinatesMetaConditionType.createConfiguration(DistanceFromCoordinatesBlockConditionType::new));
-    public static final ConditionConfiguration<OffsetBlockConditionType> OFFSET = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("offset"), OffsetBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<OffsetBlockConditionType> OFFSET = register(ConditionConfiguration.of(Apoli.identifier("offset"), OffsetBlockConditionType.DATA_FACTORY));
 
-    public static final ConditionConfiguration<AdjacentBlockConditionType> ADJACENT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("adjacent"), AdjacentBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<AdjacentBlockConditionType> ADJACENT = register(ConditionConfiguration.of(Apoli.identifier("adjacent"), AdjacentBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<AttachableBlockConditionType> ATTACHABLE = register(ConditionConfiguration.simple(Apoli.identifier("attachable"), AttachableBlockConditionType::new));
-    public static final ConditionConfiguration<BlastResistanceBlockConditionType> BLAST_RESISTANCE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("blast_resistance"), BlastResistanceBlockConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<BlockBlockConditionType> BLOCK = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("block"), BlockBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<BlastResistanceBlockConditionType> BLAST_RESISTANCE = register(ConditionConfiguration.of(Apoli.identifier("blast_resistance"), BlastResistanceBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<BlockBlockConditionType> BLOCK = register(ConditionConfiguration.of(Apoli.identifier("block"), BlockBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<BlockEntityBlockConditionType> BLOCK_ENTITY = register(ConditionConfiguration.simple(Apoli.identifier("block_entity"), BlockEntityBlockConditionType::new));
-    public static final ConditionConfiguration<BlockStateBlockConditionType> BLOCK_STATE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("block_state"), BlockStateBlockConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<CommandBlockConditionType> COMMAND = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("command"), CommandBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<BlockStateBlockConditionType> BLOCK_STATE = register(ConditionConfiguration.of(Apoli.identifier("block_state"), BlockStateBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<CommandBlockConditionType> COMMAND = register(ConditionConfiguration.of(Apoli.identifier("command"), CommandBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<ExposedToSkyBlockConditionType> EXPOSED_TO_SKY = register(ConditionConfiguration.simple(Apoli.identifier("exposed_to_sky"), ExposedToSkyBlockConditionType::new));
-    public static final ConditionConfiguration<FluidBlockConditionType> FLUID = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("fluid"), FluidBlockConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<HardnessBlockConditionType> HARDNESS = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("hardness"), HardnessBlockConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<HeightBlockConditionType> HEIGHT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("height"), HeightBlockConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<InTagBlockConditionType> IN_TAG = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("in_tag"), InTagBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<FluidBlockConditionType> FLUID = register(ConditionConfiguration.of(Apoli.identifier("fluid"), FluidBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<HardnessBlockConditionType> HARDNESS = register(ConditionConfiguration.of(Apoli.identifier("hardness"), HardnessBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<HeightBlockConditionType> HEIGHT = register(ConditionConfiguration.of(Apoli.identifier("height"), HeightBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<InTagBlockConditionType> IN_TAG = register(ConditionConfiguration.of(Apoli.identifier("in_tag"), InTagBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<LightBlockingBlockConditionType> LIGHT_BLOCKING = register(ConditionConfiguration.simple(Apoli.identifier("light_blocking"), LightBlockingBlockConditionType::new));
-    public static final ConditionConfiguration<LightLevelBlockConditionType> LIGHT_LEVEL = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("light_level"), LightLevelBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<LightLevelBlockConditionType> LIGHT_LEVEL = register(ConditionConfiguration.of(Apoli.identifier("light_level"), LightLevelBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<MovementBlockingBlockConditionType> MOVEMENT_BLOCKING = register(ConditionConfiguration.simple(Apoli.identifier("movement_blocking"), MovementBlockingBlockConditionType::new));
-    public static final ConditionConfiguration<NbtBlockConditionType> NBT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("nbt"), NbtBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<NbtBlockConditionType> NBT = register(ConditionConfiguration.of(Apoli.identifier("nbt"), NbtBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<ReplaceableBlockConditionType> REPLACEABLE = register(ConditionConfiguration.simple(Apoli.identifier("replaceable"), ReplaceableBlockConditionType::new));
-    public static final ConditionConfiguration<SlipperinessBlockConditionType> SLIPPERINESS = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("slipperiness"), SlipperinessBlockConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<SlipperinessBlockConditionType> SLIPPERINESS = register(ConditionConfiguration.of(Apoli.identifier("slipperiness"), SlipperinessBlockConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<WaterLoggableBlockConditionType> WATER_LOGGABLE = register(ConditionConfiguration.simple(Apoli.identifier("water_loggable"), WaterLoggableBlockConditionType::new));
 
 	public static void register() {

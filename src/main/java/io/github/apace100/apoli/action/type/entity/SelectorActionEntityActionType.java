@@ -8,9 +8,8 @@ import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.condition.BiEntityCondition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import net.minecraft.command.EntitySelector;
 import net.minecraft.entity.Entity;
@@ -24,7 +23,7 @@ import java.util.Optional;
 
 public class SelectorActionEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<SelectorActionEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<SelectorActionEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("selector", ApoliDataTypes.ENTITIES_SELECTOR)
             .add("bientity_action", BiEntityAction.DATA_TYPE)

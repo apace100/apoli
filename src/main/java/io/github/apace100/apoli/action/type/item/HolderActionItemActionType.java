@@ -5,16 +5,15 @@ import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.EntityAction;
 import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.action.type.ItemActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
 
 public class HolderActionItemActionType extends ItemActionType {
 
-    public static final DataObjectFactory<HolderActionItemActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<HolderActionItemActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("action", EntityAction.DATA_TYPE),
         data -> new HolderActionItemActionType(

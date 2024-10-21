@@ -3,17 +3,16 @@ package io.github.apace100.apoli.condition.type.item;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.world.World;
 
 public class IngredientItemConditionType extends ItemConditionType {
 
-    public static final DataObjectFactory<IngredientItemConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<IngredientItemConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("ingredient", SerializableDataTypes.INGREDIENT),
         data -> new IngredientItemConditionType(

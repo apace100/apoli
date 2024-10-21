@@ -3,10 +3,9 @@ package io.github.apace100.apoli.condition.type.entity;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -15,7 +14,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 
 public class StatusEffectEntityConditionType extends EntityConditionType {
 
-    public static final DataObjectFactory<StatusEffectEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<StatusEffectEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY)
             .add("min_amplifier", SerializableDataTypes.INT, 0)

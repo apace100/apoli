@@ -3,16 +3,15 @@ package io.github.apace100.apoli.action.type.item;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.action.type.ItemActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
 
 public class ConsumeItemActionType extends ItemActionType {
 
-    public static final DataObjectFactory<ConsumeItemActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ConsumeItemActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("amount", SerializableDataTypes.INT, 1),
         data -> new ConsumeItemActionType(

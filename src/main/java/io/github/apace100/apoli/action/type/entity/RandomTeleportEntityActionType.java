@@ -6,11 +6,10 @@ import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.server.world.ChunkTicketType;
@@ -27,7 +26,7 @@ import java.util.Optional;
 
 public class RandomTeleportEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<RandomTeleportEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<RandomTeleportEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("success_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
             .add("fail_action", EntityAction.DATA_TYPE.optional(), Optional.empty())

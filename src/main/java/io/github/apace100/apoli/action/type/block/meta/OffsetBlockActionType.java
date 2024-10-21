@@ -4,10 +4,9 @@ import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.BlockAction;
 import io.github.apace100.apoli.action.type.BlockActionType;
 import io.github.apace100.apoli.action.type.BlockActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
@@ -17,7 +16,7 @@ import java.util.Optional;
 
 public class OffsetBlockActionType extends BlockActionType {
 
-    public static final DataObjectFactory<OffsetBlockActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<OffsetBlockActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("action", BlockAction.DATA_TYPE)
             .add("x", SerializableDataTypes.INT, 0)

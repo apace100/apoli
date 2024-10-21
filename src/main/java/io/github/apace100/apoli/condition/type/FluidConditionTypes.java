@@ -28,8 +28,8 @@ public class FluidConditionTypes {
     public static final ConditionConfiguration<ConstantFluidConditionType> CONSTANT = register(ConstantMetaConditionType.createConfiguration(ConstantFluidConditionType::new));
     public static final ConditionConfiguration<RandomChanceFluidConditionType> RANDOM_CHANCE = register(RandomChanceMetaConditionType.createConfiguration(RandomChanceFluidConditionType::new));
 
-    public static final ConditionConfiguration<FluidFluidConditionType> FLUID = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("fluid"), FluidFluidConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<InTagFluidConditionType> IN_TAG = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("in_tag"), InTagFluidConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<FluidFluidConditionType> FLUID = register(ConditionConfiguration.of(Apoli.identifier("fluid"), FluidFluidConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<InTagFluidConditionType> IN_TAG = register(ConditionConfiguration.of(Apoli.identifier("in_tag"), InTagFluidConditionType.DATA_FACTORY));
 
     public static void register() {
 

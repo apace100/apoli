@@ -2,9 +2,9 @@ package io.github.apace100.apoli.condition.type;
 
 import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.context.TypeConditionContext;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
 import io.github.apace100.calio.util.Validatable;
 
 import java.util.Optional;
@@ -21,7 +21,7 @@ public abstract class AbstractConditionType<T extends TypeConditionContext, C ex
 	@Override
 	public void validate() throws Exception {
 
-		DataObjectFactory<AbstractConditionType<T, C>> dataFactory = (DataObjectFactory<AbstractConditionType<T,C>>) configuration().dataFactory();
+		TypedDataObjectFactory<AbstractConditionType<T, C>> dataFactory = (TypedDataObjectFactory<AbstractConditionType<T,C>>) configuration().dataFactory();
 		SerializableData.Instance data = dataFactory.toData(this);
 
 		data.validate();

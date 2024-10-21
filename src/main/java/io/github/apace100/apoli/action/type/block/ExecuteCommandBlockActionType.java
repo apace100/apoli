@@ -4,6 +4,7 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.BlockActionType;
 import io.github.apace100.apoli.action.type.BlockActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.registry.DataObjectFactory;
@@ -19,7 +20,7 @@ import java.util.Optional;
 
 public class ExecuteCommandBlockActionType extends BlockActionType {
 
-    public static final DataObjectFactory<ExecuteCommandBlockActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ExecuteCommandBlockActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("command", SerializableDataTypes.STRING),
         data -> new ExecuteCommandBlockActionType(

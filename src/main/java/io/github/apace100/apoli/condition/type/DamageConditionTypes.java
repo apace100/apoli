@@ -27,17 +27,17 @@ public class DamageConditionTypes {
     public static final ConditionConfiguration<ConstantDamageConditionType> CONSTANT = register(ConstantMetaConditionType.createConfiguration(ConstantDamageConditionType::new));
     public static final ConditionConfiguration<RandomChanceDamageConditionType> RANDOM_CHANCE = register(RandomChanceMetaConditionType.createConfiguration(RandomChanceDamageConditionType::new));
 
-    public static final ConditionConfiguration<AmountDamageConditionType> AMOUNT  = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("amount"), AmountDamageConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<AttackerDamageConditionType> ATTACKER = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("attacker"), AttackerDamageConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<AmountDamageConditionType> AMOUNT  = register(ConditionConfiguration.of(Apoli.identifier("amount"), AmountDamageConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<AttackerDamageConditionType> ATTACKER = register(ConditionConfiguration.of(Apoli.identifier("attacker"), AttackerDamageConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<BypassesArmorDamageConditionType> BYPASSES_ARMOR = register(ConditionConfiguration.simple(Apoli.identifier("bypasses_armor"), BypassesArmorDamageConditionType::new));
     public static final ConditionConfiguration<ExplosiveDamageConditionType> EXPLOSIVE = register(ConditionConfiguration.simple(Apoli.identifier("explosive"), ExplosiveDamageConditionType::new));
     public static final ConditionConfiguration<FireDamageConditionType> FIRE = register(ConditionConfiguration.simple(Apoli.identifier("fire"), FireDamageConditionType::new));
     public static final ConditionConfiguration<FromFallingDamageConditionType> FROM_FALLING = register(ConditionConfiguration.simple(Apoli.identifier("from_falling"), FromFallingDamageConditionType::new));
-    public static final ConditionConfiguration<InTagDamageConditionType> IN_TAG = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("in_tag"), InTagDamageConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<NameDamageConditionType> NAME = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("name"), NameDamageConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<InTagDamageConditionType> IN_TAG = register(ConditionConfiguration.of(Apoli.identifier("in_tag"), InTagDamageConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<NameDamageConditionType> NAME = register(ConditionConfiguration.of(Apoli.identifier("name"), NameDamageConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<OutOfWorldDamageConditionType> OUT_OF_WORLD = register(ConditionConfiguration.simple(Apoli.identifier("out_of_world"), OutOfWorldDamageConditionType::new));
-    public static final ConditionConfiguration<ProjectileDamageConditionType> PROJECTILE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("projectile"), ProjectileDamageConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<TypeDamageConditionType> TYPE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("type"), TypeDamageConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<ProjectileDamageConditionType> PROJECTILE = register(ConditionConfiguration.of(Apoli.identifier("projectile"), ProjectileDamageConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<TypeDamageConditionType> TYPE = register(ConditionConfiguration.of(Apoli.identifier("type"), TypeDamageConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<UnblockableDamageConditionType> UNBLOCKABLE = register(ConditionConfiguration.simple(Apoli.identifier("unblockable"), UnblockableDamageConditionType::new));
 
     public static void register() {

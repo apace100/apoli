@@ -27,16 +27,16 @@ public class BiEntityActionTypes {
     public static final ActionConfiguration<NothingBiEntityActionType> NOTHING = register(NothingMetaActionType.createConfiguration(NothingBiEntityActionType::new));
     public static final ActionConfiguration<SideBiEntityActionType> SIDE = register(SideMetaActionType.createConfiguration(BiEntityAction.DATA_TYPE, SideBiEntityActionType::new));
 
-    public static final ActionConfiguration<ActorActionBiEntityActionType> ACTOR_ACTION = register(ActionConfiguration.fromDataFactory(Apoli.identifier("actor_action"), ActorActionBiEntityActionType.DATA_FACTORY));
-    public static final ActionConfiguration<InvertBiEntityActionType> INVERT = register(ActionConfiguration.fromDataFactory(Apoli.identifier("invert"), InvertBiEntityActionType.DATA_FACTORY));
-    public static final ActionConfiguration<TargetActionBiEntityActionType> TARGET_ACTION = register(ActionConfiguration.fromDataFactory(Apoli.identifier("target_action"), TargetActionBiEntityActionType.DATA_FACTORY));
+    public static final ActionConfiguration<ActorActionBiEntityActionType> ACTOR_ACTION = register(ActionConfiguration.of(Apoli.identifier("actor_action"), ActorActionBiEntityActionType.DATA_FACTORY));
+    public static final ActionConfiguration<InvertBiEntityActionType> INVERT = register(ActionConfiguration.of(Apoli.identifier("invert"), InvertBiEntityActionType.DATA_FACTORY));
+    public static final ActionConfiguration<TargetActionBiEntityActionType> TARGET_ACTION = register(ActionConfiguration.of(Apoli.identifier("target_action"), TargetActionBiEntityActionType.DATA_FACTORY));
 
-    public static final ActionConfiguration<AddToEntitySetBiEntityActionType> ADD_TO_ENTITY_SET = register(ActionConfiguration.fromDataFactory(Apoli.identifier("add_to_entity_set"), AddToEntitySetBiEntityActionType.DATA_FACTORY));
-    public static final ActionConfiguration<AddVelocityBiEntityActionType> ADD_VELOCITY = register(ActionConfiguration.fromDataFactory(Apoli.identifier("add_velocity"), AddVelocityBiEntityActionType.DATA_FACTORY));
-    public static final ActionConfiguration<DamageBiEntityActionType> DAMAGE = register(ActionConfiguration.fromDataFactory(Apoli.identifier("damage"), DamageBiEntityActionType.DATA_FACTORY));
+    public static final ActionConfiguration<AddToEntitySetBiEntityActionType> ADD_TO_ENTITY_SET = register(ActionConfiguration.of(Apoli.identifier("add_to_entity_set"), AddToEntitySetBiEntityActionType.DATA_FACTORY));
+    public static final ActionConfiguration<AddVelocityBiEntityActionType> ADD_VELOCITY = register(ActionConfiguration.of(Apoli.identifier("add_velocity"), AddVelocityBiEntityActionType.DATA_FACTORY));
+    public static final ActionConfiguration<DamageBiEntityActionType> DAMAGE = register(ActionConfiguration.of(Apoli.identifier("damage"), DamageBiEntityActionType.DATA_FACTORY));
     public static final ActionConfiguration<LeashBiEntityActionType> LEASH = register(ActionConfiguration.simple(Apoli.identifier("leash"), LeashBiEntityActionType::new));
     public static final ActionConfiguration<MountBiEntityActionType> MOUNT = register(ActionConfiguration.simple(Apoli.identifier("mount"), MountBiEntityActionType::new));
-    public static final ActionConfiguration<RemoveFromEntitySetBiEntityActionType> REMOVE_FROM_ENTITY_SET = register(ActionConfiguration.fromDataFactory(Apoli.identifier("remove_from_entity_set"), RemoveFromEntitySetBiEntityActionType.DATA_FACTORY));
+    public static final ActionConfiguration<RemoveFromEntitySetBiEntityActionType> REMOVE_FROM_ENTITY_SET = register(ActionConfiguration.of(Apoli.identifier("remove_from_entity_set"), RemoveFromEntitySetBiEntityActionType.DATA_FACTORY));
     public static final ActionConfiguration<TameBiEntityActionType> TAME = ActionConfiguration.simple(Apoli.identifier("tame"), TameBiEntityActionType::new);
     public static final ActionConfiguration<SetInLoveBiEntityActionType> SET_IN_LOVE = register(ActionConfiguration.simple(Apoli.identifier("set_in_love"), SetInLoveBiEntityActionType::new));
 

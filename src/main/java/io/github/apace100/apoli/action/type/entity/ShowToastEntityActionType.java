@@ -5,13 +5,12 @@ import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.data.CustomToastData;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import net.minecraft.entity.Entity;
 
 public class ShowToastEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<ShowToastEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ShowToastEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         CustomToastData.FACTORY.getSerializableData().copy(),
         data -> new ShowToastEntityActionType(
             CustomToastData.FACTORY.fromData(data)

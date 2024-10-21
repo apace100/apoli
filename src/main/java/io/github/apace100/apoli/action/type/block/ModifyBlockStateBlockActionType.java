@@ -5,11 +5,10 @@ import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.BlockActionType;
 import io.github.apace100.apoli.action.type.BlockActionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.EnumProperty;
@@ -24,7 +23,7 @@ import java.util.Optional;
 
 public class ModifyBlockStateBlockActionType extends BlockActionType {
 
-    public static final DataObjectFactory<ModifyBlockStateBlockActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<ModifyBlockStateBlockActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("property", SerializableDataTypes.STRING)
             .add("operation", ApoliDataTypes.RESOURCE_OPERATION, ResourceOperation.ADD)

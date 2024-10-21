@@ -31,9 +31,9 @@ public class BiomeConditionTypes {
     public static final ConditionConfiguration<RandomChanceBiomeConditionType> RANDOM_CHANCE = register(RandomChanceMetaConditionType.createConfiguration(RandomChanceBiomeConditionType::new));
     
     public static final ConditionConfiguration<HighHumidityBiomeConditionType> HIGH_HUMIDITY = register(ConditionConfiguration.simple(Apoli.identifier("high_humidity"), HighHumidityBiomeConditionType::new));
-    public static final ConditionConfiguration<InTagBiomeConditionType> IN_TAG = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("in_tag"), InTagBiomeConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<PrecipitationBiomeConditionType> PRECIPITATION = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("precipitation"), PrecipitationBiomeConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<TemperatureBiomeConditionType> TEMPERATURE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("temperature"), TemperatureBiomeConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<InTagBiomeConditionType> IN_TAG = register(ConditionConfiguration.of(Apoli.identifier("in_tag"), InTagBiomeConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<PrecipitationBiomeConditionType> PRECIPITATION = register(ConditionConfiguration.of(Apoli.identifier("precipitation"), PrecipitationBiomeConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<TemperatureBiomeConditionType> TEMPERATURE = register(ConditionConfiguration.of(Apoli.identifier("temperature"), TemperatureBiomeConditionType.DATA_FACTORY));
 
     public static void register() {
 

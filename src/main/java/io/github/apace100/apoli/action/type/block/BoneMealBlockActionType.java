@@ -3,10 +3,9 @@ package io.github.apace100.apoli.action.type.block;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.BlockActionType;
 import io.github.apace100.apoli.action.type.BlockActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.BoneMealItem;
 import net.minecraft.item.ItemStack;
@@ -19,7 +18,7 @@ import java.util.Optional;
 
 public class BoneMealBlockActionType extends BlockActionType {
 
-    public static final DataObjectFactory<BoneMealBlockActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<BoneMealBlockActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("effects", SerializableDataTypes.BOOLEAN, true),
         data -> new BoneMealBlockActionType(

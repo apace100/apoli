@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
 import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -20,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class CommandBlockConditionType extends BlockConditionType {
 
-    public static final DataObjectFactory<CommandBlockConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<CommandBlockConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("command", SerializableDataTypes.STRING)
             .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN)

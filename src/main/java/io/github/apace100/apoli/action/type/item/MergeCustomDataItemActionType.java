@@ -3,10 +3,9 @@ package io.github.apace100.apoli.action.type.item;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.action.type.ItemActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.inventory.StackReference;
@@ -15,7 +14,7 @@ import net.minecraft.world.World;
 
 public class MergeCustomDataItemActionType extends ItemActionType {
 
-    public static final DataObjectFactory<MergeCustomDataItemActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<MergeCustomDataItemActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("nbt", SerializableDataTypes.NBT_COMPOUND),
         data -> new MergeCustomDataItemActionType(

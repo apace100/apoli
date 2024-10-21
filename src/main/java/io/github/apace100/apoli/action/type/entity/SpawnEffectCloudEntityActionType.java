@@ -3,10 +3,9 @@ package io.github.apace100.apoli.action.type.entity;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
@@ -15,7 +14,7 @@ import net.minecraft.server.world.ServerWorld;
 
 public class SpawnEffectCloudEntityActionType extends EntityActionType {
 
-    public static final DataObjectFactory<SpawnEffectCloudEntityActionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<SpawnEffectCloudEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("effect_component", SerializableDataTypes.POTION_CONTENTS_COMPONENT, PotionContentsComponent.DEFAULT)
             .add("wait_time", SerializableDataTypes.INT, 10)

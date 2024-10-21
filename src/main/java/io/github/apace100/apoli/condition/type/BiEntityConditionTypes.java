@@ -24,21 +24,21 @@ public class BiEntityConditionTypes {
     public static final ConditionConfiguration<ConstantBiEntityConditionType> CONSTANT = register(ConstantMetaConditionType.createConfiguration(ConstantBiEntityConditionType::new));
     public static final ConditionConfiguration<RandomChanceBiEntityConditionType> RANDOM_CHANCE = register(RandomChanceMetaConditionType.createConfiguration(RandomChanceBiEntityConditionType::new));
 
-    public static final ConditionConfiguration<ActorConditionBiEntityConditionType> ACTOR_CONDITION = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("actor_condition"), ActorConditionBiEntityConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<BothBiEntityConditionType> BOTH = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("both"), BothBiEntityConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<EitherBiEntityConditionType> EITHER = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("either"), EitherBiEntityConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<InvertBiEntityConditionType> INVERT = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("invert"), InvertBiEntityConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<TargetConditionBiEntityConditionType> TARGET_CONDITION = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("target_condition"), TargetConditionBiEntityConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<UndirectedBiEntityConditionType> UNDIRECTED = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("undirected"), UndirectedBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<ActorConditionBiEntityConditionType> ACTOR_CONDITION = register(ConditionConfiguration.of(Apoli.identifier("actor_condition"), ActorConditionBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<BothBiEntityConditionType> BOTH = register(ConditionConfiguration.of(Apoli.identifier("both"), BothBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<EitherBiEntityConditionType> EITHER = register(ConditionConfiguration.of(Apoli.identifier("either"), EitherBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<InvertBiEntityConditionType> INVERT = register(ConditionConfiguration.of(Apoli.identifier("invert"), InvertBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<TargetConditionBiEntityConditionType> TARGET_CONDITION = register(ConditionConfiguration.of(Apoli.identifier("target_condition"), TargetConditionBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<UndirectedBiEntityConditionType> UNDIRECTED = register(ConditionConfiguration.of(Apoli.identifier("undirected"), UndirectedBiEntityConditionType.DATA_FACTORY));
 
     public static final ConditionConfiguration<AttackTargetBiEntityConditionType> ATTACK_TARGET = register(ConditionConfiguration.simple(Apoli.identifier("attack_target"), AttackTargetBiEntityConditionType::new));
     public static final ConditionConfiguration<AttackerBiEntityConditionType> ATTACKER = register(ConditionConfiguration.simple(Apoli.identifier("attacker"), AttackerBiEntityConditionType::new));
-    public static final ConditionConfiguration<CanSeeBiEntityConditionType> CAN_SEE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("can_see"), CanSeeBiEntityConditionType.DATA_FACTORY));
-    public static final ConditionConfiguration<DistanceBiEntityConditionType> DISTANCE = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("distance"), DistanceBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<CanSeeBiEntityConditionType> CAN_SEE = register(ConditionConfiguration.of(Apoli.identifier("can_see"), CanSeeBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<DistanceBiEntityConditionType> DISTANCE = register(ConditionConfiguration.of(Apoli.identifier("distance"), DistanceBiEntityConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<EqualBiEntityConditionType> EQUAL = ConditionConfiguration.simple(Apoli.identifier("equal"), EqualBiEntityConditionType::new);
-    public static final ConditionConfiguration<InEntitySetBiEntityConditionType> IN_ENTITY_SET = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("in_entity_set"), InEntitySetBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<InEntitySetBiEntityConditionType> IN_ENTITY_SET = register(ConditionConfiguration.of(Apoli.identifier("in_entity_set"), InEntitySetBiEntityConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<OwnerBiEntityConditionType> OWNER = register(ConditionConfiguration.simple(Apoli.identifier("owner"), OwnerBiEntityConditionType::new));
-    public static final ConditionConfiguration<RelativeRotationBiEntityConditionType> RELATIVE_ROTATION = register(ConditionConfiguration.fromDataFactory(Apoli.identifier("relative_rotation"), RelativeRotationBiEntityConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<RelativeRotationBiEntityConditionType> RELATIVE_ROTATION = register(ConditionConfiguration.of(Apoli.identifier("relative_rotation"), RelativeRotationBiEntityConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<RidingBiEntityConditionType> RIDING = register(ConditionConfiguration.simple(Apoli.identifier("riding"), RidingBiEntityConditionType::new));
     public static final ConditionConfiguration<RidingRecursiveBiEntityConditionType> RIDING_RECURSIVE = register(ConditionConfiguration.simple(Apoli.identifier("riding_recursive"), RidingRecursiveBiEntityConditionType::new));
     public static final ConditionConfiguration<RidingRootBiEntityConditionType> RIDING_ROOT = register(ConditionConfiguration.simple(Apoli.identifier("riding_root"), RidingRootBiEntityConditionType::new));

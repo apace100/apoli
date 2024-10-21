@@ -4,12 +4,11 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.mixin.ClientPlayerEntityAccessor;
 import io.github.apace100.apoli.mixin.ClientPlayerInteractionManagerAccessor;
 import io.github.apace100.apoli.mixin.ServerPlayerInteractionManagerAccessor;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -18,7 +17,7 @@ import net.minecraft.world.GameMode;
 
 public class GameModeEntityConditionType extends EntityConditionType {
 
-    public static final DataObjectFactory<GameModeEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<GameModeEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("gamemode", ApoliDataTypes.GAME_MODE),
         data -> new GameModeEntityConditionType(

@@ -3,10 +3,9 @@ package io.github.apace100.apoli.condition.type.damage;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.DamageConditionType;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.registry.RegistryKeys;
@@ -14,7 +13,7 @@ import net.minecraft.registry.tag.TagKey;
 
 public class InTagDamageConditionType extends DamageConditionType {
 
-    public static final DataObjectFactory<InTagDamageConditionType>  DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<InTagDamageConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("tag", SerializableDataType.tagKey(RegistryKeys.DAMAGE_TYPE)),
         data -> new InTagDamageConditionType(

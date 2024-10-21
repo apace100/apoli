@@ -3,10 +3,9 @@ package io.github.apace100.apoli.condition.type.entity;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import io.github.apace100.calio.registry.DataObjectFactory;
-import io.github.apace100.calio.registry.SimpleDataObjectFactory;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.entity.Entity;
 
@@ -17,7 +16,7 @@ import java.util.Set;
 
 public class HasCommandTagEntityConditionType extends EntityConditionType {
 
-    public static final DataObjectFactory<HasCommandTagEntityConditionType> DATA_FACTORY = new SimpleDataObjectFactory<>(
+    public static final TypedDataObjectFactory<HasCommandTagEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("command_tag", SerializableDataTypes.STRING.optional(), Optional.empty())
             .add("command_tags", SerializableDataTypes.STRINGS.optional(), Optional.empty()),
