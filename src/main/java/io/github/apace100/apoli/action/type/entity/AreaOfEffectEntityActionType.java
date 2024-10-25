@@ -12,6 +12,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -78,7 +79,7 @@ public class AreaOfEffectEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.AREA_OF_EFFECT;
     }
 

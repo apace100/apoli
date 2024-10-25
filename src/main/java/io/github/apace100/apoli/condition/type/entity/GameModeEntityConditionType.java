@@ -14,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
+import org.jetbrains.annotations.NotNull;
 
 public class GameModeEntityConditionType extends EntityConditionType {
 
@@ -57,7 +58,7 @@ public class GameModeEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.GAME_MODE;
     }
 

@@ -13,6 +13,7 @@ import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 
 public class ExecuteCommandEntityActionType extends EntityActionType {
 
@@ -59,7 +60,7 @@ public class ExecuteCommandEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.EXECUTE_COMMAND;
     }
 

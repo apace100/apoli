@@ -4,6 +4,7 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ExistsEntityConditionType extends EntityConditionType {
 
@@ -13,7 +14,7 @@ public class ExistsEntityConditionType extends EntityConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return EntityConditionTypes.EXISTS;
 	}
 

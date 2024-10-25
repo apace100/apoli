@@ -10,6 +10,7 @@ import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class HolderActionItemActionType extends ItemActionType {
 
@@ -41,7 +42,7 @@ public class HolderActionItemActionType extends ItemActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return ItemActionTypes.HOLDER;
     }
 

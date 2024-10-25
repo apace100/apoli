@@ -7,6 +7,7 @@ import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.action.type.meta.ChanceMetaActionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -29,7 +30,7 @@ public class ChanceEntityActionType extends EntityActionType implements ChanceMe
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return EntityActionTypes.CHANCE;
 	}
 

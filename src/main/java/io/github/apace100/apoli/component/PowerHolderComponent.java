@@ -29,7 +29,7 @@ import org.ladysnake.cca.api.v3.component.ComponentKey;
 import org.ladysnake.cca.api.v3.component.ComponentRegistry;
 import org.ladysnake.cca.api.v3.component.sync.AutoSyncedComponent;
 import org.ladysnake.cca.api.v3.component.sync.ComponentPacketWriter;
-import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
+import org.ladysnake.cca.api.v3.component.tick.CommonTickingComponent;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -38,7 +38,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public interface PowerHolderComponent extends AutoSyncedComponent, ServerTickingComponent {
+public interface PowerHolderComponent extends AutoSyncedComponent, CommonTickingComponent {
 
     /**
      *  <b>Use {@link #getOptional(Entity)} or {@link #getNullable(Entity)} wherever possible.</b>
@@ -48,15 +48,43 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     boolean removePower(Power power, Identifier source);
 
+    default boolean removePower(PowerReference powerReference, Identifier source) {
+        return powerReference.getResultReference()
+            .mapError(err -> "Couldn't revoke non-existing power with ID \"" + powerReference.id() + "\"!")
+            .resultOrPartial(Apoli.LOGGER::warn)
+            .map(power -> removePower(power, source))
+            .orElse(false);
+    }
+
     int removeAllPowersFromSource(Identifier source);
 
     List<Power> getPowersFromSource(Identifier source);
 
     boolean addPower(Power power, Identifier source);
 
+    default boolean addPower(PowerReference powerReference, Identifier source) {
+        return powerReference.getResultReference()
+            .mapError(error -> "Couldn't grant non-existing power with ID \"" + powerReference.id() + "\"!")
+            .resultOrPartial(Apoli.LOGGER::warn)
+            .map(power -> addPower(power, source))
+            .orElse(false);
+    }
+
     boolean hasPower(Power power);
 
+    default boolean hasPower(PowerReference powerReference) {
+        return powerReference.getOptionalReference()
+            .map(this::hasPower)
+            .orElse(false);
+    }
+
     boolean hasPower(Power power, Identifier source);
+
+    default boolean hasPower(PowerReference powerReference, Identifier source) {
+        return powerReference.getOptionalReference()
+            .map(power -> hasPower(power, source))
+            .orElse(false);
+    }
 
     PowerType getPowerType(Power power);
 
@@ -69,6 +97,12 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
     <T extends PowerType> List<T> getPowerTypes(Class<T> typeClass, boolean includeInactive);
 
     List<Identifier> getSources(Power power);
+
+    default List<Identifier> getSources(PowerReference powerReference) {
+        return powerReference.getOptionalReference()
+            .map(this::getSources)
+            .orElseGet(ArrayList::new);
+    }
 
     void sync();
 
@@ -198,17 +232,13 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     }
 
-    static void syncPower(Entity entity, Power power) {
+    static void syncPower(Entity entity, PowerReference powerReference) {
+        syncPower(entity, powerReference.getReference());
+    }
 
-        if (entity == null || entity.getWorld().isClient()) {
-            return;
-        }
+    static void syncPower(@Nullable Entity entity, @Nullable Power power) {
 
-        if (power instanceof PowerReference powerReference) {
-            power = powerReference.getReference();
-        }
-
-        if (power == null) {
+        if (power == null || entity == null || entity.getWorld().isClient()) {
             return;
         }
 
@@ -237,7 +267,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
     }
 
-    static void syncPowers(Entity entity, Collection<? extends Power> powers) {
+    static <P extends Power> void syncPowers(@Nullable Entity entity, Collection<P> powers) {
 
         if (entity == null || entity.getWorld().isClient() || powers.isEmpty()) {
             return;
@@ -252,15 +282,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, ServerTicking
 
         for (Power power : powers) {
 
-            if (power instanceof PowerReference powerReference) {
-                power = powerReference.getReference();
-            }
-
-            if (power == null) {
-                continue;
-            }
-
             PowerType powerType = component.getPowerType(power);
+
             if (powerType != null) {
                 powersToSync.put(power.getId(), powerType.toTag());
             }

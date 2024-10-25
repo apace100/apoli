@@ -12,6 +12,11 @@ public abstract class BlockConditionType extends AbstractConditionType<BlockCond
 		return test(context.world(), context.pos());
 	}
 
+	@Override
+	public BlockCondition createCondition(boolean inverted) {
+		return new BlockCondition(this, inverted);
+	}
+
 	public abstract boolean test(World world, BlockPos pos);
 
 }

@@ -1,48 +1,87 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
-import net.minecraft.entity.LivingEntity;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.function.TriFunction;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
-public class ValueModifyingPowerType extends PowerType {
+public abstract class ValueModifyingPowerType extends PowerType {
 
-    private final List<Modifier> modifiers = new LinkedList<>();
+    private final List<Modifier> modifiers;
 
-    public ValueModifyingPowerType(Power power, LivingEntity entity) {
-        super(power, entity);
+    public ValueModifyingPowerType(List<Modifier> modifiers, Optional<EntityCondition> condition) {
+        super(condition);
+        this.modifiers = new ObjectArrayList<>(modifiers);
     }
 
-    public void addModifier(Modifier modifier) {
+    public ValueModifyingPowerType(Optional<EntityCondition> condition) {
+        super(condition);
+        this.modifiers = new ObjectArrayList<>();
+    }
+
+    public ValueModifyingPowerType() {
+        this(Optional.empty());
+    }
+
+    protected void addModifier(Modifier modifier) {
         this.modifiers.add(modifier);
     }
 
     public List<Modifier> getModifiers() {
-        return modifiers;
+        return new ObjectArrayList<>(modifiers);
     }
 
-    public static <T extends ValueModifyingPowerType> PowerTypeFactory<T> createValueModifyingFactory(Identifier id, BiFunction<Power, LivingEntity, T> powerConstructor) {
-        return new PowerTypeFactory<>(id,
-            new SerializableData()
-                .add("modifier", Modifier.DATA_TYPE, null)
-                .add("modifiers", Modifier.LIST_TYPE, null),
-            data -> (power, entity) -> {
+    protected final SerializableData.Instance setField(SerializableData.Instance data) {
+        return data.set("modifiers", getModifiers());
+    }
 
-                T powerType = powerConstructor.apply(power, entity);
+    private static SerializableData addFields(SerializableData serializableData) {
+        return serializableData
+            .add("modifier", Modifier.DATA_TYPE, null)
+            .addFunctionedDefault("modifiers", Modifier.LIST_TYPE, data -> MiscUtil.singletonListOrNull(data.get("modifier")))
+            .validate(MiscUtil.validateAnyFieldsPresent("modifier", "modifiers"));
+    }
 
-                data.ifPresent("modifier", powerType::addModifier);
-                data.<List<Modifier>>ifPresent("modifiers", mods -> mods.forEach(powerType::addModifier));
+    private static List<Modifier> getField(SerializableData.Instance data) {
+        return data.get("modifiers");
+    }
 
-                return powerType;
+    public static <T extends ValueModifyingPowerType> TypedDataObjectFactory<T> createModifyingDataFactory(SerializableData serializableData, BiFunction<SerializableData.Instance, List<Modifier>, T> fromData, BiFunction<T, SerializableData, SerializableData.Instance> toData) {
+        return TypedDataObjectFactory.simple(
+            addFields(serializableData),
+            data -> fromData.apply(
+                data,
+                getField(data)
+            ),
+			(t, _serializableData) ->
+                t.setField(toData.apply(t, _serializableData))
+        );
+    }
 
-            }
-        ).allowCondition();
+    public static <T extends ValueModifyingPowerType> TypedDataObjectFactory<T> createConditionedModifyingDataFactory(SerializableData serializableData, TriFunction<SerializableData.Instance, List<Modifier>, Optional<EntityCondition>, T> fromData, BiFunction<T, SerializableData, SerializableData.Instance> toData) {
+        return PowerType.createConditionedDataFactory(
+            addFields(serializableData),
+            (data, condition) -> fromData.apply(
+                data,
+                getField(data),
+                condition
+            ),
+            (t, _serializableData) ->
+                t.setField(toData.apply(t, _serializableData))
+        );
+    }
+
+    public static <T extends ValueModifyingPowerType> PowerConfiguration<T> createModifyingConfiguration(Identifier id, BiFunction<List<Modifier>, Optional<EntityCondition>, T> constructor) {
+        return PowerConfiguration.dataFactory(id, createConditionedModifyingDataFactory(new SerializableData(), (data, modifiers, condition) -> constructor.apply(modifiers, condition), (t, serializableData) -> serializableData.instance()));
     }
 
 }

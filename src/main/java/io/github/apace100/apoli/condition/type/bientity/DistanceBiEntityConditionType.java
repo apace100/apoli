@@ -12,6 +12,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
 public class DistanceBiEntityConditionType extends BiEntityConditionType {
 
@@ -37,7 +38,7 @@ public class DistanceBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiEntityConditionTypes.DISTANCE;
     }
 

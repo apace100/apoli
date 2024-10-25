@@ -11,6 +11,11 @@ public abstract class EntityConditionType extends AbstractConditionType<EntityCo
 		return test(context.entity());
 	}
 
+	@Override
+	public EntityCondition createCondition(boolean inverted) {
+		return new EntityCondition(this, inverted);
+	}
+
 	public abstract boolean test(Entity entity);
 
 }

@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.DamageConditionType;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
 import net.minecraft.entity.damage.DamageSource;
+import org.jetbrains.annotations.NotNull;
 
 public class RandomChanceDamageConditionType extends DamageConditionType implements RandomChanceMetaConditionType {
 
@@ -20,7 +21,7 @@ public class RandomChanceDamageConditionType extends DamageConditionType impleme
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return DamageConditionTypes.RANDOM_CHANCE;
 	}
 

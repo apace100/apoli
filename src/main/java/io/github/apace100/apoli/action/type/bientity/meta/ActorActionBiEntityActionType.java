@@ -7,6 +7,7 @@ import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ActorActionBiEntityActionType extends BiEntityActionType {
 
@@ -36,7 +37,7 @@ public class ActorActionBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BiEntityActionTypes.ACTOR_ACTION;
     }
 

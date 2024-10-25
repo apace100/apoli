@@ -1,12 +1,12 @@
 package io.github.apace100.apoli.power.type;
 
 import com.mojang.datafixers.util.Pair;
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
@@ -28,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 
 //  TODO: Fix this power type unreliably modifying attribute modifier enchantment effects -eggohito
 public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
@@ -40,60 +39,74 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
     private static final ConcurrentHashMap<UUID, ItemStack> MODIFIED_EMPTY_STACKS = new ConcurrentHashMap<>();
     private static final WeakHashMap<Pair<UUID, ItemStack>, ConcurrentHashMap<ModifyEnchantmentLevelPowerType, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new WeakHashMap<>(256);
 
+    public static final TypedDataObjectFactory<ModifyEnchantmentLevelPowerType> DATA_FACTORY = createConditionedModifyingDataFactory(
+        new SerializableData()
+            .add("enchantment", SerializableDataTypes.ENCHANTMENT)
+            .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty()),
+        (data, modifiers, condition) -> new ModifyEnchantmentLevelPowerType(
+            data.get("enchantment"),
+            data.get("item_condition"),
+            modifiers,
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("enchantment", powerType.enchantmentKey)
+            .set("item_condition", powerType.itemCondition)
+    );
+
     private final RegistryKey<Enchantment> enchantmentKey;
-    private final Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition;
+    private final Optional<ItemCondition> itemCondition;
 
-    public ModifyEnchantmentLevelPowerType(Power power, LivingEntity entity, RegistryKey<Enchantment> enchantmentKey, Predicate<net.minecraft.util.Pair<World, ItemStack>> itemCondition, Modifier modifier, List<Modifier> modifiers) {
-        super(power, entity);
-
+    public ModifyEnchantmentLevelPowerType(RegistryKey<Enchantment> enchantmentKey, Optional<ItemCondition> itemCondition, List<Modifier> modifiers, Optional<EntityCondition> condition) {
+        super(modifiers, condition);
         this.enchantmentKey = enchantmentKey;
         this.itemCondition = itemCondition;
-
-        if (modifier != null) {
-            this.addModifier(modifier);
-        }
-
-        if (modifiers != null) {
-            modifiers.forEach(this::addModifier);
-        }
-
         this.setTicking();
+    }
 
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.MODIFY_ENCHANTMENT_LEVEL;
     }
 
     @Override
     public void onRemoved() {
 
+        LivingEntity holder = getHolder();
+
         for (int slot : InventoryUtil.getAllSlots()) {
 
-            StackReference stackReference = entity.getStackReference(slot);
+            StackReference stackReference = holder.getStackReference(slot);
 
-            if (stackReference != StackReference.EMPTY && isWorkableEmptyStack(entity, stackReference)) {
+            if (stackReference != StackReference.EMPTY && isWorkableEmptyStack(holder, stackReference)) {
                 stackReference.set(ItemStack.EMPTY);
             }
 
         }
 
-        COPY_TO_ORIGINAL_STACK.remove(entity.getUuid());
-        ITEM_ENCHANTMENTS.remove(entity.getUuid());
+        COPY_TO_ORIGINAL_STACK.remove(holder.getUuid());
+        ITEM_ENCHANTMENTS.remove(holder.getUuid());
 
-        MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
+        MODIFIED_EMPTY_STACKS.remove(holder.getUuid());
 
     }
 
     @Override
-    public void tick() {
+    public void serverTick() {
+
+        LivingEntity holder = getHolder();
 
         for (int slot : InventoryUtil.getAllSlots()) {
 
-            StackReference stackReference = entity.getStackReference(slot);
+            StackReference stackReference = holder.getStackReference(slot);
+            ItemStack stack = stackReference.get();
+
             if (stackReference == StackReference.EMPTY) {
                 continue;
             }
 
-            ItemStack stack = stackReference.get();
-            if (stack.isEmpty() && !isWorkableEmptyStack(entity, stackReference) && checkItemCondition(stack)) {
-                stackReference.set(getOrCreateWorkableEmptyStack(entity));
+            if (stack.isEmpty() && !isWorkableEmptyStack(holder, stackReference)) {
+                stackReference.set(getOrCreateWorkableEmptyStack(holder));
             }
 
         }
@@ -260,25 +273,10 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
 
     }
 
-    public boolean checkItemCondition(ItemStack self) {
-        return itemCondition == null || itemCondition.test(new net.minecraft.util.Pair<>(entity.getWorld(), self));
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("modify_enchantment_level"),
-            new SerializableData()
-                .add("enchantment", SerializableDataTypes.ENCHANTMENT)
-                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("modifier", Modifier.DATA_TYPE, null)
-                .add("modifiers", Modifier.LIST_TYPE, null),
-            data -> (power, entity) -> new ModifyEnchantmentLevelPowerType(power, entity,
-                data.get("enchantment"),
-                data.get("item_condition"),
-                data.get("modifier"),
-                data.get("modifiers")
-            )
-        ).allowCondition();
+    public boolean checkItemCondition(ItemStack stack) {
+        return itemCondition
+            .map(condition -> condition.test(getHolder().getWorld(), stack))
+            .orElse(true);
     }
 
 }

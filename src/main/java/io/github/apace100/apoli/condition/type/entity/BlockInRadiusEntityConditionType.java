@@ -13,6 +13,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.NotNull;
 
 public class BlockInRadiusEntityConditionType extends EntityConditionType {
 
@@ -84,7 +85,7 @@ public class BlockInRadiusEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.BLOCK_IN_RADIUS;
     }
 

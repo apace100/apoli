@@ -8,6 +8,7 @@ import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class ModifyDeathTicksEntityActionType extends EntityActionType {
 
@@ -37,7 +38,7 @@ public class ModifyDeathTicksEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.MODIFY_DEATH_TICKS;
     }
 

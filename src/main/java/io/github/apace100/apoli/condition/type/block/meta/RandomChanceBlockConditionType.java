@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class RandomChanceBlockConditionType extends BlockConditionType implements RandomChanceMetaConditionType {
 
@@ -21,7 +22,7 @@ public class RandomChanceBlockConditionType extends BlockConditionType implement
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BlockConditionTypes.RANDOM_CHANCE;
 	}
 

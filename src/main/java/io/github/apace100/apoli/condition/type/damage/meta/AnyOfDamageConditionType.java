@@ -7,6 +7,7 @@ import io.github.apace100.apoli.condition.type.DamageConditionType;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
 import net.minecraft.entity.damage.DamageSource;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class AnyOfDamageConditionType extends DamageConditionType implements Any
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return DamageConditionTypes.ANY_OF;
 	}
 

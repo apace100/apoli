@@ -11,6 +11,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.registry.entry.RegistryEntry;
+import org.jetbrains.annotations.NotNull;
 
 public class StatusEffectEntityConditionType extends EntityConditionType {
 
@@ -82,7 +83,7 @@ public class StatusEffectEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.STATUS_EFFECT;
     }
 

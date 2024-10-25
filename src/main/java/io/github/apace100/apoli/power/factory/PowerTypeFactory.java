@@ -81,13 +81,7 @@ public class PowerTypeFactory<P extends PowerType> implements Factory {
         @Override
         public P apply(Power pPower, LivingEntity livingEntity) {
 
-            P power = constructor.apply(pPower, livingEntity);
-
-            if (hasConditions && data.isPresent("condition")) {
-                power.addCondition(data.get("condition"));
-            }
-
-            return power;
+			return constructor.apply(pPower, livingEntity);
 
         }
 

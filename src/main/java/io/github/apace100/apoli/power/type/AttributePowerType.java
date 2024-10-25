@@ -1,122 +1,89 @@
 package io.github.apace100.apoli.power.type;
 
-import com.mojang.datafixers.util.Pair;
-import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.AttributedEntityAttributeModifier;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.registry.entry.RegistryEntry;
+import org.apache.commons.lang3.function.TriFunction;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
 
-public class AttributePowerType extends PowerType {
+public class AttributePowerType extends PowerType implements AttributeModifying {
 
-    protected final List<AttributedEntityAttributeModifier> modifiers = new LinkedList<>();
-    protected final boolean updateHealth;
+    public static final TypedDataObjectFactory<AttributePowerType> DATA_FACTORY = TypedDataObjectFactory.simple(
+        new SerializableData()
+            .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
+            .addFunctionedDefault("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, data -> MiscUtil.singletonListOrNull(data.get("modifier")))
+            .add("update_health", SerializableDataTypes.BOOLEAN, true)
+            .validate(MiscUtil.validateAnyFieldsPresent("modifier", "modifiers")),
+        data -> new AttributePowerType(
+            data.get("modifiers"),
+            data.get("update_health")
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("modifiers", powerType.attributedModifiers)
+            .set("update_health", powerType.updateHealth)
+    );
 
-    public AttributePowerType(Power power, LivingEntity entity, boolean updateHealth) {
-        super(power, entity);
+    private final List<AttributedEntityAttributeModifier> attributedModifiers;
+    private final boolean updateHealth;
+
+    public AttributePowerType(List<AttributedEntityAttributeModifier> attributedModifiers, boolean updateHealth, Optional<EntityCondition> condition) {
+        super(condition);
+        this.attributedModifiers = attributedModifiers;
         this.updateHealth = updateHealth;
     }
 
-    public AttributePowerType(Power power, LivingEntity entity, boolean updateHealth, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier) {
-        this(power, entity, updateHealth);
-        addModifier(attribute, modifier);
+    public AttributePowerType(List<AttributedEntityAttributeModifier> attributedModifiers, boolean updateHealth) {
+        this(attributedModifiers, updateHealth, Optional.empty());
     }
 
-    public AttributePowerType addModifier(RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier) {
-        AttributedEntityAttributeModifier mod = new AttributedEntityAttributeModifier(attribute, modifier);
-        this.modifiers.add(mod);
-        return this;
-    }
-
-    public AttributePowerType addModifier(AttributedEntityAttributeModifier modifier) {
-        this.modifiers.add(modifier);
-        return this;
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.ATTRIBUTE;
     }
 
     @Override
     public void onAdded() {
-        this.applyTempMods();
+        this.applyTempModifiers(getHolder());
     }
 
     @Override
     public void onRemoved() {
-        this.removeTempMods();
+        this.removeTempModifiers(getHolder());
     }
 
-    protected void applyTempMods() {
-
-        if (entity.getWorld().isClient) {
-            return;
-        }
-
-        float previousMaxHealth = entity.getMaxHealth();
-        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
-
-        modifiers.stream()
-            .filter(mod -> entity.getAttributes().hasAttribute(mod.attribute()))
-            .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.attribute())))
-            .filter(pair -> pair.getSecond() != null && !pair.getSecond().hasModifier(pair.getFirst().modifier().id()))
-            .forEach(pair -> pair.getSecond().addTemporaryModifier(pair.getFirst().modifier()));
-
-        float currentMaxHealth = entity.getMaxHealth();
-        if (updateHealth && currentMaxHealth != previousMaxHealth) {
-            entity.setHealth(currentMaxHealth * previousHealthPercent);
-        }
-
+    @Override
+    public List<AttributedEntityAttributeModifier> attributedModifiers() {
+        return attributedModifiers;
     }
 
-    protected void removeTempMods() {
-
-        if (entity.getWorld().isClient) {
-            return;
-        }
-
-        float previousMaxHealth = entity.getMaxHealth();
-        float previousHealthPercent = entity.getHealth() / previousMaxHealth;
-
-        modifiers.stream()
-            .filter(mod -> entity.getAttributes().hasAttribute(mod.attribute()))
-            .map(mod -> Pair.of(mod, entity.getAttributeInstance(mod.attribute())))
-            .filter(pair -> pair.getSecond() != null && pair.getSecond().hasModifier(pair.getFirst().modifier().id()))
-            .forEach(pair -> pair.getSecond().removeModifier(pair.getFirst().modifier().id()));
-
-        float currentMaxHealth = entity.getMaxHealth();
-        if (updateHealth && currentMaxHealth != previousMaxHealth) {
-            entity.setHealth(currentMaxHealth * previousHealthPercent);
-        }
-
+    @Override
+    public boolean shouldUpdateHealth() {
+        return updateHealth;
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("attribute"),
-            new SerializableData()
+    public static <T extends AttributePowerType> TypedDataObjectFactory<T> createAttributeModifyingDataFactory(SerializableData serializableData, TriFunction<SerializableData.Instance, List<AttributedEntityAttributeModifier>, Boolean, T> fromData, BiFunction<T, SerializableData, SerializableData.Instance> toData) {
+        return TypedDataObjectFactory.simple(
+            serializableData
                 .add("modifier", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIER, null)
-                .add("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, null)
-                .add("update_health", SerializableDataTypes.BOOLEAN, true),
-            data -> (power, entity) -> {
-
-                AttributePowerType attributePower = new AttributePowerType(
-                    power,
-                    entity,
-                    data.get("update_health")
-                );
-
-                data.<AttributedEntityAttributeModifier>ifPresent("modifier", attributePower::addModifier);
-                data.<List<AttributedEntityAttributeModifier>>ifPresent("modifiers", mods -> mods.forEach(attributePower::addModifier));
-
-                return attributePower;
-
-            }
+                .addFunctionedDefault("modifiers", ApoliDataTypes.ATTRIBUTED_ATTRIBUTE_MODIFIERS, data -> MiscUtil.singletonListOrNull(data.get("modifier")))
+                .add("update_health", SerializableDataTypes.BOOLEAN, true)
+                .validate(MiscUtil.validateAnyFieldsPresent("modifier", "modifiers")),
+            data -> fromData.apply(
+                data,
+                data.get("modifiers"),
+                data.get("update_health")
+            ),
+            (t, _serializableData) -> toData.apply(t, _serializableData)
+                .set("modifier", t.attributedModifiers())
         );
     }
 

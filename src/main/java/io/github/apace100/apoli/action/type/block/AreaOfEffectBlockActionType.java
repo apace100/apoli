@@ -13,6 +13,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -67,7 +68,7 @@ public class AreaOfEffectBlockActionType extends BlockActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BlockActionTypes.AREA_OF_EFFECT;
     }
 

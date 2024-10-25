@@ -1,48 +1,48 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.EntityAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
-import net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
+import java.util.Optional;
 
 public class PreventElytraFlightPowerType extends PowerType {
 
-    private final Consumer<Entity> entityAction;
+    public static final TypedDataObjectFactory<PreventElytraFlightPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE.optional(), Optional.empty()),
+        (data, condition) -> new PreventElytraFlightPowerType(
+            data.get("entity_action"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+    );
 
-    public PreventElytraFlightPowerType(Power power, LivingEntity entity, Consumer<Entity> entityAction) {
-        super(power, entity);
+    private final Optional<EntityAction> entityAction;
+
+    public PreventElytraFlightPowerType(Optional<EntityAction> entityAction, Optional<EntityCondition> condition) {
+        super(condition);
         this.entityAction = entityAction;
     }
 
-    public void executeAction(Entity entity) {
-
-        if (entityAction != null) {
-            entityAction.accept(entity);
-        }
-
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.PREVENT_ELYTRA_FLIGHT;
     }
 
-    public static PowerTypeFactory<?> getFactory() {
+    public void executeAction() {
+		entityAction.ifPresent(action -> action.execute(getHolder()));
+    }
 
-        //  FIXME: Fix the entity action not being executed when preventing elytra flight -eggohito
-        EntityElytraEvents.ALLOW.register(entity -> !PowerHolderComponent.hasPowerType(entity, PreventElytraFlightPowerType.class));
-
-        return new PowerTypeFactory<>(
-            Apoli.identifier("prevent_elytra_flight"),
-            new SerializableData()
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            data -> (power, entity) -> new PreventElytraFlightPowerType(power, entity,
-                data.get("entity_action")
-            )
-        ).allowCondition();
-
+    //  FIXME: Fix the entity action not being executed when preventing elytra flight -eggohito
+    public static boolean integrateAllowCallback(LivingEntity entity) {
+        return !PowerHolderComponent.hasPowerType(entity, PreventElytraFlightPowerType.class);
     }
 
 }

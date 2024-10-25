@@ -12,6 +12,11 @@ public abstract class ItemConditionType extends AbstractConditionType<ItemCondit
 		return test(context.world(), context.stack());
 	}
 
+	@Override
+	public ItemCondition createCondition(boolean inverted) {
+		return new ItemCondition(this, inverted);
+	}
+
 	public abstract boolean test(World world, ItemStack stack);
 
 }

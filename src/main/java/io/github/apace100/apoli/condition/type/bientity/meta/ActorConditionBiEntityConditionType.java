@@ -7,6 +7,7 @@ import io.github.apace100.apoli.condition.type.BiEntityConditionTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ActorConditionBiEntityConditionType extends BiEntityConditionType {
 
@@ -27,7 +28,7 @@ public class ActorConditionBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiEntityConditionTypes.ACTOR_CONDITION;
     }
 

@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 
 public class RevokeAllPowersEntityActionType extends EntityActionType {
 
@@ -34,7 +35,7 @@ public class RevokeAllPowersEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.REVOKE_ALL_POWERS;
     }
 

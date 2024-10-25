@@ -11,6 +11,7 @@ import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class CustomDataItemConditionType extends ItemConditionType {
 
@@ -36,7 +37,7 @@ public class CustomDataItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.CUSTOM_DATA;
     }
 

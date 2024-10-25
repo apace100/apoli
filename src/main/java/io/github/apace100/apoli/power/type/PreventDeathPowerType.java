@@ -1,38 +1,56 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.EntityAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.DamageCondition;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class PreventDeathPowerType extends PowerType {
 
-    private final Consumer<Entity> entityAction;
-    private final Predicate<Pair<DamageSource, Float>> condition;
+    public static final TypedDataObjectFactory<PreventDeathPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("damage_condition", DamageCondition.DATA_TYPE.optional(), Optional.empty()),
+        (data, condition) -> new PreventDeathPowerType(
+            data.get("entity_action"),
+            data.get("damage_condition"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+            .set("damage_condition", powerType.damageCondition)
+    );
 
-    public PreventDeathPowerType(Power power, LivingEntity entity, Consumer<Entity> entityAction, Predicate<Pair<DamageSource, Float>> condition) {
-        super(power, entity);
+    private final Optional<EntityAction> entityAction;
+    private final Optional<DamageCondition> damageCondition;
+
+    public PreventDeathPowerType(Optional<EntityAction> entityAction, Optional<DamageCondition> damageCondition, Optional<EntityCondition> condition) {
+        super(condition);
         this.entityAction = entityAction;
-        this.condition = condition;
+        this.damageCondition = damageCondition;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.PREVENT_DEATH;
     }
 
     public boolean doesApply(DamageSource source, float amount) {
-        return condition == null || condition.test(new Pair<>(source, amount));
+        return damageCondition
+            .map(condition -> condition.test(source, amount))
+            .orElse(true);
     }
 
     public void executeAction() {
-        if(entityAction != null) {
-            entityAction.accept(entity);
-        }
+        entityAction.ifPresent(action -> action.execute(getHolder()));
     }
 
     public static boolean doesPrevent(Entity entity, DamageSource source, float amount) {
@@ -51,19 +69,6 @@ public class PreventDeathPowerType extends PowerType {
 
         return prevented;
 
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("prevent_death"),
-            new SerializableData()
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null),
-            data -> (power, entity) -> new PreventDeathPowerType(power, entity,
-                data.get("entity_action"),
-                data.get("damage_condition")
-            )
-        ).allowCondition();
     }
 
 }

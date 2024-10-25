@@ -62,7 +62,7 @@ public class ResourceCommand {
             Power power = PowerArgumentType.getResource(context, "resource");
 
             ServerCommandSource commandSource = context.getSource();
-            PowerType powerType = power.getType(target);
+            PowerType powerType = power.getPowerTypeFrom(target);
 
             if (powerType != null) {
                 commandSource.sendFeedback(() -> Text.translatable("commands.execute.conditional.pass"), false);
@@ -95,7 +95,7 @@ public class ResourceCommand {
             Power power = PowerArgumentType.getResource(context, "resource");
 
             ServerCommandSource commandSource = context.getSource();
-            PowerType powerType = power.getType(target);
+            PowerType powerType = power.getPowerTypeFrom(target);
 
             if (powerType != null) {
 
@@ -136,7 +136,7 @@ public class ResourceCommand {
 
             ServerCommandSource commandSource = context.getSource();
             PowerType powerType = Optional
-                .ofNullable(power.getType(target))
+                .ofNullable(power.getPowerTypeFrom(target))
                 .orElseThrow(() -> PowerArgumentType.POWER_NOT_GRANTED.create(target.getName(), power.getId().toString()));
 
             if (PowerUtil.setResourceValue(powerType, value)) {
@@ -173,7 +173,7 @@ public class ResourceCommand {
             
             ServerCommandSource commandSource = context.getSource();
             PowerType powerType = Optional
-                .ofNullable(resource.getType(target))
+                .ofNullable(resource.getPowerTypeFrom(target))
                 .orElseThrow(() -> PowerArgumentType.POWER_NOT_GRANTED.create(target.getName(), resource.getId().toString()));
             
             if (PowerUtil.changeResourceValue(powerType, value)) {
@@ -214,7 +214,7 @@ public class ResourceCommand {
 
             ServerCommandSource commandSource = context.getSource();
             PowerType powerType = Optional
-                .ofNullable(resource.getType(target))
+                .ofNullable(resource.getPowerTypeFrom(target))
                 .orElseThrow(() -> PowerArgumentType.POWER_NOT_GRANTED.create(target.getName(), resource.getId().toString()));
 
             ScoreAccess scoreAccess = commandSource.getServer().getScoreboard().getOrCreateScore(source, objective);

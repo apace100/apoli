@@ -13,13 +13,14 @@ import io.github.apace100.apoli.util.ResourceOperation;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ChangeResourceEntityActionType extends EntityActionType {
 
     public static final TypedDataObjectFactory<ChangeResourceEntityActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
             .add("resource", ApoliDataTypes.RESOURCE_REFERENCE)
-            .add("operation", ApoliDataTypes.RESOURCE_OPERATION)
+            .add("operation", ApoliDataTypes.RESOURCE_OPERATION, ResourceOperation.ADD)
             .add("change", SerializableDataTypes.INT),
         data -> new ChangeResourceEntityActionType(
             data.get("resource"),
@@ -46,7 +47,7 @@ public class ChangeResourceEntityActionType extends EntityActionType {
     @Override
     protected void execute(Entity entity) {
 
-        PowerType powerType = resource.getType(entity);
+        PowerType powerType = resource.getPowerTypeFrom(entity);
         boolean modified = switch (operation) {
             case ADD ->
                 PowerUtil.changeResourceValue(powerType, change);
@@ -61,7 +62,7 @@ public class ChangeResourceEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.CHANGE_RESOURCE;
     }
 

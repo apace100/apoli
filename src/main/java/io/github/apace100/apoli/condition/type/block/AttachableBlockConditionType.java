@@ -7,6 +7,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class AttachableBlockConditionType extends BlockConditionType {
 
@@ -29,7 +30,7 @@ public class AttachableBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BlockConditionTypes.ATTACHABLE;
     }
 

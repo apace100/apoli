@@ -1,8 +1,9 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -19,7 +20,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.structure.StructureStart;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
@@ -32,6 +32,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.structure.Structure;
 import org.apache.commons.lang3.function.TriFunction;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,22 +41,57 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized<ModifyPlayerSpawnPowerType> {
 
+    public static final TypedDataObjectFactory<ModifyPlayerSpawnPowerType> DATA_FACTORY = createConditionedDataFactory(
+        new SerializableData()
+            .add("dimension", SerializableDataTypes.DIMENSION)
+            .add("structure", SerializableDataType.registryKey(RegistryKeys.STRUCTURE).optional(), Optional.empty())
+            .add("structure_tag", SerializableDataType.tagKey(RegistryKeys.STRUCTURE).optional(), Optional.empty())
+            .add("biome", SerializableDataType.registryKey(RegistryKeys.BIOME).optional(), Optional.empty())
+            .add("biome_tag", SerializableDataType.tagKey(RegistryKeys.BIOME).optional(), Optional.empty())
+            .add("spawn_strategy", SerializableDataType.enumValue(SpawnStrategy.class), SpawnStrategy.DEFAULT)
+            .add("respawn_sound", SerializableDataTypes.SOUND_EVENT.optional(), Optional.empty())
+            .add("dimension_distance_multiplier", SerializableDataTypes.POSITIVE_FLOAT, 1.0F)
+            .add("priority", SerializableDataTypes.INT, 0),
+        (data, condition) -> new ModifyPlayerSpawnPowerType(
+            data.get("dimension"),
+            data.get("structure"),
+            data.get("structure_tag"),
+            data.get("biome"),
+            data.get("biome_tag"),
+            data.get("spawn_strategy"),
+            data.get("respawn_sound"),
+            data.get("dimension_distance_multiplier"),
+            data.get("priority"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("dimension", powerType.dimensionKey)
+            .set("structure", powerType.structureKey)
+            .set("structure_tag", powerType.structureTag)
+            .set("biome", powerType.biomeKey)
+            .set("biome_tag", powerType.biomeTag)
+            .set("spawn_strategy", powerType.spawnStrategy)
+            .set("respawn_sound", powerType.respawnSound)
+            .set("dimension_distance_multiplier", powerType.dimensionDistanceMultiplier)
+            .set("priority", powerType.getPriority())
+    );
+
     private final RegistryKey<World> dimensionKey;
 
-    private final RegistryKey<Structure> structureKey;
-    private final TagKey<Structure> structureTag;
+    private final Optional<RegistryKey<Structure>> structureKey;
+    private final Optional<TagKey<Structure>> structureTag;
 
-    private final RegistryKey<Biome> biomeKey;
-    private final TagKey<Biome> biomeTag;
+    private final Optional<RegistryKey<Biome>> biomeKey;
+    private final Optional<TagKey<Biome>> biomeTag;
 
     private final SpawnStrategy spawnStrategy;
-    private final SoundEvent respawnSound;
+    private final Optional<SoundEvent> respawnSound;
 
     private final float dimensionDistanceMultiplier;
     private final int priority;
 
-    public ModifyPlayerSpawnPowerType(Power power, LivingEntity entity, RegistryKey<World> dimensionKey, RegistryKey<Structure> structureKey, TagKey<Structure> structureTag, RegistryKey<Biome> biomeKey, TagKey<Biome> biomeTag, SpawnStrategy spawnStrategy, SoundEvent respawnSound, float dimensionDistanceMultiplier, int priority) {
-        super(power, entity);
+    public ModifyPlayerSpawnPowerType(RegistryKey<World> dimensionKey, Optional<RegistryKey<Structure>> structureKey, Optional<TagKey<Structure>> structureTag, Optional<RegistryKey<Biome>> biomeKey, Optional<TagKey<Biome>> biomeTag, SpawnStrategy spawnStrategy, Optional<SoundEvent> respawnSound, float dimensionDistanceMultiplier, int priority, Optional<EntityCondition> condition) {
+        super(condition);
         this.dimensionKey = dimensionKey;
         this.structureKey = structureKey;
         this.structureTag = structureTag;
@@ -68,18 +104,20 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
     }
 
     @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.MODIFY_PLAYER_SPAWN;
+    }
+
+    @Override
     public void onRespawn() {
-
-        if (respawnSound != null) {
-            entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getX(), respawnSound, entity.getSoundCategory(), 1.0F, 1.0F);
-        }
-
+        LivingEntity entity = getHolder();
+		respawnSound.ifPresent(soundEvent -> entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getX(), soundEvent, entity.getSoundCategory(), 1.0F, 1.0F));
     }
 
     @Override
     public void onLost() {
 
-        if (!(entity instanceof ServerPlayerEntity serverPlayer)) {
+        if (!(getHolder() instanceof ServerPlayerEntity serverPlayer)) {
             return;
         }
 
@@ -100,7 +138,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
     public void teleportToModifiedSpawn() {
 
-        if (!(entity instanceof ServerPlayerEntity serverPlayer)) {
+        if (!(getHolder() instanceof ServerPlayerEntity serverPlayer)) {
             return;
         }
 
@@ -117,7 +155,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
         Vec3d placement = Dismounting.findRespawnPos(serverPlayer.getType(), spawnPointDimension, spawnPointPosition, true);
         if (placement == null) {
-            Apoli.LOGGER.warn("Power \"{}\" could not find a suitable spawn point for player {}! Teleporting to the found location directly...", this.getPowerId(), entity.getName().getString());
+            Apoli.LOGGER.warn("Power \"{}\" could not find a suitable spawn point for player {}! Teleporting to the found location directly...", this.getPower().getId(), serverPlayer.getName().getString());
             serverPlayer.teleport(spawnPointDimension, spawnPointPosition.getX(), spawnPointPosition.getY(), spawnPointPosition.getZ(), pitch, yaw);
         }
 
@@ -129,7 +167,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
     public Optional<Pair<ServerWorld, BlockPos>> getSpawn() {
 
-        if (!(entity instanceof ServerPlayerEntity serverPlayer)) {
+        if (!(getHolder() instanceof ServerPlayerEntity serverPlayer)) {
             return Optional.empty();
         }
 
@@ -166,7 +204,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
     private Optional<BlockPos> getBiomePos(ServerWorld targetDimension, BlockPos originPos) {
 
-        if (biomeKey == null && biomeTag == null) {
+        if (biomeKey.isEmpty() && biomeTag.isEmpty()) {
             return Optional.empty();
         }
 
@@ -187,7 +225,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
         }
 
         var targetBiomePos = targetDimension.locateBiome(
-            biome -> (biomeKey == null || biome.matchesKey(this.biomeKey)) || (biomeTag == null || biome.isIn(biomeTag)),
+            biome -> biomeKey.map(biome::matchesKey).orElse(false) || biomeTag.map(biome::isIn).orElse(false),
             originPos,
             radius,
             horizontalBlockCheckInterval,
@@ -200,17 +238,18 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
         else {
 
+            LivingEntity holder = getHolder();
             StringBuilder name = new StringBuilder();
-            if (biomeKey != null) {
-                name.append("biome \"").append(biomeKey.getValue()).append("\"");
-            }
 
-            if (biomeTag != null) {
-                name.append(!name.isEmpty() ? " or " : "").append("any biomes from tag \"").append(biomeTag.id()).append("\"");
-            }
+            biomeKey
+                .map(RegistryKey::getValue)
+                .ifPresent(id -> name.append("biome \"").append(id).append("\""));
+            biomeTag
+                .map(TagKey::id)
+                .ifPresent(id -> name.append(!name.isEmpty() ? " or " : "").append("any biomes from tag \"").append(id).append("\""));
 
-            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getPowerId(), entity.getName().getString(), name, dimensionKey.getValue());
-            entity.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getPowerId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
+            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getPower().getId(), holder.getName().getString(), name, dimensionKey.getValue());
+            holder.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getPower().getId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
 
             return Optional.empty();
 
@@ -220,23 +259,22 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
     private Optional<Pair<BlockPos, Structure>> getStructurePos(ServerWorld dimension) {
 
-        if (structureKey == null && structureTag == null) {
+        if (structureKey.isEmpty() && structureTag.isEmpty()) {
             return Optional.empty();
         }
 
         Registry<Structure> structureRegistry = dimension.getRegistryManager().get(RegistryKeys.STRUCTURE);
         List<RegistryEntry<Structure>> structureEntries = new ArrayList<>();
 
-        if (structureKey != null) {
-            structureEntries.add(structureRegistry.entryOf(structureKey));
-        }
+        structureKey
+            .map(structureRegistry::entryOf)
+            .ifPresent(structureEntries::add);
 
-        if (structureTag != null) {
-            structureRegistry.getEntryList(structureTag)
-                .map(el -> (RegistryEntryList.ListBacked<Structure>) el)
-                .map(RegistryEntryList.ListBacked::getEntries)
-                .ifPresent(structureEntries::addAll);
-        }
+        structureTag
+            .flatMap(structureRegistry::getEntryList)
+            .map(registryEntries -> (RegistryEntryList.ListBacked<Structure>) registryEntries)
+            .map(RegistryEntryList.ListBacked::getEntries)
+            .ifPresent(structureEntries::addAll);
 
         BlockPos center = new BlockPos(0, 70, 0);
         int radius = Apoli.config.modifyPlayerSpawnPower.radius;
@@ -251,17 +289,18 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
         if (result.isEmpty()) {
 
+            LivingEntity holder = getHolder();
             StringBuilder name = new StringBuilder();
-            if (structureKey != null) {
-                name.append("structure \"").append(structureKey.getValue()).append("\"");
-            }
 
-            if (structureTag != null) {
-                name.append(!name.isEmpty() ? " or " : "").append("any structures from tag \"").append(structureTag.id()).append("\"");
-            }
+            structureKey
+                .map(RegistryKey::getValue)
+                .ifPresent(id -> name.append("structure \"").append(id).append("\""));
+            structureTag
+                .map(TagKey::id)
+                .ifPresent(id -> name.append(!name.isEmpty() ? " or " : "").append("any structures from tag \"").append(id).append("\""));
 
-            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getPowerId(), entity.getName().getString(), name, dimensionKey.getValue());
-            entity.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getPowerId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
+            Apoli.LOGGER.warn("Power \"{}\" could not set player {}'s spawn point at {} as none can be found nearby in dimension \"{}\".", this.getPower().getId(), holder.getName().getString(), name, dimensionKey.getValue());
+            holder.sendMessage(Text.literal("Power \"%s\" couldn't set spawn point at %s as none can be found nearby in dimension \"%s\"!".formatted(this.getPower().getId(), name, dimensionKey.getValue())).formatted(Formatting.ITALIC, Formatting.GRAY));
 
             return Optional.empty();
 
@@ -273,7 +312,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
     private Optional<Vec3d> getSpawnPos(ServerWorld targetDimension, BlockPos originPos, int range) {
 
-        if (structureKey == null && structureTag == null) {
+        if (structureKey.isEmpty() && structureTag.isEmpty()) {
             return this.getValidSpawn(targetDimension, originPos, range);
         }
 
@@ -282,16 +321,15 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
             return Optional.empty();
         }
 
-        BlockPos targetStructurePos = targetStructure.get().getLeft();
-        ChunkPos targetStructureChunkPos = new ChunkPos(targetStructurePos.getX() >> 4, targetStructurePos.getZ() >> 4);
+        BlockPos structurePos = targetStructure.get().getLeft();
+        Structure structure = targetStructure.get().getRight();
 
-        StructureStart targetStructureStart = targetDimension.getStructureAccessor().getStructureStart(ChunkSectionPos.from(targetStructureChunkPos, 0), targetStructure.get().getRight(), targetDimension.getChunk(targetStructurePos));
-        if (targetStructureStart == null) {
-            return Optional.empty();
-        }
+        ChunkPos chunkPos = new ChunkPos(structurePos.getX() >> 4, structurePos.getZ() >> 4);
+        ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(chunkPos, 0);
 
-        BlockPos targetStructureCenter = new BlockPos(targetStructureStart.getBoundingBox().getCenter());
-        return this.getValidSpawn(targetDimension, targetStructureCenter, range);
+        return Optional.ofNullable(targetDimension.getStructureAccessor().getStructureStart(chunkSectionPos, structure, targetDimension.getChunk(structurePos)))
+            .map(structureStart -> structureStart.getBoundingBox().getCenter())
+            .flatMap(pos -> this.getValidSpawn(targetDimension, pos, range));
 
     }
 
@@ -341,14 +379,14 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
 
                 //  Offset the Y axis (up and down) of the current position to check for valid spawn positions
                 mutableStartPos.setY(center + upOffset);
-                spawnPos = Dismounting.findRespawnPos(entity.getType(), targetDimension, mutableStartPos, true);
+                spawnPos = Dismounting.findRespawnPos(getHolder().getType(), targetDimension, mutableStartPos, true);
 
                 if (spawnPos != null) {
                     return Optional.of(spawnPos);
                 }
 
                 mutableStartPos.setY(center + downOffset);
-                spawnPos = Dismounting.findRespawnPos(entity.getType(), targetDimension, mutableStartPos, true);
+                spawnPos = Dismounting.findRespawnPos(getHolder().getType(), targetDimension, mutableStartPos, true);
 
                 if (spawnPos != null) {
                     return Optional.of(spawnPos);
@@ -391,16 +429,9 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
         DEFAULT((blockPos, center, multiplier) -> {
 
             BlockPos.Mutable mut = new BlockPos.Mutable();
+            multiplier = Math.max(multiplier, 1F);
 
-            if (multiplier != 0) {
-                mut.set(blockPos.getX() * multiplier, blockPos.getY(), blockPos.getZ() * multiplier);
-            }
-
-            else {
-                mut.set(blockPos);
-            }
-
-            return mut;
+            return mut.set(blockPos.getX() * multiplier, blockPos.getY(), blockPos.getZ() * multiplier);
 
         });
 
@@ -413,33 +444,6 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
             return strategyApplier.apply(blockPos, center, multiplier);
         }
 
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("modify_player_spawn"),
-            new SerializableData()
-                .add("dimension", SerializableDataTypes.DIMENSION)
-                .add("structure", SerializableDataType.registryKey(RegistryKeys.STRUCTURE), null)
-                .add("structure_tag", SerializableDataType.tag(RegistryKeys.STRUCTURE), null)
-                .add("biome", SerializableDataType.registryKey(RegistryKeys.BIOME), null)
-                .add("biome_tag", SerializableDataTypes.BIOME_TAG, null)
-                .add("spawn_strategy", SerializableDataType.enumValue(SpawnStrategy.class), SpawnStrategy.DEFAULT)
-                .add("respawn_sound", SerializableDataTypes.SOUND_EVENT, null)
-                .add("dimension_distance_multiplier", SerializableDataTypes.FLOAT, 0F)
-                .add("priority", SerializableDataTypes.INT, 0),
-            data -> (power, entity) -> new ModifyPlayerSpawnPowerType(power, entity,
-                data.get("dimension"),
-                data.get("structure"),
-                data.get("structure_tag"),
-                data.get("biome"),
-                data.get("biome_tag"),
-                data.get("spawn_strategy"),
-                data.get("respawn_sound"),
-                data.get("dimension_distance_multiplier"),
-                data.get("priority")
-            )
-        ).allowCondition();
     }
 
 }

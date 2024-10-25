@@ -10,6 +10,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class OffsetBlockConditionType extends BlockConditionType {
 
@@ -48,7 +49,7 @@ public class OffsetBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BlockConditionTypes.OFFSET;
     }
 

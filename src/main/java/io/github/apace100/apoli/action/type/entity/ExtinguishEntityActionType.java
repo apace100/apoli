@@ -4,6 +4,7 @@ import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ExtinguishEntityActionType extends EntityActionType {
 
@@ -13,7 +14,7 @@ public class ExtinguishEntityActionType extends EntityActionType {
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return EntityActionTypes.EXTINGUISH;
 	}
 

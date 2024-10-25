@@ -7,6 +7,7 @@ import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -34,7 +35,7 @@ public class BlockActionAtEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.BLOCK_ACTION_AT;
     }
 

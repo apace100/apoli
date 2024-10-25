@@ -10,6 +10,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 
+import java.util.Optional;
+
 @Environment(EnvType.CLIENT)
 public class ScrollingTextWidget extends AbstractTextWidget {
 
@@ -45,24 +47,30 @@ public class ScrollingTextWidget extends AbstractTextWidget {
     protected static void drawScrollingText(DrawContext context, TextRenderer textRenderer, Text text, TextAlignment textAlignment, int left, int top, int right, int bottom, int color, boolean hasShadow) {
 
         int textWidth = textRenderer.getWidth(text);
+
         int height = (top + bottom - 9) / 2 + 1;
         int width = right - left;
 
-        if (textWidth <= width) {
-            context.drawText(textRenderer, text, textAlignment.horizontal(left, right, textWidth), height, color, hasShadow);
-            return;
+        Optional<Integer> horizontalAlignment = textAlignment.horizontal(left, right, textWidth);
+
+        if (textWidth <= width && horizontalAlignment.isPresent()) {
+            context.drawText(textRenderer, text, horizontalAlignment.get(), height, color, hasShadow);
         }
 
-        int horizontalDiff = textWidth - width;
+        else {
 
-        double d = (double) Util.getMeasuringTimeMs() / 1000.0;
-        double e = Math.max((double) horizontalDiff * 0.5, 3.0);
-        double f = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * d / e)) / 2.0 + 0.5;
-        double g = MathHelper.lerp(f, 0.0, horizontalDiff);
+            int horizontalDiff = textWidth - width;
 
-        context.enableScissor(left, top, right, bottom);
-        context.drawText(textRenderer, text, left - (int) g, height, color, hasShadow);
-        context.disableScissor();
+            double d = (double) Util.getMeasuringTimeMs() / 1000.0;
+            double e = Math.max((double) horizontalDiff * 0.5, 3.0);
+            double f = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * d / e)) / 2.0 + 0.5;
+            double g = MathHelper.lerp(f, 0.0, horizontalDiff);
+
+            context.enableScissor(left, top, right, bottom);
+            context.drawText(textRenderer, text, left - (int) g, height, color, hasShadow);
+            context.disableScissor();
+
+        }
 
     }
 

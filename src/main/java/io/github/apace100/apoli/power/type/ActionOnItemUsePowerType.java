@@ -1,33 +1,57 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.action.EntityAction;
+import io.github.apace100.apoli.action.ItemAction;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class ActionOnItemUsePowerType extends PowerType implements Prioritized<ActionOnItemUsePowerType> {
 
-    private final Predicate<Pair<World, ItemStack>> itemCondition;
-    private final Consumer<Entity> entityAction;
-    private final Consumer<Pair<World, StackReference>> itemAction;
+    public static final TypedDataObjectFactory<ActionOnItemUsePowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("item_action", ItemAction.DATA_TYPE.optional(), Optional.empty())
+            .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("trigger", SerializableDataType.enumValue(TriggerType.class), TriggerType.FINISH)
+            .add("priority", SerializableDataTypes.INT, 0),
+        (data, condition) -> new ActionOnItemUsePowerType(
+            data.get("entity_action"),
+            data.get("item_action"),
+            data.get("item_condition"),
+            data.get("trigger"),
+            data.get("priority"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+            .set("item_action", powerType.itemAction)
+            .set("item_condition", powerType.itemCondition)
+            .set("trigger", powerType.triggerType)
+            .set("priority", powerType.getPriority())
+    );
+
+    private final Optional<EntityAction> entityAction;
+    private final Optional<ItemAction> itemAction;
+
+    private final Optional<ItemCondition> itemCondition;
     private final TriggerType triggerType;
+
     private final int priority;
 
-    public ActionOnItemUsePowerType(Power power, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> itemAction, Predicate<Pair<World, ItemStack>> itemCondition, TriggerType triggerType, int priority) {
-        super(power, entity);
+    public ActionOnItemUsePowerType(Optional<EntityAction> entityAction, Optional<ItemAction> itemAction, Optional<ItemCondition> itemCondition, TriggerType triggerType, int priority, Optional<EntityCondition> condition) {
+        super(condition);
         this.itemCondition = itemCondition;
         this.entityAction = entityAction;
         this.itemAction = itemAction;
@@ -35,27 +59,25 @@ public class ActionOnItemUsePowerType extends PowerType implements Prioritized<A
         this.priority = priority;
     }
 
-    public boolean doesApply(ItemStack stack, TriggerType triggerType, io.github.apace100.apoli.util.PriorityPhase priorityPhase) {
-        return this.triggerType == triggerType
-            && priorityPhase.test(this.getPriority())
-            && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)));
-    }
-
-    public void executeActions(StackReference stack) {
-
-        if (itemAction != null) {
-            itemAction.accept(new Pair<>(entity.getWorld(), stack));
-        }
-
-        if (entityAction != null) {
-            entityAction.accept(entity);
-        }
-
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.ACTION_ON_ITEM_USE;
     }
 
     @Override
     public int getPriority() {
         return this.priority;
+    }
+
+    public boolean doesApply(ItemStack stack, TriggerType triggerType, io.github.apace100.apoli.util.PriorityPhase priorityPhase) {
+        return this.triggerType == triggerType
+            && priorityPhase.test(this.getPriority())
+            && itemCondition.map(condition -> condition.test(getHolder().getWorld(), stack)).orElse(true);
+    }
+
+    public void executeActions(StackReference stackReference) {
+        itemAction.ifPresent(action -> action.execute(getHolder().getWorld(), stackReference));
+        entityAction.ifPresent(action -> action.execute(getHolder()));
     }
 
     public enum TriggerType {
@@ -64,7 +86,7 @@ public class ActionOnItemUsePowerType extends PowerType implements Prioritized<A
 
     public static void executeActions(Entity user, StackReference useStack, ItemStack checkStack, TriggerType triggerType, PriorityPhase phase) {
 
-        if (user.getWorld().isClient) {
+        if (user.getWorld().isClient()) {
             return;
         }
 
@@ -77,22 +99,4 @@ public class ActionOnItemUsePowerType extends PowerType implements Prioritized<A
 
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("action_on_item_use"),
-            new SerializableData()
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("trigger", SerializableDataType.enumValue(TriggerType.class), TriggerType.FINISH)
-                .add("priority", SerializableDataTypes.INT, 0),
-            data -> (power, entity) -> new ActionOnItemUsePowerType(power, entity,
-                data.get("entity_action"),
-                data.get("item_action"),
-                data.get("item_condition"),
-                data.get("trigger"),
-                data.get("priority")
-            )
-        ).allowCondition();
-    }
 }

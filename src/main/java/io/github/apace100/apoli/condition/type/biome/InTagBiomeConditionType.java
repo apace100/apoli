@@ -10,6 +10,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 
 public class InTagBiomeConditionType extends BiomeConditionType {
 
@@ -35,7 +36,7 @@ public class InTagBiomeConditionType extends BiomeConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiomeConditionTypes.IN_TAG;
     }
 

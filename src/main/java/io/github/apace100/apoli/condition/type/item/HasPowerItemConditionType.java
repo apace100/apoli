@@ -13,6 +13,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -45,11 +46,11 @@ public class HasPowerItemConditionType extends ItemConditionType {
             .stream()
             .filter(entry -> slot.map(entry.slot()::equals).orElse(true))
             .map(ItemPowersComponent.Entry::powerId)
-            .anyMatch(power.getId()::equals);
+            .anyMatch(power.id()::equals);
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.HAS_POWER;
     }
 

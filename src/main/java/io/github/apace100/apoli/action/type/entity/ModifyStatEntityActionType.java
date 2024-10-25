@@ -11,6 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.stat.ServerStatHandler;
 import net.minecraft.stat.Stat;
+import org.jetbrains.annotations.NotNull;
 
 public class ModifyStatEntityActionType extends EntityActionType {
 
@@ -51,7 +52,7 @@ public class ModifyStatEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.MODIFY_STAT;
     }
 

@@ -9,6 +9,7 @@ import io.github.apace100.apoli.action.type.meta.DelayMetaActionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -28,7 +29,7 @@ public class DelayBlockActionType extends BlockActionType implements DelayMetaAc
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return BlockActionTypes.DELAY;
 	}
 

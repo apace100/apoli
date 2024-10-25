@@ -4,13 +4,13 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
-import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.power.type.PowerType;
+import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
@@ -18,7 +18,7 @@ public class PowerTypeEntityConditionType extends EntityConditionType {
 
     public static final TypedDataObjectFactory<PowerTypeEntityConditionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
-            .add("power_type", ApoliDataTypes.POWER_TYPE_FACTORY),
+            .add("power_type", PowerTypes.DATA_TYPE),
         data -> new PowerTypeEntityConditionType(
             data.get("power_type")
         ),
@@ -26,9 +26,9 @@ public class PowerTypeEntityConditionType extends EntityConditionType {
             .set("power_type", conditionType.powerType)
     );
 
-    private final PowerTypeFactory<?> powerType;
+    private final PowerConfiguration<PowerType> powerType;
 
-    public PowerTypeEntityConditionType(PowerTypeFactory<?> powerType) {
+    public PowerTypeEntityConditionType(PowerConfiguration<PowerType> powerType) {
         this.powerType = powerType;
     }
 
@@ -38,14 +38,12 @@ public class PowerTypeEntityConditionType extends EntityConditionType {
             .stream()
             .map(PowerHolderComponent::getPowerTypes)
             .flatMap(Collection::stream)
-            .map(PowerType::getPower)
-            .map(Power::getFactoryInstance)
-            .map(PowerTypeFactory.Instance::getFactory)
+            .map(PowerType::configuration)
             .anyMatch(powerType::equals);
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.POWER_TYPE;
     }
 

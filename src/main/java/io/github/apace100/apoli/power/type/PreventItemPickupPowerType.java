@@ -1,39 +1,66 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.BiEntityAction;
+import io.github.apace100.apoli.action.ItemAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.condition.BiEntityCondition;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.mixin.ItemEntityAccessor;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class PreventItemPickupPowerType extends PowerType implements Prioritized<PreventItemPickupPowerType> {
 
-    private final Consumer<Pair<Entity, Entity>> biEntityActionThrower;
-    private final Consumer<Pair<Entity, Entity>> biEntityActionItem;
-    private final Consumer<Pair<World, StackReference>> itemAction;
+    public static final TypedDataObjectFactory<PreventItemPickupPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("bientity_action_thrower", BiEntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("bientity_action_item", BiEntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("item_action", ItemAction.DATA_TYPE.optional(), Optional.empty())
+            .add("bientity_condition", BiEntityCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("priority", SerializableDataTypes.INT, 0),
+        (data, condition) -> new PreventItemPickupPowerType(
+            data.get("bientity_action_thrower"),
+            data.get("bientity_action_item"),
+            data.get("item_action"),
+            data.get("bientity_condition"),
+            data.get("item_condition"),
+            data.get("priority"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("bientity_action_thrower", powerType.biEntityActionThrower)
+            .set("bientity_action_item", powerType.biEntityActionItem)
+            .set("item_action", powerType.itemAction)
+            .set("bientity_condition", powerType.biEntityCondition)
+            .set("item_condition", powerType.itemCondition)
+            .set("priority", powerType.getPriority())
+    );
 
-    private final Predicate<Pair<Entity, Entity>> biEntityCondition;
-    private final Predicate<Pair<World, ItemStack>> itemCondition;
+    private final Optional<BiEntityAction> biEntityActionThrower;
+    private final Optional<BiEntityAction> biEntityActionItem;
+
+    private final Optional<ItemAction> itemAction;
+
+    private final Optional<BiEntityCondition> biEntityCondition;
+    private final Optional<ItemCondition> itemCondition;
 
     private final int priority;
 
-    public PreventItemPickupPowerType(Power power, LivingEntity entity, Consumer<Pair<Entity, Entity>> biEntityActionThrower, Consumer<Pair<Entity, Entity>> biEntityActionItem, Consumer<Pair<World, StackReference>> itemAction, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<Pair<World, ItemStack>> itemCondition, int priority) {
-        super(power, entity);
+    public PreventItemPickupPowerType(Optional<BiEntityAction> biEntityActionThrower, Optional<BiEntityAction> biEntityActionItem, Optional<ItemAction> itemAction, Optional<BiEntityCondition> biEntityCondition, Optional<ItemCondition> itemCondition, int priority, Optional<EntityCondition> condition) {
+        super(condition);
         this.biEntityActionThrower = biEntityActionThrower;
         this.biEntityActionItem = biEntityActionItem;
         this.itemAction = itemAction;
@@ -43,27 +70,28 @@ public class PreventItemPickupPowerType extends PowerType implements Prioritized
     }
 
     @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.PREVENT_ITEM_PICKUP;
+    }
+
+    @Override
     public int getPriority() {
         return priority;
     }
 
     public boolean doesPrevent(ItemStack stack, Entity thrower) {
-        return (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack)))
-            && (biEntityCondition == null || biEntityCondition.test(new Pair<>(thrower, entity)));
+        return itemCondition.map(condition -> condition.test(getHolder().getWorld(), stack)).orElse(true)
+            && biEntityCondition.map(condition -> condition.test(getHolder(), thrower)).orElse(true);
     }
 
     public void executeActions(ItemEntity itemEntity, Entity thrower) {
-        if (itemAction != null) {
-            StackReference reference = InventoryUtil.createStackReference(itemEntity.getStack());
-            itemAction.accept(new Pair<>(entity.getWorld(), reference));
-            itemEntity.setStack(reference.get());
-        }
-        if (biEntityActionThrower != null) {
-            biEntityActionThrower.accept(new Pair<>(thrower, entity));
-        }
-        if (biEntityActionItem != null) {
-            biEntityActionItem.accept(new Pair<>(entity, itemEntity));
-        }
+
+        StackReference itemEntityStackReference = InventoryUtil.createStackReference(itemEntity.getStack());
+        itemAction.ifPresent(action -> action.execute(getHolder().getWorld(), itemEntityStackReference));
+
+        biEntityActionThrower.ifPresent(action -> action.execute(thrower, getHolder()));
+        biEntityActionItem.ifPresent(action -> action.execute(getHolder(), itemEntity));
+
     }
 
     public static boolean doesPrevent(ItemEntity itemEntity, Entity entity) {
@@ -92,27 +120,6 @@ public class PreventItemPickupPowerType extends PowerType implements Prioritized
 
         return prevented;
 
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("prevent_item_pickup"),
-            new SerializableData()
-                .add("bientity_action_thrower", ApoliDataTypes.BIENTITY_ACTION, null)
-                .add("bientity_action_item", ApoliDataTypes.BIENTITY_ACTION, null)
-                .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
-                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("priority", SerializableDataTypes.INT, 0),
-            data -> (power, entity) -> new PreventItemPickupPowerType(power, entity,
-                data.get("bientity_action_thrower"),
-                data.get("bientity_action_item"),
-                data.get("item_action"),
-                data.get("bientity_condition"),
-                data.get("item_condition"),
-                data.get("priority")
-            )
-        ).allowCondition();
     }
 
 }

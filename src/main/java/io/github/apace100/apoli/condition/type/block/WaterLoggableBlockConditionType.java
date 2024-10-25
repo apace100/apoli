@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import net.minecraft.block.Waterloggable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class WaterLoggableBlockConditionType extends BlockConditionType {
 
@@ -15,7 +16,7 @@ public class WaterLoggableBlockConditionType extends BlockConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BlockConditionTypes.WATER_LOGGABLE;
 	}
 

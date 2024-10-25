@@ -1,8 +1,8 @@
 package io.github.apace100.apoli.util.modifier;
 
-import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.PowerUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -50,17 +50,7 @@ public enum ModifierOperation implements IModifierOperation {
         .add("amount", SerializableDataTypes.DOUBLE, null)
         .add("resource", ApoliDataTypes.RESOURCE_REFERENCE, null)
         .add("modifier", Modifier.LIST_TYPE, null)
-        .validate(data -> {
-
-            if (!data.isPresent("amount") && !data.isPresent("resource")) {
-                return DataResult.error(() -> "Any of \"amount\" and \"resource\" fields must be defined!");
-            }
-
-            else {
-                return DataResult.success(data);
-            }
-
-        });
+        .validate(MiscUtil.validateAnyFieldsPresent("amount", "resource"));
 
     private final TriFunction<Stream<Double>, Double, Double, Double> function;
     private final Phase phase;
@@ -96,7 +86,7 @@ public enum ModifierOperation implements IModifierOperation {
             Optional<PowerReference> resource = Optional.ofNullable(data.get("resource"));
 
             double amount = resource
-                .map(powerReference -> PowerUtil.getResourceValue(powerReference.getType(entity)))
+                .map(powerReference -> PowerUtil.getResourceValue(powerReference.getPowerTypeFrom(entity)))
                 .map(Integer::doubleValue)
                 .orElseGet(() -> data.getDouble("amount"));
 

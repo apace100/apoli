@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import io.github.apace100.apoli.util.Comparison;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class ExposedToSunEntityConditionType extends EntityConditionType {
 
@@ -23,7 +24,7 @@ public class ExposedToSunEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.EXPOSED_TO_SUN;
     }
 

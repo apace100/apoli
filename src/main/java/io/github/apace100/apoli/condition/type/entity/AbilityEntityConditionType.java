@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.ladysnake.pal.PlayerAbility;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class AbilityEntityConditionType extends EntityConditionType {
 
@@ -35,7 +36,7 @@ public class AbilityEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.ABILITY;
     }
 

@@ -7,6 +7,7 @@ import io.github.apace100.apoli.power.type.EdibleItemPowerType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class FoodItemConditionType extends ItemConditionType {
 
@@ -17,7 +18,7 @@ public class FoodItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.FOOD;
     }
 

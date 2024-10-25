@@ -9,6 +9,7 @@ import io.github.apace100.apoli.action.type.meta.ChoiceMetaActionType;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.util.collection.WeightedList;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class ChoiceItemActionType extends ItemActionType implements ChoiceMetaActionType<ItemActionContext, ItemAction> {
 
@@ -24,7 +25,7 @@ public class ChoiceItemActionType extends ItemActionType implements ChoiceMetaAc
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return ItemActionTypes.CHOICE;
 	}
 

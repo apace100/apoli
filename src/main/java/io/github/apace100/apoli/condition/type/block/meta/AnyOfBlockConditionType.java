@@ -8,6 +8,7 @@ import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class AnyOfBlockConditionType extends BlockConditionType implements AnyOf
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BlockConditionTypes.ANY_OF;
 	}
 

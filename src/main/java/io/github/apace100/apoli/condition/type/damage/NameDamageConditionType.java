@@ -7,6 +7,7 @@ import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.damage.DamageSource;
+import org.jetbrains.annotations.NotNull;
 
 public class NameDamageConditionType extends DamageConditionType {
 
@@ -32,7 +33,7 @@ public class NameDamageConditionType extends DamageConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return DamageConditionTypes.NAME;
     }
 

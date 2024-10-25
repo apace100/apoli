@@ -1,71 +1,62 @@
 package io.github.apace100.apoli.power;
 
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.PowerUtil;
+import io.github.apace100.calio.util.Validatable;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.function.Function;
 
-public class PowerReference extends Power {
+public record PowerReference(Identifier id, Function<PowerType, DataResult<PowerType>> condition) implements Validatable {
 
-    protected PowerReference(Identifier id) {
-        super(id, null, null, null, true);
-    }
+	public static PowerReference of(Identifier id) {
+		return new PowerReference(id, DataResult::success);
+	}
 
-    public static PowerReference of(Identifier id) {
-        return new PowerReference(id);
-    }
+	public static PowerReference resource(Identifier id) {
+		return new PowerReference(id, PowerUtil::validateResource);
+	}
 
-    public static PowerReference resource(Identifier id) {
-        return new PowerReference(id) {
+	@Override
+	public void validate() throws Exception {
+		getResultReference()
+			.map(Power::getPowerType)
+			.flatMap(condition())
+			.getOrThrow();
+	}
 
-            @Override
-            public void validate() throws Exception {
-                PowerUtil.validateResource(create(null)).getOrThrow();
-            }
+	@Nullable
+	public PowerType getPowerTypeFrom(Entity entity) {
+		return getOptionalReference()
+			.flatMap(power -> Optional.ofNullable(power.getPowerTypeFrom(entity)))
+			.orElse(null);
+	}
 
-        };
-    }
+	public DataResult<Power> getResultReference() {
+		return PowerManager.getResult(id());
+	}
 
-    @Override
-    public PowerType create(@Nullable LivingEntity entity) {
-        return getFactoryInstance().apply(getStrictReference(), entity);
-    }
+	public Optional<Power> getOptionalReference() {
+		return PowerManager.getOptional(id());
+	}
 
-    @Override
-    public PowerTypeFactory<? extends PowerType>.Instance getFactoryInstance() {
-        return this.getStrictReference().getFactoryInstance();
-    }
+	public Power getStrictReference() {
+		return PowerManager.get(id());
+	}
 
-    @Nullable
-    @Override
-    public PowerType getType(Entity entity) {
-        Power power = this.getReference();
-        return power != null
-            ? power.getType(entity)
-            : null;
-    }
+	@Nullable
+	public Power getReference() {
+		return PowerManager.getNullable(id());
+	}
 
-    @Nullable
-    public Power getReference() {
-        return getOptionalReference().orElse(null);
-    }
-
-    public Optional<Power> getOptionalReference() {
-        return PowerManager.getOptional(this.getId());
-    }
-
-    public Power getStrictReference() {
-        return PowerManager.get(this.getId());
-    }
-
-    @Override
-    public void validate() throws Exception {
-        getStrictReference();
-    }
+	public boolean isActive(Entity entity) {
+		return getOptionalReference()
+			.map(power -> power.isActive(entity))
+			.orElse(false);
+	}
 
 }

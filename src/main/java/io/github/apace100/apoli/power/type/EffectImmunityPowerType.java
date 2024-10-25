@@ -1,32 +1,48 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.registry.entry.RegistryEntry;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 public class EffectImmunityPowerType extends PowerType {
 
-    protected final Set<RegistryEntry<StatusEffect>> effects = new HashSet<>();
-    private final boolean inverted;
+    public static final TypedDataObjectFactory<EffectImmunityPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY, null)
+            .addFunctionedDefault("effects", SerializableDataTypes.STATUS_EFFECT_ENTRIES, data -> MiscUtil.singletonListOrEmpty(data.get("effect")))
+            .add("inverted", SerializableDataTypes.BOOLEAN, false),
+        (data, condition) -> new EffectImmunityPowerType(
+            data.get("effects"),
+            data.get("inverted"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("effects", powerType.effects)
+            .set("inverted", powerType.inverted)
+    );
 
-    public EffectImmunityPowerType(Power power, LivingEntity entity, boolean inverted) {
-        super(power, entity);
+    protected final List<RegistryEntry<StatusEffect>> effects;
+    protected final boolean inverted;
+
+    public EffectImmunityPowerType(List<RegistryEntry<StatusEffect>> effects, boolean inverted, Optional<EntityCondition> condition) {
+        super(condition);
+        this.effects = effects;
         this.inverted = inverted;
     }
 
-    public EffectImmunityPowerType addEffect(RegistryEntry<StatusEffect> effect) {
-        effects.add(effect);
-        return this;
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.EFFECT_IMMUNITY;
     }
 
     public boolean doesApply(StatusEffectInstance instance) {
@@ -37,22 +53,4 @@ public class EffectImmunityPowerType extends PowerType {
         return inverted ^ effects.contains(effect);
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(Apoli.identifier("effect_immunity"),
-            new SerializableData()
-                .add("effect", SerializableDataTypes.STATUS_EFFECT_ENTRY, null)
-                .add("effects", SerializableDataTypes.STATUS_EFFECT_ENTRIES, null)
-                .add("inverted", SerializableDataTypes.BOOLEAN, false),
-            data -> (power, entity) -> {
-
-                EffectImmunityPowerType powerType = new EffectImmunityPowerType(power, entity, data.get("inverted"));
-
-                data.ifPresent("effect", powerType::addEffect);
-                data.<List<RegistryEntry<StatusEffect>>>ifPresent("effects", effects -> effects.forEach(powerType::addEffect));
-
-                return powerType;
-
-            }
-        ).allowCondition();
-    }
 }

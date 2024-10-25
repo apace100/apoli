@@ -8,6 +8,7 @@ import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class PowerActiveEntityConditionType extends EntityConditionType {
 
@@ -33,7 +34,7 @@ public class PowerActiveEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.POWER_ACTIVE;
     }
 

@@ -12,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.apache.commons.lang3.function.TriConsumer;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.function.BiFunction;
@@ -73,7 +74,7 @@ public class AddVelocityBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BiEntityActionTypes.ADD_VELOCITY;
     }
 

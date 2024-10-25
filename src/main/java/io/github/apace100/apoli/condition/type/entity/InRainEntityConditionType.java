@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import io.github.apace100.apoli.mixin.EntityAccessor;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class InRainEntityConditionType extends EntityConditionType {
 
@@ -18,7 +19,7 @@ public class InRainEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.IN_RAIN;
     }
 

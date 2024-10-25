@@ -1,25 +1,52 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
 
 public class ModelColorPowerType extends PowerType {
+
+    public static final TypedDataObjectFactory<ModelColorPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("red", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F)
+            .add("green", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F)
+            .add("blue", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F)
+            .add("alpha", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F),
+        (data, condition) -> new ModelColorPowerType(
+            data.get("red"),
+            data.get("green"),
+            data.get("blue"),
+            data.get("alpha"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("red", powerType.red)
+            .set("green", powerType.green)
+            .set("blue", powerType.blue)
+            .set("alpha", powerType.alpha)
+    );
 
     private final float red;
     private final float green;
     private final float blue;
     private final float alpha;
 
-    public ModelColorPowerType(Power power, LivingEntity entity, float red, float green, float blue, float alpha) {
-        super(power, entity);
+    public ModelColorPowerType(float red, float green, float blue, float alpha, Optional<EntityCondition> condition) {
+        super(condition);
         this.red = red;
         this.green = green;
         this.blue = blue;
         this.alpha = alpha;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.MODEL_COLOR;
     }
 
     public float getRed() {
@@ -40,23 +67,6 @@ public class ModelColorPowerType extends PowerType {
 
     public boolean isTranslucent() {
         return alpha < 1.0F;
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("model_color"),
-            new SerializableData()
-                .add("red", SerializableDataTypes.FLOAT, 1.0F)
-                .add("green", SerializableDataTypes.FLOAT, 1.0F)
-                .add("blue", SerializableDataTypes.FLOAT, 1.0F)
-                .add("alpha", SerializableDataTypes.FLOAT, 1.0F),
-            data -> (power, entity) -> new ModelColorPowerType(power, entity,
-                data.getFloat("red"),
-                data.getFloat("green"),
-                data.getFloat("blue"),
-                data.getFloat("alpha")
-            )
-        ).allowCondition();
     }
 
 }

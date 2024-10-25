@@ -8,6 +8,7 @@ import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import io.github.apace100.apoli.action.type.meta.ChoiceMetaActionType;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.collection.WeightedList;
+import org.jetbrains.annotations.NotNull;
 
 public class ChoiceBiEntityActionType extends BiEntityActionType implements ChoiceMetaActionType<BiEntityActionContext, BiEntityAction> {
 
@@ -23,7 +24,7 @@ public class ChoiceBiEntityActionType extends BiEntityActionType implements Choi
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return BiEntityActionTypes.CHOICE;
 	}
 

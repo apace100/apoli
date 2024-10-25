@@ -17,7 +17,7 @@ public class SavedBlockPosition extends CachedBlockPosition {
     private final BlockEntity blockEntity;
 
     public SavedBlockPosition(WorldView world, BlockPos pos) {
-        this(world, pos, true);
+        this(world, pos, false);
     }
 
     public SavedBlockPosition(WorldView world, BlockPos pos, boolean forceload) {

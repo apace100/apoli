@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.ItemConditionType;
 import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class DamageableItemConditionType extends ItemConditionType {
 
@@ -14,7 +15,7 @@ public class DamageableItemConditionType extends ItemConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return ItemConditionTypes.DAMAGEABLE;
 	}
 

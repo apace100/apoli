@@ -5,8 +5,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
-import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.util.hud_render.ParentHudRender;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
@@ -21,7 +20,6 @@ import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +32,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
 
     public static final DataObjectFactory<HudRender> FACTORY = new SimpleDataObjectFactory<>(
         new SerializableData()
-            .add("condition", ApoliDataTypes.ENTITY_CONDITION, null)
+            .add("condition", EntityCondition.DATA_TYPE.optional(), Optional.empty())
             .add("sprite_location", SerializableDataTypes.IDENTIFIER, DEFAULT_SPRITE)
             .add("should_render", SerializableDataTypes.BOOLEAN, true)
             .add("inverted", SerializableDataTypes.BOOLEAN, false)
@@ -61,7 +59,9 @@ public class HudRender implements Comparable<HudRender>, Validatable {
     );
 
     public static final CompoundSerializableDataType<HudRender> STRICT_DATA_TYPE = SerializableDataType.compound(FACTORY);
+
     public static final SerializableDataType<List<HudRender>> LIST_DATA_TYPE = STRICT_DATA_TYPE.list(1, Integer.MAX_VALUE);
+
     public static final SerializableDataType<HudRender> DATA_TYPE = SerializableDataType.recursive(self -> {
 
         SerializableDataType<List<HudRender>> listDataType = LIST_DATA_TYPE.setRoot(self.isRoot());
@@ -132,8 +132,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
 
     });
 
-    @Nullable
-    private final ConditionTypeFactory<Entity>.Instance condition;
+    private final Optional<EntityCondition> condition;
     private final Identifier spriteLocation;
 
     private final boolean shouldRender;
@@ -143,7 +142,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
     private final int iconIndex;
     private final int order;
 
-    public HudRender(@Nullable ConditionTypeFactory<Entity>.Instance condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
+    public HudRender(Optional<EntityCondition> condition, Identifier spriteLocation, boolean shouldRender, boolean inverted, int barIndex, int iconIndex, int order) {
         this.condition = condition;
         this.spriteLocation = spriteLocation;
         this.shouldRender = shouldRender;
@@ -166,8 +165,7 @@ public class HudRender implements Comparable<HudRender>, Validatable {
         FACTORY.toData(this).validate();
     }
 
-    @Nullable
-    public ConditionTypeFactory<Entity>.Instance getCondition() {
+    public Optional<EntityCondition> getCondition() {
         return this.condition;
     }
 
@@ -180,7 +178,8 @@ public class HudRender implements Comparable<HudRender>, Validatable {
     }
 
     public boolean shouldRender(Entity viewer) {
-        return this.shouldRender() && (this.getCondition() == null || this.getCondition().test(viewer));
+        return this.shouldRender()
+            && getCondition().map(condition -> condition.test(viewer)).orElse(true);
     }
 
     public boolean isInverted() {

@@ -10,6 +10,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class DurabilityItemConditionType extends ItemConditionType {
 
@@ -41,7 +42,7 @@ public class DurabilityItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.DURABILITY;
     }
 

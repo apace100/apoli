@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.ConstantMetaConditionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class ConstantBlockConditionType extends BlockConditionType implements ConstantMetaConditionType {
 
@@ -21,7 +22,7 @@ public class ConstantBlockConditionType extends BlockConditionType implements Co
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BlockConditionTypes.CONSTANT;
 	}
 

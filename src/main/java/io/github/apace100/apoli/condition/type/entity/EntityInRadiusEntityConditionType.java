@@ -12,6 +12,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class EntityInRadiusEntityConditionType extends EntityConditionType {
 
@@ -83,7 +84,7 @@ public class EntityInRadiusEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.ENTITY_IN_RADIUS;
     }
 

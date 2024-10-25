@@ -7,6 +7,7 @@ import io.github.apace100.apoli.action.type.EntityActionType;
 import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.action.type.meta.AndMetaActionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class AndEntityActionType extends EntityActionType implements AndMetaActi
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return EntityActionTypes.AND;
 	}
 

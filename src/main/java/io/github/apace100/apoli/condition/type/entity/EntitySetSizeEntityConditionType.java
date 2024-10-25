@@ -11,6 +11,7 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class EntitySetSizeEntityConditionType extends EntityConditionType {
 
@@ -44,7 +45,7 @@ public class EntitySetSizeEntityConditionType extends EntityConditionType {
     @Override
     public boolean test(Entity entity) {
 
-        if (set.getType(entity) instanceof EntitySetPowerType entitySet) {
+        if (set.getPowerTypeFrom(entity) instanceof EntitySetPowerType entitySet) {
             return comparison.compare(entitySet.size(), compareTo);
         }
 
@@ -55,7 +56,7 @@ public class EntitySetSizeEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.ENTITY_SET_SIZE;
     }
 

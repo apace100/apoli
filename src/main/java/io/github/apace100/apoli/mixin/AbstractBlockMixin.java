@@ -24,7 +24,7 @@ public abstract class AbstractBlockMixin {
     private boolean apoli$modifyEffectiveTool(boolean original, BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
         return PowerHolderComponent.getPowerTypes(player, ModifyHarvestPowerType.class)
             .stream()
-            .filter(mhp -> mhp.doesApply(pos))
+            .filter(mhp -> mhp.doesApply(world, pos))
             .max(ModifyHarvestPowerType::compareTo)
             .map(ModifyHarvestPowerType::isHarvestAllowed)
             .orElse(original);

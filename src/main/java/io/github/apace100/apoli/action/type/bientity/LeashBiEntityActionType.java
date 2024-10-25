@@ -6,6 +6,7 @@ import io.github.apace100.apoli.action.type.BiEntityActionType;
 import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.Leashable;
+import org.jetbrains.annotations.NotNull;
 
 public class LeashBiEntityActionType extends BiEntityActionType {
 
@@ -24,7 +25,7 @@ public class LeashBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BiEntityActionTypes.LEASH;
     }
 

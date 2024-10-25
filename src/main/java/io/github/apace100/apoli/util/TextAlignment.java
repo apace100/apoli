@@ -1,33 +1,36 @@
 package io.github.apace100.apoli.util;
 
-import java.util.Locale;
+import net.minecraft.util.StringIdentifiable;
 
-public enum TextAlignment {
+import java.util.Optional;
 
-    LEFT((left, right, textWidth) -> left - 1),
-    RIGHT((left, right, textWidth) -> right - textWidth + 1),
-    CENTER((left, right, textWidth) -> (left + right - textWidth) / 2);
+public enum TextAlignment implements StringIdentifiable {
 
+    NONE("none", (left, right, textWidth) -> null),
+    LEFT("left", (left, right, textWidth) -> left - 1),
+    RIGHT("right", (left, right, textWidth) -> right - textWidth + 1),
+    CENTER("center", (left, right, textWidth) -> (left + right - textWidth) / 2);
+
+    final String name;
     final PositionSupplier horizontalSupplier;
-    TextAlignment(PositionSupplier horizontalSupplier) {
+
+    TextAlignment(String name, PositionSupplier horizontalSupplier) {
+        this.name = name;
         this.horizontalSupplier = horizontalSupplier;
     }
 
-    public int horizontal(int left, int right, int textWidth) {
-        return horizontalSupplier.apply(left, right, textWidth);
+    @Override
+    public String asString() {
+        return name;
     }
 
-    public static TextAlignment from(String name) {
-        return switch (name.toLowerCase(Locale.ROOT)) {
-            case "left" -> LEFT;
-            case "right" -> RIGHT;
-            default -> CENTER;
-        };
+    public Optional<Integer> horizontal(int left, int right, int textWidth) {
+        return Optional.ofNullable(horizontalSupplier.apply(left, right, textWidth));
     }
 
     @FunctionalInterface
     public interface PositionSupplier {
-        int apply(int input1, int input2, int textWidth);
+        Integer apply(int left, int right, int textWidth);
     }
 
 }

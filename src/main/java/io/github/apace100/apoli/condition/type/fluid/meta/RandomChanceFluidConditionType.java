@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.FluidConditionType;
 import io.github.apace100.apoli.condition.type.FluidConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
 import net.minecraft.fluid.FluidState;
+import org.jetbrains.annotations.NotNull;
 
 public class RandomChanceFluidConditionType extends FluidConditionType implements RandomChanceMetaConditionType {
 
@@ -20,7 +21,7 @@ public class RandomChanceFluidConditionType extends FluidConditionType implement
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return FluidConditionTypes.RANDOM_CHANCE;
 	}
 

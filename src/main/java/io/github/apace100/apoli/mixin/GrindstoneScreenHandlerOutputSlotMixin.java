@@ -13,10 +13,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 @Mixin(targets = "net/minecraft/screen/GrindstoneScreenHandler$4")
-public class GrindstoneScreenHandlerOutputSlotMixin {
+public abstract class GrindstoneScreenHandlerOutputSlotMixin {
 
     @Final
     @Shadow
@@ -32,7 +32,8 @@ public class GrindstoneScreenHandlerOutputSlotMixin {
         List<Modifier> modifiers = powerModifiedGrindstone.apoli$getAppliedPowers()
             .stream()
             .map(ModifyGrindstonePowerType::getExperienceModifier)
-            .filter(Objects::nonNull)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .toList();
 
         return (int) ModifierUtil.applyModifiers(powerModifiedGrindstone.apoli$getPlayer(), modifiers, original);

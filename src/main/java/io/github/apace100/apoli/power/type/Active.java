@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.ApoliClient;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.mixin.KeyBindingAccessor;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -11,13 +12,9 @@ import java.util.*;
 
 public interface Active {
 
-    void onUse();
-
     Key getKey();
 
-    default void setKey(Key key) {
-
-    }
+    void onUse();
 
     @Environment(EnvType.CLIENT)
     static void integrateCallback(MinecraftClient client) {
@@ -26,18 +23,18 @@ public interface Active {
             return;
         }
 
-        List<PowerType> powerTypes = PowerHolderComponent.KEY.get(client.player).getPowerTypes();
+        List<PowerType> powerTypes = PowerHolderComponent.getOptional(client.player).orElseThrow().getPowerTypes();
         List<PowerType> triggeredPowerTypes = new LinkedList<>();
 
         Map<String, Boolean> currentKeybindingStates = new HashMap<>();
         for (PowerType powerType : powerTypes) {
 
-            if (!(powerType instanceof Active activePower)) {
+            if (!(powerType instanceof Active activePower) || !powerType.isActive()) {
                 continue;
             }
 
             Key key = activePower.getKey();
-            KeyBinding keyBinding = ApoliClient.getKeyBinding(key.key);
+            KeyBinding keyBinding = KeyBindingAccessor.getKeysById().get(key.key);
 
             if (keyBinding == null) {
                 continue;

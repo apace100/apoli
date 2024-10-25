@@ -12,6 +12,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import org.jetbrains.annotations.NotNull;
 
 public class InBlockAnywhereEntityConditionType extends EntityConditionType {
 
@@ -80,7 +81,7 @@ public class InBlockAnywhereEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.IN_BLOCK_ANYWHERE;
     }
 

@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class LivingEntityConditionType extends EntityConditionType {
 
@@ -14,7 +15,7 @@ public class LivingEntityConditionType extends EntityConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return EntityConditionTypes.LIVING;
 	}
 

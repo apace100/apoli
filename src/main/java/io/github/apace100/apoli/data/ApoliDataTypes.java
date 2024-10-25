@@ -11,7 +11,7 @@ import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.*;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.data.container.ContainerType;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.Active;
@@ -38,10 +38,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.inventory.SlotRange;
+import net.minecraft.inventory.SlotRanges;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -51,6 +54,7 @@ import net.minecraft.text.TextCodecs;
 import net.minecraft.util.ClickType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
+import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
@@ -72,9 +76,9 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 public class ApoliDataTypes {
 
-    public static final SerializableDataType<PowerReference> POWER_REFERENCE = SerializableDataTypes.IDENTIFIER.xmap(PowerReference::of, Power::getId);
+    public static final SerializableDataType<PowerReference> POWER_REFERENCE = SerializableDataTypes.IDENTIFIER.xmap(PowerReference::of, PowerReference::id);
 
-	public static final SerializableDataType<PowerReference> RESOURCE_REFERENCE = SerializableDataTypes.IDENTIFIER.xmap(PowerReference::resource, Power::getId);
+	public static final SerializableDataType<PowerReference> RESOURCE_REFERENCE = SerializableDataTypes.IDENTIFIER.xmap(PowerReference::resource, PowerReference::id);
 
     public static final SerializableDataType<PowerTypeFactory<? extends PowerType>> POWER_TYPE_FACTORY = SerializableDataType.lazy(() -> SerializableDataType.registry(ApoliRegistries.POWER_FACTORY, Apoli.MODID, PowerTypes.ALIASES, (registry, id) -> "Power type \"" + id + "\" is not registered"));
 
@@ -144,7 +148,7 @@ public class ApoliDataTypes {
             .set("attribute", attributedAttributeModifier.attribute())
     );
 
-    public static final SerializableDataType<List<AttributedEntityAttributeModifier>> ATTRIBUTED_ATTRIBUTE_MODIFIERS = ATTRIBUTED_ATTRIBUTE_MODIFIER.list();
+    public static final SerializableDataType<List<AttributedEntityAttributeModifier>> ATTRIBUTED_ATTRIBUTE_MODIFIERS = ATTRIBUTED_ATTRIBUTE_MODIFIER.list(1, Integer.MAX_VALUE);
 
     public static final SerializableDataType<Pair<Integer, ItemStack>> POSITIONED_ITEM_STACK = SerializableDataType.compound(
         SerializableDataTypes.ITEM_STACK.serializableData().copy()
@@ -228,6 +232,10 @@ public class ApoliDataTypes {
 
     public static final SerializableDataType<List<ArgumentWrapper<Integer>>> ITEM_SLOTS = ITEM_SLOT.list();
 
+	public static final SerializableDataType<SlotRange> SINGLE_SLOT_RANGE = SerializableDataType.of(SlotRangesUtil.SINGLE_SLOT_CODEC, PacketCodecs.STRING.xmap(SlotRanges::fromName, StringIdentifiable::asString).cast());
+
+	public static final SerializableDataType<List<SlotRange>> SINGLE_SLOT_RANGES = SINGLE_SLOT_RANGE.list();
+
     public static final SerializableDataType<Explosion.DestructionType> DESTRUCTION_TYPE = SerializableDataType.enumValue(Explosion.DestructionType.class);
 
     public static final SerializableDataType<ArgumentWrapper<EntitySelector>> ENTITIES_SELECTOR = SerializableDataType.argumentType(EntityArgumentType.entities());
@@ -295,6 +303,10 @@ public class ApoliDataTypes {
     public static final SerializableDataType<ArmPoseReference> ARM_POSE_REFERENCE = SerializableDataType.enumValue(ArmPoseReference.class);
 
 	public static SerializableDataType<CraftingRecipe> DISALLOWING_INTERNAL_CRAFTING_RECIPE = SerializableDataTypes.RECIPE.comapFlatMap(RecipeUtil::validateCraftingRecipe, Function.identity());
+
+	public static final SerializableDataType<Float> NORMALIZED_FLOAT = SerializableDataType.boundNumber(SerializableDataTypes.FLOAT, 0F, 1F);
+
+	public static final SerializableDataType<ContainerType> CONTAINER_TYPE = SerializableDataType.registry(ApoliRegistries.CONTAINER_TYPE, Apoli.MODID, true);
 
     public static <T> SerializableDataType<ConditionTypeFactory<T>.Instance> condition(Registry<ConditionTypeFactory<T>> registry, String name) {
         return condition(registry, null, name);

@@ -17,6 +17,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
 import java.util.function.Function;
@@ -62,7 +63,7 @@ public class RelativeRotationBiEntityConditionType extends BiEntityConditionType
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiEntityConditionTypes.RELATIVE_ROTATION;
     }
 

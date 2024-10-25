@@ -13,6 +13,11 @@ public abstract class BiomeConditionType extends AbstractConditionType<BiomeCond
 		return test(context.pos(), context.biomeEntry());
 	}
 
+	@Override
+	public BiomeCondition createCondition(boolean inverted) {
+		return new BiomeCondition(this, inverted);
+	}
+
 	public abstract boolean test(BlockPos pos, RegistryEntry<Biome> biomeEntry);
 
 }

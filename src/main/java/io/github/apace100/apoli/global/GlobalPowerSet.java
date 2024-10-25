@@ -2,7 +2,10 @@ package io.github.apace100.apoli.global;
 
 import com.google.common.collect.ImmutableList;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.*;
+import io.github.apace100.apoli.power.MultiplePower;
+import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.calio.data.CompoundSerializableDataType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -14,7 +17,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -67,7 +73,7 @@ public class GlobalPowerSet implements Comparable<GlobalPowerSet> {
         for (PowerReference powerReference : powerReferences) {
 
             //  Add the reference as is to the resulting set
-            result.add(powerReference);
+            powerReference.getOptionalReference().ifPresent(result::add);
 
             //  If the reference is referring to a multiple power, query its sub-powers and add those to the
             //  resulting set

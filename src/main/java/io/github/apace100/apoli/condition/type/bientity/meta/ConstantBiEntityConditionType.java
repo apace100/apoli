@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.BiEntityConditionType;
 import io.github.apace100.apoli.condition.type.BiEntityConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.ConstantMetaConditionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ConstantBiEntityConditionType extends BiEntityConditionType implements ConstantMetaConditionType {
 
@@ -15,7 +16,7 @@ public class ConstantBiEntityConditionType extends BiEntityConditionType impleme
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BiEntityConditionTypes.CONSTANT;
 	}
 

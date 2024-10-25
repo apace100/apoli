@@ -11,6 +11,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class RelativeHealthEntityConditionType extends EntityConditionType {
 
@@ -42,7 +43,7 @@ public class RelativeHealthEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.RELATIVE_HEALTH;
     }
 

@@ -10,6 +10,7 @@ import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.item.Equipment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -39,7 +40,7 @@ public class EquippableItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.EQUIPPABLE;
     }
 

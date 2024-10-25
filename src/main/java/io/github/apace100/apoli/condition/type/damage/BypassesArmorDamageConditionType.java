@@ -3,6 +3,7 @@ package io.github.apace100.apoli.condition.type.damage;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
+import org.jetbrains.annotations.NotNull;
 
 @Deprecated(forRemoval = true)
 public class BypassesArmorDamageConditionType extends InTagDamageConditionType {
@@ -12,7 +13,7 @@ public class BypassesArmorDamageConditionType extends InTagDamageConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return DamageConditionTypes.BYPASSES_ARMOR;
 	}
 

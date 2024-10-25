@@ -218,21 +218,13 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Nameable
 
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V"))
     private void dropAdditionalInventory(CallbackInfo ci) {
-        PowerHolderComponent.getPowerTypes(this, InventoryPowerType.class).forEach(inventoryPower -> {
-            if(inventoryPower.shouldDropOnDeath()) {
-                inventoryPower.dropItemsOnDeath();
-            }
-        });
-        PowerHolderComponent.getPowerTypes(this, KeepInventoryPowerType.class).forEach(p ->
-            p.preventItemsFromDropping(inventory)
-        );
+        PowerHolderComponent.withPowerTypes(this, InventoryPowerType.class, InventoryPowerType::shouldDropOnDeath, InventoryPowerType::dropItemsOnDeath);
+        PowerHolderComponent.withPowerTypes(this, KeepInventoryPowerType.class, p -> true, KeepInventoryPowerType::preventItemsFromDropping);
     }
 
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V", shift = At.Shift.AFTER))
     private void restoreKeptInventory(CallbackInfo ci) {
-        PowerHolderComponent.getPowerTypes(this, KeepInventoryPowerType.class).forEach(p ->
-            p.restoreSavedItems(inventory)
-        );
+        PowerHolderComponent.withPowerTypes(this, KeepInventoryPowerType.class, p -> true, KeepInventoryPowerType::restoreSavedItems);
     }
 
     @ModifyReturnValue(method = "canEquip", at = @At("RETURN"))

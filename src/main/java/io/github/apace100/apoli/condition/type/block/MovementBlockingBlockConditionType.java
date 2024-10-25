@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class MovementBlockingBlockConditionType extends BlockConditionType {
 
@@ -17,7 +18,7 @@ public class MovementBlockingBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BlockConditionTypes.MOVEMENT_BLOCKING;
     }
 

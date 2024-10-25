@@ -14,6 +14,7 @@ import net.minecraft.entity.player.ItemCooldownManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class RelativeItemCooldownItemConditionType extends ItemConditionType {
 
@@ -57,7 +58,7 @@ public class RelativeItemCooldownItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.RELATIVE_ITEM_COOLDOWN;
     }
 

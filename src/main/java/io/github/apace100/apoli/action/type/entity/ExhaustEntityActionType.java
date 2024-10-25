@@ -8,6 +8,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class ExhaustEntityActionType extends EntityActionType {
 
@@ -37,7 +38,7 @@ public class ExhaustEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.EXHAUST;
     }
 

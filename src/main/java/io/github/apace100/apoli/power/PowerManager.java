@@ -326,7 +326,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             };
 
             if (subPower != null && subPower.isMultiple()) {
-                throw new IllegalStateException("Using the '" + PowerTypes.MULTIPLE.getSerializerId() + "' power type in sub-powers is not allowed!");
+                throw new IllegalStateException("Using the '" + PowerTypes.MULTIPLE.id() + "' power type in sub-powers is not allowed!");
             }
 
             else {
@@ -413,16 +413,16 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     }
 
-    private <P extends Power> P finishReadingPower(BiFunction<Identifier, Power, Power> powerTypeProcessor, Identifier powerId, P power, JsonObject jsonObject, int priority) {
+    private <P extends Power> P finishReadingPower(BiFunction<Identifier, Power, Power> powerProcessor, Identifier powerId, P power, JsonObject jsonObject, int priority) {
 
-        Identifier powerFactoryId = power.getFactoryInstance().getFactory().getSerializerId();
+        Identifier powerTypeId = power.getPowerType().configuration().id();
         boolean subPower = power.isSubPower();
 
-        powerTypeProcessor.apply(powerId, power);
+        powerProcessor.apply(powerId, power);
         LOADING_PRIORITIES.put(powerId, priority);
 
-        handleAdditionalData(powerId, powerFactoryId, subPower, jsonObject, power);
-        PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(powerId, powerFactoryId, subPower, jsonObject, power);
+        handleAdditionalData(powerId, powerTypeId, subPower, jsonObject, power);
+        PostPowerLoadCallback.EVENT.invoker().onPostPowerLoad(powerId, powerTypeId, subPower, jsonObject, power);
 
         return power;
 
@@ -640,7 +640,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             || field.startsWith("$")
             || FIELDS_TO_IGNORE.contains(field)
             || ADDITIONAL_DATA.containsKey(field)
-            || Power.DATA_TYPE.serializableData().containsField(field);
+            || Power.SERIALIZABLE_DATA.containsField(field);
     }
 
 }

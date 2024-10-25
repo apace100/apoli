@@ -14,6 +14,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import org.jetbrains.annotations.NotNull;
 
 public class ElytraFlightPossibleEntityConditionType extends EntityConditionType {
 
@@ -71,7 +72,7 @@ public class ElytraFlightPossibleEntityConditionType extends EntityConditionType
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.ELYTRA_FLIGHT_POSSIBLE;
     }
 

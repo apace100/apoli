@@ -1,27 +1,60 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class RestrictArmorPowerType extends PowerType {
 
-    protected final Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions;
+    public static final TypedDataObjectFactory<RestrictArmorPowerType> DATA_FACTORY = TypedDataObjectFactory.simple(
+        createSerializableData(),
+        data -> {
 
-    public RestrictArmorPowerType(Power power, LivingEntity entity, Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions) {
-        super(power, entity);
+            EnumMap<EquipmentSlot, Optional<ItemCondition>> conditions = Arrays.stream(EquipmentSlot.values())
+                .filter(EquipmentSlot::isArmorSlot)
+                .collect(Collectors.toMap(Function.identity(), slot -> data.get(slot.getName()), (o1, o2) -> o2, () -> new EnumMap<>(EquipmentSlot.class)));
+
+            return new RestrictArmorPowerType(conditions);
+
+        },
+        (powerType, serializableData) -> {
+
+            SerializableData.Instance data = serializableData.instance();
+            powerType.armorConditions.forEach((equipmentSlot, itemCondition) -> data.set(equipmentSlot.getName(), itemCondition));
+
+            return data;
+
+        }
+    );
+
+    protected final EnumMap<EquipmentSlot, Optional<ItemCondition>> armorConditions;
+
+    public RestrictArmorPowerType(EnumMap<EquipmentSlot, Optional<ItemCondition>> armorConditions, Optional<EntityCondition> condition) {
+        super(condition);
         this.armorConditions = armorConditions;
+    }
+
+    public RestrictArmorPowerType(EnumMap<EquipmentSlot, Optional<ItemCondition>> armorConditions) {
+        this(armorConditions, Optional.empty());
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.RESTRICT_ARMOR;
     }
 
     @Override
@@ -30,63 +63,44 @@ public class RestrictArmorPowerType extends PowerType {
         dropEquippedStacks();
     }
 
+    public boolean doesRestrict(ItemStack stack, EquipmentSlot slot) {
+        return armorConditions.getOrDefault(slot, Optional.empty())
+            .map(condition -> condition.test(getHolder().getWorld(), stack))
+            .orElse(false);
+    }
+
     public void dropEquippedStacks() {
 
-        for (EquipmentSlot slot : armorConditions.keySet()) {
+        LivingEntity holder = getHolder();
+        if (holder.getWorld().isClient()) {
+            return;
+        }
 
-            ItemStack equippedStack = entity.getEquippedStack(slot);
+        for (Map.Entry<EquipmentSlot, Optional<ItemCondition>> armorConditionEntry : armorConditions.entrySet()) {
 
-            if(!equippedStack.isEmpty() && this.shouldDrop(equippedStack, slot)) {
-                // TODO: Prefer putting armor in inv instead of dropping when inv exists
-                entity.dropStack(equippedStack, entity.getEyeHeight(entity.getPose()));
-                entity.equipStack(slot, ItemStack.EMPTY);
+            EquipmentSlot equipmentSlot = armorConditionEntry.getKey();
+            Optional<ItemCondition> itemCondition = armorConditionEntry.getValue();
+
+            ItemStack equippedStack = holder.getEquippedStack(equipmentSlot);
+
+            //  TODO: Prefer inserting the armor items into the entity's inventory directly (if present)
+            if (equippedStack.isEmpty() && itemCondition.map(condition -> condition.test(holder.getWorld(), equippedStack)).orElse(false)) {
+                InventoryUtil.throwItem(holder, equippedStack, true, true, 0);
             }
 
         }
 
     }
 
-    public boolean shouldDrop(ItemStack stack, EquipmentSlot slot) {
-        return this.doesRestrict(stack, slot);
-    }
+    protected static SerializableData createSerializableData() {
 
-    public boolean doesRestrict(ItemStack stack, EquipmentSlot slot) {
-        Predicate<Pair<World, ItemStack>> armorCondition = armorConditions.get(slot);
-        return armorCondition != null && armorCondition.test(new Pair<>(entity.getWorld(), stack));
-    }
+        SerializableData serializableData = new SerializableData();
+        Arrays.stream(EquipmentSlot.values())
+            .filter(EquipmentSlot::isArmorSlot)
+            .forEach(slot -> serializableData.add(slot.getName(), ItemCondition.DATA_TYPE.optional(), Optional.empty()));
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("restrict_armor"),
-            new SerializableData()
-                .add("head", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("chest", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("legs", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("feet", ApoliDataTypes.ITEM_CONDITION, null),
-            data -> (power, entity) -> {
+        return serializableData;
 
-                Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> restrictions = new HashMap<>();
-
-                if (data.isPresent("head")) {
-                    restrictions.put(EquipmentSlot.HEAD, data.get("head"));
-                }
-
-                if (data.isPresent("chest")) {
-                    restrictions.put(EquipmentSlot.CHEST, data.get("chest"));
-                }
-
-                if (data.isPresent("legs")) {
-                    restrictions.put(EquipmentSlot.LEGS, data.get("legs"));
-                }
-
-                if (data.isPresent("feet")) {
-                    restrictions.put(EquipmentSlot.FEET, data.get("feet"));
-                }
-
-                return new RestrictArmorPowerType(power, entity, restrictions);
-
-            }
-        );
     }
 
 }

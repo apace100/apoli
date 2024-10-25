@@ -25,12 +25,15 @@ public class ElytraFeatureRendererMixin {
 
     @WrapOperation(method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer;getArmorCutoutNoCull(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"))
     private RenderLayer apoli$overrideElytraTexture(Identifier texture, Operation<RenderLayer> original, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, LivingEntity entity) {
-        return original.call(PowerHolderComponent.getPowerTypes(entity, ElytraFlightPowerType.class, true)
+
+        texture = PowerHolderComponent.getPowerTypes(entity, ElytraFlightPowerType.class)
             .stream()
-            .filter(p -> p.getTextureLocation() != null && p.isActive())
             .findFirst()
-            .map(ElytraFlightPowerType::getTextureLocation)
-            .orElse(texture));
+            .flatMap(ElytraFlightPowerType::getTextureLocation)
+            .orElse(texture);
+
+        return original.call(texture);
+
     }
 
 }

@@ -5,6 +5,7 @@ import io.github.apace100.apoli.action.type.BiEntityActionType;
 import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import io.github.apace100.apoli.action.type.meta.NothingMetaActionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class NothingBiEntityActionType extends BiEntityActionType implements NothingMetaActionType {
 
@@ -14,7 +15,7 @@ public class NothingBiEntityActionType extends BiEntityActionType implements Not
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return BiEntityActionTypes.NOTHING;
 	}
 

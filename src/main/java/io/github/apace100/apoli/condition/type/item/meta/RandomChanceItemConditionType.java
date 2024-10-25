@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class RandomChanceItemConditionType extends ItemConditionType implements RandomChanceMetaConditionType {
 
@@ -21,7 +22,7 @@ public class RandomChanceItemConditionType extends ItemConditionType implements 
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return ItemConditionTypes.RANDOM_CHANCE;
 	}
 

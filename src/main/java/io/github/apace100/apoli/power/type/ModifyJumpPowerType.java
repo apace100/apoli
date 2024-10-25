@@ -1,55 +1,44 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.action.EntityAction;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Optional;
 
 public class ModifyJumpPowerType extends ValueModifyingPowerType {
 
-    private final Consumer<Entity> entityAction;
+    public static final TypedDataObjectFactory<ModifyJumpPowerType> DATA_FACTORY = createConditionedModifyingDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE.optional(), Optional.empty()),
+        (data, modifiers, condition) -> new ModifyJumpPowerType(
+            data.get("entity_action"),
+            modifiers,
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+    );
 
-    public ModifyJumpPowerType(Power power, LivingEntity entity, Consumer<Entity> entityAction, Modifier modifier, List<Modifier> modifiers) {
-        super(power, entity);
+    private final Optional<EntityAction> entityAction;
+
+    public ModifyJumpPowerType(Optional<EntityAction> entityAction, List<Modifier> modifiers, Optional<EntityCondition> condition) {
+        super(modifiers, condition);
         this.entityAction = entityAction;
+    }
 
-        if (modifier != null) {
-            this.addModifier(modifier);
-        }
-
-        if (modifiers != null) {
-            modifiers.forEach(this::addModifier);
-        }
-
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.MODIFY_JUMP;
     }
 
     public void executeAction() {
-
-        if (entityAction != null) {
-            entityAction.accept(entity);
-        }
-
+        entityAction.ifPresent(action -> action.execute(getHolder()));
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("modify_jump"),
-            new SerializableData()
-                .add("modifier", Modifier.DATA_TYPE, null)
-                .add("modifiers", Modifier.LIST_TYPE, null)
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            data -> (power, entity) -> new ModifyJumpPowerType(power, entity,
-                data.get("entity_action"),
-                data.get("modifier"),
-                data.get("modifiers")
-            )
-        ).allowCondition();
-    }
 }

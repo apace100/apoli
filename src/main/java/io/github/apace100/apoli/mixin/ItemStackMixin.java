@@ -19,10 +19,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsage;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.*;
-import net.minecraft.item.ItemUsage;
+import net.minecraft.util.ClickType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
@@ -201,7 +201,7 @@ public abstract class ItemStackMixin implements ComponentHolder, EntityLinkedIte
     @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
     private UseAction apoli$replaceUseAction(UseAction original) {
         return EdibleItemPowerType.get((ItemStack) (Object) this)
-            .map(p -> p.getConsumeAnimation().getAction())
+            .map(EdibleItemPowerType::getConsumeAnimation)
             .orElse(original);
     }
 

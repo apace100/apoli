@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class BlockBlockConditionType extends BlockConditionType {
 
@@ -34,7 +35,7 @@ public class BlockBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BlockConditionTypes.BLOCK;
     }
 

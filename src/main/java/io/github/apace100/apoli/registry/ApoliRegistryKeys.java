@@ -10,6 +10,8 @@ import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.*;
+import io.github.apace100.apoli.data.container.ContainerType;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.modifier.IModifierOperation;
@@ -32,6 +34,8 @@ import org.apache.commons.lang3.tuple.Triple;
 public class ApoliRegistryKeys {
 
     public static final RegistryKey<Registry<PowerTypeFactory<? extends PowerType>>> POWER_FACTORY = create("power_factory");
+
+    public static final RegistryKey<Registry<PowerConfiguration<PowerType>>> POWER_TYPE = create("power_type");
 
     public static final RegistryKey<Registry<ConditionTypeFactory<Entity>>> ENTITY_CONDITION = create("entity_condition");
     public static final RegistryKey<Registry<ConditionTypeFactory<Pair<Entity, Entity>>>> BIENTITY_CONDITION = create("bientity_condition");
@@ -60,6 +64,7 @@ public class ApoliRegistryKeys {
     public static final RegistryKey<Registry<ActionConfiguration<ItemActionType>>> ITEM_ACTION_TYPE = create("item_action_type");
 
     public static final RegistryKey<Registry<IModifierOperation>> MODIFIER_OPERATION = create("modifier_operation");
+    public static final RegistryKey<Registry<ContainerType>> CONTAINER_TYPE = create("container_type");
 
     private static <T> RegistryKey<Registry<T>> create(String path) {
         return RegistryKey.ofRegistry(Apoli.identifier(path));

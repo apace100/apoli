@@ -10,6 +10,7 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -51,7 +52,7 @@ public class DistanceFromCoordinatesEntityConditionType extends EntityConditionT
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return EntityConditionTypes.DISTANCE_FROM_COORDINATES;
 	}
 

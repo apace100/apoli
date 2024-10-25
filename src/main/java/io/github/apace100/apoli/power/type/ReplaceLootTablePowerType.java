@@ -2,15 +2,18 @@ package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.IdentifiedLootTable;
+import io.github.apace100.apoli.condition.BiEntityCondition;
+import io.github.apace100.apoli.condition.BlockCondition;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.SavedBlockPosition;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootTable;
 import net.minecraft.loot.context.LootContext;
@@ -18,13 +21,12 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class ReplaceLootTablePowerType extends PowerType {
@@ -35,21 +37,51 @@ public class ReplaceLootTablePowerType extends PowerType {
     private static final Stack<LootTable> REPLACEMENT_STACK = new Stack<>();
     private static final Stack<LootTable> BACKTRACK_STACK = new Stack<>();
 
+    public static final TypedDataObjectFactory<ReplaceLootTablePowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("replace", ApoliDataTypes.REGEX_MAP, null)
+            .addFunctionedDefault("replacements", ApoliDataTypes.REGEX_MAP, data -> data.get("replace"))
+            .add("bientity_condition", BiEntityCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("block_condition", BlockCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("priority", SerializableDataTypes.INT, 0)
+            .validate(MiscUtil.validateAnyFieldsPresent("replace", "replacements")),
+        (data, condition) -> new ReplaceLootTablePowerType(
+            data.get("replacements"),
+            data.get("bientity_condition"),
+            data.get("block_condition"),
+            data.get("item_condition"),
+            data.get("priority"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("replacements", powerType.replacements)
+            .set("bientity_condition", powerType.biEntityCondition)
+            .set("block_condition", powerType.blockCondition)
+            .set("item_condition", powerType.itemCondition)
+            .set("priority", powerType.getPriority())
+    );
+
     private final Map<Pattern, Identifier> replacements;
+    private final Optional<BiEntityCondition> biEntityCondition;
+
+    private final Optional<BlockCondition> blockCondition;
+    private final Optional<ItemCondition> itemCondition;
 
     private final int priority;
 
-    private final Predicate<Pair<World, ItemStack>> itemCondition;
-    private final Predicate<Pair<Entity, Entity>> biEntityCondition;
-    private final Predicate<CachedBlockPosition> blockCondition;
-
-    public ReplaceLootTablePowerType(Power power, LivingEntity entity, Map<Pattern, Identifier> replacements, int priority, Predicate<Pair<World, ItemStack>> itemCondition, Predicate<Pair<Entity, Entity>> biEntityCondition, Predicate<CachedBlockPosition> blockCondition) {
-        super(power, entity);
+    public ReplaceLootTablePowerType(Map<Pattern, Identifier> replacements, Optional<BiEntityCondition> biEntityCondition, Optional<BlockCondition> blockCondition, Optional<ItemCondition> itemCondition, int priority, Optional<EntityCondition> condition) {
+        super(condition);
         this.replacements = replacements;
-        this.priority = priority;
-        this.itemCondition = itemCondition;
         this.biEntityCondition = biEntityCondition;
         this.blockCondition = blockCondition;
+        this.itemCondition = itemCondition;
+        this.priority = priority;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.REPLACE_LOOT_TABLE;
     }
 
     public boolean hasReplacement(RegistryKey<LootTable> lootTableKey) {
@@ -73,20 +105,18 @@ public class ReplaceLootTablePowerType extends PowerType {
     }
 
     public boolean doesApply(Entity contextEntity, ItemStack toolStack, SavedBlockPosition cachedBlock) {
-        return (biEntityCondition == null || biEntityCondition.test(new Pair<>(entity, contextEntity)))
-            && (itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), toolStack)))
-            && (blockCondition == null || blockCondition.test(cachedBlock));
+        return itemCondition.map(condition -> condition.test(getHolder().getWorld(), toolStack)).orElse(true)
+            && blockCondition.map(condition -> cachedBlock.getWorld() instanceof World world && condition.test(world, cachedBlock.getBlockPos())).orElse(true)
+            && biEntityCondition.map(condition -> condition.test(getHolder(), contextEntity)).orElse(true);
     }
 
-    @Nullable
-    public RegistryKey<LootTable> getReplacement(RegistryKey<LootTable> lootTableKey) {
+    public Optional<RegistryKey<LootTable>> getReplacement(RegistryKey<LootTable> lootTableKey) {
         String lootTableId = lootTableKey.getValue().toString();
         return replacements.entrySet()
             .stream()
             .filter(entry -> entry.getKey().pattern().equals(lootTableId) || entry.getKey().matcher(lootTableId).matches())
             .findFirst()
-            .map(entry -> RegistryKey.of(RegistryKeys.LOOT_TABLE, entry.getValue()))
-            .orElse(null);
+            .map(entry -> RegistryKey.of(RegistryKeys.LOOT_TABLE, entry.getValue()));
     }
 
     public int getPriority() {
@@ -169,25 +199,6 @@ public class ReplaceLootTablePowerType extends PowerType {
         }
         stringBuilder.append("]");
         Apoli.LOGGER.info(stringBuilder.toString());
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("replace_loot_table"),
-            new SerializableData()
-                .add("replace", ApoliDataTypes.REGEX_MAP)
-                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
-                .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
-                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("priority", SerializableDataTypes.INT, 0),
-            data -> (power, entity) -> new ReplaceLootTablePowerType(power, entity,
-                data.get("replace"),
-                data.get("priority"),
-                data.get("item_condition"),
-                data.get("bientity_condition"),
-                data.get("block_condition")
-            )
-        ).allowCondition();
     }
 
 }

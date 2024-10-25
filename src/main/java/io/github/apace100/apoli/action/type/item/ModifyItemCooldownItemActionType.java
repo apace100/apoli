@@ -5,6 +5,7 @@ import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
@@ -13,16 +14,16 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Optional;
 
 public class ModifyItemCooldownItemActionType extends ItemActionType {
 
     public static final TypedDataObjectFactory<ModifyItemCooldownItemActionType> DATA_FACTORY = TypedDataObjectFactory.simple(
         new SerializableData()
-            .add("modifier", Modifier.DATA_TYPE.optional(), Optional.empty())
-            .addFunctionedDefault("modifiers", Modifier.LIST_TYPE.optional(), data -> data.<Optional<Modifier>>get("modifier").map(List::of)),
+            .add("modifier", Modifier.DATA_TYPE, null)
+            .addFunctionedDefault("modifiers", Modifier.LIST_TYPE, data -> MiscUtil.singletonListOrNull(data.get("modifier"))),
         data -> new ModifyItemCooldownItemActionType(
             data.get("modifiers")
         ),
@@ -56,7 +57,7 @@ public class ModifyItemCooldownItemActionType extends ItemActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return ItemActionTypes.MODIFY_ITEM_COOLDOWN;
     }
 

@@ -10,6 +10,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
+import org.jetbrains.annotations.NotNull;
 
 public class InTagDamageConditionType extends DamageConditionType {
 
@@ -35,7 +36,7 @@ public class InTagDamageConditionType extends DamageConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return DamageConditionTypes.IN_TAG;
     }
 

@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class CreativeFlyingEntityConditionType extends EntityConditionType {
 
@@ -15,7 +16,7 @@ public class CreativeFlyingEntityConditionType extends EntityConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return EntityConditionTypes.CREATIVE_FLYING;
 	}
 

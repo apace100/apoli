@@ -5,11 +5,10 @@ import io.github.apace100.calio.data.ClassDataRegistry;
 
 public class ApoliClassData {
 
+    public static final ClassDataRegistry<PowerType> POWER_TYPE = ClassDataRegistry.getOrCreate(PowerType.class, "PowerType");
+
     public static void registerAll() {
-
-        ClassDataRegistry<PowerType> power = ClassDataRegistry.getOrCreate(PowerType.class, "PowerType");
-        power.addPackage("io.github.apace100.apoli.power.type");
-
+        POWER_TYPE.addPackage("io.github.apace100.apoli.power.type");
     }
 
 }

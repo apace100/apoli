@@ -3,8 +3,8 @@ package io.github.apace100.apoli.component;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.MultiplePower;
 import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import net.minecraft.entity.LivingEntity;
@@ -60,7 +60,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     public Set<Power> getPowers(boolean includeSubPowers) {
         return powers.keySet()
             .stream()
-            .filter(pt -> includeSubPowers || !pt.isSubPower())
+            .filter(p -> includeSubPowers || !p.isSubPower())
             .collect(Collectors.toCollection(HashSet::new));
     }
 
@@ -107,17 +107,8 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     protected boolean removePower(Power power, Identifier source, Consumer<Power> adder) {
 
-        Identifier powerId = power.getId();
-        if (power instanceof PowerReference powerReference) {
-            power = powerReference.getReference();
-        }
-
-        if (power == null) {
-            Apoli.LOGGER.error("Cannot remove a non-existing power with ID \"{}\" from entity {}! (UUID: {})", powerId, owner.getName().getString(), owner.getUuidAsString());
-            return false;
-        }
-
         List<Identifier> sources = powerSources.getOrDefault(power, new ArrayList<>());
+
         if (!sources.remove(source)) {
             return false;
         }
@@ -182,22 +173,15 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     protected boolean addPower(Power power, Identifier source, BiConsumer<Power, PowerType> adder) {
 
-        Identifier powerId = power.getId();
-        if (power instanceof PowerReference powerReference) {
-            power = powerReference.getReference();
-        }
-
-        if (power == null) {
-            Apoli.LOGGER.error("Cannot add a non-existing power with ID \"{}\" to entity {} (UUID: {})!", powerId, owner.getName().getString(), owner.getUuidAsString());
-            return false;
-        }
-
         List<Identifier> sources = powerSources.computeIfAbsent(power, pt -> new LinkedList<>());
+
         if (sources.contains(source)) {
             return false;
         }
 
-        PowerType powerType = power.create(owner);
+        PowerType powerType = power.getPowerType();
+        powerType.init(owner, power);
+
         sources.add(source);
 
         powerSources.put(power, sources);
@@ -215,11 +199,27 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void serverTick() {
-        this.getPowerTypes(PowerType.class, true)
+        powers.values()
             .stream()
             .filter(PowerType::shouldTick)
-            .filter(type -> type.shouldTickWhenInactive() || type.isActive())
-            .forEach(PowerType::tick);
+            .filter(powerType -> powerType.shouldTickWhenInactive() || powerType.isActive())
+            .peek(PowerType::commonTick)
+            .forEach(PowerType::serverTick);
+    }
+
+    @Override
+    public void clientTick() {
+        powers.values()
+            .stream()
+            .filter(PowerType::shouldTick)
+            .filter(powerType -> powerType.shouldTickWhenInactive() || powerType.isActive())
+            .peek(PowerType::commonTick)
+            .forEach(PowerType::clientTick);
+    }
+
+    @Override
+    public void tick() {
+
     }
 
     @Override
@@ -240,27 +240,23 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             try {
 
                 Power.Entry powerEntry = Power.Entry.CODEC.read(lookup.getOps(NbtOps.INSTANCE), powerTag).getOrThrow();
-                Identifier powerId = powerEntry.power().getId();
+                PowerReference powerReference = powerEntry.powerReference();
 
                 try {
 
-                    Power power = powerEntry.power().getStrictReference();
-                    PowerType powerType = power.create(owner);
+                    Power power = powerReference.getStrictReference();
+                    PowerType powerType = power.getPowerType();
+
+                    powerType.init(owner, power);
 
                     try {
-
-                        NbtElement powerData = powerEntry.nbtData();
-
-                        if (powerData != null) {
-                            powerType.fromTag(powerData);
-                        }
-
+                        powerType.fromTag(powerEntry.nbtData());
                     }
 
                     catch (ClassCastException cce) {
                         //  Occurs when the power was overridden by a data pack since last resource reload,
                         //  where the overridden power may encode/decode different NBT types
-                        Apoli.LOGGER.warn("Data type of power \"{}\" has changed, skipping data for that power on entity {} (UUID: {})", powerId, owner.getName().getString(), owner.getUuidAsString());
+                        Apoli.LOGGER.warn("Data type of power \"{}\" has changed, skipping data for that power on entity {} (UUID: {})", powerReference.id(), owner.getName().getString(), owner.getUuidAsString());
                     }
 
                     powerSources.put(power, powerEntry.sources());
@@ -269,7 +265,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 }
 
                 catch (Throwable t) {
-                    Apoli.LOGGER.warn("Unregistered power \"{}\" found on entity {} (UUID: {}), skipping...", powerId, owner.getName().getString(), owner.getUuidAsString());
+                    Apoli.LOGGER.warn("Unregistered power \"{}\" found on entity {} (UUID: {}), skipping...", powerReference.id(), owner.getName().getString(), owner.getUuidAsString());
                 }
 
             }
@@ -288,10 +284,10 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         NbtList powersTag = new NbtList();
         powers.forEach((power, powerType) -> {
 
-            PowerTypeFactory<?> typeFactory = power.getFactoryInstance().getFactory();
+            PowerConfiguration<?> typeConfig = power.getPowerType().configuration();
             PowerReference powerReference = PowerReference.of(power.getId());
 
-            Power.Entry.CODEC.codec().encodeStart(lookup.getOps(NbtOps.INSTANCE), new Power.Entry(typeFactory, powerReference, powerType.toTag(), powerSources.get(power)))
+            Power.Entry.CODEC.codec().encodeStart(lookup.getOps(NbtOps.INSTANCE), new Power.Entry(typeConfig, powerReference, powerType.toTag(), powerSources.get(power)))
                 .mapError(err -> "Error encoding power \"" + power.getId() + "\" to NBT of entity " + owner.getName().getString() + " (UUID: " + owner.getUuidAsString() + ") (skipping): " + err)
                 .resultOrPartial(Apoli.LOGGER::warn)
                 .ifPresent(powersTag::add);

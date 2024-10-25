@@ -11,6 +11,11 @@ public abstract class BiEntityConditionType extends AbstractConditionType<BiEnti
 		return test(context.actor(), context.target());
 	}
 
+	@Override
+	public BiEntityCondition createCondition(boolean inverted) {
+		return new BiEntityCondition(this, inverted);
+	}
+
 	public abstract boolean test(Entity actor, Entity target);
 
 }

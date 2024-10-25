@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldEvents;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -66,7 +67,7 @@ public class BoneMealBlockActionType extends BlockActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BlockActionTypes.BONE_MEAL;
     }
 

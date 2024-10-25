@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 
 public class PrecipitationBiomeConditionType extends BiomeConditionType {
 
@@ -34,7 +35,7 @@ public class PrecipitationBiomeConditionType extends BiomeConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiomeConditionTypes.PRECIPITATION;
     }
 

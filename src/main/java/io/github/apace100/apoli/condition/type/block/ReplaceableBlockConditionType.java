@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.BlockConditionType;
 import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class ReplaceableBlockConditionType extends BlockConditionType {
 
@@ -14,7 +15,7 @@ public class ReplaceableBlockConditionType extends BlockConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BlockConditionTypes.REPLACEABLE;
 	}
 

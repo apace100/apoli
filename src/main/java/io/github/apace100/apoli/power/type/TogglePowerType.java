@@ -1,33 +1,60 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtElement;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
 
 public class TogglePowerType extends PowerType implements Active {
 
+    public static final TypedDataObjectFactory<TogglePowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Key())
+            .add("retain_state", SerializableDataTypes.BOOLEAN, true)
+            .add("active_by_default", SerializableDataTypes.BOOLEAN, true),
+        (data, condition) -> new TogglePowerType(
+            data.get("key"),
+            data.get("retain_state"),
+            data.get("active_by_default"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("key", powerType.getKey())
+            .set("retain_state", powerType.shouldRetainState)
+            .set("active_by_default", powerType.activeByDefault)
+    );
+
     private final Key key;
+
+    private final boolean activeByDefault;
     private final boolean shouldRetainState;
 
     private boolean toggled;
 
-    public TogglePowerType(Power power, LivingEntity entity, boolean activeByDefault, boolean shouldRetainState, Key key) {
-        super(power, entity);
+    public TogglePowerType(Key key, boolean retainState, boolean activeByDefault, Optional<EntityCondition> condition) {
+        super(condition);
         this.key = key;
-        this.shouldRetainState = shouldRetainState;
+        this.activeByDefault = activeByDefault;
+        this.shouldRetainState = retainState;
         this.toggled = activeByDefault;
     }
 
     @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.TOGGLE;
+    }
+
+    @Override
     public boolean shouldTick() {
-        return !shouldRetainState && !this.conditions.isEmpty();
+        return !shouldRetainState && this.condition.isPresent();
     }
 
     @Override
@@ -36,11 +63,11 @@ public class TogglePowerType extends PowerType implements Active {
     }
 
     @Override
-    public void tick() {
+    public void serverTick() {
 
         if (!super.isActive() && this.toggled) {
             this.toggled = false;
-            PowerHolderComponent.syncPower(entity, this.power);
+            PowerHolderComponent.syncPower(getHolder(), getPower());
         }
 
     }
@@ -48,7 +75,7 @@ public class TogglePowerType extends PowerType implements Active {
     @Override
     public void onUse() {
         this.toggled = !this.toggled;
-        PowerHolderComponent.syncPower(entity, this.power);
+        PowerHolderComponent.syncPower(getHolder(), getPower());
     }
 
     public boolean isActive() {
@@ -72,21 +99,6 @@ public class TogglePowerType extends PowerType implements Active {
     @Override
     public Key getKey() {
         return key;
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("toggle"),
-            new SerializableData()
-                .add("active_by_default", SerializableDataTypes.BOOLEAN, true)
-                .add("retain_state", SerializableDataTypes.BOOLEAN, true)
-                .add("key", ApoliDataTypes.BACKWARDS_COMPATIBLE_KEY, new Active.Key()),
-            data -> (power, entity) -> new TogglePowerType(power, entity,
-                data.get("active_by_default"),
-                data.get("retain_state"),
-                data.get("key")
-            )
-        ).allowCondition();
     }
 
 }

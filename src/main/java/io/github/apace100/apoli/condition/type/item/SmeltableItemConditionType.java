@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.recipe.input.SingleStackRecipeInput;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class SmeltableItemConditionType extends ItemConditionType {
 
@@ -18,7 +19,7 @@ public class SmeltableItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.SMELTABLE;
     }
 

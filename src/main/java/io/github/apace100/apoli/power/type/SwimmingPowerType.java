@@ -1,12 +1,20 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.power.Power;
-import net.minecraft.entity.LivingEntity;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
 
 public class SwimmingPowerType extends PowerType {
 
-    public SwimmingPowerType(Power power, LivingEntity entity) {
-        super(power, entity);
+    public SwimmingPowerType(Optional<EntityCondition> condition) {
+        super(condition);
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.SWIMMING;
     }
 
 }

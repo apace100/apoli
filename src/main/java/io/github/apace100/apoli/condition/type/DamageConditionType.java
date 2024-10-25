@@ -11,6 +11,11 @@ public abstract class DamageConditionType extends AbstractConditionType<DamageCo
 		return test(context.source(), context.amount());
 	}
 
+	@Override
+	public DamageCondition createCondition(boolean inverted) {
+		return new DamageCondition(this, inverted);
+	}
+
 	public abstract boolean test(DamageSource source, float amount);
 
 }

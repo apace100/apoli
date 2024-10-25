@@ -1,41 +1,52 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import io.github.apace100.apoli.util.IndexedStack;
+import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class StartingEquipmentPowerType extends PowerType {
 
-    private final List<ItemStack> itemStacks = new LinkedList<>();
-    private final HashMap<Integer, ItemStack> slottedStacks = new HashMap<>();
-    private boolean recurrent;
+    public static final TypedDataObjectFactory<StartingEquipmentPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("stack", IndexedStack.DATA_TYPE, null)
+            .addFunctionedDefault("stacks", IndexedStack.DATA_TYPE.list(1, Integer.MAX_VALUE), data -> MiscUtil.singletonListOrNull(data.get("stack")))
+            .add("recurrent", SerializableDataTypes.BOOLEAN, false)
+            .validate(MiscUtil.validateAnyFieldsPresent("stack", "stacks")),
+        (data, condition) -> new StartingEquipmentPowerType(
+            data.get("stacks"),
+            data.get("recurrent"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("stacks", powerType.indexedStacks)
+            .set("recurrent", powerType.recurrent)
+    );
 
-    public StartingEquipmentPowerType(Power power, LivingEntity entity) {
-        super(power, entity);
-    }
+    private final List<IndexedStack> indexedStacks;
+    private final boolean recurrent;
 
-    public void setRecurrent(boolean recurrent) {
+    public StartingEquipmentPowerType(List<IndexedStack> indexedStacks, boolean recurrent, Optional<EntityCondition> condition) {
+        super(condition);
+        this.indexedStacks = indexedStacks;
         this.recurrent = recurrent;
     }
 
-    public void addStack(ItemStack stack) {
-        this.itemStacks.add(stack);
-    }
-
-    public void addStack(int slot, ItemStack stack) {
-        slottedStacks.put(slot, stack);
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.STARTING_EQUIPMENT;
     }
 
     @Override
@@ -45,87 +56,36 @@ public class StartingEquipmentPowerType extends PowerType {
 
     @Override
     public void onRespawn() {
-        if(recurrent) {
+        if (recurrent) {
             giveStacks();
         }
     }
 
     private void giveStacks() {
-        slottedStacks.forEach((slot, stack) -> {
-            if(entity instanceof PlayerEntity player) {
-                PlayerInventory inventory = player.getInventory();
-                if(inventory.getStack(slot).isEmpty()) {
-                    inventory.setStack(slot, stack);
-                } else {
-                    player.giveItemStack(stack);
-                }
-            } else {
-                entity.dropStack(stack);
+
+        LivingEntity holder = getHolder();
+
+        for (IndexedStack indexedStack : indexedStacks) {
+
+            ItemStack stack = indexedStack.stack();
+            int slotId = indexedStack.slotId();
+
+            StackReference stackReference = holder.getStackReference(slotId);
+
+            if (stackReference.get().isEmpty()) {
+                stackReference.set(stack);
             }
-        });
-        itemStacks.forEach(is -> {
-            ItemStack copy = is.copy();
-            if(entity instanceof PlayerEntity player) {
-                player.giveItemStack(copy);
-            } else {
-                entity.dropStack(copy);
+
+            else if (holder instanceof PlayerEntity player) {
+                player.getInventory().offerOrDrop(stack);
             }
-        });
-    }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("starting_equipment"),
-            new SerializableData()
-                .add("stack", ApoliDataTypes.POSITIONED_ITEM_STACK, null)
-                .add("stacks", ApoliDataTypes.POSITIONED_ITEM_STACKS, null)
-                .add("recurrent", SerializableDataTypes.BOOLEAN, false),
-            data -> (power, entity) -> {
-
-                StartingEquipmentPowerType powerType = new StartingEquipmentPowerType(power, entity);
-
-                if (data.isPresent("stack")) {
-
-                    Pair<Integer, ItemStack> slotAndStack = data.get("stack");
-
-                    ItemStack stack = slotAndStack.getRight();
-                    int slot = slotAndStack.getLeft();
-
-                    if(slot > Integer.MIN_VALUE) {
-                        powerType.addStack(slot, stack);
-                    }
-
-                    else {
-                        powerType.addStack(stack);
-                    }
-
-                }
-
-                if (data.isPresent("stacks")) {
-
-                    List<Pair<Integer, ItemStack>> stacks = data.get("stacks");
-                    stacks.forEach(slotAndStack -> {
-
-                        ItemStack stack = slotAndStack.getRight();
-                        int slot = slotAndStack.getLeft();
-
-                        if (slot > Integer.MIN_VALUE) {
-                            powerType.addStack(slot, stack);
-                        }
-
-                        else {
-                            powerType.addStack(stack);
-                        }
-
-                    });
-
-                }
-
-                powerType.setRecurrent(data.getBoolean("recurrent"));
-                return powerType;
-
+            else {
+                InventoryUtil.throwItem(holder, stack, true, true, 0);
             }
-        );
+
+        }
+
     }
 
 }

@@ -11,6 +11,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class ArmorValueItemConditionType extends ItemConditionType {
 
@@ -42,7 +43,7 @@ public class ArmorValueItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.ARMOR_VALUE;
     }
 

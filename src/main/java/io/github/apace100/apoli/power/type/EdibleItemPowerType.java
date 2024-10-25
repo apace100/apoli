@@ -1,11 +1,13 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
+import io.github.apace100.apoli.action.EntityAction;
+import io.github.apace100.apoli.action.ItemAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -18,33 +20,66 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Pair;
 import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class EdibleItemPowerType extends PowerType implements Prioritized<EdibleItemPowerType> {
 
-    private final Consumer<Entity> entityAction;
-    private final Consumer<Pair<World, StackReference>> resultItemAction;
-    private final Consumer<Pair<World, StackReference>> consumedItemAction;
+    public static final TypedDataObjectFactory<EdibleItemPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("item_action", ItemAction.DATA_TYPE.optional(), Optional.empty())
+            .add("result_item_action", ItemAction.DATA_TYPE.optional(), Optional.empty())
+            .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("food_component", SerializableDataTypes.FOOD_COMPONENT)
+            .add("result_stack", SerializableDataTypes.ITEM_STACK.optional(), Optional.empty())
+            .add("consume_animation", SerializableDataType.enumValue(UseAction.class), UseAction.EAT)
+            .add("consume_sound", SerializableDataTypes.SOUND_EVENT, SoundEvents.ENTITY_GENERIC_EAT)
+            .add("priority", SerializableDataTypes.INT, 0),
+        (data, condition) -> new EdibleItemPowerType(
+            data.get("entity_action"),
+            data.get("item_action"),
+            data.get("result_item_action"),
+            data.get("item_condition"),
+            data.get("food_component"),
+            data.get("result_stack"),
+            data.get("consume_animation"),
+            data.get("consume_sound"),
+            data.get("priority"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+            .set("item_action", powerType.consumedItemAction)
+            .set("result_item_action", powerType.resultItemAction)
+            .set("item_condition", powerType.itemCondition)
+            .set("food_component", powerType.foodComponent)
+            .set("result_stack", powerType.resultStack)
+            .set("consume_animation", powerType.consumeAnimation)
+            .set("consume_sound", powerType.consumeSoundEvent)
+            .set("priority", powerType.getPriority())
+    );
 
-    private final Predicate<Pair<World, ItemStack>> itemCondition;
+    private final Optional<EntityAction> entityAction;
+    private final Optional<ItemAction> resultItemAction;
+    private final Optional<ItemAction> consumedItemAction;
+
+    private final Optional<ItemCondition> itemCondition;
 
     private final FoodComponent foodComponent;
-    private final ItemStack resultStack;
-    private final ConsumeAnimation consumeAnimation;
+    private final Optional<ItemStack> resultStack;
+    private final UseAction consumeAnimation;
     private final SoundEvent consumeSoundEvent;
 
     private final int priority;
 
-    public EdibleItemPowerType(Power power, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Pair<World, StackReference>> consumedItemAction, Consumer<Pair<World, StackReference>> resultItemAction, Predicate<Pair<World, ItemStack>> itemCondition, FoodComponent foodComponent, ItemStack resultStack, ConsumeAnimation consumeAnimation, SoundEvent consumeSoundEvent, int priority) {
-        super(power, entity);
+    public EdibleItemPowerType(Optional<EntityAction> entityAction, Optional<ItemAction> consumedItemAction, Optional<ItemAction> resultItemAction, Optional<ItemCondition> itemCondition, FoodComponent foodComponent, Optional<ItemStack> resultStack, UseAction consumeAnimation, SoundEvent consumeSoundEvent, int priority, Optional<EntityCondition> condition) {
+        super(condition);
         this.entityAction = entityAction;
         this.consumedItemAction = consumedItemAction;
         this.resultItemAction = resultItemAction;
@@ -57,32 +92,39 @@ public class EdibleItemPowerType extends PowerType implements Prioritized<Edible
     }
 
     @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.EDIBLE_ITEM;
+    }
+
+    @Override
     public int getPriority() {
         return priority;
     }
 
     public boolean doesApply(ItemStack stack) {
-        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
+        return itemCondition
+            .map(condition -> condition.test(getHolder().getWorld(), stack))
+            .orElse(true);
     }
 
     public void executeEntityAction() {
-        if (entityAction != null) {
-            entityAction.accept(entity);
-        }
+        entityAction.ifPresent(action -> action.execute(getHolder()));
     }
 
-    public StackReference executeItemActions(StackReference consumedStack) {
+    public StackReference executeItemActions(StackReference consumedStackReference) {
 
-        if (consumedItemAction != null) {
-            consumedItemAction.accept(new Pair<>(entity.getWorld(), consumedStack));
-        }
+        LivingEntity holder = getHolder();
+        World world = holder.getWorld();
 
-        StackReference resultStack = this.resultStack != null ? InventoryUtil.createStackReference(this.resultStack.copy()) : StackReference.EMPTY;
-        if (resultStack != StackReference.EMPTY && resultItemAction != null) {
-            resultItemAction.accept(new Pair<>(entity.getWorld(), resultStack));
-        }
+        consumedItemAction.ifPresent(action -> action.execute(world, consumedStackReference));
 
-        return resultStack;
+        StackReference resultStackReference = this.resultStack
+            .map(ItemStack::copy)
+            .map(InventoryUtil::createStackReference)
+            .orElse(StackReference.EMPTY);
+
+        resultItemAction.ifPresent(action -> action.execute(world, resultStackReference));
+        return resultStackReference;
 
     }
 
@@ -90,7 +132,7 @@ public class EdibleItemPowerType extends PowerType implements Prioritized<Edible
         return foodComponent;
     }
 
-    public ConsumeAnimation getConsumeAnimation() {
+    public UseAction getConsumeAnimation() {
         return consumeAnimation;
     }
 
@@ -109,54 +151,6 @@ public class EdibleItemPowerType extends PowerType implements Prioritized<Edible
     public static Optional<EdibleItemPowerType> get(ItemStack stack) {
         Entity stackHolder = ((EntityLinkedItemStack) stack).apoli$getEntity(true);
         return get(stack, stackHolder);
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("edible_item"),
-            new SerializableData()
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("food_component", SerializableDataTypes.FOOD_COMPONENT)
-                .add("return_stack", SerializableDataTypes.ITEM_STACK, null)
-                .addFunctionedDefault("result_stack", SerializableDataTypes.ITEM_STACK, data -> data.get("return_stack"))
-                .add("use_action", SerializableDataType.enumValue(ConsumeAnimation.class), ConsumeAnimation.EAT)
-                .addFunctionedDefault("consume_animation", SerializableDataType.enumValue(ConsumeAnimation.class), data -> data.get("use_action"))
-                .add("sound", SerializableDataTypes.SOUND_EVENT, SoundEvents.ENTITY_GENERIC_EAT)
-                .addFunctionedDefault("consume_sound", SerializableDataTypes.SOUND_EVENT, data -> data.get("sound"))
-                .add("priority", SerializableDataTypes.INT, 0),
-            data -> (power, entity) -> new EdibleItemPowerType(
-                power,
-                entity,
-                data.get("entity_action"),
-                data.get("item_action"),
-                data.get("result_item_action"),
-                data.get("item_condition"),
-                data.get("food_component"),
-                data.get("result_stack"),
-                data.get("consume_animation"),
-                data.get("consume_sound"),
-                data.get("priority")
-            )
-        ).allowCondition();
-    }
-
-    public enum ConsumeAnimation {
-
-        EAT(UseAction.EAT),
-        DRINK(UseAction.DRINK);
-
-        final UseAction action;
-        ConsumeAnimation(UseAction action) {
-            this.action = action;
-        }
-
-        public UseAction getAction() {
-            return action;
-        }
-
     }
 
 }

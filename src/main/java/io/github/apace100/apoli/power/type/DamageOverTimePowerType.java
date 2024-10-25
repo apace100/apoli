@@ -1,8 +1,9 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.enchantment.Enchantment;
@@ -10,7 +11,6 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageSources;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -20,108 +20,146 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.Difficulty;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class DamageOverTimePowerType extends PowerType {
 
     public static final RegistryKey<DamageType> GENERIC_DAMAGE = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Apoli.identifier("damage_over_time"));
 
-    private final int damageTickInterval;
-    private final int beginDamageIn;
-    private final float damageAmountEasy;
-    private final float damageAmount;
+    public static final TypedDataObjectFactory<DamageOverTimePowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, GENERIC_DAMAGE)
+            .add("protection_enchantment", SerializableDataTypes.ENCHANTMENT.optional(), Optional.empty())
+            .add("protection_effectiveness", SerializableDataTypes.FLOAT, 1.0F)
+            .add("damage", SerializableDataTypes.FLOAT)
+            .addFunctionedDefault("damage_easy", SerializableDataTypes.FLOAT, data -> data.get("damage"))
+            .add("interval", SerializableDataTypes.POSITIVE_INT, 20)
+            .addFunctionedDefault("onset_delay", SerializableDataTypes.POSITIVE_INT, data -> data.get("interval")),
+        (data, condition) -> new DamageOverTimePowerType(
+            data.get("damage_type"),
+            data.get("protection_enchantment"),
+            data.get("protection_effectiveness"),
+            data.get("damage"),
+            data.get("damage_easy"),
+            data.get("interval"),
+            data.get("onset_delay"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("damage_type", powerType.damageType)
+            .set("protection_enchantment", powerType.protectionEnchantmentKey)
+            .set("protection_effectiveness", powerType.protectionEffectiveness)
+            .set("damage", powerType.damageAmount)
+            .set("damage_easy", powerType.damageAmountEasy)
+            .set("interval", powerType.damageInterval)
+            .set("onset_delay", powerType.damageOnsetDelay)
+    );
+
     private final RegistryKey<DamageType> damageType;
-    private final RegistryKey<Enchantment> protectingEnchantmentKey;
+    private final Optional<RegistryKey<Enchantment>> protectionEnchantmentKey;
+
     private final float protectionEffectiveness;
 
-    private int outOfDamageTicks;
-    private int inDamageTicks;
+    private final float damageAmount;
+    private final float damageAmountEasy;
 
-    private DamageSource damageSource;
+    private final int damageInterval;
+    private final int damageOnsetDelay;
 
-    public DamageOverTimePowerType(Power power, LivingEntity entity, int beginDamageIn, int damageInterval, float damageAmountEasy, float damageAmount, RegistryKey<DamageType> damageType, RegistryKey<Enchantment> protectingEnchantmentKey, float protectionEffectiveness) {
-        super(power, entity);
+    private int outOfDamageTicks = 0;
+    private int inDamageTicks = 0;
+
+    public DamageOverTimePowerType(RegistryKey<DamageType> damageType, Optional<RegistryKey<Enchantment>> protectionEnchantmentKey, float protectionEffectiveness, float damageAmountEasy, float damageAmount, int damageInterval, int damageOnsetDelay, Optional<EntityCondition> condition) {
+        super(condition);
         this.damageType = damageType;
-        this.beginDamageIn = beginDamageIn;
-        this.damageAmount = damageAmount;
-        this.damageAmountEasy = damageAmountEasy;
-        this.damageTickInterval = damageInterval;
-        this.protectingEnchantmentKey = protectingEnchantmentKey;
+        this.protectionEnchantmentKey = protectionEnchantmentKey;
         this.protectionEffectiveness = protectionEffectiveness;
+        this.damageAmountEasy = damageAmountEasy;
+        this.damageAmount = damageAmount;
+        this.damageInterval = damageInterval;
+        this.damageOnsetDelay = damageOnsetDelay;
         this.setTicking(true);
     }
 
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.DAMAGE_OVER_TIME;
+    }
+
     public int getDamageBegin() {
-        int prot = getProtection();
-        int delay = (int)(Math.pow(prot * 2, 1.3) * protectionEffectiveness);
-        return beginDamageIn + delay * 20;
+
+        int protection = getProtection();
+        int delay = (int) (Math.pow(protection * 2, 1.3) * protectionEffectiveness);
+
+        return damageOnsetDelay + delay * 20;
+
     }
 
     @Override
-    public void tick() {
-        if(this.isActive()) {
+    public void serverTick() {
+
+        if (this.isActive()) {
             doDamage();
-        } else {
+        }
+
+        else {
             resetDamage();
         }
+
     }
 
     public void doDamage() {
 
-        outOfDamageTicks = 0;
+        LivingEntity holder = getHolder();
+        this.outOfDamageTicks = 0;
 
-        if (inDamageTicks - getDamageBegin() >= 0) {
-            if((inDamageTicks - getDamageBegin()) % damageTickInterval == 0) {
-                DamageSource source = getDamageSource(entity.getDamageSources());
-                entity.damage(source, entity.getWorld().getDifficulty() == Difficulty.EASY ? damageAmountEasy : damageAmount);
-            }
+        if (inDamageTicks++ - getDamageBegin() >= 0 && (inDamageTicks - getDamageBegin()) % damageInterval == 0) {
+
+            DamageSource damageSource = holder.getDamageSources().create(damageType);
+            float amount = holder.getWorld().getDifficulty() == Difficulty.EASY
+                ? damageAmountEasy
+                : damageAmount;
+
+            holder.damage(damageSource, amount);
+
         }
-
-        inDamageTicks++;
-
-    }
-
-    private DamageSource getDamageSource(DamageSources damageSources) {
-
-        if (damageSource == null) {
-            damageSource = damageSources.create(damageType);
-        }
-
-        return damageSource;
 
     }
 
     public void resetDamage() {
 
-        if(outOfDamageTicks >= 20) {
-            inDamageTicks = 0;
+        if (outOfDamageTicks >= 20) {
+            this.inDamageTicks = 0;
         }
 
         else {
-            outOfDamageTicks++;
+            this.outOfDamageTicks++;
         }
 
     }
 
     @Override
     public void onRespawn() {
-        inDamageTicks = 0;
-        outOfDamageTicks = 0;
+        this.inDamageTicks = 0;
+        this.outOfDamageTicks = 0;
     }
 
     protected int getProtection() {
 
-        if (protectingEnchantmentKey == null) {
+        if (protectionEnchantmentKey.isEmpty()) {
             return 0;
         }
 
-        Registry<Enchantment> enchantmentRegistry = entity.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+        LivingEntity holder = getHolder();
+        Registry<Enchantment> enchantmentRegistry = holder.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
 
-        Enchantment protectingEnchantment = enchantmentRegistry.getOrThrow(protectingEnchantmentKey);
+        Enchantment protectingEnchantment = enchantmentRegistry.getOrThrow(protectionEnchantmentKey.get());
         RegistryEntry<Enchantment> protectingEnchantmentEntry = enchantmentRegistry.getEntry(protectingEnchantment);
 
-        Map<EquipmentSlot, ItemStack> potentialItems = protectingEnchantment.getEquipment(entity);
+        Map<EquipmentSlot, ItemStack> potentialItems = protectingEnchantment.getEquipment(holder);
 
         int accumLevel = 0;
         int items = 0;
@@ -163,26 +201,4 @@ public class DamageOverTimePowerType extends PowerType {
 
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("damage_over_time"),
-            new SerializableData()
-                .add("interval", SerializableDataTypes.POSITIVE_INT, 20)
-                .addFunctionedDefault("onset_delay", SerializableDataTypes.INT, data -> data.getInt("interval"))
-                .add("damage", SerializableDataTypes.FLOAT)
-                .addFunctionedDefault("damage_easy", SerializableDataTypes.FLOAT, data -> data.getFloat("damage"))
-                .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, GENERIC_DAMAGE)
-                .add("protection_enchantment", SerializableDataTypes.ENCHANTMENT, null)
-                .add("protection_effectiveness", SerializableDataTypes.FLOAT, 1.0F),
-            data -> (power, entity) -> new DamageOverTimePowerType(power, entity,
-                data.getInt("onset_delay"),
-                data.getInt("interval"),
-                data.getFloat("damage_easy"),
-                data.getFloat("damage"),
-                data.get("damage_type"),
-                data.get("protection_enchantment"),
-                data.getFloat("protection_effectiveness")
-            )
-        ).allowCondition();
-    }
 }

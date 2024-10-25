@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.DamageConditionType;
 import io.github.apace100.apoli.condition.type.DamageConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.ConstantMetaConditionType;
 import net.minecraft.entity.damage.DamageSource;
+import org.jetbrains.annotations.NotNull;
 
 public class ConstantDamageConditionType extends DamageConditionType implements ConstantMetaConditionType {
 
@@ -20,7 +21,7 @@ public class ConstantDamageConditionType extends DamageConditionType implements 
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return DamageConditionTypes.CONSTANT;
 	}
 

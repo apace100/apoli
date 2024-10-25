@@ -11,6 +11,7 @@ import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class EquippedItemEntityConditionType extends EntityConditionType {
 
@@ -55,7 +56,7 @@ public class EquippedItemEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.EQUIPPED_ITEM;
     }
 

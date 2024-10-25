@@ -16,6 +16,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -52,7 +53,7 @@ public class DropInventoryEntityActionType extends EntityActionType {
         ),
         (actionType, serializableData) -> serializableData.instance()
             .set("inventory_type", actionType.inventoryType)
-            .set("power", actionType.inventoryType)
+            .set("power", actionType.power)
             .set("entity_action", actionType.entityAction)
             .set("item_action", actionType.itemAction)
             .set("item_condition", actionType.itemCondition)
@@ -109,7 +110,7 @@ public class DropInventoryEntityActionType extends EntityActionType {
 
         Optional<InventoryPowerType> inventoryPowerType = power
             .filter(ivp -> inventoryType == InventoryType.POWER)
-            .map(p -> p.getType(entity))
+            .map(p -> p.getPowerTypeFrom(entity))
             .filter(InventoryPowerType.class::isInstance)
             .map(InventoryPowerType.class::cast);
 
@@ -118,7 +119,7 @@ public class DropInventoryEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.DROP_INVENTORY;
     }
 

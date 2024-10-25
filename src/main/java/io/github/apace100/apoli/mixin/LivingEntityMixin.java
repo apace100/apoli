@@ -250,7 +250,7 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         PowerHolderComponent.withPowerTypes(this, ActionWhenHitPowerType.class, p -> p.doesApply(attacker, source, amount), p -> p.whenHit(attacker));
         PowerHolderComponent.withPowerTypes(attacker, ActionOnHitPowerType.class, p -> p.doesApply(this, source, amount), p -> p.onHit(this));
 
-        PowerHolderComponent.withPowerTypes(this, SelfActionWhenHitPowerType.class, p -> p.doesApply(source, amount), SelfActionWhenHitPowerType::whenHit);
+        PowerHolderComponent.withPowerTypes(this, ActionWhenDamageTakenPowerType.class, p -> p.doesApply(source, amount), ActionWhenDamageTakenPowerType::whenHit);
         PowerHolderComponent.withPowerTypes(this, AttackerActionWhenHitPowerType.class, p -> p.doesApply(source, amount), p -> p.whenHit(attacker));
 
         PowerHolderComponent.withPowerTypes(attacker, SelfActionOnHitPowerType.class, p -> p.doesApply(this, source, amount), SelfActionOnHitPowerType::onHit);

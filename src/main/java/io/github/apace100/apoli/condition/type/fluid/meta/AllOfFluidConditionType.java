@@ -7,6 +7,7 @@ import io.github.apace100.apoli.condition.type.FluidConditionType;
 import io.github.apace100.apoli.condition.type.FluidConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
 import net.minecraft.fluid.FluidState;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class AllOfFluidConditionType extends FluidConditionType implements AllOf
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return FluidConditionTypes.ALL_OF;
 	}
 

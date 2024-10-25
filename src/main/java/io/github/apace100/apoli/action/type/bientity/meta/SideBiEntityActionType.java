@@ -7,6 +7,7 @@ import io.github.apace100.apoli.action.type.BiEntityActionType;
 import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import io.github.apace100.apoli.action.type.meta.SideMetaActionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class SideBiEntityActionType extends BiEntityActionType implements SideMetaActionType<BiEntityActionContext, BiEntityAction> {
 
@@ -24,7 +25,7 @@ public class SideBiEntityActionType extends BiEntityActionType implements SideMe
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return BiEntityActionTypes.SIDE;
 	}
 

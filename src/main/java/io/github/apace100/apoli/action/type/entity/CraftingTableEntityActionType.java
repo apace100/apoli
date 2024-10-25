@@ -12,6 +12,7 @@ import net.minecraft.screen.ScreenHandlerFactory;
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.stat.Stats;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 
 public class CraftingTableEntityActionType extends EntityActionType {
 
@@ -37,7 +38,7 @@ public class CraftingTableEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.CRAFTING_TABLE;
     }
 

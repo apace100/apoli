@@ -1,51 +1,81 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ConditionedRestrictArmorPowerType extends RestrictArmorPowerType {
 
-    private final int tickRate;
+    public static final TypedDataObjectFactory<ConditionedRestrictArmorPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        createSerializableData()
+            .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 20),
+        (data, condition) -> {
+
+            EnumMap<EquipmentSlot, Optional<ItemCondition>> armorConditions = Arrays.stream(EquipmentSlot.values())
+                .filter(EquipmentSlot::isArmorSlot)
+                .collect(Collectors.toMap(Function.identity(), slot -> data.get(slot.getName()), (o1, o2) -> o2, () -> new EnumMap<>(EquipmentSlot.class)));
+
+            return new ConditionedRestrictArmorPowerType(
+                armorConditions,
+                data.get("tick_rate"),
+                condition
+            );
+
+        },
+        (powerType, serializableData) -> {
+
+            SerializableData.Instance data = serializableData.instance();
+            powerType.armorConditions.forEach((equipmentSlot, itemCondition) -> data.set(equipmentSlot.getName(), itemCondition));
+
+            return data.set("tick_rate", powerType.tickRate);
+
+        }
+    );
+
+    protected final int tickRate;
 
     private Integer startTicks;
     private Integer endTicks;
 
     private boolean wasActive;
 
-    public ConditionedRestrictArmorPowerType(Power power, LivingEntity entity, Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> armorConditions, int tickRate) {
-        super(power, entity, armorConditions);
+    public ConditionedRestrictArmorPowerType(EnumMap<EquipmentSlot, Optional<ItemCondition>> armorConditions, int tickRate, Optional<EntityCondition> condition) {
+        super(armorConditions, condition);
         this.tickRate = tickRate;
-        this.setTicking();
+        this.setTicking(true);
     }
 
     @Override
-    public void tick() {
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.CONDITIONED_RESTRICT_ARMOR;
+    }
 
+    @Override
+    public void serverTick() {
+
+        LivingEntity holder = getHolder();
         if (this.isActive()) {
 
             if (startTicks == null) {
-
-                this.startTicks = entity.age % tickRate;
+                this.startTicks = holder.age % tickRate;
                 this.endTicks = null;
-
             }
 
-            else if (entity.age % tickRate == startTicks) {
+            else if (holder.age % tickRate == startTicks) {
                 dropEquippedStacks();
-                wasActive = true;
+                this.wasActive = true;
             }
 
         }
@@ -53,64 +83,16 @@ public class ConditionedRestrictArmorPowerType extends RestrictArmorPowerType {
         else if (wasActive) {
 
             if (endTicks == null) {
-
-                this.endTicks = entity.age % tickRate;
+                this.endTicks = holder.age % tickRate;
                 this.startTicks = null;
-
             }
 
-            else if (entity.age % tickRate == endTicks) {
-                wasActive = false;
+            else if (holder.age % tickRate == endTicks) {
+                this.wasActive = false;
             }
 
         }
 
-    }
-
-    @SuppressWarnings("RedundantMethodOverride")
-    @Override
-    public boolean shouldDrop(ItemStack stack, EquipmentSlot slot) {
-        return super.doesRestrict(stack, slot);
-    }
-
-    @Override
-    public boolean doesRestrict(ItemStack stack, EquipmentSlot slot) {
-        return false;
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("conditioned_restrict_armor"),
-            new SerializableData()
-                .add("head", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("chest", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("legs", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("feet", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 80),
-            data -> (power, entity) -> {
-
-                Map<EquipmentSlot, Predicate<Pair<World, ItemStack>>> restrictions = new HashMap<>();
-
-                if (data.isPresent("head")) {
-                    restrictions.put(EquipmentSlot.HEAD, data.get("head"));
-                }
-
-                if (data.isPresent("chest")) {
-                    restrictions.put(EquipmentSlot.CHEST, data.get("chest"));
-                }
-
-                if (data.isPresent("legs")) {
-                    restrictions.put(EquipmentSlot.LEGS, data.get("legs"));
-                }
-
-                if (data.isPresent("feet")) {
-                    restrictions.put(EquipmentSlot.FEET, data.get("feet"));
-                }
-
-                return new ConditionedRestrictArmorPowerType(power, entity, restrictions, data.getInt("tick_rate"));
-
-            }
-        ).allowCondition();
     }
 
 }

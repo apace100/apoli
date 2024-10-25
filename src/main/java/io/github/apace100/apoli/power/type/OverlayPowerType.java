@@ -5,8 +5,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.OverlaySpriteHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.TextureUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
@@ -21,15 +24,57 @@ import net.minecraft.client.resource.metadata.TextureResourceMetadata;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasHolder;
 import net.minecraft.client.texture.TextureManager;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.Set;
 
+//  TODO: Drop the old 'texture' field -eggohito
 public class OverlayPowerType extends PowerType {
 
     public static final Identifier ATLAS_TEXTURE = Apoli.identifier("textures/atlas/overlay.png");
+
+    public static final TypedDataObjectFactory<OverlayPowerType> DATA_FACTORY = createConditionedDataFactory(
+        new SerializableData()
+            .add("texture", SerializableDataTypes.IDENTIFIER, null)
+            .addFunctionedDefault("sprite", SerializableDataTypes.IDENTIFIER, data -> data.get("texture"))
+            .add("draw_mode", SerializableDataType.enumValue(DrawMode.class))
+            .add("draw_phase", SerializableDataType.enumValue(DrawPhase.class))
+            .add("strength", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F)
+            .add("red", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F)
+            .add("green", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F)
+            .add("blue", ApoliDataTypes.NORMALIZED_FLOAT, 1.0F)
+            .add("hide_with_hud", SerializableDataTypes.BOOLEAN, true)
+            .add("visible_in_third_person", SerializableDataTypes.BOOLEAN, false)
+            .add("priority", SerializableDataTypes.INT, 0)
+            .validate(MiscUtil.validateAnyFieldsPresent("texture", "sprite")),
+        (data, condition) -> new OverlayPowerType(
+            data.get("sprite"),
+            data.get("draw_mode"),
+            data.get("draw_phase"),
+            data.get("strength"),
+            data.get("red"),
+            data.get("green"),
+            data.get("blue"),
+            data.get("hide_with_hud"),
+            data.get("visible_in_third_person"),
+            data.get("priority"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("sprite", powerType.spriteId)
+            .set("draw_mode", powerType.drawMode)
+            .set("draw_phase", powerType.drawPhase)
+            .set("strength", powerType.strength)
+            .set("red", powerType.red)
+            .set("green", powerType.green)
+            .set("blue", powerType.blue)
+            .set("hide_with_hud", powerType.doesHideWithHud())
+            .set("visible_in_third_person", powerType.shouldBeVisibleInThirdPerson())
+            .set("priority", powerType.getPriority())
+    );
 
     private final Identifier spriteId;
 
@@ -49,8 +94,8 @@ public class OverlayPowerType extends PowerType {
     private boolean initRender = true;
     private boolean invalidTexture;
 
-    public OverlayPowerType(Power power, LivingEntity entity, Identifier spriteId, DrawMode drawMode, DrawPhase drawPhase, boolean hideWithHud, boolean visibleInThirdPerson, float strength, float red, float green, float blue, int priority) {
-        super(power, entity);
+    public OverlayPowerType(Identifier spriteId, DrawMode drawMode, DrawPhase drawPhase, float strength, float red, float green, float blue, boolean hideWithHud, boolean visibleInThirdPerson, int priority, Optional<EntityCondition> condition) {
+        super(condition);
         this.spriteId = spriteId;
         this.drawMode = drawMode;
         this.drawPhase = drawPhase;
@@ -61,6 +106,11 @@ public class OverlayPowerType extends PowerType {
         this.blue = blue;
         this.strength = strength;
         this.priority = priority;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.OVERLAY;
     }
 
     public DrawPhase getDrawPhase() {
@@ -107,7 +157,7 @@ public class OverlayPowerType extends PowerType {
             this.initRender = false;
 
             if (invalidTexture) {
-                Apoli.LOGGER.warn("Power \"{}\" references texture sprite \"{}\", which doesn't exist!", power.getId(), spriteId);
+                Apoli.LOGGER.warn("Power \"{}\" references texture sprite \"{}\", which doesn't exist!", getPower().getId(), spriteId);
                 return;
             }
 
@@ -222,33 +272,4 @@ public class OverlayPowerType extends PowerType {
         BELOW_HUD, ABOVE_HUD
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("overlay"),
-            new SerializableData()
-                .add("texture", SerializableDataTypes.IDENTIFIER, null)
-                .addFunctionedDefault("sprite", SerializableDataTypes.IDENTIFIER, data -> data.get("texture"))
-                .add("red", SerializableDataTypes.FLOAT, 1.0F)
-                .add("green", SerializableDataTypes.FLOAT, 1.0F)
-                .add("blue", SerializableDataTypes.FLOAT, 1.0F)
-                .add("strength", SerializableDataTypes.FLOAT, 1.0F)
-                .add("priority", SerializableDataTypes.INT, 1)
-                .add("draw_mode", SerializableDataType.enumValue(DrawMode.class))
-                .add("draw_phase", SerializableDataType.enumValue(DrawPhase.class))
-                .add("hide_with_hud", SerializableDataTypes.BOOLEAN, true)
-                .add("visible_in_third_person", SerializableDataTypes.BOOLEAN, false),
-            data -> (power, entity) -> new OverlayPowerType(power, entity,
-                data.get("sprite"),
-                data.get("draw_mode"),
-                data.get("draw_phase"),
-                data.get("hide_with_hud"),
-                data.get("visible_in_third_person"),
-                data.get("strength"),
-                data.get("red"),
-                data.get("green"),
-                data.get("blue"),
-                data.get("priority")
-            )
-        ).allowCondition();
-    }
 }

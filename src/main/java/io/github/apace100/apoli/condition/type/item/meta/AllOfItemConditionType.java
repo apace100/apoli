@@ -8,6 +8,7 @@ import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AllOfMetaConditionType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class AllOfItemConditionType extends ItemConditionType implements AllOfMe
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return ItemConditionTypes.ALL_OF;
 	}
 

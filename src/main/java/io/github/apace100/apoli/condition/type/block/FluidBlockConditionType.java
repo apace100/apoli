@@ -8,6 +8,7 @@ import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class FluidBlockConditionType extends BlockConditionType {
 
@@ -33,7 +34,7 @@ public class FluidBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BlockConditionTypes.FLUID;
     }
 

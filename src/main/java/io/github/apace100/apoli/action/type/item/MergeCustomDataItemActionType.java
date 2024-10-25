@@ -11,6 +11,7 @@ import net.minecraft.component.type.NbtComponent;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class MergeCustomDataItemActionType extends ItemActionType {
 
@@ -36,7 +37,7 @@ public class MergeCustomDataItemActionType extends ItemActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return ItemActionTypes.MERGE_CUSTOM_DATA;
     }
 

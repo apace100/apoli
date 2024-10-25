@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.registry.tag.TagKey;
+import org.jetbrains.annotations.NotNull;
 
 public class InTagFluidConditionType extends FluidConditionType {
 
@@ -34,7 +35,7 @@ public class InTagFluidConditionType extends FluidConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return FluidConditionTypes.IN_TAG;
     }
 

@@ -8,6 +8,7 @@ import io.github.apace100.apoli.action.type.EntityActionTypes;
 import io.github.apace100.apoli.action.type.meta.ChoiceMetaActionType;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.collection.WeightedList;
+import org.jetbrains.annotations.NotNull;
 
 public class ChoiceEntityActionType extends EntityActionType implements ChoiceMetaActionType<EntityActionContext, EntityAction> {
 
@@ -23,7 +24,7 @@ public class ChoiceEntityActionType extends EntityActionType implements ChoiceMe
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return EntityActionTypes.CHOICE;
 	}
 

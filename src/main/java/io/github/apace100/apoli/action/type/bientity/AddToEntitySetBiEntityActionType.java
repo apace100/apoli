@@ -11,6 +11,7 @@ import io.github.apace100.apoli.power.type.EntitySetPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -40,14 +41,14 @@ public class AddToEntitySetBiEntityActionType extends BiEntityActionType {
     @Override
 	protected void execute(Entity actor, Entity target) {
 
-        if (set.getType(actor) instanceof EntitySetPowerType entitySet && entitySet.add(target, timeLimit)) {
+        if (set.getPowerTypeFrom(actor) instanceof EntitySetPowerType entitySet && entitySet.add(target, timeLimit)) {
             PowerHolderComponent.syncPower(actor, set);
         }
 
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BiEntityActionTypes.ADD_TO_ENTITY_SET;
     }
 

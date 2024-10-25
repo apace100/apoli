@@ -12,6 +12,7 @@ import io.github.apace100.apoli.power.type.EntitySetPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
 public class InEntitySetBiEntityConditionType extends BiEntityConditionType {
 
@@ -32,7 +33,7 @@ public class InEntitySetBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiEntityConditionTypes.IN_ENTITY_SET;
     }
 
@@ -42,7 +43,7 @@ public class InEntitySetBiEntityConditionType extends BiEntityConditionType {
     }
 
     public static boolean condition(Entity actor, Entity target, PowerReference power) {
-        return power.getType(actor) instanceof EntitySetPowerType entitySet
+        return power.getPowerTypeFrom(actor) instanceof EntitySetPowerType entitySet
             && entitySet.contains(target);
     }
 

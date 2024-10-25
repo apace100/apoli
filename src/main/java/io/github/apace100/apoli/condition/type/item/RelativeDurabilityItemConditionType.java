@@ -11,6 +11,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class RelativeDurabilityItemConditionType extends ItemConditionType {
 
@@ -49,7 +50,7 @@ public class RelativeDurabilityItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return ItemConditionTypes.RELATIVE_DURABILITY;
     }
 

@@ -15,6 +15,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -100,7 +101,7 @@ public class InventoryEntityConditionType extends EntityConditionType {
         if (inventoryTypes.contains(InventoryUtil.InventoryType.POWER)) {
 
             Optional<InventoryPowerType> inventoryPowerType = power
-                .map(p -> p.getType(entity))
+                .map(p -> p.getPowerTypeFrom(entity))
                 .filter(InventoryPowerType.class::isInstance)
                 .map(InventoryPowerType.class::cast);
 
@@ -113,7 +114,7 @@ public class InventoryEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.INVENTORY;
     }
 

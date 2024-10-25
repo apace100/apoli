@@ -1,48 +1,47 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.type.entity.SneakingEntityConditionType;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class ClimbingPowerType extends PowerType {
 
-    private final Predicate<Entity> holdingCondition;
+    public static final TypedDataObjectFactory<ClimbingPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .addSupplied("holding_condition", EntityCondition.DATA_TYPE, () -> new SneakingEntityConditionType().createCondition())
+            .add("allow_holding", SerializableDataTypes.BOOLEAN, true),
+        (data, condition) -> new ClimbingPowerType(
+            data.get("holding_condition"),
+            data.get("allow_holding"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("holding_condition", powerType.holdingCondition)
+            .set("allow_holding", powerType.allowHolding)
+    );
+
+    private final EntityCondition holdingCondition;
     private final boolean allowHolding;
 
-    public ClimbingPowerType(Power power, LivingEntity entity, Predicate<Entity> holdingCondition, boolean allowHolding) {
-        super(power, entity);
+    public ClimbingPowerType(EntityCondition holdingCondition, boolean allowHolding, Optional<EntityCondition> condition) {
+        super(condition);
         this.holdingCondition = holdingCondition;
         this.allowHolding = allowHolding;
     }
 
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.CLIMBING;
+    }
+
     public boolean canHold() {
-        return allowHolding && this.shouldHold();
-    }
-
-    public boolean shouldHold() {
-        return holdingCondition != null
-            ? holdingCondition.test(entity)
-            : entity.isSneaking();
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("climbing"),
-            new SerializableData()
-                .add("hold_condition", ApoliDataTypes.ENTITY_CONDITION, null)
-                .add("allow_holding", SerializableDataTypes.BOOLEAN, true),
-            data -> (power, entity) -> new ClimbingPowerType(power, entity,
-                data.get("hold_condition"),
-                data.get("allow_holding")
-            )
-        ).allowCondition();
+        return allowHolding && holdingCondition.test(getHolder());
     }
 
 }

@@ -8,6 +8,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
+import org.jetbrains.annotations.NotNull;
 
 public class FluidFluidConditionType extends FluidConditionType {
 
@@ -33,7 +34,7 @@ public class FluidFluidConditionType extends FluidConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return FluidConditionTypes.FLUID;
     }
 

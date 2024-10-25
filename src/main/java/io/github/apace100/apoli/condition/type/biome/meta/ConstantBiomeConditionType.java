@@ -7,6 +7,7 @@ import io.github.apace100.apoli.condition.type.meta.ConstantMetaConditionType;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 
 public class ConstantBiomeConditionType extends BiomeConditionType implements ConstantMetaConditionType {
 
@@ -22,7 +23,7 @@ public class ConstantBiomeConditionType extends BiomeConditionType implements Co
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BiomeConditionTypes.CONSTANT;
 	}
 

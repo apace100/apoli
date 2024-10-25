@@ -43,16 +43,32 @@ public abstract class AbstractBlockStateMixin extends State<Block, BlockState> i
 
     @ModifyReturnValue(method = "getOutlineShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("RETURN"))
     private VoxelShape apoli$preventBlockSelection(VoxelShape original, BlockView blockView, BlockPos blockPos, ShapeContext context) {
-        return PreventBlockSelectionPowerType.doesPrevent(context, blockPos)
-            ? VoxelShapes.empty()
-            : original;
+
+        if (context == ShapeContext.absent()) {
+            return original;
+        }
+
+        else {
+            return PreventBlockSelectionPowerType.doesPrevent(context, blockPos)
+                ? VoxelShapes.empty()
+                : original;
+        }
+
     }
 
     @ModifyReturnValue(method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;", at = @At("RETURN"))
     private VoxelShape apoli$phaseThroughBlocks(VoxelShape original, BlockView blockView, BlockPos blockPos, ShapeContext context) {
-        return !apoli$queryOriginal && PhasingPowerType.shouldPhase(context, original, blockPos)
-            ? VoxelShapes.empty()
-            : original;
+
+        if (context == ShapeContext.absent()) {
+            return original;
+        }
+
+        else {
+            return !apoli$queryOriginal && PhasingPowerType.shouldPhase(context, original, blockPos)
+                ? VoxelShapes.empty()
+                : original;
+        }
+
     }
 
     @WrapWithCondition(method = "onEntityCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onEntityCollision(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V"))

@@ -11,6 +11,7 @@ import io.github.apace100.apoli.util.Shape;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -55,7 +56,7 @@ public class DistanceFromCoordinatesBlockConditionType extends BlockConditionTyp
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BlockConditionTypes.DISTANCE_FROM_COORDINATES;
 	}
 

@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class ExposedToSkyEntityConditionType extends EntityConditionType {
 
@@ -17,7 +18,7 @@ public class ExposedToSkyEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.EXPOSED_TO_SKY;
     }
 

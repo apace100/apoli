@@ -9,6 +9,7 @@ import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.TogglePowerType;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ToggleEntityActionType extends EntityActionType {
 
@@ -31,14 +32,14 @@ public class ToggleEntityActionType extends EntityActionType {
     @Override
     protected void execute(Entity entity) {
 
-        if (power.getType(entity) instanceof TogglePowerType togglePowerType) {
+        if (power.getPowerTypeFrom(entity) instanceof TogglePowerType togglePowerType) {
             togglePowerType.onUse();
         }
 
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.TOGGLE;
     }
 

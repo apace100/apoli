@@ -10,6 +10,7 @@ import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.condition.context.ItemConditionContext;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class IfElseListItemActionType extends ItemActionType implements IfElseLi
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return ItemActionTypes.IF_ELSE_LIST;
 	}
 

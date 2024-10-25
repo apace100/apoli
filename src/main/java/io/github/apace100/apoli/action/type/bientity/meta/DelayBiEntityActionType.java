@@ -7,6 +7,7 @@ import io.github.apace100.apoli.action.type.BiEntityActionType;
 import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import io.github.apace100.apoli.action.type.meta.DelayMetaActionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class DelayBiEntityActionType extends BiEntityActionType implements DelayMetaActionType<BiEntityActionContext, BiEntityAction> {
 
@@ -24,7 +25,7 @@ public class DelayBiEntityActionType extends BiEntityActionType implements Delay
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return BiEntityActionTypes.DELAY;
 	}
 

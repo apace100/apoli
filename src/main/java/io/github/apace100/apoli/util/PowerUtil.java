@@ -27,7 +27,7 @@ public class PowerUtil {
 
 				Power power = powerType.getPower();
 
-				Identifier powerTypeId = power.getFactoryInstance().getSerializerId();
+				Identifier powerTypeId = power.getPowerType().configuration().id();
 				StringBuilder powerString = new StringBuilder();
 
 				if (power instanceof SubPower subPower) {

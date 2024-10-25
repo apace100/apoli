@@ -11,6 +11,11 @@ public abstract class FluidConditionType extends AbstractConditionType<FluidCond
 		return test(context.fluidState());
 	}
 
+	@Override
+	public FluidCondition createCondition(boolean inverted) {
+		return new FluidCondition(this, inverted);
+	}
+
 	public abstract boolean test(FluidState fluidState);
 
 }

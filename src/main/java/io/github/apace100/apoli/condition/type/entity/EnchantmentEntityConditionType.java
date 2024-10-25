@@ -17,6 +17,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import org.jetbrains.annotations.NotNull;
 
 public class EnchantmentEntityConditionType extends EntityConditionType {
 
@@ -77,7 +78,7 @@ public class EnchantmentEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.ENCHANTMENT;
     }
 

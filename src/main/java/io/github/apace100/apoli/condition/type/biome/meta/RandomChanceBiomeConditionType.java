@@ -7,6 +7,7 @@ import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionTyp
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 
 public class RandomChanceBiomeConditionType extends BiomeConditionType implements RandomChanceMetaConditionType {
 
@@ -22,7 +23,7 @@ public class RandomChanceBiomeConditionType extends BiomeConditionType implement
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BiomeConditionTypes.RANDOM_CHANCE;
 	}
 

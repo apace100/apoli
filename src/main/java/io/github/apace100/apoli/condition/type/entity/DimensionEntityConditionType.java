@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class DimensionEntityConditionType extends EntityConditionType {
 
@@ -34,7 +35,7 @@ public class DimensionEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.DIMENSION;
     }
 

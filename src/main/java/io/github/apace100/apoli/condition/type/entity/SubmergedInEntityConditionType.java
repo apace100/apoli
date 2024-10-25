@@ -10,6 +10,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.registry.tag.TagKey;
+import org.jetbrains.annotations.NotNull;
 
 public class SubmergedInEntityConditionType extends EntityConditionType {
 
@@ -36,7 +37,7 @@ public class SubmergedInEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.SUBMERGED_IN;
     }
 

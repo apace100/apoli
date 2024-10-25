@@ -9,6 +9,7 @@ import io.github.apace100.apoli.action.type.meta.IfElseListMetaActionType;
 import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.condition.context.EntityConditionContext;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class IfElseListEntityActionType extends EntityActionType implements IfEl
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return EntityActionTypes.IF_ELSE_LIST;
 	}
 

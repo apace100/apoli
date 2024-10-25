@@ -9,6 +9,7 @@ import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class AnyOfBiomeConditionType extends BiomeConditionType implements AnyOf
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BiomeConditionTypes.ANY_OF;
 	}
 

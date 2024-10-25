@@ -1,10 +1,10 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.networking.packet.s2c.SyncEntityTypeTagCacheS2CPacket;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.mixin.TagEntryAccessor;
@@ -16,7 +16,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.TagEntry;
@@ -28,22 +27,41 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+//  TODO: Rename this to 'modify_entity_type_tag' -eggohito
 public class ModifyTypeTagPowerType extends PowerType {
 
     private static final Map<Identifier, Collection<Identifier>> ENTITY_TYPE_SUB_TAGS = new ConcurrentHashMap<>();
     private static final String ENTITY_TYPE_TAG_PATH = RegistryKeys.getTagPath(RegistryKeys.ENTITY_TYPE);
 
-    private final TagKey<EntityType<?>> tag;
+    public static final TypedDataObjectFactory<ModifyTypeTagPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("tag", SerializableDataTypes.ENTITY_TAG),
+        (data, condition) -> new ModifyTypeTagPowerType(
+            data.get("tag"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("tag", powerType.tag)
+    );
 
-    public ModifyTypeTagPowerType(Power power, LivingEntity entity, TagKey<EntityType<?>> tag) {
-        super(power, entity);
+    protected final TagKey<EntityType<?>> tag;
+
+    public ModifyTypeTagPowerType(TagKey<EntityType<?>> tag, Optional<EntityCondition> condition) {
+        super(condition);
         this.tag = tag;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.MODIFY_TYPE_TAG;
     }
 
     public boolean doesApply(TagKey<EntityType<?>> typeTag) {
@@ -95,17 +113,6 @@ public class ModifyTypeTagPowerType extends PowerType {
     @ApiStatus.Internal
     public static void sendTagCache(ServerPlayerEntity player, boolean joined) {
         ServerPlayNetworking.send(player, new SyncEntityTypeTagCacheS2CPacket(ENTITY_TYPE_SUB_TAGS));
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("modify_type_tag"),
-            new SerializableData()
-                .add("tag", SerializableDataTypes.ENTITY_TAG),
-            data -> (power, entity) -> new ModifyTypeTagPowerType(power, entity,
-                data.get("tag")
-            )
-        ).allowCondition();
     }
 
 }

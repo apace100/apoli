@@ -12,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.ReadableScoreboardScore;
 import net.minecraft.scoreboard.ScoreHolder;
 import net.minecraft.scoreboard.Scoreboard;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -64,7 +65,7 @@ public class ScoreboardEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.SCOREBOARD;
     }
 

@@ -1,58 +1,85 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.BlockCondition;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.type.entity.SneakingEntityConditionType;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.EntityShapeContext;
 import net.minecraft.block.ShapeContext;
-import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class PhasingPowerType extends PowerType {
 
-    private final Predicate<CachedBlockPosition> blockCondition;
-    private final boolean blacklist;
+    public static final TypedDataObjectFactory<PhasingPowerType> DATA_FACTORY = createConditionedDataFactory(
+        new SerializableData()
+            .addSupplied("phase_down_condition", EntityCondition.DATA_TYPE, () -> new SneakingEntityConditionType().createCondition())
+            .add("block_condition", BlockCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("render_type", SerializableDataType.enumValue(RenderType.class), RenderType.BLINDNESS)
+            .add("view_distance", SerializableDataTypes.POSITIVE_FLOAT, 10.0F)
+            .add("blacklist", SerializableDataTypes.BOOLEAN, false),
+        (data, condition) -> new PhasingPowerType(
+            data.get("phase_down_condition"),
+            data.get("block_condition"),
+            data.get("render_type"),
+            data.get("view_distance"),
+            data.get("blacklist"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("phase_down_condition", powerType.phaseDownCondition)
+            .set("block_condition", powerType.blockCondition)
+            .set("render_type", powerType.getRenderType())
+            .set("view_distance", powerType.getViewDistance())
+            .set("blacklist", powerType.blacklist)
+    );
 
-    private final Predicate<Entity> phaseDownCondition;
+    private final EntityCondition phaseDownCondition;
+    private final Optional<BlockCondition> blockCondition;
 
     private final RenderType renderType;
     private final float viewDistance;
 
-    public PhasingPowerType(Power power, LivingEntity entity, Predicate<CachedBlockPosition> blockCondition, boolean blacklist, RenderType renderType, float viewDistance, Predicate<Entity> phaseDownCondition) {
-        super(power, entity);
+    private final boolean blacklist;
+
+    public PhasingPowerType(EntityCondition phaseDownCondition, Optional<BlockCondition> blockCondition, RenderType renderType, float viewDistance, boolean blacklist, Optional<EntityCondition> condition) {
+        super(condition);
+        this.phaseDownCondition = phaseDownCondition;
         this.blockCondition = blockCondition;
         this.blacklist = blacklist;
         this.renderType = renderType;
         this.viewDistance = viewDistance;
-        this.phaseDownCondition = phaseDownCondition;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.PHASING;
     }
 
     public boolean doesApply(BlockPos pos) {
-        return blockCondition == null
-            || blacklist != blockCondition.test(new CachedBlockPosition(entity.getWorld(), pos, true));
+        return blockCondition
+            .map(condition -> blacklist != condition.test(getHolder().getWorld(), pos))
+            .orElse(true);
     }
 
     public boolean shouldPhase(VoxelShape shape, BlockPos pos) {
-        return (entity.getY() < (double) pos.getY() + shape.getMax(Direction.Axis.Y) - (entity.isOnGround() ? 8.05 / 16.0 : 0.0015)
-            || this.shouldPhaseDown())
+        LivingEntity holder = getHolder();
+        return (holder.getY() < (double) pos.getY() + shape.getMax(Direction.Axis.Y) - (holder.isOnGround() ? 8.05 / 16.0 : 0.0015) || this.shouldPhaseDown())
             && this.doesApply(pos);
     }
 
     public boolean shouldPhaseDown() {
-        return phaseDownCondition != null
-            ? phaseDownCondition.test(entity)
-            : entity.isSneaking();
+        return phaseDownCondition.test(getHolder());
     }
 
     public RenderType getRenderType() {
@@ -72,21 +99,4 @@ public class PhasingPowerType extends PowerType {
             && PowerHolderComponent.hasPowerType(entityContext.getEntity(), PhasingPowerType.class, p -> p.shouldPhase(shape, pos));
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(Apoli.identifier("phasing"),
-            new SerializableData()
-                .add("block_condition", ApoliDataTypes.BLOCK_CONDITION, null)
-                .add("blacklist", SerializableDataTypes.BOOLEAN, false)
-                .add("render_type", SerializableDataType.enumValue(PhasingPowerType.RenderType.class), PhasingPowerType.RenderType.BLINDNESS)
-                .add("view_distance", SerializableDataTypes.FLOAT, 10F)
-                .add("phase_down_condition", ApoliDataTypes.ENTITY_CONDITION, null),
-            data -> (power, entity) -> new PhasingPowerType(power, entity,
-                data.get("block_condition"),
-                data.getBoolean("blacklist"),
-                data.get("render_type"),
-                data.getFloat("view_distance"),
-                data.get("phase_down_condition")
-            )
-        ).allowCondition();
-    }
 }

@@ -10,6 +10,7 @@ import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.EntitySetPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class RemoveFromEntitySetBiEntityActionType extends BiEntityActionType {
 
@@ -32,14 +33,14 @@ public class RemoveFromEntitySetBiEntityActionType extends BiEntityActionType {
     @Override
 	protected void execute(Entity actor, Entity target) {
 
-        if (set.getType(actor) instanceof EntitySetPowerType entitySet && entitySet.remove(target)) {
+        if (set.getPowerTypeFrom(actor) instanceof EntitySetPowerType entitySet && entitySet.remove(target)) {
             PowerHolderComponent.syncPower(actor, set);
         }
 
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BiEntityActionTypes.REMOVE_FROM_ENTITY_SET;
     }
 

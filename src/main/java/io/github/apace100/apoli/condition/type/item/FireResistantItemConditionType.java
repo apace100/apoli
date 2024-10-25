@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.ItemConditionTypes;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class FireResistantItemConditionType extends ItemConditionType {
 
@@ -15,7 +16,7 @@ public class FireResistantItemConditionType extends ItemConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return ItemConditionTypes.FIRE_RESISTANT;
 	}
 

@@ -21,9 +21,9 @@ public class BlockCondition extends AbstractCondition<BlockConditionContext, Blo
 	}
 
 	@Override
-	public boolean test(BlockConditionContext operand) {
-		return operand.world().isChunkLoaded(operand.pos())
-			&& super.test(operand);
+	public boolean test(BlockConditionContext context) {
+		return context.world().isChunkLoaded(context.pos())
+			&& super.test(context);
 	}
 
 	public boolean test(World world, BlockPos pos) {

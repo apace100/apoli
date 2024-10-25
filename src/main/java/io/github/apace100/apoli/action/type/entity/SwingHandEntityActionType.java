@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Hand;
+import org.jetbrains.annotations.NotNull;
 
 public class SwingHandEntityActionType extends EntityActionType {
 
@@ -38,7 +39,7 @@ public class SwingHandEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.SWING_HAND;
     }
 

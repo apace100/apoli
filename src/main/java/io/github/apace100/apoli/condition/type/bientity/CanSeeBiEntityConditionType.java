@@ -13,6 +13,7 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+import org.jetbrains.annotations.NotNull;
 
 public class CanSeeBiEntityConditionType extends BiEntityConditionType {
 
@@ -38,7 +39,7 @@ public class CanSeeBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiEntityConditionTypes.CAN_SEE;
     }
 

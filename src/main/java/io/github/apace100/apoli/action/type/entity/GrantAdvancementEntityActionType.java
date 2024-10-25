@@ -17,6 +17,7 @@ import net.minecraft.server.ServerAdvancementLoader;
 import net.minecraft.server.command.AdvancementCommand;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
@@ -99,7 +100,7 @@ public class GrantAdvancementEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.GRANT_ADVANCEMENT;
     }
 

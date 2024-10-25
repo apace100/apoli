@@ -14,6 +14,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,7 +65,7 @@ public class ActionOnEntitySetEntityActionType extends EntityActionType {
     @Override
     protected void execute(Entity entity) {
 
-        if (!(set.getType(entity) instanceof EntitySetPowerType entitySet)) {
+        if (!(set.getPowerTypeFrom(entity) instanceof EntitySetPowerType entitySet)) {
             return;
         }
 
@@ -93,7 +94,7 @@ public class ActionOnEntitySetEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.ACTION_ON_ENTITY_SET;
     }
 

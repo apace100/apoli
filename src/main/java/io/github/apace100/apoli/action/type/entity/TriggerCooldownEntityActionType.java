@@ -9,6 +9,7 @@ import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.CooldownPowerType;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class TriggerCooldownEntityActionType extends EntityActionType {
 
@@ -31,14 +32,14 @@ public class TriggerCooldownEntityActionType extends EntityActionType {
     @Override
     protected void execute(Entity entity) {
 
-        if (power.getType(entity) instanceof CooldownPowerType cooldownPowerType) {
+        if (power.getPowerTypeFrom(entity) instanceof CooldownPowerType cooldownPowerType) {
             cooldownPowerType.use();
         }
 
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.TRIGGER_COOLDOWN;
     }
 

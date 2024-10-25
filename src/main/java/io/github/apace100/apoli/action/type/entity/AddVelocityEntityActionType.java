@@ -10,6 +10,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import org.apache.commons.lang3.function.TriConsumer;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 public class AddVelocityEntityActionType extends EntityActionType {
@@ -64,7 +65,7 @@ public class AddVelocityEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.ADD_VELOCITY;
     }
 

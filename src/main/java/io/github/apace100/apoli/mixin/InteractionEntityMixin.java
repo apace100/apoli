@@ -48,7 +48,7 @@ public abstract class InteractionEntityMixin extends Entity {
         PowerHolderComponent.withPowerTypes(this, ActionWhenHitPowerType.class, p -> p.doesApply(attacker, damageSource, damageTaken), p -> p.whenHit(attacker));
         PowerHolderComponent.withPowerTypes(attacker, ActionOnHitPowerType.class, p -> p.doesApply(this, damageSource, damageDealt), p -> p.onHit(this));
 
-        PowerHolderComponent.withPowerTypes(this, SelfActionWhenHitPowerType.class, p -> p.doesApply(damageSource, damageTaken), SelfActionWhenHitPowerType::whenHit);
+        PowerHolderComponent.withPowerTypes(this, ActionWhenDamageTakenPowerType.class, p -> p.doesApply(damageSource, damageTaken), ActionWhenDamageTakenPowerType::whenHit);
         PowerHolderComponent.withPowerTypes(this, AttackerActionWhenHitPowerType.class, p -> p.doesApply(damageSource, damageTaken), p -> p.whenHit(attacker));
 
         PowerHolderComponent.withPowerTypes(attacker, SelfActionOnHitPowerType.class, p -> p.doesApply(this, damageSource, damageDealt), SelfActionOnHitPowerType::onHit);

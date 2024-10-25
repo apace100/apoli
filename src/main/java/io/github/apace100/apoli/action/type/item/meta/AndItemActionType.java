@@ -8,6 +8,7 @@ import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.action.type.meta.AndMetaActionType;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class AndItemActionType extends ItemActionType implements AndMetaActionTy
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return ItemActionTypes.AND;
 	}
 

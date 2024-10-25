@@ -11,6 +11,7 @@ import io.github.apace100.apoli.util.PowerUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -40,14 +41,14 @@ public class ModifyResourceEntityActionType extends EntityActionType {
     @Override
     protected void execute(Entity entity) {
 
-        if (PowerUtil.modifyResourceValue(resource.getType(entity), List.of(modifier))) {
+        if (PowerUtil.modifyResourceValue(resource.getPowerTypeFrom(entity), List.of(modifier))) {
             PowerHolderComponent.syncPower(entity, resource);
         }
 
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.MODIFY_RESOURCE;
     }
 

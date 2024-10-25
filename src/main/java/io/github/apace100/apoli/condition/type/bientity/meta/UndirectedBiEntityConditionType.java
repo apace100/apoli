@@ -11,6 +11,7 @@ import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
@@ -33,7 +34,7 @@ public class UndirectedBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiEntityConditionTypes.UNDIRECTED;
     }
 

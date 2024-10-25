@@ -4,9 +4,11 @@ import com.google.common.collect.Lists;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.LivingEntity;
@@ -15,74 +17,121 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class TooltipPowerType extends PowerType {
 
-    private final Predicate<Pair<World, ItemStack>> itemCondition;
+    public static final TypedDataObjectFactory<TooltipPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("text", SerializableDataTypes.TEXT, null)
+            .addFunctionedDefault("texts", SerializableDataTypes.TEXTS, data -> MiscUtil.singletonListOrNull(data.get("text")))
+            .add("should_resolve", SerializableDataTypes.BOOLEAN, false)
+            .addFunctionedDefault("resolve", SerializableDataTypes.BOOLEAN, data -> data.get("should_resolve"))
+            .add("tick_rate", SerializableDataTypes.INT, 20)
+            .add("order", SerializableDataTypes.INT, 0)
+            .validate(MiscUtil.validateAnyFieldsPresent("text", "texts")),
+        (data, condition) -> new TooltipPowerType(
+            data.get("item_condition"),
+            data.get("texts"),
+            data.get("resolve"),
+            data.get("tick_rate"),
+            data.get("order"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("item_condition", powerType.itemCondition)
+            .set("texts", powerType.texts)
+            .set("resolve", powerType.resolve)
+            .set("tick_rate", powerType.tickRate)
+            .set("order", powerType.order)
+    );
+
+    private final Optional<ItemCondition> itemCondition;
     private final List<Text> texts;
+
     private final int tickRate;
     private final int order;
 
     private List<Text> tooltipTexts;
-    private Integer initialTicks;
-    private boolean shouldResolve;
+    private boolean resolve;
 
-    public TooltipPowerType(Power power, LivingEntity entity, Predicate<Pair<World, ItemStack>> itemCondition, Text text, List<Text> texts, boolean shouldResolve, int tickRate, int order) {
-        super(power, entity);
-        this.texts = new LinkedList<>();
-        this.tooltipTexts = new LinkedList<>();
-        if (text != null) {
-            this.texts.add(text);
-        }
-        if (texts != null) {
-            this.texts.addAll(texts);
-        }
+    private Integer startTicks;
+    private Integer endTicks;
+
+    private boolean wasActive;
+
+    public TooltipPowerType(Optional<ItemCondition> itemCondition, List<Text> texts, boolean resolve, int tickRate, int order, Optional<EntityCondition> condition) {
+        super(condition);
         this.itemCondition = itemCondition;
-        this.shouldResolve = shouldResolve;
-        this.tickRate = tickRate <= 0 ? 1 : tickRate;
+        this.texts = texts;
+        this.resolve = resolve;
+        this.tickRate = tickRate;
         this.order = order;
-        if (shouldResolve) {
-            this.setTicking(true);
-        }
     }
 
     @Override
-    public void tick() {
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.TOOLTIP;
+    }
+
+    @Override
+    public boolean shouldTick() {
+        return resolve;
+    }
+
+    @Override
+    public boolean shouldTickWhenInactive() {
+        return shouldTick();
+    }
+
+    @Override
+    public void serverTick() {
+
+        LivingEntity holder = getHolder();
+        int modTicks = holder.age % tickRate;
 
         if (isActive()) {
 
-            if (initialTicks == null) {
-                initialTicks = entity.age % tickRate;
-                return;
+            if (startTicks == null) {
+                this.startTicks = modTicks;
+                this.endTicks = null;
             }
 
-            if (entity.age % tickRate != initialTicks) {
-                return;
+            else if (modTicks == startTicks) {
+
+                List<Text> parsedTexts = parseTexts();
+                this.wasActive = true;
+
+                if (!parsedTexts.isEmpty() && Collections.disjoint(tooltipTexts, parsedTexts)) {
+                    this.tooltipTexts = parsedTexts;
+                    PowerHolderComponent.syncPower(getHolder(), getPower());
+                }
+
             }
 
-            List<Text> parsedTexts = parseTexts();
-            if (parsedTexts.isEmpty() || !Collections.disjoint(tooltipTexts, parsedTexts)) {
-                return;
+        }
+
+        else if (wasActive) {
+
+            if (endTicks == null) {
+                this.startTicks = null;
+                this.endTicks = modTicks;
             }
 
-            tooltipTexts = parsedTexts;
-            PowerHolderComponent.syncPower(entity, this.getPower());
+            else if (modTicks == endTicks) {
+                this.wasActive = false;
+            }
 
-        } else if (initialTicks != null) {
-            initialTicks = null;
         }
 
     }
@@ -94,12 +143,12 @@ public class TooltipPowerType extends PowerType {
         NbtList tooltipTextsNbt = new NbtList();
 
         for (Text tooltipText : tooltipTexts) {
-            NbtString tooltipTextNbt = NbtString.of(Text.Serialization.toJsonString(tooltipText, entity.getRegistryManager()));
+            NbtString tooltipTextNbt = NbtString.of(Text.Serialization.toJsonString(tooltipText, getHolder().getRegistryManager()));
             tooltipTextsNbt.add(tooltipTextNbt);
         }
 
         rootNbt.put("Tooltips", tooltipTextsNbt);
-        rootNbt.putBoolean("ShouldResolve", shouldResolve);
+        rootNbt.putBoolean("ShouldResolve", resolve);
         return rootNbt;
 
     }
@@ -112,11 +161,11 @@ public class TooltipPowerType extends PowerType {
         NbtList tooltipTextsNbt = rootNbt.getList("Tooltips", NbtElement.STRING_TYPE);
 
         for (int i = 0; i < tooltipTextsNbt.size(); i++) {
-            Text tooltipText = Text.Serialization.fromJson(tooltipTextsNbt.getString(i), entity.getRegistryManager());
+            Text tooltipText = Text.Serialization.fromJson(tooltipTextsNbt.getString(i), getHolder().getRegistryManager());
             tooltipTexts.add(tooltipText);
         }
 
-        shouldResolve = rootNbt.getBoolean("ShouldResolve");
+        resolve = rootNbt.getBoolean("ShouldResolve");
 
     }
 
@@ -126,7 +175,7 @@ public class TooltipPowerType extends PowerType {
 
     public void addToTooltip(Consumer<Text> tooltipConsumer) {
 
-        if (shouldResolve) {
+        if (resolve) {
             tooltipTexts.forEach(tooltipConsumer);
         }
 
@@ -137,64 +186,43 @@ public class TooltipPowerType extends PowerType {
     }
 
     public boolean doesApply(ItemStack stack) {
-        return itemCondition == null || itemCondition.test(new Pair<>(entity.getWorld(), stack));
+        return itemCondition
+            .map(condition -> condition.test(getHolder().getWorld(), stack))
+            .orElse(true);
     }
 
     private List<Text> parseTexts() {
 
         List<Text> parsedTexts = Lists.newLinkedList();
-        if (texts.isEmpty() || entity.getWorld().isClient) {
+        LivingEntity holder = getHolder();
+
+        if (texts.isEmpty() || !(holder.getWorld() instanceof ServerWorld serverWorld)) {
             return parsedTexts;
         }
 
-        ServerCommandSource source = new ServerCommandSource(
-            CommandOutput.DUMMY,
-            entity.getPos(),
-            entity.getRotationClient(),
-            (ServerWorld) entity.getWorld(),
-            Apoli.config.executeCommand.permissionLevel,
-            entity.getNameForScoreboard(),
-            entity.getName(),
-            entity.getWorld().getServer(),
-            entity
-        );
+        ServerCommandSource source = holder.getCommandSource()
+            .withOutput(serverWorld.getServer())
+            .withLevel(Apoli.config.executeCommand.permissionLevel);
 
         for (int i = 0; i < texts.size(); i++) {
+
             try {
 
                 Text text = texts.get(i);
-                Text parsedText = Texts.parse(source, text, entity, 0);
+                Text parsedText = Texts.parse(source, text, holder, 0);
 
                 parsedTexts.add(parsedText);
 
-            } catch (CommandSyntaxException e) {
+            }
+
+            catch (CommandSyntaxException e) {
                 Apoli.LOGGER.warn("Power {} could not parse tooltip text at index {}: {}", this.getPower().getId(), i, e.getMessage());
             }
+
         }
 
         return parsedTexts;
 
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("tooltip"),
-            new SerializableData()
-                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("text", SerializableDataTypes.TEXT, null)
-                .add("texts", SerializableDataTypes.TEXTS, null)
-                .add("should_resolve", SerializableDataTypes.BOOLEAN, false)
-                .add("tick_rate", SerializableDataTypes.INT, 20)
-                .add("order", SerializableDataTypes.INT, 0),
-            data -> (power, entity) -> new TooltipPowerType(power, entity,
-                data.get("item_condition"),
-                data.get("text"),
-                data.get("texts"),
-                data.get("should_resolve"),
-                data.get("tick_rate"),
-                data.get("order")
-            )
-        ).allowCondition();
     }
 
 }

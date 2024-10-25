@@ -18,10 +18,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -164,7 +168,11 @@ public class InventoryUtil {
 
     }
 
-    public static void throwItem(Entity thrower, ItemStack itemStack, boolean throwRandomly, boolean retainOwnership) {
+    public static void throwItem(Entity thrower, ItemStack stack, boolean throwRandomly, boolean retainOwnership) {
+        throwItem(thrower, stack, throwRandomly, retainOwnership, 40);
+    }
+
+    public static void throwItem(Entity thrower, ItemStack itemStack, boolean throwRandomly, boolean retainOwnership, int pickupDelay) {
 
         if (itemStack.isEmpty()) {
             return;
@@ -175,33 +183,46 @@ public class InventoryUtil {
         }
 
         double yOffset = thrower.getEyeY() - 0.30000001192092896D;
-        ItemEntity itemEntity = new ItemEntity(thrower.getWorld(), thrower.getX(), yOffset, thrower.getZ(), itemStack);
-        itemEntity.setPickupDelay(40);
 
-        Random random = new Random();
+        ItemEntity itemEntity = new ItemEntity(thrower.getWorld(), thrower.getX(), yOffset, thrower.getZ(), itemStack);
+        itemEntity.setPickupDelay(pickupDelay);
+
+        Random random = Random.create();
 
         float f;
         float g;
 
-        if (retainOwnership) itemEntity.setThrower(thrower);
+        if (retainOwnership) {
+            itemEntity.setThrower(thrower);
+        }
+
         if (throwRandomly) {
+
             f = random.nextFloat() * 0.5F;
             g = random.nextFloat() * 6.2831855F;
+
             itemEntity.setVelocity(- MathHelper.sin(g) * f, 0.20000000298023224D, MathHelper.cos(g) * f);
+
         }
+
         else {
+
             f = 0.3F;
             g = MathHelper.sin(thrower.getPitch() * 0.017453292F);
+
             float h = MathHelper.cos(thrower.getPitch() * 0.017453292F);
             float i = MathHelper.sin(thrower.getYaw() * 0.017453292F);
             float j = MathHelper.cos(thrower.getYaw() * 0.017453292F);
+
             float k = random.nextFloat() * 6.2831855F;
             float l = 0.02F * random.nextFloat();
+
             itemEntity.setVelocity(
                 (double) (- i * h * f) + Math.cos(k) * (double) l,
                 (-g * f + 0.1F + (random.nextFloat() - random.nextFloat()) * 0.1F),
                 (double) (j * h * f) + Math.sin(k) * (double) l
             );
+
         }
 
         thrower.getWorld().spawnEntity(itemEntity);

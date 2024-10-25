@@ -12,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
+import org.jetbrains.annotations.NotNull;
 
 public class EquippedItemActionEntityActionType extends EntityActionType {
 
@@ -54,7 +55,7 @@ public class EquippedItemActionEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.EQUIPPED_ITEM_ACTION;
     }
 

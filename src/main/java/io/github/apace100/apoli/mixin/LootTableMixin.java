@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Mixin(LootTable.class)
@@ -50,7 +51,7 @@ public class LootTableMixin implements IdentifiedLootTable {
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At("HEAD"), cancellable = true)
     private void modifyLootTable(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
 
-        if (!(context instanceof ReplacingLootContext replacingContext) || replacingContext.apoli$isReplaced((LootTable) (Object) this)) {
+        if (!(context instanceof ReplacingLootContext replacingContext) || replacingContext.apoli$isReplaced(thisAsLootTable())) {
             return;
         }
 
@@ -91,24 +92,23 @@ public class LootTableMixin implements IdentifiedLootTable {
             return;
         }
 
-        ReplaceLootTablePowerType.addToStack((LootTable) (Object) this);
-        LootTable replacement = null;
+        ReplaceLootTablePowerType.addToStack(thisAsLootTable());
+        AtomicReference<LootTable> replacement = new AtomicReference<>();
 
         for (ReplaceLootTablePowerType replaceLootTablePower : replaceLootTablePowers) {
 
-            RegistryKey<LootTable> replacementLootTableKey = replaceLootTablePower.getReplacement(apoli$lootTableKey);
-            if (replacementLootTableKey == null) {
-                continue;
-            }
+            Optional<LootTable> replacementLootTable = replaceLootTablePower
+                .getReplacement(this.apoli$getLootTableKey())
+                .map(this.apoli$registryLookup::getLootTable);
 
-            replacement = apoli$registryLookup.getLootTable(replacementLootTableKey);
-            ReplaceLootTablePowerType.addToStack(replacement);
+            replacementLootTable.ifPresent(ReplaceLootTablePowerType::addToStack);
+            replacementLootTable.ifPresent(replacement::set);
 
         }
 
-        if (replacement != null) {
-            ((ReplacingLootContext) context).apoli$setReplaced((LootTable) (Object) this);
-            replacement.generateUnprocessedLoot(context, lootConsumer);
+        if (replacement.get() != null) {
+            ((ReplacingLootContext) context).apoli$setReplaced(thisAsLootTable());
+            replacement.get().generateUnprocessedLoot(context, lootConsumer);
         }
 
         ReplaceLootTablePowerType.clearStack();
@@ -124,6 +124,11 @@ public class LootTableMixin implements IdentifiedLootTable {
     @Inject(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/loot/context/LootContext;markInactive(Lnet/minecraft/loot/context/LootContext$Entry;)V"))
     private void restoreReplacementStack(LootContext context, Consumer<ItemStack> lootConsumer, CallbackInfo ci) {
         ReplaceLootTablePowerType.restore();
+    }
+
+    @Unique
+    private LootTable thisAsLootTable() {
+        return (LootTable) (Object) this;
     }
 
 }

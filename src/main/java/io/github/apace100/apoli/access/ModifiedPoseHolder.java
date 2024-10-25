@@ -3,12 +3,14 @@ package io.github.apace100.apoli.access;
 import io.github.apace100.apoli.util.ArmPoseReference;
 import net.minecraft.entity.EntityPose;
 
+import java.util.Optional;
+
 public interface ModifiedPoseHolder {
 
-    EntityPose apoli$getModifiedEntityPose();
+    Optional<EntityPose> apoli$getModifiedEntityPose();
     void apoli$setModifiedEntityPose(EntityPose entityPose);
 
-    ArmPoseReference apoli$getModifiedArmPose();
+    Optional<ArmPoseReference> apoli$getModifiedArmPose();
     void apoli$setModifiedArmPose(ArmPoseReference armPose);
 
 }

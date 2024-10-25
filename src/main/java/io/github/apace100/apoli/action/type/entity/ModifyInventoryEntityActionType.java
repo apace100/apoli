@@ -17,6 +17,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import io.github.apace100.calio.util.ArgumentWrapper;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -105,7 +106,7 @@ public class ModifyInventoryEntityActionType extends EntityActionType {
 
         Optional<InventoryPowerType> inventoryPowerType = power
             .filter(ipt -> inventoryType == InventoryType.POWER)
-            .map(p -> p.getType(entity))
+            .map(p -> p.getPowerTypeFrom(entity))
             .filter(InventoryPowerType.class::isInstance)
             .map(InventoryPowerType.class::cast);
 
@@ -114,7 +115,7 @@ public class ModifyInventoryEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.MODIFY_INVENTORY;
     }
 

@@ -8,6 +8,7 @@ import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.action.type.meta.ChanceMetaActionType;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -30,7 +31,7 @@ public class ChanceItemActionType extends ItemActionType implements ChanceMetaAc
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return ItemActionTypes.CHANCE;
 	}
 

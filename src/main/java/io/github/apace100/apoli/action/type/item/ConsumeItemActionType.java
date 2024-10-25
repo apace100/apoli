@@ -8,6 +8,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class ConsumeItemActionType extends ItemActionType {
 
@@ -33,7 +34,7 @@ public class ConsumeItemActionType extends ItemActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return ItemActionTypes.CONSUME;
     }
 

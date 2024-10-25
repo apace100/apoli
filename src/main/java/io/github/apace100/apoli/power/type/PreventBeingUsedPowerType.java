@@ -1,74 +1,69 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.action.BiEntityAction;
+import io.github.apace100.apoli.action.ItemAction;
+import io.github.apace100.apoli.condition.BiEntityCondition;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.condition.ItemCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
-import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Pair;
-import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class PreventBeingUsedPowerType extends InteractionPowerType {
 
-    private final Consumer<Pair<Entity, Entity>> biEntityAction;
-    private final Predicate<Pair<Entity, Entity>> bientityCondition;
+    public static final TypedDataObjectFactory<PreventBeingUsedPowerType> DATA_FACTORY = InteractionPowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("bientity_action", BiEntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("bientity_condition", BiEntityCondition.DATA_TYPE.optional(), Optional.empty()),
+        (data, heldItemAction, heldItemCondition, resultItemAction, resultStack, hands, actionResult, condition) -> new PreventBeingUsedPowerType(
+            data.get("bientity_action"),
+            data.get("bientity_condition"),
+            heldItemAction,
+            heldItemCondition,
+            resultItemAction,
+            resultStack,
+            hands,
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("bientity_action", powerType.biEntityAction)
+            .set("bientity_condition", powerType.biEntityCondition)
+    );
 
-    public PreventBeingUsedPowerType(Power power, LivingEntity entity, EnumSet<Hand> hands, Predicate<Pair<World, ItemStack>> itemCondition, Consumer<Pair<World, StackReference>> heldItemAction, ItemStack itemResult, Consumer<Pair<World, StackReference>> itemAction, Consumer<Pair<Entity, Entity>> biEntityAction, Predicate<Pair<Entity, Entity>> bientityCondition) {
-        super(power, entity, hands, ActionResult.FAIL, itemCondition, heldItemAction, itemResult, itemAction);
+    private final Optional<BiEntityAction> biEntityAction;
+    private final Optional<BiEntityCondition> biEntityCondition;
+
+    public PreventBeingUsedPowerType(Optional<BiEntityAction> biEntityAction, Optional<BiEntityCondition> biEntityCondition, Optional<ItemAction> heldItemAction, Optional<ItemCondition> heldItemCondition, Optional<ItemAction> resultItemAction, Optional<ItemStack> resultStack, EnumSet<Hand> hands, Optional<EntityCondition> condition) {
+        super(heldItemAction, heldItemCondition, resultItemAction, resultStack, hands, ActionResult.FAIL, condition);
         this.biEntityAction = biEntityAction;
-        this.bientityCondition = bientityCondition;
+        this.biEntityCondition = biEntityCondition;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.PREVENT_BEING_USED;
     }
 
     public boolean doesApply(PlayerEntity other, Hand hand, ItemStack heldStack) {
-        if(!shouldExecute(hand, heldStack)) {
-            return false;
-        }
-        return bientityCondition == null || bientityCondition.test(new Pair<>(other, entity));
+        return shouldExecute(hand, heldStack)
+            && biEntityCondition.map(condition -> condition.test(other, getHolder())).orElse(true);
     }
 
     public ActionResult executeAction(PlayerEntity other, Hand hand) {
 
-        if (biEntityAction != null) {
-            biEntityAction.accept(new Pair<>(other, entity));
-        }
+        biEntityAction.ifPresent(action -> action.execute(other, getHolder()));
+        this.performActorItemStuff(other, hand);
 
-        this.performActorItemStuff(this, other, hand);
         return this.getActionResult();
 
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("prevent_being_used"),
-            new SerializableData()
-                .add("bientity_action", ApoliDataTypes.BIENTITY_ACTION, null)
-                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null)
-                .add("item_condition", ApoliDataTypes.ITEM_CONDITION, null)
-                .add("hands", SerializableDataTypes.HAND_SET, EnumSet.allOf(Hand.class))
-                .add("result_stack", SerializableDataTypes.ITEM_STACK, null)
-                .add("held_item_action", ApoliDataTypes.ITEM_ACTION, null)
-                .add("result_item_action", ApoliDataTypes.ITEM_ACTION, null),
-            data -> (power, entity) -> new PreventBeingUsedPowerType(power, entity,
-                data.get("hands"),
-                data.get("item_condition"),
-                data.get("held_item_action"),
-                data.get("result_stack"),
-                data.get("result_item_action"),
-                data.get("bientity_action"),
-                data.get("bientity_condition")
-            )
-        ).allowCondition();
-    }
 }

@@ -17,6 +17,11 @@ public abstract class EntityActionType extends AbstractActionType<EntityActionCo
 
 	}
 
+	@Override
+	public EntityAction createAction() {
+		return new EntityAction(this);
+	}
+
 	protected abstract void execute(Entity entity);
 
 }

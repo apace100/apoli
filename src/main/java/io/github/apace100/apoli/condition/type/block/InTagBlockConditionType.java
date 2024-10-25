@@ -10,6 +10,7 @@ import net.minecraft.block.Block;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class InTagBlockConditionType extends BlockConditionType {
 
@@ -35,7 +36,7 @@ public class InTagBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BlockConditionTypes.IN_TAG;
     }
 

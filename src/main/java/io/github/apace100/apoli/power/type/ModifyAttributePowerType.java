@@ -1,52 +1,46 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.apoli.power.Power;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.registry.entry.RegistryEntry;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ModifyAttributePowerType extends ValueModifyingPowerType {
 
+    public static final TypedDataObjectFactory<ModifyAttributePowerType> DATA_FACTORY = createConditionedModifyingDataFactory(
+        new SerializableData()
+            .add("attribute", SerializableDataTypes.ATTRIBUTE_ENTRY),
+        (data, modifiers, condition) -> new ModifyAttributePowerType(
+            data.get("attribute"),
+            modifiers,
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("attribute", powerType.attribute)
+    );
+
     private final RegistryEntry<EntityAttribute> attribute;
 
-    public ModifyAttributePowerType(Power power, LivingEntity entity, RegistryEntry<EntityAttribute> attribute, Modifier modifier, List<Modifier> modifiers) {
-        super(power, entity);
-
+    public ModifyAttributePowerType(RegistryEntry<EntityAttribute> attribute, List<Modifier> modifiers, Optional<EntityCondition> condition) {
+        super(modifiers, condition);
         this.attribute = attribute;
-        if (modifier != null) {
-            this.addModifier(modifier);
-        }
+    }
 
-        if (modifiers != null) {
-            modifiers.forEach(this::addModifier);
-        }
-
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.MODIFY_ATTRIBUTE;
     }
 
     public RegistryEntry<EntityAttribute> getAttribute() {
         return attribute;
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("modify_attribute"),
-            new SerializableData()
-                .add("attribute", SerializableDataTypes.ATTRIBUTE_ENTRY)
-                .add("modifier", Modifier.DATA_TYPE, null)
-                .add("modifiers", Modifier.LIST_TYPE, null),
-            data -> (power, entity) -> new ModifyAttributePowerType(power, entity,
-                data.get("attribute"),
-                data.get("modifier"),
-                data.get("modifiers")
-            )
-        ).allowCondition();
     }
 
 }

@@ -8,6 +8,7 @@ import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.action.type.meta.SideMetaActionType;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class SideItemActionType extends ItemActionType implements SideMetaActionType<ItemActionContext, ItemAction> {
 
@@ -25,7 +26,7 @@ public class SideItemActionType extends ItemActionType implements SideMetaAction
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return ItemActionTypes.SIDE;
 	}
 

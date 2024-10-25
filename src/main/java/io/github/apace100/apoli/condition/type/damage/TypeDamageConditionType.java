@@ -9,6 +9,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.registry.RegistryKey;
+import org.jetbrains.annotations.NotNull;
 
 public class TypeDamageConditionType extends DamageConditionType {
 
@@ -34,7 +35,7 @@ public class TypeDamageConditionType extends DamageConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return DamageConditionTypes.TYPE;
     }
 

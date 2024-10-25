@@ -53,11 +53,12 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
     @Final
     public static int OUTPUT_ID;
 
-    @Unique
-    private PlayerEntity apoli$cachedPlayer;
+    @Shadow
+    @Final
+    private ScreenHandlerContext context;
 
     @Unique
-    private BlockPos apoli$cachedPosition;
+    private PlayerEntity apoli$cachedPlayer;
 
     @Unique
     private List<ModifyGrindstonePowerType> apoli$appliedPowers;
@@ -69,7 +70,6 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At("RETURN"))
     private void cachePlayer(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, CallbackInfo ci) {
         apoli$cachedPlayer = playerInventory.player;
-        apoli$cachedPosition = context.get((world, pos) -> pos).orElse(null);
     }
 
     @Inject(method = "updateResult", at = @At("RETURN"))
@@ -81,7 +81,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
         StackReference outputStackRef = InventoryUtil.createStackReference(result.getStack(0));
         this.apoli$appliedPowers = PowerHolderComponent.getPowerTypes(apoli$cachedPlayer, ModifyGrindstonePowerType.class)
             .stream()
-            .filter(mgp -> mgp.doesApply(topStack, bottomStack, outputStackRef.get(), apoli$cachedPosition))
+            .filter(mgp -> mgp.doesApply(topStack, bottomStack, outputStackRef.get(), apoli$getPos()))
             .peek(mgp -> mgp.setOutput(topStack, bottomStack, outputStackRef))
             .collect(Collectors.toCollection(LinkedList::new));
 
@@ -124,7 +124,7 @@ public abstract class GrindstoneScreenHandlerMixin extends ScreenHandler impleme
     @Nullable
     @Override
     public BlockPos apoli$getPos() {
-        return apoli$cachedPosition;
+        return this.context.get((world, pos) -> pos, null);
     }
 
 }

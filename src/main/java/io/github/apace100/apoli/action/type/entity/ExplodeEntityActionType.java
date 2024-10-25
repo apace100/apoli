@@ -12,6 +12,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.explosion.Explosion;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
@@ -96,7 +97,7 @@ public class ExplodeEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.EXPLODE;
     }
 

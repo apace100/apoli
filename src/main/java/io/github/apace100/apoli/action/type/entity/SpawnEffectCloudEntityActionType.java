@@ -11,6 +11,7 @@ import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 
 public class SpawnEffectCloudEntityActionType extends EntityActionType {
 
@@ -81,7 +82,7 @@ public class SpawnEffectCloudEntityActionType extends EntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.SPAWN_EFFECT_CLOUD;
     }
 

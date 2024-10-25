@@ -1,62 +1,69 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.action.EntityAction;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.HudRender;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
+import java.util.Optional;
 
 public class ResourcePowerType extends HudRenderedVariableIntPowerType {
 
-    private final Consumer<Entity> actionOnMin;
-    private final Consumer<Entity> actionOnMax;
+    public static final TypedDataObjectFactory<ResourcePowerType> DATA_FACTORY = TypedDataObjectFactory.simple(
+        new SerializableData()
+            .add("min_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("max_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("hud_render", HudRender.DATA_TYPE, HudRender.DONT_RENDER)
+            .add("min", SerializableDataTypes.INT)
+            .add("max", SerializableDataTypes.INT)
+            .addFunctionedDefault("start_value", SerializableDataTypes.INT, data -> data.get("min")),
+        data -> new ResourcePowerType(
+            data.get("min_action"),
+            data.get("max_action"),
+            data.get("hud_render"),
+            data.get("min"),
+            data.get("max"),
+            data.get("start_value")
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("min_action", powerType.minAction)
+            .set("max_action", powerType.maxAction)
+            .set("hud_render", powerType.getRenderSettings())
+            .set("min", powerType.getMin())
+            .set("max", powerType.getMax())
+            .set("start_value", powerType.getStartValue())
+    );
 
-    public ResourcePowerType(Power power, LivingEntity entity, HudRender hudRender, int startValue, int min, int max, Consumer<Entity> actionOnMin, Consumer<Entity> actionOnMax) {
-        super(power, entity, hudRender, startValue, min, max);
-        this.actionOnMin = actionOnMin;
-        this.actionOnMax = actionOnMax;
+    private final Optional<EntityAction> minAction;
+    private final Optional<EntityAction> maxAction;
+
+    public ResourcePowerType(Optional<EntityAction> minAction, Optional<EntityAction> maxAction, HudRender hudRender, int min, int max, int startValue) {
+        super(hudRender, min, max, startValue);
+        this.minAction = minAction;
+        this.maxAction = maxAction;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.RESOURCE;
     }
 
     @Override
     public int setValue(int newValue) {
-        int oldValue = currentValue;
-        int actualNewValue = super.setValue(newValue);
-        if(oldValue != actualNewValue) {
-            if(actionOnMin != null && actualNewValue == min) {
-                actionOnMin.accept(entity);
-            }
-            if(actionOnMax != null && actualNewValue == max) {
-                actionOnMax.accept(entity);
-            }
-        }
-        return actualNewValue;
-    }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("resource"),
-            new SerializableData()
-                .add("min", SerializableDataTypes.INT)
-                .add("max", SerializableDataTypes.INT)
-                .addFunctionedDefault("start_value", SerializableDataTypes.INT, data -> data.getInt("min"))
-                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER)
-                .add("min_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("max_action", ApoliDataTypes.ENTITY_ACTION, null),
-            data -> (power, entity) -> new ResourcePowerType(power, entity,
-                data.get("hud_render"),
-                data.getInt("start_value"),
-                data.getInt("min"),
-                data.getInt("max"),
-                data.get("min_action"),
-                data.get("max_action")
-            )
-        ).allowCondition();
+        int oldValue = getValue();
+        int actualNewValue = super.setValue(newValue);
+
+        if (oldValue != actualNewValue) {
+            minAction.filter(action -> actualNewValue == getMin()).ifPresent(action -> action.execute(getHolder()));
+            maxAction.filter(action -> actualNewValue == getMax()).ifPresent(action -> action.execute(getHolder()));
+        }
+
+        return actualNewValue;
+
     }
 
 }

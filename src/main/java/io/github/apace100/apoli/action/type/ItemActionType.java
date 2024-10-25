@@ -34,6 +34,11 @@ public abstract class ItemActionType extends AbstractActionType<ItemActionContex
 
 	}
 
+	@Override
+	public ItemAction createAction() {
+		return new ItemAction(this);
+	}
+
 	protected abstract void execute(World world, StackReference stackReference);
 
 }

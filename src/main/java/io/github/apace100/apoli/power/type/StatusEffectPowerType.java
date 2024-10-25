@@ -1,44 +1,49 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.power.Power;
-import net.minecraft.entity.LivingEntity;
+import io.github.apace100.apoli.condition.EntityCondition;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.registry.entry.RegistryEntry;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
-public class StatusEffectPowerType extends PowerType {
+public abstract class StatusEffectPowerType extends PowerType {
 
     protected final List<StatusEffectInstance> effects = new LinkedList<>();
 
-    public StatusEffectPowerType(Power power, LivingEntity entity) {
-        super(power, entity);
-    }
-    public StatusEffectPowerType(Power power, LivingEntity entity, StatusEffectInstance effectInstance) {
-        super(power, entity);
-        addEffect(effectInstance);
+    public StatusEffectPowerType(Optional<EntityCondition> condition) {
+        super(condition);
     }
 
-    public StatusEffectPowerType addEffect(RegistryEntry<StatusEffect> effect) {
-        return addEffect(effect, 80);
+    public StatusEffectPowerType() {
+
     }
 
-    public StatusEffectPowerType addEffect(RegistryEntry<StatusEffect> effect, int lingerDuration) {
-        return addEffect(effect, lingerDuration, 0);
+    public StatusEffectPowerType(StatusEffectInstance effectInstance, Optional<EntityCondition> condition) {
+        this(condition);
+        this.addEffect(effectInstance);
     }
 
-    public StatusEffectPowerType addEffect(RegistryEntry<StatusEffect> effect, int lingerDuration, int amplifier) {
-        return addEffect(new StatusEffectInstance(effect, lingerDuration, amplifier));
+    public StatusEffectPowerType(StatusEffectInstance effectInstance) {
+        this(effectInstance, Optional.empty());
     }
 
-    public StatusEffectPowerType addEffect(StatusEffectInstance instance) {
+    public void addEffect(RegistryEntry<StatusEffect> effect, int duration) {
+        addEffect(effect, duration, 0);
+    }
+
+    public void addEffect(RegistryEntry<StatusEffect> effect, int duration, int amplifier) {
+        addEffect(new StatusEffectInstance(effect, duration, amplifier));
+    }
+
+    public void addEffect(StatusEffectInstance instance) {
         effects.add(instance);
-        return this;
     }
 
     public void applyEffects() {
-        effects.stream().map(StatusEffectInstance::new).forEach(entity::addStatusEffect);
+        effects.stream().map(StatusEffectInstance::new).forEach(getHolder()::addStatusEffect);
     }
+
 }

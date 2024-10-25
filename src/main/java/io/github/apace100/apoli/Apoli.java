@@ -11,6 +11,7 @@ import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.component.item.ApoliDataComponentTypes;
 import io.github.apace100.apoli.component.item.ItemPowersComponent;
 import io.github.apace100.apoli.condition.type.*;
+import io.github.apace100.apoli.data.ApoliContainerTypes;
 import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.global.GlobalPowerSetManager;
 import io.github.apace100.apoli.integration.PowerIntegration;
@@ -93,6 +94,7 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ApoliLootFunctionTypes.register();
 		ApoliLootConditionTypes.register();
 
+		ApoliContainerTypes.register();
 		ApoliClassData.registerAll();
 
 		ModifierOperations.registerAll();

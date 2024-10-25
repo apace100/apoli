@@ -54,7 +54,7 @@ public record PowerArgumentType(PowerTarget powerTarget) implements ArgumentType
 
     public static Power getResource(CommandContext<ServerCommandSource> context, String argumentName) throws CommandSyntaxException {
         Power power = getPower(context, argumentName);
-        return PowerUtil.validateResource(power.create(null))
+        return PowerUtil.validateResource(power.getPowerType())
             .map(PowerType::getPower)
             .getOrThrow(err -> POWER_NOT_RESOURCE.create(power.getId()));
     }
@@ -72,7 +72,7 @@ public record PowerArgumentType(PowerTarget powerTarget) implements ArgumentType
         else {
 
             powerResult = powerResult.flatMap(power -> powerTarget() == PowerTarget.RESOURCE
-                ? PowerUtil.validateResource(power.create(null)).map(PowerType::getPower)
+                ? PowerUtil.validateResource(power.getPowerType()).map(PowerType::getPower)
                 : DataResult.success(power));
 
             return powerResult.getOrThrow(err -> POWER_NOT_RESOURCE.createWithContext(reader, id));
@@ -86,7 +86,7 @@ public record PowerArgumentType(PowerTarget powerTarget) implements ArgumentType
 
         Stream<Identifier> powerIds = PowerManager.entrySet()
             .stream()
-            .filter(e -> powerTarget() != PowerTarget.RESOURCE || PowerUtil.validateResource(e.getValue().create(null)).isSuccess())
+            .filter(e -> powerTarget() != PowerTarget.RESOURCE || PowerUtil.validateResource(e.getValue().getPowerType()).isSuccess())
             .map(Map.Entry::getKey);
 
         return CommandSource.suggestIdentifiers(powerIds, builder);

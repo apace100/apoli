@@ -1,23 +1,42 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.action.EntityAction;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtElement;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
+import java.util.Optional;
 
 public class ActionOverTimePowerType extends PowerType {
 
-    private final Consumer<Entity> entityAction;
-    private final Consumer<Entity> risingAction;
-    private final Consumer<Entity> fallingAction;
+    public static final TypedDataObjectFactory<ActionOverTimePowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("rising_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("falling_action", EntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("interval", SerializableDataTypes.POSITIVE_INT, 20),
+        (data, condition) -> new ActionOverTimePowerType(
+            data.get("entity_action"),
+            data.get("rising_action"),
+            data.get("falling_action"),
+            data.get("interval"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+            .set("rising_action", powerType.risingAction)
+            .set("falling_action", powerType.fallingAction)
+            .set("interval", powerType.interval)
+    );
+
+    private final Optional<EntityAction> entityAction;
+    private final Optional<EntityAction> risingAction;
+    private final Optional<EntityAction> fallingAction;
 
     private final int interval;
 
@@ -26,62 +45,72 @@ public class ActionOverTimePowerType extends PowerType {
 
     private boolean wasActive = false;
 
-    public ActionOverTimePowerType(Power power, LivingEntity entity, Consumer<Entity> entityAction, Consumer<Entity> risingAction, Consumer<Entity> fallingAction, int interval) {
-        super(power, entity);
+    public ActionOverTimePowerType(Optional<EntityAction> entityAction, Optional<EntityAction> risingAction, Optional<EntityAction> fallingAction, int interval, Optional<EntityCondition> condition) {
+        super(condition);
         this.interval = interval;
         this.entityAction = entityAction;
         this.risingAction = risingAction;
         this.fallingAction = fallingAction;
-        this.setTicking(true);
     }
 
     @Override
-    public void tick() {
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.ACTION_OVER_TIME;
+    }
+
+    @Override
+    public boolean shouldTick() {
+        return true;
+    }
+
+    @Override
+    public boolean shouldTickWhenInactive() {
+        return shouldTick();
+    }
+
+    @Override
+    public void serverTick() {
 
         if (isActive()) {
 
             if (startTicks == null) {
 
-                startTicks = entity.age % interval;
+                startTicks = getHolder().age % interval;
                 endTicks = null;
 
                 return;
 
             }
 
-            if (entity.age % interval != startTicks) {
+            if (getHolder().age % interval != startTicks) {
                 return;
             }
 
-            if (!wasActive && risingAction != null) {
-                risingAction.accept(entity);
+            if (!wasActive) {
+                risingAction.ifPresent(action -> action.execute(getHolder()));
             }
 
-            if (entityAction != null) {
-                entityAction.accept(entity);
-            }
-
+            entityAction.ifPresent(action -> action.execute(getHolder()));
             wasActive = true;
 
-        } else if (wasActive) {
+        }
+
+        else if (wasActive) {
 
             if (endTicks == null) {
 
-                endTicks = entity.age % interval;
+                endTicks = getHolder().age % interval;
                 startTicks = null;
 
                 return;
 
             }
 
-            if (entity.age % interval != endTicks) {
+            if (getHolder().age % interval != endTicks) {
                 return;
             }
 
-            if (fallingAction != null) {
-                fallingAction.accept(entity);
-            }
-
+            fallingAction.ifPresent(action -> action.execute(getHolder()));
             wasActive = false;
 
         }
@@ -96,23 +125,6 @@ public class ActionOverTimePowerType extends PowerType {
     @Override
     public void fromTag(NbtElement tag) {
         wasActive = tag.equals(NbtByte.ONE);
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("action_over_time"),
-            new SerializableData()
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("rising_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("falling_action", ApoliDataTypes.ENTITY_ACTION, null)
-                .add("interval", SerializableDataTypes.POSITIVE_INT, 20),
-            data -> (power, entity) -> new ActionOverTimePowerType(power, entity,
-                data.get("entity_action"),
-                data.get("rising_action"),
-                data.get("falling_action"),
-                data.get("interval")
-            )
-        ).allowCondition();
     }
 
 }

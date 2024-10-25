@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.BiEntityConditionType;
 import io.github.apace100.apoli.condition.type.BiEntityConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class RandomChanceBiEntityConditionType extends BiEntityConditionType implements RandomChanceMetaConditionType {
 
@@ -15,7 +16,7 @@ public class RandomChanceBiEntityConditionType extends BiEntityConditionType imp
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BiEntityConditionTypes.RANDOM_CHANCE;
 	}
 

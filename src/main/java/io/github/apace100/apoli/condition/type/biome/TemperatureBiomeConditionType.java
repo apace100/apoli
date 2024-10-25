@@ -11,6 +11,7 @@ import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 
 public class TemperatureBiomeConditionType extends BiomeConditionType {
 
@@ -41,7 +42,7 @@ public class TemperatureBiomeConditionType extends BiomeConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return BiomeConditionTypes.TEMPERATURE;
     }
 

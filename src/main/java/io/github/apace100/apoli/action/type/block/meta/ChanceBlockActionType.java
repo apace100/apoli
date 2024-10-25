@@ -9,6 +9,7 @@ import io.github.apace100.apoli.action.type.meta.ChanceMetaActionType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -31,7 +32,7 @@ public class ChanceBlockActionType extends BlockActionType implements ChanceMeta
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return BlockActionTypes.CHANCE;
 	}
 

@@ -1,10 +1,9 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.action.BiEntityAction;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -14,18 +13,34 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class EntitySetPowerType extends PowerType {
 
-    private final Consumer<Pair<Entity, Entity>> actionOnAdd;
-    private final Consumer<Pair<Entity, Entity>> actionOnRemove;
+    public static final TypedDataObjectFactory<EntitySetPowerType> DATA_FACTORY = TypedDataObjectFactory.simple(
+        new SerializableData()
+            .add("action_on_add", BiEntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("action_on_remove", BiEntityAction.DATA_TYPE.optional(), Optional.empty())
+            .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 1),
+        data -> new EntitySetPowerType(
+            data.get("action_on_add"),
+            data.get("action_on_remove"),
+            data.get("tick_rate")
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("action_on_add", powerType.actionOnAdd)
+            .set("action_on_remove", powerType.actionOnRemove)
+            .set("tick_rate", powerType.tickRate)
+    );
+
+    private final Optional<BiEntityAction> actionOnAdd;
+    private final Optional<BiEntityAction> actionOnRemove;
+
     private final int tickRate;
 
     private final Set<UUID> entityUuids = new HashSet<>();
@@ -39,8 +54,7 @@ public class EntitySetPowerType extends PowerType {
     private boolean wasActive = false;
     private boolean removedTemps = false;
 
-    public EntitySetPowerType(Power power, LivingEntity entity, Consumer<Pair<Entity, Entity>> actionOnAdd, Consumer<Pair<Entity, Entity>> actionOnRemove, int tickRate) {
-        super(power, entity);
+    public EntitySetPowerType(Optional<BiEntityAction> actionOnAdd, Optional<BiEntityAction> actionOnRemove, int tickRate) {
         this.actionOnAdd = actionOnAdd;
         this.actionOnRemove = actionOnRemove;
         this.tickRate = tickRate;
@@ -48,18 +62,24 @@ public class EntitySetPowerType extends PowerType {
     }
 
     @Override
-    public void onAdded() {
-        removedTemps = entityUuids.removeIf(tempUuids::contains);
-        tempUuids.clear();
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.ENTITY_SET;
     }
 
     @Override
-    public void tick() {
+    public void onAdded() {
+        this.removedTemps = entityUuids.removeIf(tempUuids::contains);
+        this.tempUuids.clear();
+    }
 
+    @Override
+    public void serverTick() {
+
+        LivingEntity holder = getHolder();
         if (removedTemps) {
 
             this.removedTemps = false;
-            PowerHolderComponent.syncPower(this.entity, this.power);
+            PowerHolderComponent.syncPower(holder, this.getPower());
 
             return;
 
@@ -68,11 +88,11 @@ public class EntitySetPowerType extends PowerType {
         if (!tempEntities.isEmpty() && this.isActive()) {
 
             if (startTicks == null) {
-                this.startTicks = entity.age % tickRate;
+                this.startTicks = holder.age % tickRate;
                 return;
             }
 
-            if (entity.age % tickRate == startTicks) {
+            if (holder.age % tickRate == startTicks) {
                 this.tickTempEntities();
             }
 
@@ -90,7 +110,9 @@ public class EntitySetPowerType extends PowerType {
     protected void tickTempEntities() {
 
         Iterator<Map.Entry<UUID, Long>> entryIterator = tempEntities.entrySet().iterator();
-        long time = entity.getWorld().getTime();
+        LivingEntity holder = getHolder();
+
+        long time = holder.getWorld().getTime();
 
         while (entryIterator.hasNext()) {
 
@@ -104,13 +126,8 @@ public class EntitySetPowerType extends PowerType {
 
             entryIterator.remove();
             if (entityUuids.remove(uuid) | entities.remove(uuid) != null | tempUuids.remove(uuid)) {
-
-                if (actionOnRemove != null) {
-                    actionOnRemove.accept(new Pair<>(entity, tempEntity));
-                }
-
+                actionOnRemove.ifPresent(action -> action.execute(holder, tempEntity));
                 this.removedTemps = true;
-
             }
 
         }
@@ -119,7 +136,7 @@ public class EntitySetPowerType extends PowerType {
 
     public boolean validateEntities() {
 
-        MinecraftServer server = entity.getServer();
+        MinecraftServer server = getHolder().getServer();
         if (server == null) {
             return false;
         }
@@ -170,9 +187,7 @@ public class EntitySetPowerType extends PowerType {
             addedToSet |= entityUuids.add(uuid);
             entities.put(uuid, entity);
 
-            if (actionOnAdd != null) {
-                actionOnAdd.accept(new Pair<>(this.entity, entity));
-            }
+            actionOnAdd.ifPresent(action -> action.execute(getHolder(), entity));
 
         }
 
@@ -196,8 +211,8 @@ public class EntitySetPowerType extends PowerType {
             | tempUuids.remove(uuid)
             | tempEntities.remove(uuid) != null;
 
-        if (executeRemoveAction && result && actionOnRemove != null) {
-            actionOnRemove.accept(new Pair<>(this.entity, entity));
+        if (executeRemoveAction && result) {
+            actionOnRemove.ifPresent(action -> action.execute(getHolder(), entity));
         }
 
         return result;
@@ -214,10 +229,12 @@ public class EntitySetPowerType extends PowerType {
 
     public void clear() {
 
-        if (actionOnRemove != null) {
+        if (actionOnRemove.isPresent()) {
+
+            BiEntityAction actualActionOnRemove = actionOnRemove.get();
 
             for (UUID entityUuid : entityUuids) {
-                actionOnRemove.accept(new Pair<>(this.entity, this.getEntity(entityUuid)));
+                actualActionOnRemove.execute(getHolder(), getEntity(entityUuid));
             }
 
         }
@@ -230,7 +247,7 @@ public class EntitySetPowerType extends PowerType {
         entities.clear();
 
         if (wasNotEmpty) {
-            PowerHolderComponent.syncPower(this.entity, this.power);
+            PowerHolderComponent.syncPower(getHolder(), getPower());
         }
 
     }
@@ -247,7 +264,7 @@ public class EntitySetPowerType extends PowerType {
         }
 
         Entity entity = null;
-        MinecraftServer server = this.entity.getServer();
+        MinecraftServer server = getHolder().getServer();
 
         if (entities.containsKey(uuid)) {
             entity = entities.get(uuid);
@@ -344,23 +361,6 @@ public class EntitySetPowerType extends PowerType {
 
         }
 
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("entity_set"),
-            new SerializableData()
-                .add("action_on_add", ApoliDataTypes.BIENTITY_ACTION, null)
-                .add("action_on_remove", ApoliDataTypes.BIENTITY_ACTION, null)
-                .add("tick_rate", SerializableDataTypes.POSITIVE_INT, 1),
-            data -> (power, entity) -> new EntitySetPowerType(
-                power,
-                entity,
-                data.get("action_on_add"),
-                data.get("action_on_remove"),
-                data.get("tick_rate")
-            )
-        ).allowCondition();
     }
 
 }

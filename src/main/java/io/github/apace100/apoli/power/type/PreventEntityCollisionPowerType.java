@@ -1,44 +1,50 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.BiEntityCondition;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class PreventEntityCollisionPowerType extends PowerType {
 
-    private final Predicate<Pair<Entity, Entity>> biEntityCondition;
+    public static final TypedDataObjectFactory<PreventEntityCollisionPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("bientity_condition", BiEntityCondition.DATA_TYPE.optional(), Optional.empty()),
+        (data, condition) -> new PreventEntityCollisionPowerType(
+            data.get("bientity_condition"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("bientity_condition", powerType.biEntityCondition)
+    );
 
-    public PreventEntityCollisionPowerType(Power power, LivingEntity entity, Predicate<Pair<Entity, Entity>> biEntityCondition) {
-        super(power, entity);
+    private final Optional<BiEntityCondition> biEntityCondition;
+
+    public PreventEntityCollisionPowerType(Optional<BiEntityCondition> biEntityCondition, Optional<EntityCondition> condition) {
+        super(condition);
         this.biEntityCondition = biEntityCondition;
     }
 
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.PREVENT_ENTITY_COLLISION;
+    }
+
     public boolean doesApply(Entity target) {
-        return biEntityCondition == null || biEntityCondition.test(new Pair<>(entity, target));
+        return biEntityCondition
+            .map(condition -> condition.test(getHolder(), target))
+            .orElse(true);
     }
 
     public static boolean doesApply(Entity fromEntity, Entity collidingEntity) {
         return PowerHolderComponent.hasPowerType(fromEntity, PreventEntityCollisionPowerType.class, p -> p.doesApply(collidingEntity))
             || PowerHolderComponent.hasPowerType(collidingEntity, PreventEntityCollisionPowerType.class, p -> p.doesApply(fromEntity));
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("prevent_entity_collision"),
-            new SerializableData()
-                .add("bientity_condition", ApoliDataTypes.BIENTITY_CONDITION, null),
-            data -> (power, entity) -> new PreventEntityCollisionPowerType(power, entity,
-                data.get("bientity_condition")
-            )
-        ).allowCondition();
     }
 
 }

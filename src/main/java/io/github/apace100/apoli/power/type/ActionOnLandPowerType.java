@@ -1,37 +1,41 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.action.EntityAction;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
+import java.util.Optional;
 
 public class ActionOnLandPowerType extends PowerType {
 
-    private final Consumer<Entity> entityAction;
+    public static final TypedDataObjectFactory<ActionOnLandPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE),
+        (data, condition) -> new ActionOnLandPowerType(
+            data.get("entity_action"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+    );
 
-    public ActionOnLandPowerType(Power power, LivingEntity entity, Consumer<Entity> entityAction) {
-        super(power, entity);
+    private final EntityAction entityAction;
+
+    public ActionOnLandPowerType(EntityAction entityAction, Optional<EntityCondition> condition) {
+        super(condition);
         this.entityAction = entityAction;
     }
 
-    public void executeAction() {
-        entityAction.accept(entity);
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.ACTION_ON_LAND;
     }
 
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("action_on_land"),
-            new SerializableData()
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION, null),
-            data -> (power, entity) -> new ActionOnLandPowerType(power, entity,
-                data.get("entity_action")
-            )
-        ).allowCondition();
+    public void executeAction() {
+        entityAction.execute(getHolder());
     }
 
 }

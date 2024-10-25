@@ -11,6 +11,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 
 public class RevokePowerEntityActionType extends EntityActionType {
 
@@ -37,11 +38,11 @@ public class RevokePowerEntityActionType extends EntityActionType {
 
     @Override
     protected void execute(Entity entity) {
-        PowerHolderComponent.revokePower(entity, power, source, true);
+        PowerHolderComponent.revokePower(entity, power.getStrictReference(), source, true);
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.REVOKE_POWER;
     }
 

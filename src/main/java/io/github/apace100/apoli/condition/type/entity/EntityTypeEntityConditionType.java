@@ -8,6 +8,7 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import org.jetbrains.annotations.NotNull;
 
 public class EntityTypeEntityConditionType extends EntityConditionType {
 
@@ -33,7 +34,7 @@ public class EntityTypeEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.ENTITY_TYPE;
     }
 

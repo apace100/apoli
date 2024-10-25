@@ -6,6 +6,7 @@ import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.action.type.meta.NothingMetaActionType;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class NothingItemActionType extends ItemActionType implements NothingMetaActionType {
 
@@ -15,7 +16,7 @@ public class NothingItemActionType extends ItemActionType implements NothingMeta
 	}
 
 	@Override
-	public ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> configuration() {
 		return ItemActionTypes.NOTHING;
 	}
 

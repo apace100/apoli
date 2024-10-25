@@ -2,6 +2,7 @@ package io.github.apace100.apoli.integration;
 
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.type.*;
+import net.fabricmc.fabric.api.entity.event.v1.EntityElytraEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
@@ -20,6 +21,11 @@ public class PowerIntegration {
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(ModifyTypeTagPowerType::sendTagCache);
 
         PostPowerReloadCallback.EVENT.register(RecipePowerType::registerPowerRecipes);
+
+        EntityElytraEvents.CUSTOM.register(ElytraFlightPowerType::integrateCustomCallback);
+        EntityElytraEvents.ALLOW.register(PreventElytraFlightPowerType::integrateAllowCallback);
+
+        InvulnerabilityPowerType.INCOMPATIBILITY.register(InvulnerabilityPowerType::integrateDefaultIncompatibilityCallback);
 
     }
 

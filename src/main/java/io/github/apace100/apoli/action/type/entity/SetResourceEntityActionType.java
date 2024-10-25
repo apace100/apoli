@@ -11,6 +11,7 @@ import io.github.apace100.apoli.util.PowerUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class SetResourceEntityActionType extends EntityActionType {
 
@@ -38,14 +39,14 @@ public class SetResourceEntityActionType extends EntityActionType {
     @Override
     protected void execute(Entity entity) {
 
-        if (PowerUtil.setResourceValue(resource.getType(entity), value)) {
+        if (PowerUtil.setResourceValue(resource.getPowerTypeFrom(entity), value)) {
             PowerHolderComponent.syncPower(entity, resource);
         }
 
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return EntityActionTypes.SET_RESOURCE;
     }
 

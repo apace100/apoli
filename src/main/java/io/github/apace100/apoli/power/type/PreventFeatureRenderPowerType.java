@@ -1,60 +1,59 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.registry.ApoliClassDataClient;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 public class PreventFeatureRenderPowerType extends PowerType {
 
-    private final Set<String> classStrings;
+    public static final TypedDataObjectFactory<PreventFeatureRenderPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("feature", SerializableDataTypes.STRING, null)
+            .addFunctionedDefault("features", SerializableDataTypes.STRINGS, data -> MiscUtil.singletonListOrEmpty(data.get("feature"))),
+        (data, condition) -> new PreventFeatureRenderPowerType(
+            data.get("features"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("features", powerType.featureRendererReferences)
+    );
 
-    public PreventFeatureRenderPowerType(Power power, LivingEntity entity, String classString, List<String> classStrings) {
-        super(power, entity);
-        this.classStrings = new HashSet<>();
+    private final List<String> featureRendererReferences;
 
-        if (classString != null) {
-            this.classStrings.add(classString);
-        }
+    public PreventFeatureRenderPowerType(List<String> featureRendererReferences, Optional<EntityCondition> condition) {
+        super(condition);
+        this.featureRendererReferences = featureRendererReferences
+            .stream()
+            .distinct()
+            .collect(Collectors.toCollection(ObjectArrayList::new));
+    }
 
-        if (classStrings != null) {
-            this.classStrings.addAll(classStrings);
-        }
-
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.PREVENT_FEATURE_RENDER;
     }
 
     @Environment(EnvType.CLIENT)
     public <T extends FeatureRenderer<?, ?>> boolean doesApply(T featureRenderer) {
-        return classStrings.isEmpty() || classStrings
+        return featureRendererReferences.isEmpty() || featureRendererReferences
             .stream()
             .map(ApoliClassDataClient.FEATURE_RENDERERS::mapStringToClass)
             .filter(Optional::isPresent)
             .map(Optional::get)
             .anyMatch(cls -> cls.isAssignableFrom(featureRenderer.getClass()));
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("prevent_feature_render"),
-            new SerializableData()
-                .add("feature", SerializableDataTypes.STRING, null)
-                .add("features", SerializableDataTypes.STRINGS, null),
-            data -> (power, entity) -> new PreventFeatureRenderPowerType(power, entity,
-                data.get("feature"),
-                data.get("features")
-            )
-        ).allowCondition();
     }
 
 }

@@ -11,6 +11,7 @@ import io.github.apace100.apoli.util.PowerUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class ResourceEntityConditionType extends EntityConditionType {
 
@@ -43,11 +44,11 @@ public class ResourceEntityConditionType extends EntityConditionType {
 
     @Override
     public boolean test(Entity entity) {
-        return comparison.compare(PowerUtil.getResourceValue(resource.getType(entity)), compareTo);
+        return comparison.compare(PowerUtil.getResourceValue(resource.getPowerTypeFrom(entity)), compareTo);
     }
 
     @Override
-    public ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> configuration() {
         return EntityConditionTypes.RESOURCE;
     }
 

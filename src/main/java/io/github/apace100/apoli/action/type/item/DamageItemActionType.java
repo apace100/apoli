@@ -10,6 +10,7 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 public class DamageItemActionType extends ItemActionType {
 
@@ -61,7 +62,7 @@ public class DamageItemActionType extends ItemActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return ItemActionTypes.DAMAGE;
     }
 

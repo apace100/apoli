@@ -1,71 +1,65 @@
 package io.github.apace100.apoli.power.type;
 
-import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
+import io.github.apace100.apoli.action.EntityAction;
+import io.github.apace100.apoli.condition.DamageCondition;
+import io.github.apace100.apoli.condition.EntityCondition;
+import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.util.HudRender;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.Optional;
 
+@Deprecated
 public class AttackerActionWhenHitPowerType extends CooldownPowerType {
 
-    private final Predicate<Pair<DamageSource, Float>> damageCondition;
-    private final Consumer<Entity> entityAction;
+    public static final TypedDataObjectFactory<AttackerActionWhenHitPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
+        new SerializableData()
+            .add("entity_action", EntityAction.DATA_TYPE)
+            .add("damage_condition", DamageCondition.DATA_TYPE.optional(), Optional.empty())
+            .add("hud_render", HudRender.DATA_TYPE, HudRender.DONT_RENDER)
+            .add("cooldown", SerializableDataTypes.INT, 1),
+        (data, condition) -> new AttackerActionWhenHitPowerType(
+            data.get("entity_action"),
+            data.get("damage_condition"),
+            data.get("hud_render"),
+            data.get("cooldown"),
+            condition
+        ),
+        (powerType, serializableData) -> serializableData.instance()
+            .set("entity_action", powerType.entityAction)
+            .set("damage_condition", powerType.damageCondition)
+            .set("hud_render", powerType.getRenderSettings())
+            .set("cooldown", powerType.getCooldown())
+    );
 
-    public AttackerActionWhenHitPowerType(Power power, LivingEntity entity, int cooldownDuration, HudRender hudRender, Predicate<Pair<DamageSource, Float>> damageCondition, Consumer<Entity> entityAction) {
-        super(power, entity, cooldownDuration, hudRender);
-        this.damageCondition = damageCondition;
+    private final EntityAction entityAction;
+    private final Optional<DamageCondition> damageCondition;
+
+    public AttackerActionWhenHitPowerType(EntityAction entityAction, Optional<DamageCondition> damageCondition, HudRender hudRender, int cooldownDuration, Optional<EntityCondition> condition) {
+        super(cooldownDuration, hudRender, condition);
         this.entityAction = entityAction;
+        this.damageCondition = damageCondition;
+    }
+
+    @Override
+    public @NotNull PowerConfiguration<?> configuration() {
+        return PowerTypes.ATTACKER_ACTION_WHEN_HIT;
     }
 
     public boolean doesApply(DamageSource source, float amount) {
         return source.getAttacker() != null
             && this.canUse()
-            && (damageCondition == null || damageCondition.test(new Pair<>(source, amount)));
+            && damageCondition.map(condition -> condition.test(source, amount)).orElse(true);
     }
 
     public void whenHit(Entity attacker) {
-        this.entityAction.accept(attacker);
         this.use();
-    }
-
-    @Deprecated(forRemoval = true)
-    public void whenHit(DamageSource damageSource, float damageAmount) {
-        if(damageSource.getAttacker() != null && damageSource.getAttacker() != entity) {
-            if(damageCondition == null || damageCondition.test(new Pair<>(damageSource, damageAmount))) {
-                if(canUse()) {
-                    this.entityAction.accept(damageSource.getAttacker());
-                    use();
-                }
-            }
-        }
-    }
-
-    public static PowerTypeFactory<?> getFactory() {
-        return new PowerTypeFactory<>(
-            Apoli.identifier("attacker_action_when_hit"),
-            new SerializableData()
-                .add("entity_action", ApoliDataTypes.ENTITY_ACTION)
-                .add("damage_condition", ApoliDataTypes.DAMAGE_CONDITION, null)
-                .add("cooldown", SerializableDataTypes.INT, 1)
-                .add("hud_render", ApoliDataTypes.HUD_RENDER, HudRender.DONT_RENDER),
-            data -> (power, entity) -> new AttackerActionWhenHitPowerType(
-                power,
-                entity,
-                data.get("cooldown"),
-                data.get("hud_render"),
-                data.get("damage_condition"),
-                data.get("entity_action")
-            )
-        ).allowCondition();
+        this.entityAction.execute(attacker);
     }
 
 }

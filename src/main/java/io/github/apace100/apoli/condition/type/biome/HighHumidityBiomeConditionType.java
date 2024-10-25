@@ -6,6 +6,7 @@ import io.github.apace100.apoli.condition.type.BiomeConditionTypes;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 
 public class HighHumidityBiomeConditionType extends BiomeConditionType {
 
@@ -15,7 +16,7 @@ public class HighHumidityBiomeConditionType extends BiomeConditionType {
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return BiomeConditionTypes.HIGH_HUMIDITY;
 	}
 

@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.type.EntityConditionType;
 import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.RandomChanceMetaConditionType;
 import net.minecraft.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 public class RandomChanceEntityConditionType extends EntityConditionType implements RandomChanceMetaConditionType {
 
@@ -20,7 +21,7 @@ public class RandomChanceEntityConditionType extends EntityConditionType impleme
 	}
 
 	@Override
-	public ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> configuration() {
 		return EntityConditionTypes.RANDOM_CHANCE;
 	}
 

@@ -54,6 +54,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -128,7 +129,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     @ModifyReturnValue(method = "isInvulnerableTo", at = @At("RETURN"))
     private boolean apoli$makeEntitiesInvulnerable(boolean original, DamageSource source) {
         return original
-            || PowerHolderComponent.hasPowerType((Entity) (Object) this, InvulnerablePowerType.class, p -> p.doesApply(source));
+            || PowerHolderComponent.hasPowerType((Entity) (Object) this, InvulnerabilityPowerType.class, p -> p.doesApply(source));
     }
 
     @ModifyExpressionValue(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isWet()Z"))
@@ -461,8 +462,8 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     private ArmPoseReference apoli$modifiedArmPose;
 
     @Override
-    public EntityPose apoli$getModifiedEntityPose() {
-        return apoli$modifiedEntityPose;
+    public Optional<EntityPose> apoli$getModifiedEntityPose() {
+        return Optional.ofNullable(apoli$modifiedEntityPose);
     }
 
     @Override
@@ -471,8 +472,8 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
     }
 
     @Override
-    public ArmPoseReference apoli$getModifiedArmPose() {
-        return apoli$modifiedArmPose;
+    public Optional<ArmPoseReference> apoli$getModifiedArmPose() {
+        return Optional.ofNullable(apoli$modifiedArmPose);
     }
 
     @Override
@@ -492,15 +493,12 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity, Mo
                         this.apoli$previousEntityPose = this.getPose();
                     }
 
-                    @Nullable
-                    EntityPose entityPose = posePower.getEntityPose();
+                    Optional<EntityPose> replacementEntityPose = posePower.getEntityPose();
 
-                    this.apoli$setModifiedEntityPose(entityPose);
-                    this.apoli$setModifiedArmPose(posePower.getArmPose());
+                    this.apoli$setModifiedEntityPose(replacementEntityPose.orElse(null));
+                    this.apoli$setModifiedArmPose(posePower.getArmPose().orElse(null));
 
-                    if (entityPose != null) {
-                        this.setPose(entityPose);
-                    }
+					replacementEntityPose.ifPresent(this::setPose);
 
                 },
                 () -> {

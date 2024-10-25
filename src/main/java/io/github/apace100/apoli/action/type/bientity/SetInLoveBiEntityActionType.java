@@ -6,6 +6,7 @@ import io.github.apace100.apoli.action.type.BiEntityActionTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class SetInLoveBiEntityActionType extends BiEntityActionType {
 
@@ -19,7 +20,7 @@ public class SetInLoveBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BiEntityActionTypes.SET_IN_LOVE;
     }
 

@@ -1,39 +1,47 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.power.Power;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
-import io.github.apace100.calio.data.SerializableData;
+import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.ladysnake.pal.AbilitySource;
 import io.github.ladysnake.pal.Pal;
 import io.github.ladysnake.pal.PlayerAbility;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.network.ServerPlayerEntity;
 
-public class PlayerAbilityPowerType extends PowerType {
+import java.util.Objects;
+import java.util.Optional;
 
-    private final PlayerAbility ability;
-    private final AbilitySource source;
+//  TODO: Implement this as a standalone power type -eggohito
+public abstract class PlayerAbilityPowerType extends PowerType {
 
+    protected final PlayerAbility ability;
+    protected final int priority;
+
+    private AbilitySource source;
     private boolean shouldRefresh;
 
-    public PlayerAbilityPowerType(Power power, LivingEntity entity, PlayerAbility playerAbility) {
-        super(power, entity);
+    public PlayerAbilityPowerType(PlayerAbility playerAbility, int priority, Optional<EntityCondition> condition) {
+        super(condition);
         this.ability = playerAbility;
-        this.source = Pal.getAbilitySource(this.getPowerId());
+        this.priority = priority;
     }
 
     @Override
     public boolean shouldTick() {
-        return entity instanceof PlayerEntity;
+        return getHolder() instanceof PlayerEntity;
     }
 
     @Override
     public boolean shouldTickWhenInactive() {
         return this.shouldTick();
+    }
+
+    @Override
+    public void onInit() {
+        this.source = Pal.getAbilitySource(getPower().getId(), priority);
+        this.shouldRefresh = false;
     }
 
     @Override
@@ -54,15 +62,15 @@ public class PlayerAbilityPowerType extends PowerType {
     }
 
     @Override
-    public void tick() {
+    public void serverTick() {
 
-        if (!(entity instanceof PlayerEntity player)) {
+        if (!(getHolder() instanceof PlayerEntity player)) {
             return;
         }
 
         if (shouldRefresh) {
-            ability.getTracker(player).refresh(true);
-            shouldRefresh = false;
+            this.ability.getTracker(player).refresh(true);
+            this.shouldRefresh = false;
         }
 
         else {
@@ -84,8 +92,8 @@ public class PlayerAbilityPowerType extends PowerType {
 
     @Override
     public void onAdded() {
-        if (!entity.getWorld().isClient && entity instanceof PlayerEntity player && Apoli.LEGACY_POWER_SOURCE.grants(player, ability)) {
-            Apoli.LEGACY_POWER_SOURCE.revokeFrom(player, ability);
+        if (getHolder() instanceof ServerPlayerEntity serverPlayer && Apoli.LEGACY_POWER_SOURCE.grants(serverPlayer, ability)) {
+            Apoli.LEGACY_POWER_SOURCE.revokeFrom(serverPlayer, ability);
         }
     }
 
@@ -97,39 +105,36 @@ public class PlayerAbilityPowerType extends PowerType {
 
     @Override
     public void onGained() {
-        if (!entity.getWorld().isClient && this.isActive()) {
+        if (!getHolder().getWorld().isClient && this.isActive()) {
             grantAbility();
         }
     }
 
     @Override
     public void onLost() {
-        if (!entity.getWorld().isClient) {
+        if (!getHolder().getWorld().isClient) {
             revokeAbility();
         }
     }
 
+    protected AbilitySource getSource() {
+        return Objects.requireNonNull(source, "The source of ability \"" + ability.getId() + "\" wasn't initialized yet!");
+    }
+
     public boolean hasAbility() {
-        return entity instanceof PlayerEntity playerEntity && source.grants(playerEntity, ability);
+        return getHolder() instanceof PlayerEntity playerEntity && getSource().grants(playerEntity, ability);
     }
 
     public void grantAbility() {
-        if (entity instanceof PlayerEntity playerEntity) {
-            source.grantTo(playerEntity, ability);
+        if (getHolder() instanceof PlayerEntity playerEntity) {
+            getSource().grantTo(playerEntity, ability);
         }
     }
 
     public void revokeAbility() {
-        if (entity instanceof PlayerEntity playerEntity) {
-            source.revokeFrom(playerEntity, ability);
+        if (getHolder() instanceof PlayerEntity playerEntity) {
+            getSource().revokeFrom(playerEntity, ability);
         }
-    }
-
-    public static PowerTypeFactory<?> createFactory(Identifier id, PlayerAbility ability) {
-        return new PowerTypeFactory<>(id,
-            new SerializableData(),
-            data -> (power, entity) -> new PlayerAbilityPowerType(power, entity, ability)
-        ).allowCondition();
     }
 
 }

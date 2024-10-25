@@ -7,6 +7,7 @@ import io.github.apace100.apoli.networking.packet.s2c.MountPlayerS2CPacket;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.NotNull;
 
 public class MountBiEntityActionType extends BiEntityActionType {
 
@@ -25,7 +26,7 @@ public class MountBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> configuration() {
         return BiEntityActionTypes.MOUNT;
     }
 
