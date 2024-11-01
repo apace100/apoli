@@ -4,6 +4,7 @@ import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
 import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.util.SavedBlockPosition;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -20,10 +21,8 @@ public class BlockCondition extends AbstractCondition<BlockConditionContext, Blo
 		this(conditionType, false);
 	}
 
-	@Override
-	public boolean test(BlockConditionContext context) {
-		return context.world().isChunkLoaded(context.pos())
-			&& super.test(context);
+	public boolean test(SavedBlockPosition savedBlock) {
+		return test(new BlockConditionContext(savedBlock));
 	}
 
 	public boolean test(World world, BlockPos pos) {

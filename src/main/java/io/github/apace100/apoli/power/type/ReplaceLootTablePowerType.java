@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.access.IdentifiedLootTable;
+import io.github.apace100.apoli.access.KeyableLootTable;
 import io.github.apace100.apoli.condition.BiEntityCondition;
 import io.github.apace100.apoli.condition.BlockCondition;
 import io.github.apace100.apoli.condition.EntityCondition;
@@ -21,7 +21,6 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -29,7 +28,7 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-public class ReplaceLootTablePowerType extends PowerType {
+public class ReplaceLootTablePowerType extends PowerType implements Prioritized<ReplaceLootTablePowerType> {
 
     public static final RegistryKey<LootTable> REPLACED_TABLE_KEY = RegistryKey.of(RegistryKeys.LOOT_TABLE, Apoli.identifier("replaced_loot_table"));
     public static Identifier LAST_REPLACED_TABLE_ID;
@@ -84,13 +83,19 @@ public class ReplaceLootTablePowerType extends PowerType {
         return PowerTypes.REPLACE_LOOT_TABLE;
     }
 
+    @Override
+    public int getPriority() {
+        return priority;
+    }
+
     public boolean hasReplacement(RegistryKey<LootTable> lootTableKey) {
 
-        String id = lootTableKey.getValue().toString();
+        Identifier id = lootTableKey.getValue();
+        String idString = id.toString();
 
         return replacements.keySet()
             .stream()
-            .anyMatch(regex -> regex.pattern().equals(id) || regex.matcher(id).matches());
+            .anyMatch(regex -> regex.pattern().equals(idString) || regex.matcher(idString).matches());
 
     }
 
@@ -98,15 +103,14 @@ public class ReplaceLootTablePowerType extends PowerType {
 
         Entity contextEntity = context.get(LootContextParameters.THIS_ENTITY);
         ItemStack toolStack = context.hasParameter(LootContextParameters.TOOL) ? context.get(LootContextParameters.TOOL) : ItemStack.EMPTY;
-        SavedBlockPosition savedBlockPosition = SavedBlockPosition.fromLootContext(context);
 
-        return doesApply(contextEntity, toolStack, savedBlockPosition);
+        return doesApply(contextEntity, toolStack, SavedBlockPosition.fromLootContext(context));
 
     }
 
-    public boolean doesApply(Entity contextEntity, ItemStack toolStack, SavedBlockPosition cachedBlock) {
+    public boolean doesApply(Entity contextEntity, ItemStack toolStack, SavedBlockPosition savedBlock) {
         return itemCondition.map(condition -> condition.test(getHolder().getWorld(), toolStack)).orElse(true)
-            && blockCondition.map(condition -> cachedBlock.getWorld() instanceof World world && condition.test(world, cachedBlock.getBlockPos())).orElse(true)
+            && blockCondition.map(condition -> condition.test(savedBlock)).orElse(true)
             && biEntityCondition.map(condition -> condition.test(getHolder(), contextEntity)).orElse(true);
     }
 
@@ -115,12 +119,9 @@ public class ReplaceLootTablePowerType extends PowerType {
         return replacements.entrySet()
             .stream()
             .filter(entry -> entry.getKey().pattern().equals(lootTableId) || entry.getKey().matcher(lootTableId).matches())
+            .map(Map.Entry::getValue)
             .findFirst()
-            .map(entry -> RegistryKey.of(RegistryKeys.LOOT_TABLE, entry.getValue()));
-    }
-
-    public int getPriority() {
-        return priority;
+            .map(replacementId -> RegistryKey.of(RegistryKeys.LOOT_TABLE, replacementId));
     }
 
     public static void clearStack() {
@@ -134,7 +135,7 @@ public class ReplaceLootTablePowerType extends PowerType {
 
     public static LootTable pop() {
 
-        if(REPLACEMENT_STACK.isEmpty()) {
+        if (REPLACEMENT_STACK.isEmpty()) {
             return LootTable.EMPTY;
         }
 
@@ -147,7 +148,7 @@ public class ReplaceLootTablePowerType extends PowerType {
 
     public static LootTable restore() {
 
-        if(BACKTRACK_STACK.isEmpty()) {
+        if (BACKTRACK_STACK.isEmpty()) {
             return LootTable.EMPTY;
         }
 
@@ -160,11 +161,13 @@ public class ReplaceLootTablePowerType extends PowerType {
 
     public static LootTable peek() {
 
-        if(REPLACEMENT_STACK.isEmpty()) {
+        if (REPLACEMENT_STACK.isEmpty()) {
             return LootTable.EMPTY;
         }
 
-        return REPLACEMENT_STACK.peek();
+        else {
+            return REPLACEMENT_STACK.peek();
+        }
 
     }
 
@@ -174,7 +177,7 @@ public class ReplaceLootTablePowerType extends PowerType {
         int count = 0;
         while(!REPLACEMENT_STACK.isEmpty()) {
             LootTable t = pop();
-            stringBuilder.append(t == null ? "null" : ((IdentifiedLootTable)t).apoli$getLootTableKey());
+            stringBuilder.append(t == null ? "null" : ((KeyableLootTable)t).apoli$getKey());
             if(!REPLACEMENT_STACK.isEmpty()) {
                 stringBuilder.append(", ");
             }
@@ -187,7 +190,7 @@ public class ReplaceLootTablePowerType extends PowerType {
         }
         while(!BACKTRACK_STACK.isEmpty()) {
             LootTable t = restore();
-            stringBuilder.append(t == null ? "null" : ((IdentifiedLootTable)t).apoli$getLootTableKey());
+            stringBuilder.append(t == null ? "null" : ((KeyableLootTable)t).apoli$getKey());
             if(!BACKTRACK_STACK.isEmpty()) {
                 stringBuilder.append(", ");
             }

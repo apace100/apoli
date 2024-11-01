@@ -8,6 +8,8 @@ import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.DistanceFromCoordinatesMetaConditionType;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -51,8 +53,8 @@ public class DistanceFromCoordinatesBlockConditionType extends BlockConditionTyp
 	}
 
 	@Override
-	public boolean test(World world, BlockPos pos) {
-		return testCondition(Either.left(new BlockConditionContext(world, pos)));
+	public boolean test(World world, BlockPos pos, BlockState blockState, Optional<BlockEntity> blockEntity) {
+		return testCondition(Either.left(new BlockConditionContext(world, pos, blockState, blockEntity)));
 	}
 
 	@Override

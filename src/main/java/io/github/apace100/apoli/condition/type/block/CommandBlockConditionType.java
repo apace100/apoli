@@ -10,6 +10,7 @@ import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
@@ -20,6 +21,7 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CommandBlockConditionType extends BlockConditionType {
@@ -52,7 +54,7 @@ public class CommandBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public boolean test(World world, BlockPos pos) {
+    public boolean test(World world, BlockPos pos, BlockState blockState, Optional<BlockEntity> blockEntity) {
 
         if (!(world instanceof ServerWorld serverWorld)) {
             return false;
@@ -61,9 +63,7 @@ public class CommandBlockConditionType extends BlockConditionType {
         MinecraftServer server = serverWorld.getServer();
         AtomicInteger result = new AtomicInteger();
 
-        BlockState blockState = world.getBlockState(pos);
         String blockTranslationKey = blockState.getBlock().getTranslationKey();
-
         ServerCommandSource commandSource = new ServerCommandSource(
             Apoli.config.executeCommand.showOutput ? server : CommandOutput.DUMMY,
             pos.toCenterPos(),

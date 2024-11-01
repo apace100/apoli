@@ -6,13 +6,15 @@ import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
-import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
 
 /**
  *  TODO: Use {@link SerializableDataTypes#NBT_PATH} for the 'nbt' parameter    -eggohito
@@ -36,14 +38,11 @@ public class NbtBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public boolean test(World world, BlockPos pos) {
-
-        DynamicRegistryManager dynamicRegistries = world.getRegistryManager();
-        BlockEntity blockEntity = world.getBlockEntity(pos);
-
-        return blockEntity != null
-            && NbtHelper.matches(nbt, blockEntity.createNbtWithIdentifyingData(dynamicRegistries), true);
-
+    public boolean test(World world, BlockPos pos, BlockState blockState, Optional<BlockEntity> blockEntity) {
+        return blockEntity
+            .map(_blockEntity -> _blockEntity.createNbtWithIdentifyingData(world.getRegistryManager()))
+            .map(blockEntityNbt -> NbtHelper.matches(nbt, blockEntityNbt, true))
+            .orElse(false);
     }
 
     @Override

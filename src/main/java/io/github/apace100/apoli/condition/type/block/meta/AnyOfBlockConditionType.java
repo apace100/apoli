@@ -6,11 +6,14 @@ import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.apoli.condition.type.BlockConditionType;
 import io.github.apace100.apoli.condition.type.BlockConditionTypes;
 import io.github.apace100.apoli.condition.type.meta.AnyOfMetaConditionType;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 
 public class AnyOfBlockConditionType extends BlockConditionType implements AnyOfMetaConditionType<BlockConditionContext, BlockCondition> {
 
@@ -21,8 +24,8 @@ public class AnyOfBlockConditionType extends BlockConditionType implements AnyOf
 	}
 
 	@Override
-	public boolean test(World world, BlockPos pos) {
-		return testConditions(new BlockConditionContext(world, pos));
+	public boolean test(World world, BlockPos pos, BlockState blockState, Optional<BlockEntity> blockEntity) {
+		return testConditions(new BlockConditionContext(world, pos, blockState, blockEntity));
 	}
 
 	@Override
