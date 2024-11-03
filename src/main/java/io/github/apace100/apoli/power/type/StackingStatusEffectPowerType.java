@@ -55,7 +55,7 @@ public class StackingStatusEffectPowerType extends StatusEffectPowerType {
     private int currentStack = 0;
 
     public StackingStatusEffectPowerType(List<StatusEffectInstance> effects, int minStacks, int maxStacks, int durationPerStack, int tickRate, Optional<EntityCondition> condition) {
-        super(condition);
+        super(effects, condition);
         this.minStacks = minStacks;
         this.maxStacks = maxStacks;
         this.durationPerStack = durationPerStack;

@@ -13,6 +13,11 @@ public abstract class StatusEffectPowerType extends PowerType {
 
     protected final List<StatusEffectInstance> effects = new LinkedList<>();
 
+    public StatusEffectPowerType(List<StatusEffectInstance> effectInstances, Optional<EntityCondition> condition) {
+        super(condition);
+        this.effects.addAll(effectInstances);
+    }
+
     public StatusEffectPowerType(Optional<EntityCondition> condition) {
         super(condition);
     }
