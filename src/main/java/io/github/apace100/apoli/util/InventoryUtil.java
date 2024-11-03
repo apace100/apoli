@@ -229,7 +229,7 @@ public class InventoryUtil {
 
     }
 
-    public static void forEachStack(Entity entity, Consumer<ItemStack> itemStackConsumer) {
+    public static void forEachStack(Entity entity, Consumer<ItemStack> stackConsumer) {
 
         int slotToSkip = getDuplicatedSlotIndex(entity);
         for (int slot : getAllSlots()) {
@@ -240,32 +240,32 @@ public class InventoryUtil {
             }
 
             StackReference stackReference = entity.getStackReference(slot);
-            if (stackReference == StackReference.EMPTY) {
-                continue;
-            }
-
             ItemStack stack = stackReference.get();
+
             if (!stack.isEmpty()) {
-                itemStackConsumer.accept(stack);
+                stackConsumer.accept(stack);
             }
 
         }
 
-        PowerHolderComponent component = PowerHolderComponent.KEY.maybeGet(entity).orElse(null);
-        if (component == null) {
-            return;
-        }
+        List<InventoryPowerType> inventoryPowerTypes = PowerHolderComponent.getOptional(entity)
+            .stream()
+            .map(component -> component.getPowerTypes(InventoryPowerType.class))
+            .flatMap(Collection::stream)
+            .toList();
 
-        List<InventoryPowerType> inventoryPowers = component.getPowerTypes(InventoryPowerType.class);
-        for (InventoryPowerType inventoryPower : inventoryPowers) {
-            for (int index = 0; index < inventoryPower.size(); index++) {
+        for (InventoryPowerType inventoryPowerType : inventoryPowerTypes) {
 
-                ItemStack stack = inventoryPower.getStack(index);
+            for (int i = 0; i < inventoryPowerTypes.size(); i++) {
+
+                ItemStack stack = inventoryPowerType.getStack(i);
+
                 if (!stack.isEmpty()) {
-                    itemStackConsumer.accept(stack);
+                    stackConsumer.accept(stack);
                 }
 
             }
+
         }
 
     }
