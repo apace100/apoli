@@ -40,7 +40,7 @@ public class RemoveFromEntitySetBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BiEntityActionTypes.REMOVE_FROM_ENTITY_SET;
     }
 

@@ -67,7 +67,7 @@ public class ExecuteCommandBlockActionType extends BlockActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BlockActionTypes.EXECUTE_COMMAND;
     }
 

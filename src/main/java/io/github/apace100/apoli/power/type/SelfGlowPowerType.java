@@ -60,7 +60,7 @@ public class SelfGlowPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.SELF_GLOW;
     }
 

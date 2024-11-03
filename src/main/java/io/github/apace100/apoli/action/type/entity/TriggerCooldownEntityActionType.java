@@ -39,7 +39,7 @@ public class TriggerCooldownEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.TRIGGER_COOLDOWN;
     }
 

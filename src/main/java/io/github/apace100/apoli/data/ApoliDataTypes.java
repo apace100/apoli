@@ -276,7 +276,7 @@ public class ApoliDataTypes {
 					public <I> RecordBuilder<I> encode(C input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
 
 						CT conditionType = input.getConditionType();
-						ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.configuration();
+						ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.getConfig();
 
 						prefix.add(typeField, registryDataType.write(ops, config));
 						config.mapCodec(root).encode(conditionType, ops, prefix);
@@ -306,7 +306,7 @@ public class ApoliDataTypes {
 				public void encode(RegistryByteBuf buf, C value) {
 
 					CT conditionType = value.getConditionType();
-					ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.configuration();
+					ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.getConfig();
 
 					SerializableData.Instance conditionData = serializableData.instance()
 						.set(typeField, config)
@@ -347,7 +347,7 @@ public class ApoliDataTypes {
 					public <I> RecordBuilder<I> encode(A input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
 
 						AT actionType = input.getActionType();
-						ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.configuration();
+						ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.getConfig();
 
 						prefix.add(typeField, registryDataType.write(ops, config));
 						config.mapCodec(root).encode(actionType, ops, prefix);
@@ -374,7 +374,7 @@ public class ApoliDataTypes {
 				public void encode(RegistryByteBuf buf, A value) {
 
 					AT actionType = value.getActionType();
-					ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.configuration();
+					ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.getConfig();
 
 					SerializableData.Instance actionData = serializableData.instance()
 						.set(typeField, config);

@@ -30,7 +30,7 @@ public class ChanceEntityActionType extends EntityActionType implements ChanceMe
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return EntityActionTypes.CHANCE;
 	}
 

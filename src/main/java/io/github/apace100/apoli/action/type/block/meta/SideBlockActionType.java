@@ -29,7 +29,7 @@ public class SideBlockActionType extends BlockActionType implements SideMetaActi
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BlockActionTypes.SIDE;
 	}
 

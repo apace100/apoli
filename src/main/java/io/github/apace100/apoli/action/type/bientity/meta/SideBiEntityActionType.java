@@ -25,7 +25,7 @@ public class SideBiEntityActionType extends BiEntityActionType implements SideMe
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BiEntityActionTypes.SIDE;
 	}
 

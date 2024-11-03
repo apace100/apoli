@@ -70,7 +70,7 @@ public class PreventItemPickupPowerType extends PowerType implements Prioritized
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_ITEM_PICKUP;
     }
 

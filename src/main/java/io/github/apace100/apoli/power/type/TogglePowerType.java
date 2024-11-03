@@ -48,7 +48,7 @@ public class TogglePowerType extends PowerType implements Active {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.TOGGLE;
     }
 

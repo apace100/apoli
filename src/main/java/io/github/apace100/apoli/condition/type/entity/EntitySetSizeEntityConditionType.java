@@ -56,7 +56,7 @@ public class EntitySetSizeEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.ENTITY_SET_SIZE;
     }
 

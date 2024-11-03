@@ -36,7 +36,7 @@ public class ModifyCameraSubmersionTypePowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_CAMERA_SUBMERSION;
     }
 

@@ -30,7 +30,7 @@ public class InEntitySetBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiEntityConditionTypes.IN_ENTITY_SET;
     }
 

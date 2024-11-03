@@ -98,7 +98,7 @@ public class ItemOnItemPowerType extends PowerType implements Prioritized<ItemOn
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ITEM_ON_ITEM;
     }
 

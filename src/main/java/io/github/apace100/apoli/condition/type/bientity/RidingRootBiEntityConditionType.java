@@ -11,7 +11,7 @@ import java.util.Objects;
 public class RidingRootBiEntityConditionType extends BiEntityConditionType {
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiEntityConditionTypes.RIDING_ROOT;
     }
 

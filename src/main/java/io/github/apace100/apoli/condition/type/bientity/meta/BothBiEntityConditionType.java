@@ -28,7 +28,7 @@ public class BothBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiEntityConditionTypes.BOTH;
     }
 

@@ -25,7 +25,7 @@ public class AnyOfEntityConditionType extends EntityConditionType implements Any
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return EntityConditionTypes.ANY_OF;
 	}
 

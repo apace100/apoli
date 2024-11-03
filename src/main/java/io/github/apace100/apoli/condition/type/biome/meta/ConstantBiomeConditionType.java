@@ -23,7 +23,7 @@ public class ConstantBiomeConditionType extends BiomeConditionType implements Co
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BiomeConditionTypes.CONSTANT;
 	}
 

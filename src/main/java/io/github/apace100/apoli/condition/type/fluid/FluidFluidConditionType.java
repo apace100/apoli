@@ -34,7 +34,7 @@ public class FluidFluidConditionType extends FluidConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return FluidConditionTypes.FLUID;
     }
 

@@ -27,7 +27,7 @@ public class IfElseListEntityActionType extends EntityActionType implements IfEl
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return EntityActionTypes.IF_ELSE_LIST;
 	}
 

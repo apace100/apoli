@@ -42,7 +42,7 @@ public class ActiveSelfPowerType extends ActiveCooldownPowerType {
 	}
 
 	@Override
-	public @NotNull PowerConfiguration<?> configuration() {
+	public @NotNull PowerConfiguration<?> getConfig() {
 		return PowerTypes.ACTIVE_SELF;
 	}
 

@@ -39,7 +39,7 @@ public class ToggleEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.TOGGLE;
     }
 

@@ -23,7 +23,7 @@ public class RandomChanceBiomeConditionType extends BiomeConditionType implement
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BiomeConditionTypes.RANDOM_CHANCE;
 	}
 

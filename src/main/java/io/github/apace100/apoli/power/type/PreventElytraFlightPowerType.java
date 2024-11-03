@@ -32,7 +32,7 @@ public class PreventElytraFlightPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_ELYTRA_FLIGHT;
     }
 

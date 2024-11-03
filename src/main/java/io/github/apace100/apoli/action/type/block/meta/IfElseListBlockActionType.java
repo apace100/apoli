@@ -30,7 +30,7 @@ public class IfElseListBlockActionType extends BlockActionType implements IfElse
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BlockActionTypes.IF_ELSE_LIST;
 	}
 

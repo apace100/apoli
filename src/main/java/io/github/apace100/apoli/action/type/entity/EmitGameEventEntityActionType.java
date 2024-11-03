@@ -35,7 +35,7 @@ public class EmitGameEventEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.EMIT_GAME_EVENT;
     }
 

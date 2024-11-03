@@ -44,7 +44,7 @@ public class RecipePowerType extends PowerType implements Prioritized<RecipePowe
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.RECIPE;
     }
 

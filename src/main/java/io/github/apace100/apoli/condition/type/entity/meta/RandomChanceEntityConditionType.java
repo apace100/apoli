@@ -21,7 +21,7 @@ public class RandomChanceEntityConditionType extends EntityConditionType impleme
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return EntityConditionTypes.RANDOM_CHANCE;
 	}
 

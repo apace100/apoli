@@ -15,7 +15,7 @@ public class EmptyItemConditionType extends ItemConditionType {
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return ItemConditionTypes.EMPTY;
 	}
 

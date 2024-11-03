@@ -24,7 +24,7 @@ public class ChoiceBiEntityActionType extends BiEntityActionType implements Choi
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BiEntityActionTypes.CHOICE;
 	}
 

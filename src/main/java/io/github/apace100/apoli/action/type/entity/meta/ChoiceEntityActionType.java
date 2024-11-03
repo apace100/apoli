@@ -24,7 +24,7 @@ public class ChoiceEntityActionType extends EntityActionType implements ChoiceMe
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return EntityActionTypes.CHOICE;
 	}
 

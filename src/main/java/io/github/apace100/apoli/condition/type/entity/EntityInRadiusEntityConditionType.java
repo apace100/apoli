@@ -84,7 +84,7 @@ public class EntityInRadiusEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.ENTITY_IN_RADIUS;
     }
 

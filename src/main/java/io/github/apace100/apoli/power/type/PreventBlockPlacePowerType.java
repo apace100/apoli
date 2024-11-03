@@ -77,7 +77,7 @@ public class PreventBlockPlacePowerType extends ActiveInteractionPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_BLOCK_PLACE;
     }
 

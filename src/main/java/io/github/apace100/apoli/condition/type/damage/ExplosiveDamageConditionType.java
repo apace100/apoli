@@ -13,7 +13,7 @@ public class ExplosiveDamageConditionType extends InTagDamageConditionType {
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return DamageConditionTypes.EXPLOSIVE;
 	}
 

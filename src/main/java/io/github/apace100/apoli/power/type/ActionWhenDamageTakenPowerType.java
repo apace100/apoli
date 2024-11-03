@@ -45,7 +45,7 @@ public class ActionWhenDamageTakenPowerType extends CooldownPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_WHEN_DAMAGE_TAKEN;
     }
 

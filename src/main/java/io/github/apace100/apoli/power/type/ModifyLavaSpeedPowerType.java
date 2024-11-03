@@ -38,7 +38,7 @@ public class ModifyLavaSpeedPowerType extends ConditionedAttributePowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_LAVA_SPEED;
     }
 

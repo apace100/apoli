@@ -7,7 +7,7 @@ import net.minecraft.entity.Entity;
 public abstract class EntityConditionType extends AbstractConditionType<EntityConditionContext, EntityCondition> {
 
 	@Override
-	public final boolean test(EntityConditionContext context) {
+	public boolean test(EntityConditionContext context) {
 		return test(context.entity());
 	}
 

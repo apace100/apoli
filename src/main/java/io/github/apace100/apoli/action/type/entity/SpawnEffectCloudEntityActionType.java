@@ -82,7 +82,7 @@ public class SpawnEffectCloudEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.SPAWN_EFFECT_CLOUD;
     }
 

@@ -83,7 +83,7 @@ public class InventoryPowerType extends PowerType implements Active, Inventory {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.INVENTORY;
     }
 

@@ -27,7 +27,7 @@ public class AnyOfBiomeConditionType extends BiomeConditionType implements AnyOf
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BiomeConditionTypes.ANY_OF;
 	}
 

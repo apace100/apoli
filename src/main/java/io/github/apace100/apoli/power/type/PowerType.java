@@ -40,7 +40,7 @@ public abstract class PowerType implements Validatable {
     public void validate() throws Exception {
 
 		//noinspection unchecked
-		TypedDataObjectFactory<PowerType> dataFactory = (TypedDataObjectFactory<PowerType>) configuration().dataFactory();
+		TypedDataObjectFactory<PowerType> dataFactory = (TypedDataObjectFactory<PowerType>) getConfig().dataFactory();
         SerializableData.Instance data = dataFactory.toData(this);
 
         data.validate();
@@ -48,7 +48,7 @@ public abstract class PowerType implements Validatable {
     }
 
     @NotNull
-    public abstract PowerConfiguration<?> configuration();
+    public abstract PowerConfiguration<?> getConfig();
 
     @ApiStatus.Internal
     public final void init(@NotNull final LivingEntity holder, @NotNull final Power power) {
@@ -68,11 +68,11 @@ public abstract class PowerType implements Validatable {
     public final Power getPower() {
 
         if (initialized) {
-            return Objects.requireNonNull(power, "Power of initialized power type \"" + configuration().id() + "\" was null!");
+            return Objects.requireNonNull(power, "Power of initialized power type \"" + getConfig().id() + "\" was null!");
         }
 
         else {
-            throw new IllegalStateException("Power type \"" + configuration().id() + "\" wasn't initialized yet!");
+            throw new IllegalStateException("Power type \"" + getConfig().id() + "\" wasn't initialized yet!");
         }
 
     }
@@ -80,11 +80,11 @@ public abstract class PowerType implements Validatable {
     public final LivingEntity getHolder() {
 
         if (initialized) {
-            return Objects.requireNonNull(holder, "Holder of initialized power type \"" + configuration().id() + "\" was null!");
+            return Objects.requireNonNull(holder, "Holder of initialized power type \"" + getConfig().id() + "\" was null!");
         }
 
         else {
-            throw new IllegalStateException("Power type \"" + configuration().id() + "\" wasn't initialized yet!");
+            throw new IllegalStateException("Power type \"" + getConfig().id() + "\" wasn't initialized yet!");
         }
 
     }

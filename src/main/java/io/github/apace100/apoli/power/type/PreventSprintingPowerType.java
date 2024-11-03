@@ -13,7 +13,7 @@ public class PreventSprintingPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_SPRINTING;
     }
 

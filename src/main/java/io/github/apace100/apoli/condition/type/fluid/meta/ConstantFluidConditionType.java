@@ -21,7 +21,7 @@ public class ConstantFluidConditionType extends FluidConditionType implements Co
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return FluidConditionTypes.CONSTANT;
 	}
 

@@ -42,7 +42,7 @@ public class ModifyStatusEffectAmplifierPowerType extends ValueModifyingPowerTyp
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_STATUS_EFFECT_AMPLIFIER;
     }
 

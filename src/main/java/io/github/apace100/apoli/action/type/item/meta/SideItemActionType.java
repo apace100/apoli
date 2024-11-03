@@ -26,7 +26,7 @@ public class SideItemActionType extends ItemActionType implements SideMetaAction
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return ItemActionTypes.SIDE;
 	}
 

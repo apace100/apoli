@@ -38,7 +38,7 @@ public class ModifySwimSpeedPowerType extends ConditionedAttributePowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_SWIM_SPEED;
     }
 

@@ -38,12 +38,12 @@ public class PowerTypeEntityConditionType extends EntityConditionType {
             .stream()
             .map(PowerHolderComponent::getPowerTypes)
             .flatMap(Collection::stream)
-            .map(PowerType::configuration)
+            .map(PowerType::getConfig)
             .anyMatch(powerType::equals);
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.POWER_TYPE;
     }
 

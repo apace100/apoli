@@ -46,7 +46,7 @@ public class PosePowerType extends PowerType implements Prioritized<PosePowerTyp
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.POSE;
     }
 

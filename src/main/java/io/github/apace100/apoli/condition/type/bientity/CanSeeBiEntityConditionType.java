@@ -36,7 +36,7 @@ public class CanSeeBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiEntityConditionTypes.CAN_SEE;
     }
 

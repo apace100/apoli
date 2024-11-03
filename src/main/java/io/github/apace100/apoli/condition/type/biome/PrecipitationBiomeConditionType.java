@@ -35,7 +35,7 @@ public class PrecipitationBiomeConditionType extends BiomeConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiomeConditionTypes.PRECIPITATION;
     }
 

@@ -28,7 +28,7 @@ public class UndirectedBiEntityConditionType extends BiEntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiEntityConditionTypes.UNDIRECTED;
     }
 

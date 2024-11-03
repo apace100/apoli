@@ -26,7 +26,7 @@ public class MountBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BiEntityActionTypes.MOUNT;
     }
 

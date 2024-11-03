@@ -16,7 +16,7 @@ public class FireResistantItemConditionType extends ItemConditionType {
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return ItemConditionTypes.FIRE_RESISTANT;
 	}
 

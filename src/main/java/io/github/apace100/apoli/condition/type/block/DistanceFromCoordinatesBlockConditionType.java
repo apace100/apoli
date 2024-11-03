@@ -58,7 +58,7 @@ public class DistanceFromCoordinatesBlockConditionType extends BlockConditionTyp
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BlockConditionTypes.DISTANCE_FROM_COORDINATES;
 	}
 

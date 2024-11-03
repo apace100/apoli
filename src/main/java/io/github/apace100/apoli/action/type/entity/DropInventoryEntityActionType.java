@@ -119,7 +119,7 @@ public class DropInventoryEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.DROP_INVENTORY;
     }
 

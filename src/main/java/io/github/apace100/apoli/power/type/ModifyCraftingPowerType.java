@@ -86,7 +86,7 @@ public class ModifyCraftingPowerType extends PowerType implements Prioritized<Mo
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_CRAFTING;
     }
 

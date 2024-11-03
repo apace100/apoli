@@ -26,7 +26,7 @@ public class AnyOfItemConditionType extends ItemConditionType implements AnyOfMe
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return ItemConditionTypes.ANY_OF;
 	}
 

@@ -46,7 +46,7 @@ public class ToggleNightVisionPowerType extends NightVisionPowerType implements 
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.TOGGLE_NIGHT_VISION;
     }
 

@@ -13,7 +13,7 @@ public class FreezePowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.FREEZE;
     }
 

@@ -38,7 +38,7 @@ public class ElytraFlightPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ELYTRA_FLIGHT;
     }
 

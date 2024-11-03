@@ -25,7 +25,7 @@ public class ChoiceItemActionType extends ItemActionType implements ChoiceMetaAc
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return ItemActionTypes.CHOICE;
 	}
 

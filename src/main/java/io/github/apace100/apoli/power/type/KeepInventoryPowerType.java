@@ -74,7 +74,7 @@ public class KeepInventoryPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.KEEP_INVENTORY;
     }
 

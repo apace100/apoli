@@ -63,7 +63,7 @@ public class ActionOnItemPickupPowerType extends PowerType implements Prioritize
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_ON_ITEM_PICKUP;
     }
 

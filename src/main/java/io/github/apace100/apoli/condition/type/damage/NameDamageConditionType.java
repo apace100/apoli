@@ -33,7 +33,7 @@ public class NameDamageConditionType extends DamageConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return DamageConditionTypes.NAME;
     }
 

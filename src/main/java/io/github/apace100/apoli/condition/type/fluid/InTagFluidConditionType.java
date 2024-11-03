@@ -35,7 +35,7 @@ public class InTagFluidConditionType extends FluidConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return FluidConditionTypes.IN_TAG;
     }
 

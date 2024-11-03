@@ -414,7 +414,7 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     private <P extends Power> P finishReadingPower(BiFunction<Identifier, Power, Power> powerProcessor, Identifier powerId, P power, JsonObject jsonObject, int priority) {
 
-        Identifier powerTypeId = power.getPowerType().configuration().id();
+        Identifier powerTypeId = power.getPowerType().getConfig().id();
         boolean subPower = power.isSubPower();
 
         powerProcessor.apply(powerId, power);

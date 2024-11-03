@@ -36,7 +36,7 @@ public class InTagBiomeConditionType extends BiomeConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiomeConditionTypes.IN_TAG;
     }
 

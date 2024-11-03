@@ -60,7 +60,7 @@ public class ActionOnItemUsePowerType extends PowerType implements Prioritized<A
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_ON_ITEM_USE;
     }
 

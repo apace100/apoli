@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public final class MultiplePowerType extends PowerType {
 
 	@Override
-	public @NotNull PowerConfiguration<?> configuration() {
+	public @NotNull PowerConfiguration<?> getConfig() {
 		return PowerTypes.MULTIPLE;
 	}
 

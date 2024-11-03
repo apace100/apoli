@@ -29,7 +29,7 @@ public class AnyOfBlockConditionType extends BlockConditionType implements AnyOf
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BlockConditionTypes.ANY_OF;
 	}
 

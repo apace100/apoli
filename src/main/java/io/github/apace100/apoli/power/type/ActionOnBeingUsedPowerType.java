@@ -51,7 +51,7 @@ public class ActionOnBeingUsedPowerType extends ActiveInteractionPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_ON_BEING_USED;
     }
 

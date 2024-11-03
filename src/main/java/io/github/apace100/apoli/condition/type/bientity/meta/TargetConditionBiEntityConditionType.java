@@ -28,7 +28,7 @@ public class TargetConditionBiEntityConditionType extends BiEntityConditionType 
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiEntityConditionTypes.TARGET_CONDITION;
     }
 

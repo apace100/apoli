@@ -22,7 +22,7 @@ public class RandomChanceItemConditionType extends ItemConditionType implements 
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return ItemConditionTypes.RANDOM_CHANCE;
 	}
 

@@ -42,7 +42,7 @@ public class ModifyBreakSpeedPowerType extends ValueModifyingPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_BREAK_SPEED;
     }
 

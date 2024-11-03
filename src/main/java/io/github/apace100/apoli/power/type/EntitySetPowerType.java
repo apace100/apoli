@@ -62,7 +62,7 @@ public class EntitySetPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ENTITY_SET;
     }
 

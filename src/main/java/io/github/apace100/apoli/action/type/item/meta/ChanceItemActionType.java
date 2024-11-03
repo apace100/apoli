@@ -31,7 +31,7 @@ public class ChanceItemActionType extends ItemActionType implements ChanceMetaAc
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return ItemActionTypes.CHANCE;
 	}
 

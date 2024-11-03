@@ -13,7 +13,7 @@ public class FireImmunityPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.FIRE_IMMUNITY;
     }
 

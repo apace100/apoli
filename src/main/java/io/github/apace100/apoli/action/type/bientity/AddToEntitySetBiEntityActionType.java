@@ -48,7 +48,7 @@ public class AddToEntitySetBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BiEntityActionTypes.ADD_TO_ENTITY_SET;
     }
 

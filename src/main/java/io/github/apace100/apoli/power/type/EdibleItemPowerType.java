@@ -92,7 +92,7 @@ public class EdibleItemPowerType extends PowerType implements Prioritized<Edible
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.EDIBLE_ITEM;
     }
 

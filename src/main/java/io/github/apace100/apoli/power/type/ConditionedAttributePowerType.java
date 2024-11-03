@@ -59,7 +59,7 @@ public class ConditionedAttributePowerType extends AttributePowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.CONDITIONED_ATTRIBUTE;
     }
 

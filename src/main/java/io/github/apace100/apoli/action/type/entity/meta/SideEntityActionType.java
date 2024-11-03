@@ -25,7 +25,7 @@ public class SideEntityActionType extends EntityActionType implements SideMetaAc
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return EntityActionTypes.SIDE;
 	}
 

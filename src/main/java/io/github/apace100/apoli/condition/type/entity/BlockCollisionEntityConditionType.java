@@ -73,7 +73,7 @@ public class BlockCollisionEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.BLOCK_COLLISION;
     }
 

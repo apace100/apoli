@@ -36,7 +36,7 @@ public class AttackerDamageConditionType extends DamageConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return DamageConditionTypes.ATTACKER;
     }
 

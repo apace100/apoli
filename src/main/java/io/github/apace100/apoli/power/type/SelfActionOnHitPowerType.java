@@ -53,7 +53,7 @@ public class SelfActionOnHitPowerType extends CooldownPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.SELF_ACTION_ON_HIT;
     }
 

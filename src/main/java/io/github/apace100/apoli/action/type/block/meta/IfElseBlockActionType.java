@@ -34,7 +34,7 @@ public class IfElseBlockActionType extends BlockActionType implements IfElseMeta
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BlockActionTypes.IF_ELSE;
 	}
 

@@ -21,7 +21,7 @@ public class ConstantDamageConditionType extends DamageConditionType implements 
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return DamageConditionTypes.CONSTANT;
 	}
 

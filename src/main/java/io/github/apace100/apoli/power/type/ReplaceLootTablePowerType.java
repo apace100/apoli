@@ -79,7 +79,7 @@ public class ReplaceLootTablePowerType extends PowerType implements Prioritized<
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.REPLACE_LOOT_TABLE;
     }
 

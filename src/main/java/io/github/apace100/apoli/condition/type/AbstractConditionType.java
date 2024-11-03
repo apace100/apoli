@@ -21,7 +21,7 @@ public abstract class AbstractConditionType<T extends TypeConditionContext, C ex
 	public void init(@NotNull C condition) {
 
 		if (condition.getConditionType() != this) {
-			throw new IllegalArgumentException("Cannot initialize condition type \"" + configuration().id() + "\" with mismatched condition!");
+			throw new IllegalArgumentException("Cannot initialize condition type \"" + getConfig().id() + "\" with mismatched condition!");
 		}
 
 		this.condition = condition;
@@ -36,7 +36,7 @@ public abstract class AbstractConditionType<T extends TypeConditionContext, C ex
 	@Override
 	public void validate() throws Exception {
 
-		TypedDataObjectFactory<AbstractConditionType<T, C>> dataFactory = (TypedDataObjectFactory<AbstractConditionType<T,C>>) configuration().dataFactory();
+		TypedDataObjectFactory<AbstractConditionType<T, C>> dataFactory = (TypedDataObjectFactory<AbstractConditionType<T,C>>) getConfig().dataFactory();
 		SerializableData.Instance data = dataFactory.toData(this);
 
 		data.validate();
@@ -44,16 +44,16 @@ public abstract class AbstractConditionType<T extends TypeConditionContext, C ex
 	}
 
 	@NotNull
-	public abstract ConditionConfiguration<?> configuration();
+	public abstract ConditionConfiguration<?> getConfig();
 
 	public final C getCondition() {
 
 		if (initialized) {
-			return Objects.requireNonNull(condition, "Condition of initialized condition type \"" + configuration().id() + "\" was null!");
+			return Objects.requireNonNull(condition, "Condition of initialized condition type \"" + getConfig().id() + "\" was null!");
 		}
 
 		else {
-			throw new IllegalStateException("Condition type \"" + configuration().id() + "\" wasn't initialized yet!");
+			throw new IllegalStateException("Condition type \"" + getConfig().id() + "\" wasn't initialized yet!");
 		}
 
 	}

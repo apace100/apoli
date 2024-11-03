@@ -66,7 +66,7 @@ public class ModifyDamageDealtPowerType extends ValueModifyingPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_DAMAGE_DEALT;
     }
 

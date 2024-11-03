@@ -52,7 +52,7 @@ public class ActionOnEntityUsePowerType extends ActiveInteractionPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_ON_ENTITY_USE;
     }
 

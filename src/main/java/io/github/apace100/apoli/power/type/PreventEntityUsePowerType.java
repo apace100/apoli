@@ -50,7 +50,7 @@ public class PreventEntityUsePowerType extends InteractionPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_ENTITY_USE;
     }
 

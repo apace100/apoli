@@ -74,7 +74,7 @@ public class ActionOnBlockUsePowerType extends ActiveInteractionPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_ON_BLOCK_USE;
     }
 

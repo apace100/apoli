@@ -26,7 +26,7 @@ public class AndItemActionType extends ItemActionType implements AndMetaActionTy
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return ItemActionTypes.AND;
 	}
 

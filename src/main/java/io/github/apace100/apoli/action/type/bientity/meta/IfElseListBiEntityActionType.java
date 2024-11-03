@@ -27,7 +27,7 @@ public class IfElseListBiEntityActionType extends BiEntityActionType implements 
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BiEntityActionTypes.IF_ELSE_LIST;
 	}
 

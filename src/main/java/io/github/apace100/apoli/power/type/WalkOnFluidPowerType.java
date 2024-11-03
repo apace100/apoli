@@ -32,7 +32,7 @@ public class WalkOnFluidPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.WALK_ON_FLUID;
     }
 

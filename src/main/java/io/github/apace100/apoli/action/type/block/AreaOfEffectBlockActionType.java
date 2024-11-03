@@ -68,7 +68,7 @@ public class AreaOfEffectBlockActionType extends BlockActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BlockActionTypes.AREA_OF_EFFECT;
     }
 

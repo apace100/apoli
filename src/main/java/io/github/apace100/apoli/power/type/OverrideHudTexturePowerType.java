@@ -62,7 +62,7 @@ public class OverrideHudTexturePowerType extends PowerType implements Prioritize
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.STATUS_BAR_TEXTURE;
     }
 

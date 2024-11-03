@@ -35,7 +35,7 @@ public class BlockActionAtEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.BLOCK_ACTION_AT;
     }
 

@@ -25,7 +25,7 @@ public class AllOfDamageConditionType extends DamageConditionType implements All
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return DamageConditionTypes.ALL_OF;
 	}
 

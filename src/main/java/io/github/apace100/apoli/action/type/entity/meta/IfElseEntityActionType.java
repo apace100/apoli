@@ -32,7 +32,7 @@ public class IfElseEntityActionType extends EntityActionType implements IfElseMe
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return EntityActionTypes.IF_ELSE;
 	}
 

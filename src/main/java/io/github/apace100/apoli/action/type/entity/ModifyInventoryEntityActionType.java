@@ -115,7 +115,7 @@ public class ModifyInventoryEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.MODIFY_INVENTORY;
     }
 

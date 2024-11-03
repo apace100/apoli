@@ -57,7 +57,7 @@ public class PassengerRecursiveEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.PASSENGER_RECURSIVE;
     }
 

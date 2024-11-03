@@ -52,7 +52,7 @@ public class PreventSleepPowerType extends PowerType implements Prioritized<Prev
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_SLEEP;
     }
 

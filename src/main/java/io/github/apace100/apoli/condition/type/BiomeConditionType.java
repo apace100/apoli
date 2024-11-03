@@ -9,7 +9,7 @@ import net.minecraft.world.biome.Biome;
 public abstract class BiomeConditionType extends AbstractConditionType<BiomeConditionContext, BiomeCondition> {
 
 	@Override
-	public final boolean test(BiomeConditionContext context) {
+	public boolean test(BiomeConditionContext context) {
 		return test(context.pos(), context.biomeEntry());
 	}
 

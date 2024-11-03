@@ -95,7 +95,7 @@ public class SpawnParticlesEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.SPAWN_PARTICLES;
     }
 

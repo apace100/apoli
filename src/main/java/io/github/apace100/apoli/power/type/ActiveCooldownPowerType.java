@@ -21,7 +21,7 @@ public abstract class ActiveCooldownPowerType extends CooldownPowerType implemen
     }
 
     @Override
-    public abstract @NotNull PowerConfiguration<?> configuration();
+    public abstract @NotNull PowerConfiguration<?> getConfig();
 
     @Override
     public void onUse() {

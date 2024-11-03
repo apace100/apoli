@@ -112,7 +112,7 @@ public class RemoveEnchantmentItemActionType extends ItemActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return ItemActionTypes.REMOVE_ENCHANTMENT;
     }
 

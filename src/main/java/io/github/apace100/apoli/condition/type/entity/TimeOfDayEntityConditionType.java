@@ -40,7 +40,7 @@ public class TimeOfDayEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.TIME_OF_DAY;
     }
 

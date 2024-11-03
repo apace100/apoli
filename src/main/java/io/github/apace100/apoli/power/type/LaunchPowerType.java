@@ -52,7 +52,7 @@ public class LaunchPowerType extends ActiveCooldownPowerType {
 	}
 
 	@Override
-	public @NotNull PowerConfiguration<?> configuration() {
+	public @NotNull PowerConfiguration<?> getConfig() {
 		return PowerTypes.LAUNCH;
 	}
 

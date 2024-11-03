@@ -37,7 +37,7 @@ public class TargetActionBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BiEntityActionTypes.TARGET_ACTION;
     }
 

@@ -7,7 +7,7 @@ import net.minecraft.entity.Entity;
 public abstract class EntityActionType extends AbstractActionType<EntityActionContext, EntityAction> {
 
 	@Override
-	public final void accept(EntityActionContext context) {
+	public void accept(EntityActionContext context) {
 
 		Entity entity = context.entity();
 

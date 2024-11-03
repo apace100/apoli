@@ -22,7 +22,7 @@ public class ConstantItemConditionType extends ItemConditionType implements Cons
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return ItemConditionTypes.CONSTANT;
 	}
 

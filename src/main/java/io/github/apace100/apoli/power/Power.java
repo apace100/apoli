@@ -73,7 +73,7 @@ public class Power implements Validatable {
 				public <T> RecordBuilder<T> encode(Power input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 
                     PowerType powerType = input.getPowerType();
-                    PowerConfiguration<PowerType> config = (PowerConfiguration<PowerType>) powerType.configuration();
+                    PowerConfiguration<PowerType> config = (PowerConfiguration<PowerType>) powerType.getConfig();
 
                     prefix.add("type", PowerTypes.DATA_TYPE.write(ops, config));
 
@@ -136,7 +136,7 @@ public class Power implements Validatable {
                 try {
 
                     PowerType powerType = value.getPowerType();
-                    PowerConfiguration<PowerType> config = (PowerConfiguration<PowerType>) powerType.configuration();
+                    PowerConfiguration<PowerType> config = (PowerConfiguration<PowerType>) powerType.getConfig();
 
                     SerializableData.Instance powerData = serializableData.instance()
                         .set("id", value.getId())
@@ -166,7 +166,7 @@ public class Power implements Validatable {
                 }
 
                 catch (Exception e) {
-                    Apoli.LOGGER.error("Error trying to send power \"{}\" with power type \"{}\": ", value.getId(), value.getPowerType().configuration().id());
+                    Apoli.LOGGER.error("Error trying to send power \"{}\" with power type \"{}\": ", value.getId(), value.getPowerType().getConfig().id());
                     throw e;
                 }
 

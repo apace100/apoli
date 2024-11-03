@@ -12,7 +12,7 @@ public class DayTimeEntityConditionType extends TimeOfDayEntityConditionType {
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return EntityConditionTypes.DAY_TIME;
 	}
 

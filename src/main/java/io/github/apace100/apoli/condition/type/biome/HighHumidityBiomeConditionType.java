@@ -16,7 +16,7 @@ public class HighHumidityBiomeConditionType extends BiomeConditionType {
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BiomeConditionTypes.HIGH_HUMIDITY;
 	}
 

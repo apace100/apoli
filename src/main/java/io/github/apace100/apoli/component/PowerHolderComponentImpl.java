@@ -284,7 +284,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         NbtList powersTag = new NbtList();
         powers.forEach((power, powerType) -> {
 
-            PowerConfiguration<?> typeConfig = power.getPowerType().configuration();
+            PowerConfiguration<?> typeConfig = power.getPowerType().getConfig();
             PowerReference powerReference = PowerReference.of(power.getId());
 
             Power.Entry.CODEC.codec().encodeStart(lookup.getOps(NbtOps.INSTANCE), new Power.Entry(typeConfig, powerReference, powerType.toTag(), powerSources.get(power)))

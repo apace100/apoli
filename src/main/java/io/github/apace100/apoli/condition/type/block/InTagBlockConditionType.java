@@ -40,7 +40,7 @@ public class InTagBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BlockConditionTypes.IN_TAG;
     }
 

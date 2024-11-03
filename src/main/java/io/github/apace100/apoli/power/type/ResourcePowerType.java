@@ -47,7 +47,7 @@ public class ResourcePowerType extends HudRenderedVariableIntPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.RESOURCE;
     }
 

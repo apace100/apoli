@@ -94,7 +94,7 @@ public class ActionOnEntitySetEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.ACTION_ON_ENTITY_SET;
     }
 

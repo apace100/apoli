@@ -61,7 +61,7 @@ public class SpawnEntityBlockActionType extends BlockActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BlockActionTypes.SPAWN_ENTITY;
     }
 

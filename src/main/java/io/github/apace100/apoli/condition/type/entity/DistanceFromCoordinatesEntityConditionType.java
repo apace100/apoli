@@ -52,7 +52,7 @@ public class DistanceFromCoordinatesEntityConditionType extends EntityConditionT
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return EntityConditionTypes.DISTANCE_FROM_COORDINATES;
 	}
 

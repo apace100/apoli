@@ -65,7 +65,7 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_ENCHANTMENT_LEVEL;
     }
 

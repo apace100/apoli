@@ -142,7 +142,7 @@ public class FireProjectileEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.FIRE_PROJECTILE;
     }
 

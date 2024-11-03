@@ -79,7 +79,7 @@ public class AreaOfEffectEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.AREA_OF_EFFECT;
     }
 

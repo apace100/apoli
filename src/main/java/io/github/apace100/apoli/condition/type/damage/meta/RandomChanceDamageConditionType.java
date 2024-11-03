@@ -21,7 +21,7 @@ public class RandomChanceDamageConditionType extends DamageConditionType impleme
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return DamageConditionTypes.RANDOM_CHANCE;
 	}
 

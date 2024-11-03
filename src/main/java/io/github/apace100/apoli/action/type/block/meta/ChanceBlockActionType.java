@@ -32,7 +32,7 @@ public class ChanceBlockActionType extends BlockActionType implements ChanceMeta
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BlockActionTypes.CHANCE;
 	}
 

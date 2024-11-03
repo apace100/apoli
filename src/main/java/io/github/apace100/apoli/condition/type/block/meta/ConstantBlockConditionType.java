@@ -26,7 +26,7 @@ public class ConstantBlockConditionType extends BlockConditionType implements Co
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BlockConditionTypes.CONSTANT;
 	}
 

@@ -42,7 +42,7 @@ public class PreventFeatureRenderPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_FEATURE_RENDER;
     }
 

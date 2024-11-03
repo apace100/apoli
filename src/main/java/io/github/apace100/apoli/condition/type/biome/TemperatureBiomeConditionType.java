@@ -42,7 +42,7 @@ public class TemperatureBiomeConditionType extends BiomeConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiomeConditionTypes.TEMPERATURE;
     }
 

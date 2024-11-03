@@ -29,7 +29,7 @@ public class DelayBlockActionType extends BlockActionType implements DelayMetaAc
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BlockActionTypes.DELAY;
 	}
 

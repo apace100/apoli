@@ -8,7 +8,7 @@ import net.minecraft.world.World;
 public abstract class ItemConditionType extends AbstractConditionType<ItemConditionContext, ItemCondition> {
 
 	@Override
-	public final boolean test(ItemConditionContext context) {
+	public boolean test(ItemConditionContext context) {
 		return test(context.world(), context.stack());
 	}
 

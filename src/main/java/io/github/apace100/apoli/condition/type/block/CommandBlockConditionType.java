@@ -84,7 +84,7 @@ public class CommandBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BlockConditionTypes.COMMAND;
     }
 

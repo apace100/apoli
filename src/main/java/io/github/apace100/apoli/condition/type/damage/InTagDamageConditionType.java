@@ -36,7 +36,7 @@ public class InTagDamageConditionType extends DamageConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return DamageConditionTypes.IN_TAG;
     }
 

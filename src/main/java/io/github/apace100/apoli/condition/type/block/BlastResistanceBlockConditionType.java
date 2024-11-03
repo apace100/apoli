@@ -45,7 +45,7 @@ public class BlastResistanceBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BlockConditionTypes.BLAST_RESISTANCE;
     }
 

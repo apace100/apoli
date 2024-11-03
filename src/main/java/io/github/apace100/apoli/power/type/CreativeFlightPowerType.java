@@ -15,7 +15,7 @@ public class CreativeFlightPowerType extends PlayerAbilityPowerType {
 	}
 
 	@Override
-	public @NotNull PowerConfiguration<?> configuration() {
+	public @NotNull PowerConfiguration<?> getConfig() {
 		return PowerTypes.CREATIVE_FLIGHT;
 	}
 

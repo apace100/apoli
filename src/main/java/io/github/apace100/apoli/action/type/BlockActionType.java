@@ -11,7 +11,7 @@ import java.util.Optional;
 public abstract class BlockActionType extends AbstractActionType<BlockActionContext, BlockAction> {
 
 	@Override
-	public final void accept(BlockActionContext context) {
+	public void accept(BlockActionContext context) {
 		execute(context.world(), context.pos(), context.direction());
 	}
 

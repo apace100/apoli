@@ -39,7 +39,7 @@ public class ModifyBlockRenderPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_BLOCK_RENDER;
     }
 

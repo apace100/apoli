@@ -20,7 +20,7 @@ public class AllOfBiEntityConditionType extends BiEntityConditionType implements
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BiEntityConditionTypes.ALL_OF;
 	}
 

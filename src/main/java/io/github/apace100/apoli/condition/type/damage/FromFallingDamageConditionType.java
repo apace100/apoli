@@ -13,7 +13,7 @@ public class FromFallingDamageConditionType extends InTagDamageConditionType {
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return DamageConditionTypes.FROM_FALLING;
 	}
 

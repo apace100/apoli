@@ -65,7 +65,7 @@ public class ModifyItemActionType extends ItemActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return ItemActionTypes.MODIFY;
     }
 

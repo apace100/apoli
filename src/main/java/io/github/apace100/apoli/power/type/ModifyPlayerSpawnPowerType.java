@@ -104,7 +104,7 @@ public class ModifyPlayerSpawnPowerType extends PowerType implements Prioritized
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_PLAYER_SPAWN;
     }
 

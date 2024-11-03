@@ -53,7 +53,7 @@ public class PreventGameEventPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.PREVENT_GAME_EVENT;
     }
 

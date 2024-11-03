@@ -14,7 +14,7 @@ public class DismountEntityActionType extends EntityActionType {
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return EntityActionTypes.DISMOUNT;
 	}
 

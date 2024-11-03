@@ -13,7 +13,7 @@ public class DisableRegenPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.DISABLE_REGEN;
     }
 

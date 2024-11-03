@@ -113,7 +113,7 @@ public class FireProjectilePowerType extends ActiveCooldownPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.FIRE_PROJECTILE;
     }
 

@@ -73,7 +73,7 @@ public class RidingRecursiveEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.RIDING_RECURSIVE;
     }
 

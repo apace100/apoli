@@ -7,7 +7,7 @@ import net.minecraft.entity.damage.DamageSource;
 public abstract class DamageConditionType extends AbstractConditionType<DamageConditionContext, DamageCondition> {
 
 	@Override
-	public final boolean test(DamageConditionContext context) {
+	public boolean test(DamageConditionContext context) {
 		return test(context.source(), context.amount());
 	}
 

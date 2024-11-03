@@ -25,7 +25,7 @@ public class AllOfFluidConditionType extends FluidConditionType implements AllOf
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return FluidConditionTypes.ALL_OF;
 	}
 

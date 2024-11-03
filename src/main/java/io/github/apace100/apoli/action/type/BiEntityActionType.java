@@ -7,7 +7,7 @@ import net.minecraft.entity.Entity;
 public abstract class BiEntityActionType extends AbstractActionType<BiEntityActionContext, BiEntityAction> {
 
 	@Override
-	public final void accept(BiEntityActionContext context) {
+	public void accept(BiEntityActionContext context) {
 		execute(context.actor(), context.target());
 	}
 

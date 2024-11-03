@@ -45,7 +45,7 @@ public class HeightBlockConditionType extends BlockConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BlockConditionTypes.HEIGHT;
     }
 

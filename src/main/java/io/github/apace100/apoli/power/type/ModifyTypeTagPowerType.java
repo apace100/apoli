@@ -60,7 +60,7 @@ public class ModifyTypeTagPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_TYPE_TAG;
     }
 

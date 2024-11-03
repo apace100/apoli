@@ -13,7 +13,7 @@ import java.util.Objects;
 public class AttackTargetBiEntityConditionType extends BiEntityConditionType {
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return BiEntityConditionTypes.ATTACK_TARGET;
     }
 

@@ -54,7 +54,7 @@ public class ActionOverTimePowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_OVER_TIME;
     }
 

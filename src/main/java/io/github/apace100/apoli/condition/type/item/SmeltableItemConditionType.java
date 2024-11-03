@@ -19,7 +19,7 @@ public class SmeltableItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return ItemConditionTypes.SMELTABLE;
     }
 

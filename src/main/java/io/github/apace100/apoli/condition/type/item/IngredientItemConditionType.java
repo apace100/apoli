@@ -35,7 +35,7 @@ public class IngredientItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return ItemConditionTypes.INGREDIENT;
     }
 

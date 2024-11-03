@@ -47,7 +47,7 @@ public class AttackerActionWhenHitPowerType extends CooldownPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ATTACKER_ACTION_WHEN_HIT;
     }
 

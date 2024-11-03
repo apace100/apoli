@@ -33,7 +33,7 @@ public class InvertBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BiEntityActionTypes.INVERT;
     }
 

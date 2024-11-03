@@ -15,7 +15,7 @@ public class NothingBiEntityActionType extends BiEntityActionType implements Not
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BiEntityActionTypes.NOTHING;
 	}
 

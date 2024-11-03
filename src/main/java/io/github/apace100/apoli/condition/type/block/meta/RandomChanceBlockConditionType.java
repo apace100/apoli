@@ -26,7 +26,7 @@ public class RandomChanceBlockConditionType extends BlockConditionType implement
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BlockConditionTypes.RANDOM_CHANCE;
 	}
 

@@ -21,7 +21,7 @@ public abstract class AbstractActionType<T extends TypeActionContext<?>, A exten
 	public final void init(A action) {
 
 		if (action.getActionType() != this) {
-			throw new IllegalArgumentException("Cannot initialize action type \"" + configuration().id() + "\" with mismatched action!");
+			throw new IllegalArgumentException("Cannot initialize action type \"" + getConfig().id() + "\" with mismatched action!");
 		}
 
 		this.action = action;
@@ -36,7 +36,7 @@ public abstract class AbstractActionType<T extends TypeActionContext<?>, A exten
 	@Override
 	public void validate() throws Exception {
 
-		TypedDataObjectFactory<AbstractActionType<T, A>> dataFactory = (TypedDataObjectFactory<AbstractActionType<T,A>>) configuration().dataFactory();
+		TypedDataObjectFactory<AbstractActionType<T, A>> dataFactory = (TypedDataObjectFactory<AbstractActionType<T,A>>) getConfig().dataFactory();
 		SerializableData.Instance data = dataFactory.toData(this);
 
 		data.validate();
@@ -44,16 +44,16 @@ public abstract class AbstractActionType<T extends TypeActionContext<?>, A exten
 	}
 
 	@NotNull
-	public abstract ActionConfiguration<?> configuration();
+	public abstract ActionConfiguration<?> getConfig();
 
 	public final A getAction() {
 
 		if (initialized) {
-			return Objects.requireNonNull(action, "Action of initialized action type \"" + configuration().id() + "\" was null!");
+			return Objects.requireNonNull(action, "Action of initialized action type \"" + getConfig().id() + "\" was null!");
 		}
 
 		else {
-			throw new IllegalStateException("Action type \"" + configuration().id() + "\" wasn't initialized yet!");
+			throw new IllegalStateException("Action type \"" + getConfig().id() + "\" wasn't initialized yet!");
 		}
 
 	}

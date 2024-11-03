@@ -81,7 +81,7 @@ public class InBlockAnywhereEntityConditionType extends EntityConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.IN_BLOCK_ANYWHERE;
     }
 

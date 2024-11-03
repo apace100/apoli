@@ -62,7 +62,7 @@ public class DamageItemActionType extends ItemActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return ItemActionTypes.DAMAGE;
     }
 

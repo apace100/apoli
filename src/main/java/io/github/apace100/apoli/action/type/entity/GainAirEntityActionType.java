@@ -38,7 +38,7 @@ public class GainAirEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.GAIN_AIR;
     }
 

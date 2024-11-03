@@ -10,7 +10,7 @@ import net.minecraft.world.World;
 public abstract class ItemActionType extends AbstractActionType<ItemActionContext, ItemAction> {
 
 	@Override
-	public final void accept(ItemActionContext context) {
+	public void accept(ItemActionContext context) {
 
 		StackReference stackReference = context.stackReference();
 		if (stackReference == StackReference.EMPTY) {

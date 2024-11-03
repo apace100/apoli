@@ -16,7 +16,7 @@ public class RandomChanceBiEntityConditionType extends BiEntityConditionType imp
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BiEntityConditionTypes.RANDOM_CHANCE;
 	}
 

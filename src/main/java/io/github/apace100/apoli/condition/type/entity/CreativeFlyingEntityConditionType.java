@@ -16,7 +16,7 @@ public class CreativeFlyingEntityConditionType extends EntityConditionType {
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return EntityConditionTypes.CREATIVE_FLYING;
 	}
 

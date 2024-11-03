@@ -114,7 +114,7 @@ public class ModifyBlockStateBlockActionType extends BlockActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BlockActionTypes.MODIFY_BLOCK_STATE;
     }
 

@@ -13,7 +13,7 @@ public class GroundedPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.GROUNDED;
     }
 

@@ -35,7 +35,7 @@ public class TypeDamageConditionType extends DamageConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return DamageConditionTypes.TYPE;
     }
 

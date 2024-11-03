@@ -18,7 +18,7 @@ public class FoodItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return ItemConditionTypes.FOOD;
     }
 

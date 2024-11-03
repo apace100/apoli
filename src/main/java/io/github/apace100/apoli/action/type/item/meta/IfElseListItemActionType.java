@@ -28,7 +28,7 @@ public class IfElseListItemActionType extends ItemActionType implements IfElseLi
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return ItemActionTypes.IF_ELSE_LIST;
 	}
 

@@ -53,7 +53,7 @@ public class ActionOnBlockBreakPowerType extends PowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.ACTION_ON_BLOCK_BREAK;
     }
 

@@ -21,7 +21,7 @@ public class RandomChanceFluidConditionType extends FluidConditionType implement
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return FluidConditionTypes.RANDOM_CHANCE;
 	}
 

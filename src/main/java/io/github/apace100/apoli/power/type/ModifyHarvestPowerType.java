@@ -46,7 +46,7 @@ public class ModifyHarvestPowerType extends PowerType implements Prioritized<Mod
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.MODIFY_HARVEST;
     }
 

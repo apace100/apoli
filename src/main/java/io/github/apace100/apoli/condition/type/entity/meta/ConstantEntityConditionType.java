@@ -21,7 +21,7 @@ public class ConstantEntityConditionType extends EntityConditionType implements 
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return EntityConditionTypes.CONSTANT;
 	}
 

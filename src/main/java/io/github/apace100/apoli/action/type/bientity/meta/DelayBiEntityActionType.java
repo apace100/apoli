@@ -25,7 +25,7 @@ public class DelayBiEntityActionType extends BiEntityActionType implements Delay
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BiEntityActionTypes.DELAY;
 	}
 

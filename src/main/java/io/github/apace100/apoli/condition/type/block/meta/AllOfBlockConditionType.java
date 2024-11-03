@@ -29,7 +29,7 @@ public class AllOfBlockConditionType extends BlockConditionType implements AllOf
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BlockConditionTypes.ALL_OF;
 	}
 

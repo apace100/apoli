@@ -32,7 +32,7 @@ public class IfElseBiEntityActionType extends BiEntityActionType implements IfEl
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BiEntityActionTypes.IF_ELSE;
 	}
 

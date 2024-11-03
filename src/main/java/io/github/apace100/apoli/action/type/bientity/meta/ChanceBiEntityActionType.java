@@ -30,7 +30,7 @@ public class ChanceBiEntityActionType extends BiEntityActionType implements Chan
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return BiEntityActionTypes.CHANCE;
 	}
 

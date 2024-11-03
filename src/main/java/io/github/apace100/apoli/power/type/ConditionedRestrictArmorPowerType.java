@@ -58,7 +58,7 @@ public class ConditionedRestrictArmorPowerType extends RestrictArmorPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.CONDITIONED_RESTRICT_ARMOR;
     }
 

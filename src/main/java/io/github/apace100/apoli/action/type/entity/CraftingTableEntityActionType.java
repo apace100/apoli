@@ -38,7 +38,7 @@ public class CraftingTableEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.CRAFTING_TABLE;
     }
 

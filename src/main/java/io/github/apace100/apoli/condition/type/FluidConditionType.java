@@ -7,7 +7,7 @@ import net.minecraft.fluid.FluidState;
 public abstract class FluidConditionType extends AbstractConditionType<FluidConditionContext, FluidCondition> {
 
 	@Override
-	public final boolean test(FluidConditionContext context) {
+	public boolean test(FluidConditionContext context) {
 		return test(context.fluidState());
 	}
 

@@ -44,7 +44,7 @@ public class CooldownPowerType extends PowerType implements HudRendered {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.COOLDOWN;
     }
 

@@ -34,7 +34,7 @@ public class LavaVisionPowerType extends PowerType implements AttributeModifying
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.LAVA_VISION;
     }
 

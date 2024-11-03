@@ -128,7 +128,7 @@ public class GameEventListenerPowerType extends CooldownPowerType implements Vib
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.GAME_EVENT_LISTENER;
     }
 

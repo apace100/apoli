@@ -64,7 +64,7 @@ public class StackingStatusEffectPowerType extends StatusEffectPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.STACKING_STATUS_EFFECT;
     }
 

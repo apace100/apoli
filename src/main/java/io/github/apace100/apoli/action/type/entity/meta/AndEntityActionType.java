@@ -25,7 +25,7 @@ public class AndEntityActionType extends EntityActionType implements AndMetaActi
 	}
 
 	@Override
-	public @NotNull ActionConfiguration<?> configuration() {
+	public @NotNull ActionConfiguration<?> getConfig() {
 		return EntityActionTypes.AND;
 	}
 

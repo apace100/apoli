@@ -42,7 +42,7 @@ public class ShaderPowerType extends PowerType implements Prioritized<ShaderPowe
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.SHADER;
     }
 

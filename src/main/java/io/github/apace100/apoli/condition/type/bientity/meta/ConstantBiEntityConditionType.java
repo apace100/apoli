@@ -16,7 +16,7 @@ public class ConstantBiEntityConditionType extends BiEntityConditionType impleme
 	}
 
 	@Override
-	public @NotNull ConditionConfiguration<?> configuration() {
+	public @NotNull ConditionConfiguration<?> getConfig() {
 		return BiEntityConditionTypes.CONSTANT;
 	}
 

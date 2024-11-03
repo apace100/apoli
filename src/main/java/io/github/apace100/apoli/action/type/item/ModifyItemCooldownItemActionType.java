@@ -57,7 +57,7 @@ public class ModifyItemCooldownItemActionType extends ItemActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return ItemActionTypes.MODIFY_ITEM_COOLDOWN;
     }
 

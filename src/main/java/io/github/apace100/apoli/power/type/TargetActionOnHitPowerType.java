@@ -53,7 +53,7 @@ public class TargetActionOnHitPowerType extends CooldownPowerType {
     }
 
     @Override
-    public @NotNull PowerConfiguration<?> configuration() {
+    public @NotNull PowerConfiguration<?> getConfig() {
         return PowerTypes.TARGET_ACTION_ON_HIT;
     }
 

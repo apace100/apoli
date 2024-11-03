@@ -46,7 +46,7 @@ public class SetResourceEntityActionType extends EntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.SET_RESOURCE;
     }
 

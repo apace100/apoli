@@ -37,7 +37,7 @@ public class MergeCustomDataItemActionType extends ItemActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return ItemActionTypes.MERGE_CUSTOM_DATA;
     }
 

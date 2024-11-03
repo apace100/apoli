@@ -20,7 +20,7 @@ public class SetInLoveBiEntityActionType extends BiEntityActionType {
     }
 
     @Override
-    public @NotNull ActionConfiguration<?> configuration() {
+    public @NotNull ActionConfiguration<?> getConfig() {
         return BiEntityActionTypes.SET_IN_LOVE;
     }
 

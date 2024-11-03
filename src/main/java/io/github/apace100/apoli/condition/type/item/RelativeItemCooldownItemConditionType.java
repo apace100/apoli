@@ -58,7 +58,7 @@ public class RelativeItemCooldownItemConditionType extends ItemConditionType {
     }
 
     @Override
-    public @NotNull ConditionConfiguration<?> configuration() {
+    public @NotNull ConditionConfiguration<?> getConfig() {
         return ItemConditionTypes.RELATIVE_ITEM_COOLDOWN;
     }
 
