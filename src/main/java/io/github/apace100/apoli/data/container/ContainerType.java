@@ -11,8 +11,8 @@ import java.util.Optional;
 public record ContainerType(TextAlignment titleAlignment, int columns, int rows, Optional<Factory> factory) {
 
 	public ContainerType {
-		Preconditions.checkArgument(columns() < 1, "Container type must have at least 1 column!");
-		Preconditions.checkArgument(rows() < 1, "Container type must have at least 1 row!");
+		Preconditions.checkArgument(columns < 1, "Container type must have at least 1 column!");
+		Preconditions.checkArgument(rows < 1, "Container type must have at least 1 row!");
 	}
 
 	public ScreenHandlerFactory create(Inventory inventory) {
