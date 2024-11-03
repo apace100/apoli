@@ -388,4 +388,40 @@ public class ApoliDataTypes {
 		);
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T extends TypeActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & AndMetaActionType<T, A>> SerializableDataType<A> actions(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<List<A>, M> multiActionsConstructor, Function<AT, A> constructor) {
+
+		CompoundSerializableDataType<A> dataType = action(typeField, registryDataType, constructor);
+		SerializableDataType<List<A>> listDataType = dataType.list();
+
+		return SerializableDataType.recursive(self -> SerializableDataType.of(
+			new Codec<>() {
+
+				@Override
+				public <I> DataResult<com.mojang.datafixers.util.Pair<A, I>> decode(DynamicOps<I> ops, I input) {
+
+					if (ops.getList(input).isSuccess()) {
+						return listDataType.setRoot(self.isRoot()).codec().decode(ops, input)
+							.map(actionsAndInput -> actionsAndInput
+								.mapFirst(multiActionsConstructor)
+								.mapFirst(m -> constructor.apply((AT) m)));
+					}
+
+					else {
+						return dataType.setRoot(self.isRoot()).codec().decode(ops, input);
+					}
+
+				}
+
+				@Override
+				public <I> DataResult<I> encode(A input, DynamicOps<I> ops, I prefix) {
+					return dataType.setRoot(self.isRoot()).codec().encode(input, ops, prefix);
+				}
+
+			},
+			dataType.packetCodec()
+		));
+
+	}
+
 }
