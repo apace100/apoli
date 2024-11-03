@@ -7,7 +7,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.damage.DamageSource;
 
-public class DamageCondition extends AbstractCondition<DamageConditionContext, DamageConditionType> {
+public final class DamageCondition extends AbstractCondition<DamageConditionContext, DamageConditionType> {
 
 	public static final SerializableDataType<DamageCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", DamageConditionTypes.DATA_TYPE, DamageCondition::new));
 

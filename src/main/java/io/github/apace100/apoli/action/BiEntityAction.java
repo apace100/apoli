@@ -8,7 +8,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
 
-public class BiEntityAction extends AbstractAction<BiEntityActionContext, BiEntityActionType> {
+public final class BiEntityAction extends AbstractAction<BiEntityActionContext, BiEntityActionType> {
 
 	public static final SerializableDataType<BiEntityAction> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.actions("type", BiEntityActionTypes.DATA_TYPE, AndBiEntityActionType::new, BiEntityAction::new));
 

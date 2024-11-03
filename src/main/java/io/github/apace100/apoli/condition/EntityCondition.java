@@ -7,7 +7,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.entity.Entity;
 
-public class EntityCondition extends AbstractCondition<EntityConditionContext, EntityConditionType> {
+public final class EntityCondition extends AbstractCondition<EntityConditionContext, EntityConditionType> {
 
 	public static final SerializableDataType<EntityCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", EntityConditionTypes.DATA_TYPE, EntityCondition::new));
 

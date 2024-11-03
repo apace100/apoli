@@ -8,7 +8,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class ItemCondition extends AbstractCondition<ItemConditionContext, ItemConditionType> {
+public final class ItemCondition extends AbstractCondition<ItemConditionContext, ItemConditionType> {
 
 	public static final SerializableDataType<ItemCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", ItemConditionTypes.DATA_TYPE, ItemCondition::new));
 

@@ -9,7 +9,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.world.World;
 
-public class ItemAction extends AbstractAction<ItemActionContext, ItemActionType> {
+public final class ItemAction extends AbstractAction<ItemActionContext, ItemActionType> {
 
 	public static final SerializableDataType<ItemAction> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.actions("type", ItemActionTypes.DATA_TYPE, AndItemActionType::new, ItemAction::new));
 
