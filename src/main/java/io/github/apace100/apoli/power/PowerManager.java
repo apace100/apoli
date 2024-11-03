@@ -7,7 +7,6 @@ import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.*;
 import io.github.apace100.apoli.networking.packet.s2c.SyncPowersS2CPacket;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -622,10 +621,10 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
             return;
         }
 
-        for (PowerTypeFactory<?> powerTypeFactory : ApoliRegistries.POWER_FACTORY) {
+        for (PowerConfiguration<?> powerConfiguration : ApoliRegistries.POWER_TYPE) {
 
-            if (powerTypeFactory.getSerializableData().containsField(field)) {
-                Apoli.LOGGER.error("Cannot add additional data callback for field \"{}\" as it's already used by the \"{}\" power type!", field, powerTypeFactory.getSerializerId());
+            if (powerConfiguration.dataType().serializableData().containsField(field)) {
+                Apoli.LOGGER.error("Cannot add additional data callback for field \"{}\", as it's already used by the \"{}\" power type!", field, powerConfiguration.id());
                 return;
             }
 

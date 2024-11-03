@@ -1,8 +1,6 @@
 package io.github.apace100.apoli.condition.type.bientity;
 
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.factory.ConditionTypeFactory;
 import io.github.apace100.apoli.condition.type.BiEntityConditionType;
 import io.github.apace100.apoli.condition.type.BiEntityConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
@@ -13,7 +11,6 @@ import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -39,24 +36,24 @@ public class RelativeRotationBiEntityConditionType extends BiEntityConditionType
             data.get("compare_to")
         ),
         (conditionType, serializableData) -> serializableData.instance()
-            .set("actor_rotation", conditionType.actorRotation)
-            .set("target_rotation", conditionType.targetRotation)
+            .set("actor_rotation", conditionType.actorRotationType)
+            .set("target_rotation", conditionType.targetRotationType)
             .set("axes", conditionType.axes)
             .set("comparison", conditionType.comparison)
             .set("compare_to", conditionType.compareTo)
     );
 
-    private final RotationType actorRotation;
-    private final RotationType targetRotation;
+    private final RotationType actorRotationType;
+    private final RotationType targetRotationType;
 
     private final EnumSet<Direction.Axis> axes;
 
     private final Comparison comparison;
     private final double compareTo;
 
-    public RelativeRotationBiEntityConditionType(RotationType actorRotation, RotationType targetRotation, EnumSet<Direction.Axis> axes, Comparison comparison, double compareTo) {
-        this.actorRotation = actorRotation;
-        this.targetRotation = targetRotation;
+    public RelativeRotationBiEntityConditionType(RotationType actorRotationType, RotationType targetRotationType, EnumSet<Direction.Axis> axes, Comparison comparison, double compareTo) {
+        this.actorRotationType = actorRotationType;
+        this.targetRotationType = targetRotationType;
         this.axes = axes;
         this.comparison = comparison;
         this.compareTo = compareTo;
@@ -69,10 +66,6 @@ public class RelativeRotationBiEntityConditionType extends BiEntityConditionType
 
     @Override
     public boolean test(Entity actor, Entity target) {
-        return condition(actor, target, actorRotation, targetRotation, axes, comparison, compareTo);
-    }
-
-    public static boolean condition(Entity actor, Entity target, RotationType actorRotationType, RotationType targetRotationType, EnumSet<Direction.Axis> axes, Comparison comparison, double compareTo) {
 
         if (actor == null || target == null) {
             return false;
@@ -117,25 +110,6 @@ public class RelativeRotationBiEntityConditionType extends BiEntityConditionType
 
         return new Vec3d(i * j, -k, h * j);
 
-    }
-
-    public static ConditionTypeFactory<Pair<Entity, Entity>> getFactory() {
-        return new ConditionTypeFactory<>(
-            Apoli.identifier("relative_rotation"),
-            new SerializableData()
-                .add("actor_rotation", SerializableDataType.enumValue(RotationType.class), RotationType.HEAD)
-                .add("target_rotation", SerializableDataType.enumValue(RotationType.class), RotationType.BODY)
-                .add("axes", SerializableDataTypes.AXIS_SET, EnumSet.allOf(Direction.Axis.class))
-                .add("comparison", ApoliDataTypes.COMPARISON)
-                .add("compare_to", SerializableDataTypes.DOUBLE),
-            (data, actorAndTarget) -> condition(actorAndTarget.getLeft(), actorAndTarget.getRight(),
-                data.get("actor_rotation"),
-                data.get("target_rotation"),
-                data.get("axes"),
-                data.get("comparison"),
-                data.get("compare_to")
-            )
-        );
     }
 
     public enum RotationType {

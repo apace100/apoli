@@ -4,13 +4,11 @@ import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerConfiguration;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.util.Validatable;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -146,11 +144,11 @@ public abstract class PowerType implements Validatable {
     }
 
     public boolean shouldTick() {
-        return false;
+        return ticking;
     }
 
     public boolean shouldTickWhenInactive() {
-        return false;
+        return tickingWhenInActive;
     }
 
     public final void setTicking() {
@@ -160,10 +158,6 @@ public abstract class PowerType implements Validatable {
     public final void setTicking(boolean whenInActive) {
         this.ticking = true;
         this.tickingWhenInActive = whenInActive;
-    }
-
-    public static <T extends PowerType> PowerTypeFactory<T> createSimpleFactory(Identifier id, BiFunction<Power, LivingEntity, T> powerConstructor) {
-        return new PowerTypeFactory<>(id, new SerializableData(), data -> powerConstructor).allowCondition();
     }
 
     public static <T extends PowerType> TypedDataObjectFactory<T> createConditionedDataFactory(SerializableData serializableData, BiFunction<SerializableData.Instance, Optional<EntityCondition>, T> fromData, BiFunction<T, SerializableData, SerializableData.Instance> toData) {

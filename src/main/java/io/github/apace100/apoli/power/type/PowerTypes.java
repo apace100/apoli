@@ -2,15 +2,12 @@ package io.github.apace100.apoli.power.type;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.power.PowerConfiguration;
-import io.github.apace100.apoli.power.factory.PowerTypeFactory;
 import io.github.apace100.apoli.power.type.meta.DummyPowerType;
 import io.github.apace100.apoli.power.type.meta.MultiplePowerType;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableDataType;
 import io.github.apace100.calio.util.IdentifierAlias;
 import net.minecraft.registry.Registry;
-
-import java.util.function.Supplier;
 
 public class PowerTypes {
 
@@ -139,15 +136,6 @@ public class PowerTypes {
 
     public static void register() {
         ALIASES.addPathAlias("self_action_when_hit", "action_when_damage_taken");
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T extends PowerType> PowerTypeFactory<T> register(PowerTypeFactory<?> powerTypeFactory) {
-        return (PowerTypeFactory<T>) Registry.register(ApoliRegistries.POWER_FACTORY, powerTypeFactory.getSerializerId(), powerTypeFactory);
-    }
-
-    public static <T extends PowerType> PowerTypeFactory<T> register(Supplier<PowerTypeFactory<?>> powerTypeFactory) {
-        return register(powerTypeFactory.get());
     }
 
     @SuppressWarnings("unchecked")
