@@ -10,7 +10,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,6 +24,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -387,6 +390,18 @@ public final class MiscUtil {
 
     public static Vec3d getPoseDependentEyePos(Entity entity) {
         return new Vec3d(entity.getX(), entity.getY() + entity.getEyeHeight(entity.getPose()), entity.getZ());
+    }
+
+    public static double getAttributeValueOrElse(Entity entity, RegistryEntry<EntityAttribute> attribute, double defaultValue) {
+
+        if (entity instanceof LivingEntity livingEntity && livingEntity.getAttributes().hasAttribute(attribute)) {
+            return livingEntity.getAttributeValue(attribute);
+        }
+
+        else {
+            return defaultValue;
+        }
+
     }
 
 }

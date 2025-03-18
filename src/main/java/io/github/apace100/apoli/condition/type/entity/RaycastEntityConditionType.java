@@ -13,7 +13,6 @@ import io.github.apace100.apoli.util.Space;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.predicate.entity.EntityPredicates;
@@ -205,17 +204,13 @@ public class RaycastEntityConditionType extends EntityConditionType {
     private double getEntityReach(Entity entity) {
         return entityDistance
             .or(() -> distance)
-            .orElseGet(() -> entity instanceof LivingEntity livingEntity
-                ? livingEntity.getAttributeValue(EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE)
-                : 0.0);
+            .orElseGet(() -> MiscUtil.getAttributeValueOrElse(entity, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, 1.0));
     }
 
     private double getBlockReach(Entity entity) {
         return blockDistance
             .or(() -> distance)
-            .orElseGet(() -> entity instanceof LivingEntity livingEntity
-                ? livingEntity.getAttributeValue(EntityAttributes.PLAYER_BLOCK_INTERACTION_RANGE)
-                : 0.0);
+            .orElseGet(() -> MiscUtil.getAttributeValueOrElse(entity, EntityAttributes.PLAYER_BLOCK_INTERACTION_RANGE, 1.0));
     }
 
 }
