@@ -28,10 +28,10 @@ public class AddVelocityEntityActionType extends EntityActionType {
             .add("z", SerializableDataTypes.FLOAT, 0F)
             .addFunctionedDefault("velocity", ApoliDataTypes.VECTOR_3_FLOAT, data -> new Vector3f(data.getFloat("x"), data.getFloat("y"), data.getFloat("z")))
             .add("x_modifier", Modifier.DATA_TYPE, null)
-            .addFunctionedDefault("x_modifiers", Modifier.LIST_TYPE, data -> MiscUtil.singletonListOrEmpty(data.get("x_modifier")))
             .add("y_modifier", Modifier.DATA_TYPE, null)
-            .addFunctionedDefault("y_modifiers", Modifier.LIST_TYPE, data -> MiscUtil.singletonListOrEmpty(data.get("y_modifier")))
             .add("z_modifier", Modifier.DATA_TYPE, null)
+            .addFunctionedDefault("x_modifiers", Modifier.LIST_TYPE, data -> MiscUtil.singletonListOrEmpty(data.get("x_modifier")))
+            .addFunctionedDefault("y_modifiers", Modifier.LIST_TYPE, data -> MiscUtil.singletonListOrEmpty(data.get("y_modifier")))
             .addFunctionedDefault("z_modifiers", Modifier.LIST_TYPE, data -> MiscUtil.singletonListOrEmpty(data.get("z_modifier")))
             .add("space", ApoliDataTypes.SPACE, Space.WORLD)
             .add("set", SerializableDataTypes.BOOLEAN, false),
