@@ -23,8 +23,6 @@ public class PowerIntegration {
         EntityElytraEvents.CUSTOM.register(ElytraFlightPowerType::integrateCustomCallback);
         EntityElytraEvents.ALLOW.register(PreventElytraFlightPowerType::integrateAllowCallback);
 
-        InvulnerabilityPowerType.INCOMPATIBILITY.register(InvulnerabilityPowerType::integrateDefaultIncompatibilityCallback);
-
     }
 
 }

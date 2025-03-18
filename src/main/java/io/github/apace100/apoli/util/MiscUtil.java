@@ -1,7 +1,11 @@
 package io.github.apace100.apoli.util;
 
 import com.mojang.serialization.DataResult;
+import io.github.apace100.apoli.condition.AbstractCondition;
 import io.github.apace100.apoli.condition.context.BlockConditionContext;
+import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.condition.type.meta.MultiMetaConditionType;
+import io.github.apace100.apoli.util.context.ConditionContext;
 import io.github.apace100.calio.data.SerializableData;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -42,8 +46,6 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class MiscUtil {
@@ -400,6 +402,31 @@ public final class MiscUtil {
 
         else {
             return defaultValue;
+        }
+
+    }
+
+    public static <CX extends ConditionContext, CC extends AbstractCondition<CX, CT>, CT extends AbstractConditionType<CX, CC>> DataResult<CT> validateConditionType(CT conditionType, Function<CT, DataResult<CT>> validator) {
+
+        if (conditionType instanceof MultiMetaConditionType<?, ?> multi) {
+
+            for (var innerCondition : multi.conditions()) {
+
+                CT innerConditionType = (CT) innerCondition.getConditionType();
+                DataResult<CT> result = validateConditionType(innerConditionType, validator);
+
+                if (result.isError()) {
+                    return result;
+                }
+
+            }
+
+            return DataResult.success(conditionType);
+
+        }
+
+        else {
+            return validator.apply(conditionType);
         }
 
     }

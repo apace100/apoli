@@ -11,11 +11,9 @@ import io.github.apace100.calio.data.SerializableDataType;
 import java.util.List;
 import java.util.function.Function;
 
-public interface AnyOfMetaConditionType<T extends ConditionContext, C extends AbstractCondition<T, ? extends AbstractConditionType<T, C>>> {
+public interface AnyOfMetaConditionType<CX extends ConditionContext, CC extends AbstractCondition<CX, ? extends AbstractConditionType<CX, CC>>> extends MultiMetaConditionType<CX, CC> {
 
-    List<C> conditions();
-
-    default boolean testConditions(T context) {
+    default boolean testConditions(CX context) {
         return conditions()
             .stream()
             .anyMatch(condition -> condition.test(context));
