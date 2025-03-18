@@ -8,13 +8,13 @@ import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,25 +67,25 @@ public class StartingEquipmentPowerType extends PowerType {
     private void giveStacks() {
 
         LivingEntity holder = getHolder();
-
         for (IndexedStack indexedStack : indexedStacks) {
 
             ItemStack stack = indexedStack.stack().copy();
-            Optional<Integer> slotId = indexedStack.slotIds().stream().flatMap(Collection::stream).findFirst();
+            IntList slotIds = indexedStack.slotIds().orElseGet(IntArrayList::new);
 
-            StackReference stackReference = slotId.map(holder::getStackReference)
-                .filter(stackRef -> stackRef != StackReference.EMPTY)
-                .filter(stackRef -> stackRef.get().isEmpty())
-                .orElse(null);
+            boolean given = slotIds
+                .intStream()
+                .boxed()
+                .map(holder::getStackReference)
+                .anyMatch(stackReference -> stackReference.set(stack));
 
-            if (stackReference == null || !stackReference.set(stack)) {
+            if (!given) {
 
                 if (holder instanceof PlayerEntity player) {
                     player.getInventory().offerOrDrop(stack);
                 }
 
                 else {
-                    InventoryUtil.throwItem(holder, stack, true, true, 0);
+                    InventoryUtil.throwItem(holder, stack, true, false, 0);
                 }
 
             }
