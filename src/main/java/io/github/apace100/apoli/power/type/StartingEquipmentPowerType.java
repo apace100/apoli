@@ -14,6 +14,7 @@ import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,7 +71,7 @@ public class StartingEquipmentPowerType extends PowerType {
         for (IndexedStack indexedStack : indexedStacks) {
 
             ItemStack stack = indexedStack.stack().copy();
-            Optional<Integer> slotId = indexedStack.slotId();
+            Optional<Integer> slotId = indexedStack.slotIds().stream().flatMap(Collection::stream).findFirst();
 
             StackReference stackReference = slotId.map(holder::getStackReference)
                 .filter(stackRef -> stackRef != StackReference.EMPTY)
