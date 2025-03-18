@@ -6,6 +6,9 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.mixin.SlotRangesAccessor;
 import io.github.apace100.apoli.power.type.InventoryPowerType;
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
@@ -20,18 +23,16 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 public class InventoryUtil {
 
@@ -62,9 +63,9 @@ public class InventoryUtil {
 
     }
 
-    public static int checkInventory(Entity entity, Collection<Integer> slots, Optional<InventoryPowerType> inventoryPowerType, Optional<ItemCondition> itemCondition, ProcessMode processMode) {
+    public static int checkInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<ItemCondition> itemCondition, ProcessMode processMode) {
 
-        Set<Integer> preppedSlots = prepSlots(slots, entity, inventoryPowerType);
+        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
         int matches = 0;
 
         for (int preppedSlot : preppedSlots) {
@@ -82,9 +83,9 @@ public class InventoryUtil {
 
     }
 
-    public static void modifyInventory(Entity entity, Collection<Integer> slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, ItemAction itemAction, Optional<ItemCondition> itemCondition, Optional<Integer> limit, ProcessMode processMode) {
+    public static void modifyInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, ItemAction itemAction, Optional<ItemCondition> itemCondition, Optional<Integer> limit, ProcessMode processMode) {
 
-        Set<Integer> preppedSlots = prepSlots(slots, entity, inventoryPowerType);
+        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
         AtomicInteger processedItems = new AtomicInteger();
 
         modifyingItemsLoop:
@@ -113,9 +114,9 @@ public class InventoryUtil {
 
     }
 
-    public static void replaceInventory(Entity entity, Collection<Integer> slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, Optional<ItemAction> itemAction, Optional<ItemCondition> itemCondition, ItemStack replacementStack, boolean mergeNbt) {
+    public static void replaceInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, Optional<ItemAction> itemAction, Optional<ItemCondition> itemCondition, ItemStack replacementStack, boolean mergeNbt) {
 
-        Set<Integer> preppedSlots = prepSlots(slots, entity, inventoryPowerType);
+        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
         for (int preppedSlot : preppedSlots) {
 
             StackReference stackReference = getStackReference(entity, inventoryPowerType, preppedSlot);
@@ -130,7 +131,7 @@ public class InventoryUtil {
 
             if (mergeNbt) {
                 //  TODO: Either keep this as is, or re-implement it to merge components in a possibly hacky way (I'd rather not)   -eggohito
-                NbtCompound originalStackNbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).getNbt();
+                NbtCompound originalStackNbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt();
                 NbtComponent.set(DataComponentTypes.CUSTOM_DATA, replacementStackCopy, replacementStackNbt -> replacementStackNbt.copyFrom(originalStackNbt));
             }
 
@@ -141,9 +142,9 @@ public class InventoryUtil {
 
     }
 
-    public static void dropInventory(Entity entity, Collection<Integer> slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, Optional<ItemAction> itemAction, Optional<ItemCondition> itemCondition, boolean throwRandomly, boolean retainOwnership, Optional<Integer> amount) {
+    public static void dropInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, Optional<ItemAction> itemAction, Optional<ItemCondition> itemCondition, boolean throwRandomly, boolean retainOwnership, Optional<Integer> amount) {
 
-        Set<Integer> preppedSlots = prepSlots(slots, entity, inventoryPowerType);
+        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
         for (int preppedSlot : preppedSlots) {
 
             StackReference stackReference = getStackReference(entity, inventoryPowerType, preppedSlot);
@@ -231,11 +232,10 @@ public class InventoryUtil {
 
     public static void forEachStack(Entity entity, Consumer<ItemStack> stackConsumer) {
 
-        int slotToSkip = getDuplicatedSlotIndex(entity);
+        OptionalInt slotToSkip = getSelectedHotBarSlot(entity);
         for (int slot : getAllSlots()) {
 
-            if (slot == slotToSkip) {
-                slotToSkip = Integer.MIN_VALUE;
+            if (slotToSkip.isPresent() && slotToSkip.getAsInt() == slot) {
                 continue;
             }
 
@@ -276,11 +276,10 @@ public class InventoryUtil {
 
     public static StackReference getStackReferenceFromStack(Entity entity, ItemStack stack, BiPredicate<ItemStack, ItemStack> equalityPredicate) {
 
-        int slotToSkip = getDuplicatedSlotIndex(entity);
+        OptionalInt slotToSkip = getSelectedHotBarSlot(entity);
         for (int slot : getAllSlots()) {
 
-            if (slot == slotToSkip) {
-                slotToSkip = Integer.MIN_VALUE;
+            if (slotToSkip.isPresent() && slotToSkip.getAsInt() == slot) {
                 continue;
             }
 
@@ -295,21 +294,6 @@ public class InventoryUtil {
 
     }
 
-    private static final List<String> EXEMPT_SLOTS = List.of("weapon", "weapon.mainhand");
-
-    private static void deduplicateSlots(Entity entity, Set<Integer> slots) {
-
-        int selectedHotbarSlot = getDuplicatedSlotIndex(entity);
-        if (selectedHotbarSlot != Integer.MIN_VALUE && slots.contains(selectedHotbarSlot)) {
-            SlotRangesAccessor.getSlotRanges()
-                .stream()
-                .filter(sr -> EXEMPT_SLOTS.contains(sr.asString()))
-                .flatMapToInt(sr -> sr.getSlotIds().intStream())
-                .forEach(slots::remove);
-        }
-
-    }
-
     /**
      *      <p>For players, their selected hotbar slot will overlap with the `weapon.mainhand` slot reference. This
      *      method returns the slot ID of the selected hotbar slot.</p>
@@ -317,15 +301,15 @@ public class InventoryUtil {
      *      @param entity   The entity to get the slot ID of its selected hotbar slot
      *      @return         The slot ID of the hotbar slot or {@link Integer#MIN_VALUE} if the entity is not a player
      */
-    private static int getDuplicatedSlotIndex(Entity entity) {
+    private static OptionalInt getSelectedHotBarSlot(Entity entity) {
 
         SlotRange slotRange = entity instanceof PlayerEntity player
             ? SlotRanges.fromName("hotbar." + player.getInventory().selectedSlot)
             : null;
 
         return slotRange != null
-            ? slotRange.getSlotIds().getFirst()
-            : Integer.MIN_VALUE;
+            ? OptionalInt.of(slotRange.getSlotIds().getFirst())
+            : OptionalInt.empty();
 
     }
 
@@ -378,42 +362,47 @@ public class InventoryUtil {
         };
     }
 
-    public static Set<Integer> getAllSlots() {
-        return SlotRangesAccessor.getSlotRanges()
-            .stream()
-            .flatMapToInt(slotRange -> slotRange.getSlotIds().intStream())
-            .boxed()
-            .collect(Collectors.toSet());
+    private static final IntSet ALL_SLOTS = new IntOpenHashSet();
+
+    public static IntSet getAllSlots() {
+
+        if (ALL_SLOTS.isEmpty()) {
+
+            for (SlotRange slotRange : SlotRangesAccessor.getSlotRanges()) {
+                ALL_SLOTS.addAll(slotRange.getSlotIds());
+            }
+
+        }
+
+        return ALL_SLOTS;
+
     }
 
-    public static Set<Integer> prepSlots(Collection<Integer> slots, Entity entity, Optional<InventoryPowerType> inventoryPowerType) {
+    public static IntSet prepSlots(IntCollection slots, Entity entity, Optional<InventoryPowerType> inventoryPowerType) {
 
-        Stream<Integer> slotStream = slots.isEmpty()
-            ? SlotRangesAccessor.getSlotRanges().stream().flatMapToInt(slotRange -> slotRange.getSlotIds().intStream()).boxed()
-            : slots.stream();
-        Set<Integer> slotSet = slotStream
+        IntStream slotStream = slots.isEmpty()
+            ? getAllSlots().intStream()
+            : slots.intStream();
+
+        return slotStream
             .filter(slot -> slotWithinBounds(entity, inventoryPowerType, slot))
-            .collect(Collectors.toSet());
-
-        deduplicateSlots(entity, slotSet);
-        return slotSet;
+            .collect(IntOpenHashSet::new, IntOpenHashSet::add, IntOpenHashSet::addAll);
 
     }
 
-    @Nullable
-    public static Integer getSlotFromStackReference(Entity entity, StackReference stackReference) {
+    public static OptionalInt getSlotFromStackReference(Entity entity, StackReference stackReference) {
 
         for (int slot : getAllSlots()) {
 
             StackReference queriedStackRef = entity.getStackReference(slot);
 
             if (queriedStackRef != StackReference.EMPTY && queriedStackRef.equals(stackReference)) {
-                return slot;
+                return OptionalInt.of(slot);
             }
 
         }
 
-        return null;
+        return OptionalInt.empty();
 
     }
 

@@ -7,7 +7,8 @@ import io.github.apace100.apoli.condition.type.AbstractConditionType;
 import io.github.apace100.apoli.condition.type.meta.MultiMetaConditionType;
 import io.github.apace100.apoli.util.context.ConditionContext;
 import io.github.apace100.calio.data.SerializableData;
-import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -381,13 +382,15 @@ public final class MiscUtil {
             .orElseGet(defaultValue);
     }
 
-    public static Set<Integer> toSlotIdSet(Collection<SlotRange> slotRanges) {
-        return slotRanges
-            .stream()
-            .map(SlotRange::getSlotIds)
-            .map(IntCollection::intStream)
-            .flatMap(IntStream::boxed)
-            .collect(Collectors.toSet());
+    public static IntSet toSlotIdSet(Collection<SlotRange> slotRanges) {
+
+        IntSet slotIdSet = new IntOpenHashSet();
+        for (SlotRange slotRange : slotRanges) {
+            slotIdSet.addAll(slotRange.getSlotIds());
+        }
+
+        return slotIdSet;
+
     }
 
     public static Vec3d getPoseDependentEyePos(Entity entity) {

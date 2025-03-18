@@ -16,13 +16,13 @@ import io.github.apace100.apoli.util.InventoryUtil.ProcessMode;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.SlotRange;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static io.github.apace100.apoli.util.InventoryUtil.modifyInventory;
 
@@ -70,7 +70,7 @@ public class ModifyInventoryEntityActionType extends EntityActionType {
     private final Optional<ItemCondition> itemCondition;
 
     private final List<SlotRange> slotRanges;
-    private final Set<Integer> slots;
+    private final IntSet slots;
 
     private final Optional<Integer> limit;
 

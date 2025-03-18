@@ -14,6 +14,7 @@ import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.SlotRange;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class InventoryEntityConditionType extends EntityConditionType {
 
@@ -61,7 +61,7 @@ public class InventoryEntityConditionType extends EntityConditionType {
     private final Optional<ItemCondition> itemCondition;
 
     private final List<SlotRange> slotRanges;
-    private final Set<Integer> slots;
+    private final IntSet slots;
 
     private final Comparison comparison;
     private final int compareTo;
