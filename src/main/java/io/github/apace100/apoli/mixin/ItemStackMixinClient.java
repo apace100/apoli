@@ -22,13 +22,10 @@ import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.AttributeModifierSlot;
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -54,12 +51,14 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
     @Shadow
     public abstract UseAction getUseAction();
 
-    @Shadow public abstract ComponentMap getComponents();
+    @Shadow
+    public abstract ComponentMap getComponents();
 
-    @Shadow public abstract Item getItem();
+    @Shadow
+    public abstract Item getItem();
 
     @Unique
-    private final Set<AttributeModifierSlot> apoli$appendedSlots = new HashSet<>();
+    private EnumSet<AttributeModifierSlot> apoli$appendedSlots;
 
     @Unique
     private Item.TooltipContext apoli$tooltipContext;
@@ -72,20 +71,22 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/MutableText;append(Lnet/minecraft/text/Text;)Lnet/minecraft/text/MutableText;"))
     private void apoli$cacheTooltipStuff(Item.TooltipContext context, @Nullable PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir, @Local List<Text> tooltip) {
-        // Although this is a client-only mixin, this is still seen by the internal server.
-        if(player == null || !player.getWorld().isClient) {
+
+		// Although this is a client-only mixin, this is still seen by the internal server.
+        if (player == null || !player.getWorld().isClient) {
             return;
         }
 
-        this.apoli$appendedSlots.clear();
+        this.apoli$appendedSlots = EnumSet.noneOf(AttributeModifierSlot.class);
         this.apoli$tooltipContext = context;
         this.apoli$tooltipType = type;
         this.apoli$tooltip = tooltip;
+
     }
 
     @Inject(method = "getTooltip", at = @At(value = "RETURN"))
     private void apoli$clearCachedTooltipStuff(CallbackInfoReturnable<?> cir) {
-        this.apoli$appendedSlots.clear();
+        this.apoli$appendedSlots = null;
         this.apoli$tooltipContext = null;
         this.apoli$tooltipType = null;
         this.apoli$tooltip = null;
@@ -94,8 +95,7 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;appendTooltip(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/Item$TooltipContext;Ljava/util/List;Lnet/minecraft/item/tooltip/TooltipType;)V", shift = At.Shift.AFTER))
     private void apoli$appendUnusableTooltip(Item.TooltipContext context, @Nullable PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir) {
 
-        ApoliConfigClient.Tooltips config = ((ApoliConfigClient) Apoli.config).tooltips;
-        if (!config.showUsabilityHints) {
+        if (!(Apoli.config instanceof ApoliConfigClient config) || !config.tooltips.showUsabilityHints) {
             return;
         }
 
@@ -127,7 +127,7 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
 
         }
 
-        else if (config.compactUsabilityHints) {
+        else if (config.tooltips.compactUsabilityHints) {
 
             MinecraftClient client = MinecraftClient.getInstance();
             KeyBinding keyBinding = ApoliClient.showPowersOnUsabilityHint;
@@ -183,38 +183,24 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
     }
 
     @Inject(method = "appendAttributeModifiersTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;applyAttributeModifier(Lnet/minecraft/component/type/AttributeModifierSlot;Ljava/util/function/BiConsumer;)V", shift = At.Shift.AFTER))
-    private void apoli$appendItemPowersTooltipWithoutModifiers(Consumer<Text> tooltipConsumer, @Nullable PlayerEntity player, CallbackInfo ci, @Local AttributeModifierSlot modifierSlot, @Local MutableBoolean shouldAppendSlotName) {
+    private void apoli$appendItemPowersTooltips(Consumer<Text> tooltipConsumer, @Nullable PlayerEntity player, CallbackInfo ci, @Local AttributeModifierSlot modifierSlot, @Local MutableBoolean shouldAppendSlotName) {
 
-        if (apoli$tooltipContext == null || apoli$tooltipType == null || apoli$appendedSlots.contains(modifierSlot)) {
+        ItemPowersComponent itemPowersComponent = this.getOrDefault(ApoliDataComponentTypes.POWERS, ItemPowersComponent.DEFAULT);
+        if (apoli$appendedSlots == null || apoli$appendedSlots.contains(modifierSlot) || !itemPowersComponent.containsSlot(modifierSlot)) {
             return;
         }
 
-        ItemPowersComponent itemPowers = this.get(ApoliDataComponentTypes.POWERS);
-        if (itemPowers == null || !itemPowers.containsSlot(modifierSlot)) {
-            return;
+        if (shouldAppendSlotName.isTrue()) {
+
+            tooltipConsumer.accept(ScreenTexts.EMPTY);
+            tooltipConsumer.accept(Text.translatable("item.modifiers." + modifierSlot.asString()).formatted(Formatting.GRAY));
+
+            shouldAppendSlotName.setFalse();
+
         }
 
-        tooltipConsumer.accept(ScreenTexts.EMPTY);
-        tooltipConsumer.accept(Text.translatable("item.modifiers." + modifierSlot.asString()).formatted(Formatting.GRAY));
-
-        itemPowers.appendTooltip(modifierSlot, apoli$tooltipContext, tooltipConsumer, apoli$tooltipType);
+        itemPowersComponent.appendTooltip(modifierSlot, apoli$tooltipContext, apoli$tooltip::add, apoli$tooltipType);
         apoli$appendedSlots.add(modifierSlot);
-
-    }
-
-    @Inject(method = "method_57370", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;appendAttributeModifierTooltip(Ljava/util/function/Consumer;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/registry/entry/RegistryEntry;Lnet/minecraft/entity/attribute/EntityAttributeModifier;)V", shift = At.Shift.AFTER))
-    private void apoli$appendStackPowersTooltipWithModifiers(MutableBoolean shouldAppendSlotName, Consumer<Text> tooltipConsumer, AttributeModifierSlot modifierSlot, PlayerEntity playerEntity, RegistryEntry<EntityAttribute> attribute, EntityAttributeModifier modifier, CallbackInfo ci) {
-
-        if (apoli$tooltip == null || apoli$tooltipContext == null || apoli$tooltipType == null || modifier.value() == 0) {
-            return;
-        }
-
-        ItemPowersComponent itemPowers = this.get(ApoliDataComponentTypes.POWERS);
-        apoli$appendedSlots.add(modifierSlot);
-
-        if (itemPowers != null && itemPowers.containsSlot(modifierSlot)) {
-            itemPowers.appendTooltip(modifierSlot, apoli$tooltipContext, apoli$tooltip::add, apoli$tooltipType);
-        }
 
     }
 
