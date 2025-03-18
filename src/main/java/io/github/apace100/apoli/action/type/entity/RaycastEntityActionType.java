@@ -189,30 +189,29 @@ public class RaycastEntityActionType extends EntityActionType {
 
         }
 
-        boolean hit = hitResult != null
-            && hitResult.getType() != HitResult.Type.MISS;
-
-        if (hit && commandAtHit.isPresent()) {
+        if (hitResult != null) {
 
             Vec3d hitPos = hitResult.getPos();
-            Offset offset = getOffset(entity, hitResult, direction);
+            boolean hit = hitResult.getType() != HitResult.Type.MISS;
 
-            hitPos = hitPos.subtract(offset.direction().multiply(offset.amount()));
-            executeCommandAtHit(entity, hitPos);
+            if (commandAtHit.isPresent() && hit) {
 
-        }
+                Offset offset = getOffset(entity, hitResult, direction);
+                Vec3d offsetHitPos = hitPos.subtract(offset.direction().multiply(offset.amount()));
 
-        if (commandAlongRay.isPresent() && (!commandAlongRayOnlyOnHit || hit)) {
-            executeCommandAtSteps(entity, origin, destination);
-        }
+                executeCommandAtHit(entity, offsetHitPos);
 
-        if (hit) {
+            }
+
+            if (commandAlongRay.isPresent() && !commandAlongRayOnlyOnHit || hit) {
+                executeCommandAtSteps(entity, origin, hitPos);
+            }
 
             switch (hitResult) {
-                case BlockHitResult blockResult ->
-                    blockAction.ifPresent(action -> action.execute(entity.getWorld(), blockResult.getBlockPos(), Optional.of(blockResult.getSide())));
-                case EntityHitResult entityResult ->
-                    biEntityAction.ifPresent(action -> action.execute(entity, entityResult.getEntity()));
+                case BlockHitResult blockHitResult ->
+                    blockAction.ifPresent(action -> action.execute(entity.getWorld(), blockHitResult.getBlockPos(), Optional.of(blockHitResult.getSide())));
+                case EntityHitResult entityHitResult ->
+                    biEntityAction.ifPresent(action -> action.execute(entity, entityHitResult.getEntity()));
                 default -> {
 
                 }
@@ -350,7 +349,9 @@ public class RaycastEntityActionType extends EntityActionType {
     private void executeCommandAtSteps(Entity entity, Vec3d origin, Vec3d destination) {
 
         MinecraftServer server = entity.getServer();
-        if (server == null) {
+        String commandAlongRay = this.commandAlongRay.orElse("");
+
+        if (server == null || commandAlongRay.isEmpty()) {
             return;
         }
 
@@ -372,8 +373,7 @@ public class RaycastEntityActionType extends EntityActionType {
             Vec3d offsetPos = direction.multiply(steps);
             Vec3d newPos = origin.add(offsetPos);
 
-            ServerCommandSource offsetCommandSource = commandSource.withPosition(newPos);
-            commandAlongRay.ifPresent(command -> server.getCommandManager().executeWithPrefix(offsetCommandSource, command));
+            server.getCommandManager().executeWithPrefix(commandSource.withPosition(newPos), commandAlongRay);
 
         }
 
@@ -382,7 +382,9 @@ public class RaycastEntityActionType extends EntityActionType {
     private void executeCommandAtHit(Entity entity, Vec3d hitPos) {
 
         MinecraftServer server = entity.getServer();
-        if (server == null) {
+        String commandAtHit = this.commandAtHit.orElse("");
+
+        if (server == null || commandAtHit.isEmpty()) {
             return;
         }
 
@@ -397,8 +399,7 @@ public class RaycastEntityActionType extends EntityActionType {
                 : server);
         }
 
-        ServerCommandSource finalCommandSource = commandSource;
-        commandAtHit.ifPresent(command -> server.getCommandManager().executeWithPrefix(finalCommandSource, command));
+        server.getCommandManager().executeWithPrefix(commandSource, commandAtHit);
 
     }
 
