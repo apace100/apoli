@@ -7,7 +7,12 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.power.type.*;
+import io.github.apace100.apoli.power.type.ActionOnItemUsePowerType;
+import io.github.apace100.apoli.power.type.EdibleItemPowerType;
+import io.github.apace100.apoli.power.type.ItemOnItemPowerType;
+import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
+import io.github.apace100.apoli.power.type.ModifyFoodPowerType;
+import io.github.apace100.apoli.power.type.PreventItemUsePowerType;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.PriorityPhase;
 import io.github.apace100.apoli.util.StackClickPhase;
@@ -33,6 +38,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.lang.ref.WeakReference;
+
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin implements ComponentHolder, EntityLinkedItemStack, FabricItemStack {
 
@@ -50,7 +57,8 @@ public abstract class ItemStackMixin implements ComponentHolder, EntityLinkedIte
     public abstract ItemStack copy();
 
     @Unique
-    private Entity apoli$holdingEntity;
+    @Nullable
+    private WeakReference<Entity> apoli$holdingEntity;
 
     @Override
     public Entity apoli$getEntity() {
@@ -60,15 +68,18 @@ public abstract class ItemStackMixin implements ComponentHolder, EntityLinkedIte
     @Override
     public Entity apoli$getEntity(boolean prioritiseVanillaHolder) {
         Entity vanillaHolder = getHolder();
-        if(!prioritiseVanillaHolder || vanillaHolder == null) {
-            return apoli$holdingEntity;
+        if (prioritiseVanillaHolder && vanillaHolder != null) {
+            return vanillaHolder;
         }
-        return vanillaHolder;
+        if (apoli$holdingEntity != null) {
+            return apoli$holdingEntity.get();
+        }
+        return null;
     }
 
     @Override
     public void apoli$setEntity(Entity entity) {
-        this.apoli$holdingEntity = entity;
+        this.apoli$holdingEntity = new WeakReference<>(entity);
     }
 
     @ModifyReturnValue(method = "copy", at = @At("RETURN"))

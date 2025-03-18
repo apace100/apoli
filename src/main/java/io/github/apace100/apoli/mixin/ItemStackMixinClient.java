@@ -72,10 +72,23 @@ public abstract class ItemStackMixinClient implements ComponentHolder {
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/MutableText;append(Lnet/minecraft/text/Text;)Lnet/minecraft/text/MutableText;"))
     private void apoli$cacheTooltipStuff(Item.TooltipContext context, @Nullable PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir, @Local List<Text> tooltip) {
+        // Although this is a client-only mixin, this is still seen by the internal server.
+        if(player == null || !player.getWorld().isClient) {
+            return;
+        }
+
         this.apoli$appendedSlots.clear();
         this.apoli$tooltipContext = context;
         this.apoli$tooltipType = type;
         this.apoli$tooltip = tooltip;
+    }
+
+    @Inject(method = "getTooltip", at = @At(value = "RETURN"))
+    private void apoli$clearCachedTooltipStuff(CallbackInfoReturnable<?> cir) {
+        this.apoli$appendedSlots.clear();
+        this.apoli$tooltipContext = null;
+        this.apoli$tooltipType = null;
+        this.apoli$tooltip = null;
     }
 
     @Inject(method = "getTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;appendTooltip(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/Item$TooltipContext;Ljava/util/List;Lnet/minecraft/item/tooltip/TooltipType;)V", shift = At.Shift.AFTER))

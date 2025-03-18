@@ -15,17 +15,17 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class DefaultAttributeContainerMixin implements OwnableAttributeContainer {
 
     @Unique
-    private Entity apoli$owner;
+    private final ThreadLocal<Entity> apoli$owner = new ThreadLocal<>();
 
     @Override
     @Nullable
     public Entity apoli$getOwner() {
-        return apoli$owner;
+        return apoli$owner.get();
     }
 
     @Override
     public void apoli$setOwner(Entity owner) {
-        this.apoli$owner = owner;
+        this.apoli$owner.set(owner);
     }
 
     @ModifyExpressionValue(method = "getValue", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/attribute/DefaultAttributeContainer;require(Lnet/minecraft/registry/entry/RegistryEntry;)Lnet/minecraft/entity/attribute/EntityAttributeInstance;"))

@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -34,16 +35,19 @@ public abstract class EntityAttributeInstanceMixin implements OwnableAttributeIn
 
     @Unique
     @Nullable
-    Entity apoli$owner;
+    WeakReference<Entity> apoli$owner;
 
     @Override
     public void apoli$setOwner(Entity owner) {
-        apoli$owner = owner;
+        apoli$owner = new WeakReference<>(owner);
     }
 
     @Override
     public Entity apoli$getOwner() {
-        return apoli$owner;
+        if (apoli$owner != null) {
+            return apoli$owner.get();
+        }
+        return null;
     }
 
     /**

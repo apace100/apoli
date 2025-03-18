@@ -11,20 +11,26 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.lang.ref.WeakReference;
+
 @Mixin(EntityType.class)
 public abstract class EntityTypeMixin implements EntityLinkedType {
 
     @Unique
-    private Entity apoli$currentEntity;
+    private final ThreadLocal<WeakReference<Entity>> apoli$currentEntity = new ThreadLocal<>();
 
     @Override
     public Entity apoli$getEntity() {
-        return apoli$currentEntity;
+        final WeakReference<Entity> reference = apoli$currentEntity.get();
+        if (reference != null) {
+            return reference.get();
+        }
+        return null;
     }
 
     @Override
     public void apoli$setEntity(Entity entity) {
-        this.apoli$currentEntity = entity;
+        this.apoli$currentEntity.set(new WeakReference<>(entity));
     }
 
     @ModifyReturnValue(method = "isIn(Lnet/minecraft/registry/tag/TagKey;)Z", at = @At("RETURN"))

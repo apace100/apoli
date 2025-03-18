@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.access.OverlaySpriteHolder;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.integration.PostLoadTexturesCallback;
+import io.github.apace100.apoli.internal.InternalClient;
 import io.github.apace100.apoli.power.type.EntityGlowPowerType;
 import io.github.apace100.apoli.power.type.OverlayPowerType;
 import io.github.apace100.apoli.power.type.SelfGlowPowerType;
@@ -14,6 +15,7 @@ import net.minecraft.client.RunArgs;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.TextureManager;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.resource.ReloadableResourceManagerImpl;
 import net.minecraft.util.Identifier;
@@ -68,4 +70,8 @@ public abstract class MinecraftClientMixin implements OverlaySpriteHolder {
         PostLoadTexturesCallback.EVENT.invoker().onPostLoad((MinecraftClient) (Object) this, this.isFinishedLoading());
     }
 
+    @Inject(method = "setWorld", at = @At("HEAD"))
+    private void apoli$onJoinWorld(ClientWorld world, CallbackInfo ci) {
+        InternalClient.onClientWorldChanged();
+    }
 }
