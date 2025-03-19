@@ -71,7 +71,7 @@ public class Power implements Validatable {
 				@Override
 				public <T> RecordBuilder<T> encode(Power input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
 
-                    PowerType powerType = input.getPowerType();
+                    PowerType powerType = input.getType();
                     PowerConfiguration<PowerType> config = (PowerConfiguration<PowerType>) powerType.getConfig();
 
                     prefix.add("type", PowerTypes.DATA_TYPE.write(ops, config));
@@ -134,7 +134,7 @@ public class Power implements Validatable {
 
                 try {
 
-                    PowerType powerType = value.getPowerType();
+                    PowerType powerType = value.getType();
                     PowerConfiguration<PowerType> config = (PowerConfiguration<PowerType>) powerType.getConfig();
 
                     SerializableData.Instance powerData = serializableData.instance()
@@ -165,7 +165,7 @@ public class Power implements Validatable {
                 }
 
                 catch (Exception e) {
-                    Apoli.LOGGER.error("Error trying to send power \"{}\" with power type \"{}\": ", value.getId(), value.getPowerType().getConfig().id());
+                    Apoli.LOGGER.error("Error trying to send power \"{}\" with power type \"{}\": ", value.getId(), value.getType().getConfig().id());
                     throw e;
                 }
 
@@ -203,12 +203,12 @@ public class Power implements Validatable {
     }
 
     protected Power(Power basePower) {
-        this(basePower.getId(), basePower.getPowerType(), Optional.of(basePower.getName()), Optional.of(basePower.getDescription()), basePower.isHidden());
+        this(basePower.getId(), basePower.getType(), Optional.of(basePower.getName()), Optional.of(basePower.getDescription()), basePower.isHidden());
     }
 
     @Override
     public void validate() throws Exception {
-        getPowerType().validate();
+        getType().validate();
     }
 
     @Override
@@ -238,7 +238,7 @@ public class Power implements Validatable {
     }
 
     @NotNull
-    public PowerType getPowerType() {
+    public PowerType getType() {
         return powerType;
     }
 
@@ -252,7 +252,7 @@ public class Power implements Validatable {
     }
 
     public boolean isMultiple() {
-        return this.getPowerType() instanceof MultiplePowerType
+        return this.getType() instanceof MultiplePowerType
             || this instanceof MultiplePower;
     }
 

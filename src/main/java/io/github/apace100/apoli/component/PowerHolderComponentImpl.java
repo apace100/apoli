@@ -180,7 +180,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
             return false;
         }
 
-        PowerType powerType = shallowCopy(power.getPowerType());
+        PowerType powerType = shallowCopy(power.getType());
 
         powerType.setPower(power);
         powerType.setHolder(owner);
@@ -249,7 +249,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
                 try {
 
                     Power power = powerReference.getPower();
-                    PowerType powerType = shallowCopy(power.getPowerType());
+                    PowerType powerType = shallowCopy(power.getType());
 
                     powerType.setPower(power);
                     powerType.setHolder(owner);
@@ -291,7 +291,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
         NbtList powersTag = new NbtList();
         powers.forEach((power, powerType) -> {
 
-            PowerConfiguration<?> typeConfig = power.getPowerType().getConfig();
+            PowerConfiguration<?> typeConfig = power.getType().getConfig();
             PowerReference powerReference = PowerReference.of(power.getId());
 
             Power.DataEntry.CODEC.codec().encodeStart(lookup.getOps(NbtOps.INSTANCE), new Power.DataEntry(typeConfig, powerReference, powerType.toTag(), powerSources.get(power)))

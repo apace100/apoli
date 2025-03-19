@@ -1,9 +1,9 @@
 package io.github.apace100.apoli.action.type.meta;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.action.AbstractAction;
+import io.github.apace100.apoli.action.Action;
 import io.github.apace100.apoli.action.ActionConfiguration;
-import io.github.apace100.apoli.action.type.AbstractActionType;
+import io.github.apace100.apoli.action.type.ActionType;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.context.ActionContext;
@@ -14,7 +14,7 @@ import org.apache.commons.lang3.function.TriFunction;
 
 import java.util.Optional;
 
-public interface RandomChanceMetaActionType<T extends ActionContext<?>, A extends AbstractAction<T, ? extends AbstractActionType<T, A>>> {
+public interface RandomChanceMetaActionType<T extends ActionContext<?>, A extends Action<T, ? extends ActionType<T, A>>> {
 
     A successAction();
 
@@ -34,7 +34,7 @@ public interface RandomChanceMetaActionType<T extends ActionContext<?>, A extend
 
     }
 
-    static <T extends ActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & RandomChanceMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, TriFunction<A, Optional<A>, Float, M> constructor) {
+    static <T extends ActionContext<?>, A extends Action<T, AT>, AT extends ActionType<T, A>, M extends ActionType<T, A> & RandomChanceMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, TriFunction<A, Optional<A>, Float, M> constructor) {
         return ActionConfiguration.of(
             Apoli.identifier("random_chance"),
             new SerializableData()

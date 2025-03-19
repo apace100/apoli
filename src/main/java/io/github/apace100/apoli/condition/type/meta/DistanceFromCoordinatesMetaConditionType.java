@@ -2,11 +2,11 @@ package io.github.apace100.apoli.condition.type.meta;
 
 import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.condition.AbstractCondition;
+import io.github.apace100.apoli.condition.Condition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.apoli.condition.context.EntityConditionContext;
-import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.condition.type.ConditionType;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.Shape;
@@ -123,7 +123,7 @@ public interface DistanceFromCoordinatesMetaConditionType {
 
 	}
 
-	static <T extends ConditionContext, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>, M extends AbstractConditionType<T, C> & DistanceFromCoordinatesMetaConditionType> ConditionConfiguration<M> createConfiguration(Constructor<M> constructor) {
+	static <T extends ConditionContext, C extends Condition<T, CT>, CT extends ConditionType<T, C>, M extends ConditionType<T, C> & DistanceFromCoordinatesMetaConditionType> ConditionConfiguration<M> createConfiguration(Constructor<M> constructor) {
 		return ConditionConfiguration.of(
 			Apoli.identifier("distance_from_coordinates"),
 			new SerializableData()
@@ -168,7 +168,7 @@ public interface DistanceFromCoordinatesMetaConditionType {
 		);
 	}
 
-	interface Constructor<M extends AbstractConditionType<?, ?> & DistanceFromCoordinatesMetaConditionType> {
+	interface Constructor<M extends ConditionType<?, ?> & DistanceFromCoordinatesMetaConditionType> {
 		M create(Reference reference, Shape shape, Optional<Integer> roundToDigit, Vec3d offset, Comparison comparison, double compareTo, boolean scaleReferenceToDimension, boolean scaleDistanceToDimension, boolean ignoreX, boolean ignoreY, boolean ignoreZ);
 	}
 

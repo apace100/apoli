@@ -4,7 +4,7 @@ import io.github.apace100.apoli.action.BiEntityAction;
 import io.github.apace100.apoli.action.context.BiEntityActionContext;
 import io.github.apace100.apoli.util.requirement.BiEntityRequirement;
 
-public abstract class BiEntityActionType extends AbstractActionType<BiEntityActionContext, BiEntityAction> {
+public abstract class BiEntityActionType extends ActionType<BiEntityActionContext, BiEntityAction> {
 
 	@Override
 	public BiEntityAction createAction() {

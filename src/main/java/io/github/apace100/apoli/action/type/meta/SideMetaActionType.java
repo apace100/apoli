@@ -1,16 +1,16 @@
 package io.github.apace100.apoli.action.type.meta;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.action.AbstractAction;
+import io.github.apace100.apoli.action.Action;
 import io.github.apace100.apoli.action.ActionConfiguration;
-import io.github.apace100.apoli.action.type.AbstractActionType;
+import io.github.apace100.apoli.action.type.ActionType;
 import io.github.apace100.apoli.util.context.ActionContext;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataType;
 
 import java.util.function.BiFunction;
 
-public interface SideMetaActionType<T extends ActionContext<?>, A extends AbstractAction<T, ?>> {
+public interface SideMetaActionType<T extends ActionContext<?>, A extends Action<T, ?>> {
 
     A action();
 
@@ -24,7 +24,7 @@ public interface SideMetaActionType<T extends ActionContext<?>, A extends Abstra
 
     }
 
-    static <T extends ActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & SideMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, BiFunction<A, Side, M> constructor) {
+    static <T extends ActionContext<?>, A extends Action<T, AT>, AT extends ActionType<T, A>, M extends ActionType<T, A> & SideMetaActionType<T, A>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, BiFunction<A, Side, M> constructor) {
         return ActionConfiguration.of(
             Apoli.identifier("side"),
             new SerializableData()

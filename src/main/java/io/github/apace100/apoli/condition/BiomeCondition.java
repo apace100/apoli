@@ -9,7 +9,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 
-public final class BiomeCondition extends AbstractCondition<BiomeConditionContext, BiomeConditionType> {
+public final class BiomeCondition extends Condition<BiomeConditionContext, BiomeConditionType> {
 
 	public static final SerializableDataType<BiomeCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", BiomeConditionTypes.DATA_TYPE, BiomeCondition::new));
 

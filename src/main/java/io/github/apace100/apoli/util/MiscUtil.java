@@ -1,9 +1,9 @@
 package io.github.apace100.apoli.util;
 
 import com.mojang.serialization.DataResult;
-import io.github.apace100.apoli.condition.AbstractCondition;
+import io.github.apace100.apoli.condition.Condition;
 import io.github.apace100.apoli.condition.context.BlockConditionContext;
-import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.condition.type.ConditionType;
 import io.github.apace100.apoli.condition.type.meta.MultiMetaConditionType;
 import io.github.apace100.apoli.util.context.ConditionContext;
 import io.github.apace100.calio.data.SerializableData;
@@ -409,13 +409,13 @@ public final class MiscUtil {
 
     }
 
-    public static <CX extends ConditionContext, CC extends AbstractCondition<CX, CT>, CT extends AbstractConditionType<CX, CC>> DataResult<CT> validateConditionType(CT conditionType, Function<CT, DataResult<CT>> validator) {
+    public static <CX extends ConditionContext, CC extends Condition<CX, CT>, CT extends ConditionType<CX, CC>> DataResult<CT> validateConditionType(CT conditionType, Function<CT, DataResult<CT>> validator) {
 
         if (conditionType instanceof MultiMetaConditionType<?, ?> multi) {
 
             for (var innerCondition : multi.conditions()) {
 
-                CT innerConditionType = (CT) innerCondition.getConditionType();
+                CT innerConditionType = (CT) innerCondition.getType();
                 DataResult<CT> result = validateConditionType(innerConditionType, validator);
 
                 if (result.isError()) {

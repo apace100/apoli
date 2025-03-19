@@ -1,11 +1,11 @@
 package io.github.apace100.apoli.action.type.meta;
 
 import io.github.apace100.apoli.Apoli;
-import io.github.apace100.apoli.action.AbstractAction;
+import io.github.apace100.apoli.action.Action;
 import io.github.apace100.apoli.action.ActionConfiguration;
-import io.github.apace100.apoli.action.type.AbstractActionType;
-import io.github.apace100.apoli.condition.AbstractCondition;
-import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.action.type.ActionType;
+import io.github.apace100.apoli.condition.Condition;
+import io.github.apace100.apoli.condition.type.ConditionType;
 import io.github.apace100.apoli.util.context.ActionContext;
 import io.github.apace100.apoli.util.context.ConditionContext;
 import io.github.apace100.calio.data.SerializableData;
@@ -14,7 +14,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import java.util.List;
 import java.util.function.Function;
 
-public interface IfElseListMetaActionType<AX extends ActionContext<CX>, CX extends ConditionContext, A extends AbstractAction<AX, ?>, C extends AbstractCondition<CX, ?>> {
+public interface IfElseListMetaActionType<AX extends ActionContext<CX>, CX extends ConditionContext, A extends Action<AX, ?>, C extends Condition<CX, ?>> {
 
     List<ConditionedAction<A, C>> conditionedActions();
 
@@ -33,7 +33,7 @@ public interface IfElseListMetaActionType<AX extends ActionContext<CX>, CX exten
 
     }
 
-    static <AX extends ActionContext<CX>, CX extends ConditionContext, A extends AbstractAction<AX, AT>, AT extends AbstractActionType<AX, A>, C extends AbstractCondition<CX, CT>, CT extends AbstractConditionType<CX, C>, M extends AbstractActionType<AX, A> & IfElseListMetaActionType<AX, CX, A, C>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, SerializableDataType<C> conditionDataType, Function<List<ConditionedAction<A, C>>, M> constructor) {
+    static <AX extends ActionContext<CX>, CX extends ConditionContext, A extends Action<AX, AT>, AT extends ActionType<AX, A>, C extends Condition<CX, CT>, CT extends ConditionType<CX, C>, M extends ActionType<AX, A> & IfElseListMetaActionType<AX, CX, A, C>> ActionConfiguration<M> createConfiguration(SerializableDataType<A> actionDataType, SerializableDataType<C> conditionDataType, Function<List<ConditionedAction<A, C>>, M> constructor) {
 
         SerializableDataType<ConditionedAction<A, C>> conditionedActionDataType = SerializableDataType.compound(
             new SerializableData()
@@ -61,7 +61,7 @@ public interface IfElseListMetaActionType<AX extends ActionContext<CX>, CX exten
 
     }
 
-    record ConditionedAction<A extends AbstractAction<?, ?>, C extends AbstractCondition<?, ?>>(A action, C condition) {
+    record ConditionedAction<A extends Action<?, ?>, C extends Condition<?, ?>>(A action, C condition) {
 
     }
 

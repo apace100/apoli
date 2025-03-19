@@ -67,7 +67,7 @@ public class RecipePowerType extends PowerType implements Prioritized<RecipePowe
 
         for (Power power : PowerManager.values()) {
 
-            if (!(power.getPowerType() instanceof RecipePowerType recipePowerType)) {
+            if (!(power.getType() instanceof RecipePowerType recipePowerType)) {
                 continue;
             }
 

@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.condition.type;
 
-import io.github.apace100.apoli.condition.AbstractCondition;
+import io.github.apace100.apoli.condition.Condition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.context.ConditionContext;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public abstract class AbstractConditionType<T extends ConditionContext, C extends AbstractCondition<T, ?>> implements Predicate<T>, Validatable {
+public abstract class ConditionType<CX extends ConditionContext, C extends Condition<CX, ?>> implements Predicate<CX>, Validatable {
 
 	private C condition = null;
 	private boolean initialized = false;
@@ -20,7 +20,7 @@ public abstract class AbstractConditionType<T extends ConditionContext, C extend
 	@ApiStatus.Internal
 	public void init(@NotNull C condition) {
 
-		if (condition.getConditionType() != this) {
+		if (condition.getType() != this) {
 			throw new IllegalArgumentException("Cannot initialize condition type \"" + getConfig().id() + "\" with mismatched condition!");
 		}
 
@@ -30,9 +30,9 @@ public abstract class AbstractConditionType<T extends ConditionContext, C extend
 	}
 
 	@Override
-	public abstract boolean test(T context);
+	public abstract boolean test(CX context);
 
-	public boolean shouldTest(T context) {
+	public boolean shouldTest(CX context) {
 		return true;
 	}
 
@@ -40,7 +40,7 @@ public abstract class AbstractConditionType<T extends ConditionContext, C extend
 	@Override
 	public void validate() throws Exception {
 
-		TypedDataObjectFactory<AbstractConditionType<T, C>> dataFactory = (TypedDataObjectFactory<AbstractConditionType<T,C>>) getConfig().dataFactory();
+		TypedDataObjectFactory<ConditionType<CX, C>> dataFactory = (TypedDataObjectFactory<ConditionType<CX,C>>) getConfig().dataFactory();
 		SerializableData.Instance data = dataFactory.toData(this);
 
 		data.validate();

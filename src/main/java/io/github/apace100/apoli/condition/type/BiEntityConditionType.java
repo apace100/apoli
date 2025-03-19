@@ -4,7 +4,7 @@ import io.github.apace100.apoli.condition.BiEntityCondition;
 import io.github.apace100.apoli.condition.context.BiEntityConditionContext;
 import io.github.apace100.apoli.util.requirement.BiEntityRequirement;
 
-public abstract class BiEntityConditionType extends AbstractConditionType<BiEntityConditionContext, BiEntityCondition> {
+public abstract class BiEntityConditionType extends ConditionType<BiEntityConditionContext, BiEntityCondition> {
 
 	@Override
 	public BiEntityCondition createCondition(boolean inverted) {

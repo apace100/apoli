@@ -12,7 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 
-public final class ItemAction extends AbstractAction<ItemActionContext, ItemActionType> {
+public final class ItemAction extends Action<ItemActionContext, ItemActionType> {
 
 	public static final SerializableDataType<ItemAction> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.actions("type", ItemActionTypes.DATA_TYPE, SequenceItemActionType::new, ItemAction::new));
 
@@ -40,7 +40,7 @@ public final class ItemAction extends AbstractAction<ItemActionContext, ItemActi
 		}
 
 		//	Execute the action type
-		getActionType().accept(context);
+		getType().accept(context);
 
 		//	Restore the empty stack instance of the stack reference afterward
 		if (!ModifyEnchantmentLevelPowerType.isWorkableEmptyStack(stackReference) && stackReference.get().isEmpty()) {

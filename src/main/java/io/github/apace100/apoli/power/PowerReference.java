@@ -24,7 +24,7 @@ public record PowerReference(Identifier id, Function<PowerType, DataResult<Power
 	@Override
 	public void validate() throws Exception {
 		getResultPower()
-			.map(Power::getPowerType)
+			.map(Power::getType)
 			.flatMap(condition())
 			.getOrThrow();
 	}

@@ -46,7 +46,7 @@ public abstract class PowerType implements Validatable {
     @ApiStatus.Internal
     public final void setPower(@NotNull final Power power) {
 
-        if (this.power == null && !this.getConfig().equals(power.getPowerType().getConfig())) {
+        if (this.power == null && !this.getConfig().equals(power.getType().getConfig())) {
             throw new IllegalArgumentException("Couldn't initialize power type \"" + this.getConfig().id() + "\" with a power that has a mismatching power type! (power type data: " + this.toData() + ")");
         }
 

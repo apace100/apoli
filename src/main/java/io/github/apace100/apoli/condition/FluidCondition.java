@@ -7,7 +7,7 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.fluid.FluidState;
 
-public final class FluidCondition extends AbstractCondition<FluidConditionContext, FluidConditionType> {
+public final class FluidCondition extends Condition<FluidConditionContext, FluidConditionType> {
 
 	public static final SerializableDataType<FluidCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", FluidConditionTypes.DATA_TYPE, FluidCondition::new));
 

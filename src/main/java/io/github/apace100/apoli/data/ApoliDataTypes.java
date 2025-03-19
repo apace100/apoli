@@ -2,13 +2,13 @@ package io.github.apace100.apoli.data;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.*;
-import io.github.apace100.apoli.action.AbstractAction;
+import io.github.apace100.apoli.action.Action;
 import io.github.apace100.apoli.action.ActionConfiguration;
-import io.github.apace100.apoli.action.type.AbstractActionType;
+import io.github.apace100.apoli.action.type.ActionType;
 import io.github.apace100.apoli.action.type.meta.SequenceMetaActionType;
-import io.github.apace100.apoli.condition.AbstractCondition;
+import io.github.apace100.apoli.condition.Condition;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
-import io.github.apace100.apoli.condition.type.AbstractConditionType;
+import io.github.apace100.apoli.condition.type.ConditionType;
 import io.github.apace100.apoli.data.container.ContainerType;
 import io.github.apace100.apoli.data.container.DynamicContainerType;
 import io.github.apace100.apoli.data.container.PresetContainerType;
@@ -353,7 +353,7 @@ public class ApoliDataTypes {
 	);
 
 	@SuppressWarnings("unchecked")
-	public static <T extends ConditionContext, C extends AbstractCondition<T, CT>, CT extends AbstractConditionType<T, C>> CompoundSerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
+	public static <T extends ConditionContext, C extends Condition<T, CT>, CT extends ConditionType<T, C>> CompoundSerializableDataType<C> condition(String typeField, SerializableDataType<ConditionConfiguration<CT>> registryDataType, BiFunction<CT, Boolean, C> constructor) {
 		return new CompoundSerializableDataType<>(
 			new SerializableData()
 				.add(typeField, registryDataType)
@@ -384,7 +384,7 @@ public class ApoliDataTypes {
 					@Override
 					public <I> RecordBuilder<I> encode(C input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
 
-						CT conditionType = input.getConditionType();
+						CT conditionType = input.getType();
 						ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.getConfig();
 
 						prefix.add(typeField, registryDataType.write(ops, config));
@@ -414,7 +414,7 @@ public class ApoliDataTypes {
 				@Override
 				public void encode(RegistryByteBuf buf, C value) {
 
-					CT conditionType = value.getConditionType();
+					CT conditionType = value.getType();
 					ConditionConfiguration<CT> config = (ConditionConfiguration<CT>) conditionType.getConfig();
 
 					SerializableData.Instance conditionData = serializableData.instance()
@@ -431,7 +431,7 @@ public class ApoliDataTypes {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T extends ActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>> CompoundSerializableDataType<A> action(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<AT, A> constructor) {
+	public static <T extends ActionContext<?>, A extends Action<T, AT>, AT extends ActionType<T, A>> CompoundSerializableDataType<A> action(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<AT, A> constructor) {
 		return new CompoundSerializableDataType<>(
 			new SerializableData()
 				.add(typeField, registryDataType),
@@ -455,7 +455,7 @@ public class ApoliDataTypes {
 					@Override
 					public <I> RecordBuilder<I> encode(A input, DynamicOps<I> ops, RecordBuilder<I> prefix) {
 
-						AT actionType = input.getActionType();
+						AT actionType = input.getType();
 						ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.getConfig();
 
 						prefix.add(typeField, registryDataType.write(ops, config));
@@ -482,7 +482,7 @@ public class ApoliDataTypes {
 				@Override
 				public void encode(RegistryByteBuf buf, A value) {
 
-					AT actionType = value.getActionType();
+					AT actionType = value.getType();
 					ActionConfiguration<AT> config = (ActionConfiguration<AT>) actionType.getConfig();
 
 					SerializableData.Instance actionData = serializableData.instance()
@@ -498,7 +498,7 @@ public class ApoliDataTypes {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T extends ActionContext<?>, A extends AbstractAction<T, AT>, AT extends AbstractActionType<T, A>, M extends AbstractActionType<T, A> & SequenceMetaActionType<T, A>> SerializableDataType<A> actions(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<List<A>, M> multiActionsConstructor, Function<AT, A> constructor) {
+	public static <T extends ActionContext<?>, A extends Action<T, AT>, AT extends ActionType<T, A>, M extends ActionType<T, A> & SequenceMetaActionType<T, A>> SerializableDataType<A> actions(String typeField, SerializableDataType<ActionConfiguration<AT>> registryDataType, Function<List<A>, M> multiActionsConstructor, Function<AT, A> constructor) {
 
 		CompoundSerializableDataType<A> dataType = action(typeField, registryDataType, constructor);
 		SerializableDataType<List<A>> listDataType = dataType.list();

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-public final class BlockAction extends AbstractAction<BlockActionContext, BlockActionType> {
+public final class BlockAction extends Action<BlockActionContext, BlockActionType> {
 
 	public static final SerializableDataType<BlockAction> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.actions("type", BlockActionTypes.DATA_TYPE, SequenceBlockActionType::new, BlockAction::new));
 

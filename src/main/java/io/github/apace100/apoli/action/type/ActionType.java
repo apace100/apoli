@@ -1,6 +1,6 @@
 package io.github.apace100.apoli.action.type;
 
-import io.github.apace100.apoli.action.AbstractAction;
+import io.github.apace100.apoli.action.Action;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.util.context.ActionContext;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public abstract class AbstractActionType<T extends ActionContext<?>, A extends AbstractAction<T, ?>> implements Consumer<T>, Validatable {
+public abstract class ActionType<AX extends ActionContext<?>, A extends Action<AX, ?>> implements Consumer<AX>, Validatable {
 
 	private A action = null;
 	private boolean initialized = false;
@@ -20,7 +20,7 @@ public abstract class AbstractActionType<T extends ActionContext<?>, A extends A
 	@ApiStatus.Internal
 	public final void init(A action) {
 
-		if (action.getActionType() != this) {
+		if (action.getType() != this) {
 			throw new IllegalArgumentException("Cannot initialize action type \"" + getConfig().id() + "\" with mismatched action!");
 		}
 
@@ -30,13 +30,13 @@ public abstract class AbstractActionType<T extends ActionContext<?>, A extends A
 	}
 
 	@Override
-	public abstract void accept(T context);
+	public abstract void accept(AX context);
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void validate() throws Exception {
 
-		TypedDataObjectFactory<AbstractActionType<T, A>> dataFactory = (TypedDataObjectFactory<AbstractActionType<T,A>>) getConfig().dataFactory();
+		TypedDataObjectFactory<ActionType<AX, A>> dataFactory = (TypedDataObjectFactory<ActionType<AX,A>>) getConfig().dataFactory();
 		SerializableData.Instance data = dataFactory.toData(this);
 
 		data.validate();
@@ -60,7 +60,7 @@ public abstract class AbstractActionType<T extends ActionContext<?>, A extends A
 
 	public abstract A createAction();
 
-	public boolean shouldExecute(T context) {
+	public boolean shouldExecute(AX context) {
 		return true;
 	}
 

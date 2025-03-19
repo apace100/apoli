@@ -9,7 +9,7 @@ import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public final class BlockCondition extends AbstractCondition<BlockConditionContext, BlockConditionType> {
+public final class BlockCondition extends Condition<BlockConditionContext, BlockConditionType> {
 
 	public static final SerializableDataType<BlockCondition> DATA_TYPE = SerializableDataType.lazy(() -> ApoliDataTypes.condition("type", BlockConditionTypes.DATA_TYPE, BlockCondition::new));
 
