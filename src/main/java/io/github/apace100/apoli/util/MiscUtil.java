@@ -1,10 +1,14 @@
 package io.github.apace100.apoli.util;
 
+import com.mojang.brigadier.ImmutableStringReader;
+import com.mojang.brigadier.Message;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.condition.Condition;
 import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.apoli.condition.type.ConditionType;
 import io.github.apace100.apoli.condition.type.meta.MultiMetaConditionType;
+import io.github.apace100.apoli.exception.DummyCommandExceptionType;
 import io.github.apace100.apoli.util.context.ConditionContext;
 import io.github.apace100.calio.data.SerializableData;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -432,6 +436,14 @@ public final class MiscUtil {
             return validator.apply(conditionType);
         }
 
+    }
+
+    public static CommandSyntaxException createCommandException(Message message) {
+        return new CommandSyntaxException(DummyCommandExceptionType.INSTANCE, message);
+    }
+
+    public static CommandSyntaxException createCommandExceptionWithContext(ImmutableStringReader reader, Message message) {
+        return new CommandSyntaxException(DummyCommandExceptionType.INSTANCE, message, reader.getString(), reader.getCursor());
     }
 
 }

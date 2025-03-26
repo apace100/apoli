@@ -638,10 +638,8 @@ public class PowerManager extends IdentifiableMultiJsonDataLoader implements Ide
 
     public static boolean shouldIgnoreField(String field) {
         return field.isEmpty()
-            || field.startsWith("$")
-            || FIELDS_TO_IGNORE.contains(field)
             || ADDITIONAL_DATA.containsKey(field)
-            || Power.SERIALIZABLE_DATA.containsField(field);
+            || MultiplePower.isKeyIgnored(field);
     }
 
 }

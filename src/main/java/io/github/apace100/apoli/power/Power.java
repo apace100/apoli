@@ -35,9 +35,10 @@ import java.util.stream.Stream;
 
 public class Power implements Validatable {
 
+    public static final String TYPE_KEY = "type";
     public static final SerializableData SERIALIZABLE_DATA = new SerializableData()
         .add("id", SerializableDataTypes.IDENTIFIER)
-        .add("type", PowerTypes.DATA_TYPE)
+        .add(TYPE_KEY, PowerTypes.DATA_TYPE)
         .add("name", SerializableDataTypes.TEXT.optional(), Optional.empty())
         .add("description", SerializableDataTypes.TEXT.optional(), Optional.empty())
         .add("hidden", SerializableDataTypes.BOOLEAN, false);
@@ -59,7 +60,7 @@ public class Power implements Validatable {
 
                     DataResult<SerializableData.Instance> powerDataResult = serializableData.decode(ops, input);
                     DataResult<PowerType> powerTypeResult = powerDataResult
-                        .map(powerData -> (PowerConfiguration<PowerType>) powerData.get("type"))
+                        .map(powerData -> (PowerConfiguration<PowerType>) powerData.get(TYPE_KEY))
                         .flatMap(config -> config.mapCodec(root).decode(ops, input));
 
                     return powerDataResult
@@ -74,7 +75,7 @@ public class Power implements Validatable {
                     PowerType powerType = input.getType();
                     PowerConfiguration<PowerType> config = (PowerConfiguration<PowerType>) powerType.getConfig();
 
-                    prefix.add("type", PowerTypes.DATA_TYPE.write(ops, config));
+                    prefix.add(TYPE_KEY, PowerTypes.DATA_TYPE.write(ops, config));
 
                     if (input instanceof MultiplePower multiplePower) {
                         multiplePower
@@ -104,7 +105,7 @@ public class Power implements Validatable {
 
                 try {
 
-                    PowerConfiguration<?> config = powerData.get("type");
+                    PowerConfiguration<?> config = powerData.get(TYPE_KEY);
                     PowerType powerType = config.dataType().receive(buf);
 
                     Power basePower = new Power(powerType, powerData);
@@ -139,7 +140,7 @@ public class Power implements Validatable {
 
                     SerializableData.Instance powerData = serializableData.instance()
                         .set("id", value.getId())
-                        .set("type", config)
+                        .set(TYPE_KEY, config)
                         .set("name", Optional.of(value.getName()))
                         .set("description", Optional.of(value.getDescription()))
                         .set("hidden", value.isHidden());
