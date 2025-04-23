@@ -20,18 +20,9 @@ public abstract class TextCodecsMixin {
 	@ModifyArg(method = "createCodec", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/TextCodecs;dispatchingCodec([Lnet/minecraft/util/StringIdentifiable;Ljava/util/function/Function;Ljava/util/function/Function;Ljava/lang/String;)Lcom/mojang/serialization/MapCodec;"))
 	private static StringIdentifiable[] apoli$addCustomTypes(StringIdentifiable[] original) {
 
-		if (original.getClass().getComponentType().isAssignableFrom(TextContent.Type.class)) {
-
-			TextContent.Type<?>[] copy = (TextContent.Type<?>[]) Arrays.copyOf(original, original.length + 1);
-			copy[copy.length - 1] = ForcedTranslatableTextContent.TYPE;
-
-			return copy;
-
-		}
-
-		else {
-			return original;
-		}
+		StringIdentifiable[] copy = Arrays.copyOf(original, original.length + 1);
+		copy[copy.length - 1] = ForcedTranslatableTextContent.TYPE;
+		return copy;
 
 	}
 
