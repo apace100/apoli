@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.HiddenEffectStatus;
 import io.github.apace100.apoli.access.ModifiableFoodEntity;
@@ -347,28 +348,35 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
     }
 
     // CLIMBING
-    @Inject(at = @At("RETURN"), method = "isClimbing", cancellable = true)
-    public void doSpiderClimbing(CallbackInfoReturnable<Boolean> info) {
-        if(!info.getReturnValue()) {
-            if((Entity)this instanceof LivingEntity) {
-                List<ClimbingPower> climbingPowers = PowerHolderComponent.KEY.get((Entity)this).getPowers(ClimbingPower.class, true);
-                // TODO: Rethink how "holding" is implemented
-                if(climbingPowers.size() > 0) {
-                    if(climbingPowers.stream().anyMatch(ClimbingPower::isActive)) {
-                        BlockPos pos = getBlockPos();
-                        this.climbingPos = Optional.of(pos);
-                        //origins_lastClimbingPos = getPos();
-                        info.setReturnValue(true);
-                    } else if(isHoldingOntoLadder()) {
-                        //if(origins_lastClimbingPos != null && isHoldingOntoLadder()) {
-                            if(climbingPowers.stream().anyMatch(ClimbingPower::canHold)) {
-                                    info.setReturnValue(true);
-                            }
-                        //}
-                    }
-                }
-            }
+    @ModifyReturnValue(method = "isClimbing", at = @At("RETURN"))
+    private boolean apoli$modifyClimbing(boolean original) {
+
+        if (original) {
+            return true;
         }
+
+        List<ClimbingPower> climbingPowers = PowerHolderComponent.getPowers(this, ClimbingPower.class);
+        if (this.isSpectator() || climbingPowers.isEmpty()) {
+            return false;
+        }
+
+        this.climbingPos = Optional.of(this.getBlockPos());
+        return true;
+
+    }
+
+    @ModifyReturnValue(method = "isHoldingOntoLadder", at = @At("RETURN"))
+    private boolean apoli$overrideClimbHold(boolean original) {
+
+        List<ClimbingPower> climbingPowers = PowerHolderComponent.getPowers(this, ClimbingPower.class);
+        if (climbingPowers.isEmpty()) {
+            return original;
+        }
+
+        return climbingPowers
+                .stream()
+                .anyMatch(ClimbingPower::canHold);
+
     }
 
     // SLOW_FALLING

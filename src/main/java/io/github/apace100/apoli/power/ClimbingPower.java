@@ -13,29 +13,31 @@ import java.util.function.Predicate;
 
 public class ClimbingPower extends Power {
 
-    private final boolean allowHolding;
     private final Predicate<Entity> holdingCondition;
+    private final boolean allowHolding;
 
-    public ClimbingPower(PowerType<?> type, LivingEntity entity, boolean allowHolding, Predicate<Entity> holdingCondition) {
+    public ClimbingPower(PowerType<?> type, LivingEntity entity, Predicate<Entity> holdingCondition, boolean allowHolding) {
         super(type, entity);
+        this.holdingCondition = holdingCondition != null ? holdingCondition : Entity::isSneaking;
         this.allowHolding = allowHolding;
-        this.holdingCondition = holdingCondition;
     }
 
     public boolean canHold() {
-        return allowHolding && (holdingCondition == null ? isActive() : holdingCondition.test(entity));
+        return allowHolding && holdingCondition.test(entity);
     }
 
     public static PowerFactory createFactory() {
-        return new PowerFactory<>(Apoli.identifier("climbing"),
-            new SerializableData()
-                .add("allow_holding", SerializableDataTypes.BOOLEAN, true)
-                .add("hold_condition", ApoliDataTypes.ENTITY_CONDITION, null),
-            data ->
-                (type, player) -> {
-                    Predicate<Entity> holdCondition = (ConditionFactory<Entity>.Instance)data.get("hold_condition");
-                    return new ClimbingPower(type, player, data.getBoolean("allow_holding"), holdCondition);
-                })
-            .allowCondition();
+        return new PowerFactory<>(
+                Apoli.identifier("climbing"),
+                new SerializableData()
+                        .add("hold_condition", ApoliDataTypes.ENTITY_CONDITION, null)
+                        .add("allow_holding", SerializableDataTypes.BOOLEAN, true),
+                data -> (powerType, livingEntity) -> new ClimbingPower(
+                        powerType,
+                        livingEntity,
+                        data.get("hold_condition"),
+                        data.get("allow_holding")
+                )
+        ).allowCondition();
     }
 }

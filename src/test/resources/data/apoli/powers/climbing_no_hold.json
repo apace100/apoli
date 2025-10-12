@@ -1,0 +1,8 @@
+{
+	"type": "apoli:climbing",
+	"allow_holding": false,
+	"hold_condition": {
+		"type": "apoli:constant",
+		"value": false
+	}
+}
