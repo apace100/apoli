@@ -24,51 +24,26 @@ import java.util.function.Predicate;
 public class ExplodeAction {
 
     public static void action(SerializableData.Instance data, Entity entity) {
-        if(entity.getWorld().isClient) {
+        World world = entity.getWorld();
+        if(world.isClient) {
             return;
         }
 
-        Predicate<CachedBlockPosition> indestructible = null;
-        if(data.isPresent("indestructible")) {
-            indestructible = MiscUtil.combineOr(indestructible, data.get("indestructible"));
-        }
-        if(data.isPresent("destructible")) {
+        Predicate<CachedBlockPosition> indestructibleCondition = data.get("indestructible");
+        if (data.isPresent("destructible")) {
             Predicate<CachedBlockPosition> destructibleCondition = data.get("destructible");
-            indestructible = MiscUtil.combineOr(indestructible, destructibleCondition.negate());
+            indestructibleCondition = MiscUtil.combineOr(destructibleCondition.negate(), indestructibleCondition);
         }
 
-        if(indestructible != null) {
-            ExplosionBehavior eb = getExplosionBehaviour(entity.getWorld(), indestructible);
-            entity.getWorld().createExplosion(data.getBoolean("damage_self") ? null : entity,
-                null,
-                eb, entity.getX(), entity.getY(), entity.getZ(),
-                data.getFloat("power"), data.getBoolean("create_fire"),
-                data.get("destruction_type"));
-        } else {
-            explode(entity.getWorld(), data.getBoolean("damage_self") ? null : entity, null, null,
-                entity.getX(), entity.getY(), entity.getZ(),
-                data.getFloat("power"), data.getBoolean("create_fire"),
-                data.get("destruction_type"));
-        }
-    }
-
-    private static void explode(World world, Entity entity, DamageSource damageSource, ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType) {
-        Explosion explosion = new Explosion(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType);
-        explosion.collectBlocksAndDamageEntities();
-        explosion.affectWorld(true);
-    }
-
-    private static ExplosionBehavior getExplosionBehaviour(World world, Predicate<CachedBlockPosition> indestructiblePredicate) {
-        return new ExplosionBehavior() {
-            @Override
-            public Optional<Float> getBlastResistance(Explosion explosion, BlockView blockView, BlockPos pos, BlockState blockState, FluidState fluidState) {
-                CachedBlockPosition cbp = new CachedBlockPosition(world, pos, true);
-                Optional<Float> def = super.getBlastResistance(explosion, world, pos, blockState, fluidState);
-                Optional<Float> ovr = indestructiblePredicate.test(cbp) ?
-                    Optional.of(Blocks.WATER.getBlastResistance()) : Optional.empty();
-                return ovr.isPresent() ? def.isPresent() ? def.get() > ovr.get() ? def : ovr : ovr : def;
-            }
-        };
+        MiscUtil.createExplosion(
+                world,
+                entity,
+                entity.getPos(),
+                data.getFloat("power"),
+                data.getBoolean("create_fire"),
+                data.get("destruction_type"),
+                MiscUtil.getExplosionBehavior(world, indestructibleCondition)
+        );
     }
 
     public static ActionFactory<Entity> getFactory() {
