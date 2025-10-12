@@ -52,15 +52,7 @@ public class EntityActions {
         register(DelayAction.getFactory(ApoliDataTypes.ENTITY_ACTION));
         register(NothingAction.getFactory());
         register(SideAction.getFactory(ApoliDataTypes.ENTITY_ACTION, entity -> !entity.getWorld().isClient));
-
-        register(new ActionFactory<>(Apoli.identifier("damage"), new SerializableData()
-            .add("amount", SerializableDataTypes.FLOAT)
-            .add("source", ApoliDataTypes.DAMAGE_SOURCE_DESCRIPTION, null)
-            .add("damage_type", SerializableDataTypes.DAMAGE_TYPE, null),
-            (data, entity) -> {
-                DamageSource damageSource = MiscUtil.createDamageSource(entity.getDamageSources(), data.get("source"), data.get("damage_type"));
-                entity.damage(damageSource, data.getFloat("amount"));
-            }));
+        register(DamageAction.getFactory());
         register(new ActionFactory<>(Apoli.identifier("heal"), new SerializableData()
             .add("amount", SerializableDataTypes.FLOAT),
             (data, entity) -> {
