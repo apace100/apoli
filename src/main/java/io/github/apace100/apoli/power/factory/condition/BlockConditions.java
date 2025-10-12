@@ -2,6 +2,7 @@ package io.github.apace100.apoli.power.factory.condition;
 
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.factory.condition.block.LightLevelCondition;
 import io.github.apace100.apoli.power.factory.condition.block.MaterialCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
@@ -109,20 +110,7 @@ public class BlockConditions {
             (data, block) -> block.getBlockState().getBlock() instanceof FluidFillable));
         register(new ConditionFactory<>(Apoli.identifier("exposed_to_sky"), new SerializableData(),
             (data, block) -> block.getWorld().isSkyVisible(block.getBlockPos())));
-        register(new ConditionFactory<>(Apoli.identifier("light_level"), new SerializableData()
-            .add("comparison", ApoliDataTypes.COMPARISON)
-            .add("compare_to", SerializableDataTypes.INT)
-            .add("light_type", SerializableDataType.enumValue(LightType.class), null),
-            (data, block) -> {
-                int value;
-                if(data.isPresent("light_type")) {
-                    LightType lightType = (LightType)data.get("light_type");
-                    value = block.getWorld().getLightLevel(lightType, block.getBlockPos());
-                } else {
-                    value = block.getWorld().getLightLevel(block.getBlockPos());
-                }
-                return ((Comparison)data.get("comparison")).compare(value, data.getInt("compare_to"));
-            }));
+        register(LightLevelCondition.getFactory());
         register(new ConditionFactory<>(Apoli.identifier("block_state"), new SerializableData()
             .add("property", SerializableDataTypes.STRING)
             .add("comparison", ApoliDataTypes.COMPARISON, null)
