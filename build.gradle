@@ -109,7 +109,7 @@ dependencies {
 	})
 
 	//	Mod Menu
-	include(modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}"))
+	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
 	//	Additional Entity Attributes
 	include(modApi("maven.modrinth:AdditionalEntityAttributes:${project.aea_version}"))
