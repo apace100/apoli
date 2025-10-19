@@ -19,6 +19,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.network.PacketByteBuf;
@@ -77,6 +78,12 @@ public class ApoliClient implements ClientModInitializer {
 		});
 
 		GameHudRender.HUD_RENDERS.add(new PowerHudRenderer());
+
+		HudRenderCallback.EVENT.register(((drawContext, tickDelta) -> {
+			for(GameHudRender hudRender : GameHudRender.HUD_RENDERS) {
+				hudRender.render(drawContext, tickDelta);
+			}
+		}));
 
 		AutoConfig.register(ApoliConfigClient.class, JanksonConfigSerializer::new);
 		Apoli.config = AutoConfig.getConfigHolder(ApoliConfigClient.class).getConfig();

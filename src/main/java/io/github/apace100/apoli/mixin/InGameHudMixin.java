@@ -42,10 +42,6 @@ public class InGameHudMixin {
             }
             return true;
         }, OverlayPower::render);
-
-        for(GameHudRender hudRender : GameHudRender.HUD_RENDERS) {
-            hudRender.render(context, tickDelta);
-        }
     }
 
     @ModifyArg(method = "renderStatusBars", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"), index = 0)
