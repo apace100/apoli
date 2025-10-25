@@ -3,7 +3,6 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.mixin.ClientAdvancementManagerAccessor;
 import io.github.apace100.apoli.mixin.ClientPlayerInteractionManagerAccessor;
-import io.github.apace100.apoli.mixin.ServerPlayerInteractionManagerAccessor;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
@@ -17,6 +16,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registry;
 
@@ -29,10 +29,10 @@ public final class EntityConditionsClient {
     public static void register() {
         register(new ConditionFactory<>(Apoli.identifier("using_effective_tool"), new SerializableData(),
             (data, entity) -> {
-                if(entity instanceof ServerPlayerEntity) {
-                    ServerPlayerInteractionManagerAccessor interactionMngr = ((ServerPlayerInteractionManagerAccessor)((ServerPlayerEntity)entity).interactionManager);
-                    if(interactionMngr.getMining()) {
-                        return ((PlayerEntity)entity).canHarvest(entity.getWorld().getBlockState(interactionMngr.getMiningPos()));
+                if(entity instanceof ServerPlayerEntity player) {
+                    ServerPlayerInteractionManager interactionMngr = ((ServerPlayerEntity)entity).interactionManager;
+                    if(interactionMngr.mining) {
+                        return ((PlayerEntity)entity).canHarvest(entity.getWorld().getBlockState(interactionMngr.miningPos));
                     }
                 } else
                 if(entity instanceof ClientPlayerEntity) {
@@ -46,7 +46,7 @@ public final class EntityConditionsClient {
         register(new ConditionFactory<>(Apoli.identifier("gamemode"), new SerializableData()
             .add("gamemode", SerializableDataTypes.STRING), (data, entity) -> {
             if(entity instanceof ServerPlayerEntity) {
-                ServerPlayerInteractionManagerAccessor interactionMngr = ((ServerPlayerInteractionManagerAccessor)((ServerPlayerEntity)entity).interactionManager);
+                ServerPlayerInteractionManager interactionMngr = ((ServerPlayerEntity)entity).interactionManager;
                 return interactionMngr.getGameMode().getName().equals(data.getString("gamemode"));
             } else
             if(entity instanceof ClientPlayerEntity) {

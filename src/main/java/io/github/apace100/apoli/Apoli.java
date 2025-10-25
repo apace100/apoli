@@ -9,6 +9,7 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.component.PowerHolderComponentImpl;
 import io.github.apace100.apoli.global.GlobalPowerSetLoader;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
+import io.github.apace100.apoli.power.ActionOnBlockBreakPower;
 import io.github.apace100.apoli.power.PowerTypes;
 import io.github.apace100.apoli.power.factory.PowerFactories;
 import io.github.apace100.apoli.power.factory.action.BiEntityActions;
@@ -27,15 +28,16 @@ import io.github.ladysnake.pal.Pal;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.conditions.v1.ResourceConditions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -58,6 +60,13 @@ public class Apoli implements ModInitializer, EntityComponentInitializer, Ordere
 
 	@Override
 	public void onInitialize() {
+		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
+			SavedBlockPosition saved = new SavedBlockPosition(world, pos);
+			PowerHolderComponent.getPowers(player, ActionOnBlockBreakPower.class).stream()
+					.filter(p -> p.doesApply(saved))
+					.forEach(power -> power.executeActions(true, pos, null));
+		});
+
 		ServerLifecycleEvents.SERVER_STARTED.register(s -> server = s);
 
 		FabricLoader.getInstance().getModContainer(MODID).ifPresent(modContainer -> {
