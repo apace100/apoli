@@ -3,3 +3,6 @@ accessWidener   v1  named
 mutable field net/minecraft/item/ItemStack item Lnet/minecraft/item/Item;
 extendable class net/minecraft/item/ItemStack
 accessible class net/minecraft/client/render/BackgroundRenderer$FogData
+accessible field net/minecraft/server/network/ServerPlayerInteractionManager mining Z
+accessible field net/minecraft/server/network/ServerPlayerInteractionManager miningPos Lnet/minecraft/util/math/BlockPos;
+accessible field net/minecraft/server/network/ServerPlayerInteractionManager gameMode Lnet/minecraft/world/GameMode;
