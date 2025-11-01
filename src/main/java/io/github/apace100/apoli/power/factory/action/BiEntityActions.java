@@ -4,8 +4,6 @@ package io.github.apace100.apoli.power.factory.action;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.networking.ModPackets;
-import io.github.apace100.apoli.power.factory.action.bientity.AddToEntitySetAction;
-import io.github.apace100.apoli.power.factory.action.bientity.RemoveFromEntitySetAction;
 import io.github.apace100.apoli.power.factory.action.meta.*;
 import io.github.apace100.apoli.power.factory.action.bientity.DamageAction;
 import io.github.apace100.apoli.registry.ApoliRegistries;
@@ -100,8 +98,6 @@ public class BiEntityActions {
                 target.velocityModified = true;
             }));
         register(DamageAction.getFactory());
-        register(AddToEntitySetAction.getFactory());
-        register(RemoveFromEntitySetAction.getFactory());
     }
 
     private static void register(ActionFactory<Pair<Entity, Entity>> actionFactory) {

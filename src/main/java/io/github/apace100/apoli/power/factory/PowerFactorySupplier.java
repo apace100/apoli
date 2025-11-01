@@ -5,5 +5,5 @@ import io.github.apace100.apoli.power.Power;
 @FunctionalInterface
 public interface PowerFactorySupplier<T extends Power> {
 
-    PowerFactory<? extends Power> createFactory();
+    PowerFactory<T> createFactory();
 }
