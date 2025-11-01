@@ -122,6 +122,7 @@ public class PowerFactories {
         register(ModifyGrindstonePower::createFactory);
         register(ReplaceLootTablePower::createFactory);
         register(ModifyVelocityPower::createFactory);
+        register(EntitySetPower::createFactory);
         register(() -> Power.createSimpleFactory(GroundedPower::new, Apoli.identifier("grounded")));
     }
 
