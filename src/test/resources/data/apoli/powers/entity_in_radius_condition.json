@@ -1,0 +1,25 @@
+{
+    "type": "apoli:action_over_time",
+    "entity_action": {
+        "type": "apoli:if_else",
+        "condition": {
+            "type": "apoli:entity_in_radius",
+            "bientity_condition": {
+                "type": "apoli:owner"
+            },
+            "shape": "sphere",
+            "radius": 10.0,
+            "comparison": ">=",
+            "compare_to": 3
+        },
+        "if_action": {
+            "type": "apoli:execute_command",
+            "command": "tellraw @s {\"text\":\"Your pets are nearby!\",\"color\":\"green\"}"
+        },
+        "else_action": {
+            "type": "apoli:execute_command",
+            "command": "tellraw @s {\"text\":\"You need more pets nearby!\",\"color\":\"red\"}"
+        }
+    },
+    "interval": 20
+}
