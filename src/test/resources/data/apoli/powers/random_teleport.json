@@ -1,0 +1,23 @@
+{
+  "type": "apoli:resource",
+  "min": 0,
+  "max": 1,
+  "hud_render": {
+    "should_render": false
+  },
+  "start_value": 0,
+  "max_action": {
+    "type": "apoli:random_teleport",
+    "area_width": 8,
+    "area_height": 8,
+    "success_action": {
+      "type": "apoli:spawn_particles",
+      "particle": "minecraft:poof",
+      "count": 8
+    },
+    "fail_action": {
+      "type": "apoli:execute_command",
+      "command": "title @s actionbar {\"text\": \"Cannot teleport!\", \"color\": \"red\"}"
+    }
+  }
+}
