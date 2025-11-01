@@ -512,6 +512,7 @@ public class EntityConditions {
         register(RaycastCondition.getFactory());
         register(ElytraFlightPossibleCondition.getFactory());
         register(InventoryCondition.getFactory());
+        register(EntitySetSizeCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Entity> conditionFactory) {

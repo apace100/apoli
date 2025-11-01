@@ -3,6 +3,7 @@ package io.github.apace100.apoli.power.factory.condition;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.power.factory.condition.bientity.RelativeRotationCondition;
+import io.github.apace100.apoli.power.factory.condition.entity.InEntitySetCondition;
 import io.github.apace100.apoli.registry.ApoliRegistries;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.calio.data.SerializableData;
@@ -157,6 +158,7 @@ public class BiEntityConditions {
             }
         ));
         register(RelativeRotationCondition.getFactory());
+        register(InEntitySetCondition.getFactory());
     }
 
     private static void register(ConditionFactory<Pair<Entity, Entity>> conditionFactory) {
