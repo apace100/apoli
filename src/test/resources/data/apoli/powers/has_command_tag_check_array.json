@@ -1,0 +1,22 @@
+{
+  "type": "apoli:action_over_time",
+  "entity_action": {
+    "type": "apoli:if_else",
+    "condition": {
+      "type": "apoli:has_command_tag",
+      "command_tags": [
+        "test_1",
+        "test_2"
+      ]
+    },
+    "if_action": {
+      "type": "apoli:execute_command",
+      "command": "tellraw @s {\"text\":\"You have all the right tags!\",\"color\":\"green\"}"
+    },
+    "else_action": {
+      "type": "apoli:execute_command",
+      "command": "tellraw @s {\"text\":\"You do NOT have all the right tags!\",\"color\":\"red\"}"
+    }
+  },
+  "interval": 20
+}
