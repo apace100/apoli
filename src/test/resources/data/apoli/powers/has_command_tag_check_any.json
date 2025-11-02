@@ -1,0 +1,18 @@
+{
+  "type": "apoli:action_over_time",
+  "entity_action": {
+    "type": "apoli:if_else",
+    "condition": {
+      "type": "apoli:has_command_tag"
+    },
+    "if_action": {
+      "type": "apoli:execute_command",
+      "command": "tellraw @s {\"text\":\"I mean, you have a tag, sure...\",\"color\":\"green\"}"
+    },
+    "else_action": {
+      "type": "apoli:execute_command",
+      "command": "tellraw @s {\"text\":\"Damn, no tag? Nerd!\",\"color\":\"red\"}"
+    }
+  },
+  "interval": 20
+}
