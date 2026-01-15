@@ -163,14 +163,14 @@ public class RaycastEntityActionType extends EntityActionType {
     public void accept(EntityActionContext context) {
 
         Entity entity = context.entity();
+        double distance = getReach(entity);
+
         beforeAction.ifPresent(action -> action.execute(entity));
 
         Vec3d origin = MiscUtil.getPoseDependentEyePos(entity).add(context.offset());
         Vec3d direction = this.direction
             .map(dir -> transformDirection(entity, dir))
             .orElseGet(() -> entity.getRotationVec(1.0F));
-
-        double distance = getReach(entity);
 
         Vec3d destination = origin.add(direction.multiply(distance));
         HitResult hitResult = null;
@@ -189,29 +189,29 @@ public class RaycastEntityActionType extends EntityActionType {
 
         }
 
-        if (hitResult != null) {
+        boolean hit = hitResult != null && hitResult.getType() != HitResult.Type.MISS;
+
+        if (hit && commandAtHit.isPresent()) {
 
             Vec3d hitPos = hitResult.getPos();
-            boolean hit = hitResult.getType() != HitResult.Type.MISS;
+            Offset offset = this.getOffset(entity, hitResult, direction);
 
-            if (commandAtHit.isPresent() && hit) {
+            hitPos = hitPos.subtract(offset.direction().multiply(offset.amount()));
+            this.executeCommandAtHit(entity, hitPos);
 
-                Offset offset = getOffset(entity, hitResult, direction);
-                Vec3d offsetHitPos = hitPos.subtract(offset.direction().multiply(offset.amount()));
+        }
 
-                executeCommandAtHit(entity, offsetHitPos);
+        if (commandAlongRay.isPresent() && (!commandAlongRayOnlyOnHit || hit)) {
+            this.executeCommandAtSteps(entity, origin, hit ? hitResult.getPos() : destination);
+        }
 
-            }
-
-            if (commandAlongRay.isPresent() && !commandAlongRayOnlyOnHit || hit) {
-                executeCommandAtSteps(entity, origin, hitPos);
-            }
+        if (hit) {
 
             switch (hitResult) {
-                case BlockHitResult blockHitResult ->
-                    blockAction.ifPresent(action -> action.execute(entity.getWorld(), blockHitResult.getBlockPos(), Optional.of(blockHitResult.getSide())));
-                case EntityHitResult entityHitResult ->
-                    biEntityAction.ifPresent(action -> action.execute(entity, entityHitResult.getEntity()));
+                case BlockHitResult blockResult ->
+                    blockAction.ifPresent(action -> action.execute(entity.getWorld(), blockResult.getBlockPos(), Optional.of(blockResult.getSide())));
+                case EntityHitResult entityResult ->
+                    biEntityAction.ifPresent(action -> action.execute(entity, entityResult.getEntity()));
                 default -> {
 
                 }
