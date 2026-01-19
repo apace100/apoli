@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.HudRendered;
@@ -51,7 +50,7 @@ public class PowerHudRenderer implements GameHudRender {
                     RenderSystem.setShaderTexture(0, currentLocation);
                     lastLocation = currentLocation;
                 }*/
-                context.drawTexture(currentLocation, x, y, 0, 0, barWidth, 5);
+                context.drawTexture(currentLocation, x, y, 0, 0, barWidth, barHeight);
                 int v = 8 + render.getBarIndex() * 10;
                 float fill = hudPower.getFill();
                 if(render.isInverted()) {
