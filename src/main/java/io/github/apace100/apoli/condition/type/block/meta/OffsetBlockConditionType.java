@@ -9,7 +9,9 @@ import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 
 public class OffsetBlockConditionType extends BlockConditionType {
@@ -40,7 +42,13 @@ public class OffsetBlockConditionType extends BlockConditionType {
 
     @Override
     public boolean test(BlockConditionContext context) {
-        return blockCondition.test(new BlockConditionContext(context.world(), context.pos().add(offset), context.blockState(), context.blockEntity()));
+
+        World world = context.world();
+        BlockPos offsetBlockPos = context.pos().add(offset);
+
+        return world.isChunkLoaded(offsetBlockPos)
+            && blockCondition.test(world, offsetBlockPos);
+
     }
 
     @Override
