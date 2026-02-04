@@ -100,11 +100,16 @@ public class BlockItemMixin {
 
         Prioritized.CallInstance<ActiveInteractionPowerType> aipci = aipciRef.get();
 
-        for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
-            aipci.getPowerTypes(i)
-                .stream()
-                .filter(p -> p instanceof ActionOnBlockPlacePowerType)
-                .forEach(p -> ((ActionOnBlockPlacePowerType) p).executeItemActions(context.getHand()));
+        if (aipci != null) {
+
+            for (int i = aipci.getMaxPriority(); i >= aipci.getMinPriority(); i--) {
+                aipci.getPowerTypes(i)
+                    .stream()
+                    .filter(ActionOnBlockPlacePowerType.class::isInstance)
+                    .map(ActionOnBlockPlacePowerType.class::cast)
+                    .forEach(p -> p.executeItemActions(context.getHand()));
+            }
+
         }
 
     }
