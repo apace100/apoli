@@ -38,6 +38,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "isFireImmune", at = @At("HEAD"), cancellable = true)
     private void makeFullyFireImmune(CallbackInfoReturnable<Boolean> cir) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return;
+        }
         if(PowerHolderComponent.hasPower((Entity)(Object)this, FireImmunityPower.class)) {
             cir.setReturnValue(true);
         }
@@ -64,6 +67,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
     private void makeEntitiesIgnoreWater(CallbackInfoReturnable<Boolean> cir) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return;
+        }
         if(PowerHolderComponent.hasPower((Entity)(Object)this, IgnoreWaterPower.class)) {
             if(this instanceof WaterMovingEntity) {
                 if(((WaterMovingEntity)this).isInMovementPhase()) {
@@ -75,6 +81,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "fall", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onLandedUpon(Lnet/minecraft/world/World;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;F)V"))
     private void invokeActionOnLand(CallbackInfo ci) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return;
+        }
         List<ActionOnLandPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, ActionOnLandPower.class);
         powers.forEach(ActionOnLandPower::executeAction);
     }
@@ -91,14 +100,19 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Redirect(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isWet()Z"))
     private boolean preventExtinguishingFromSwimming(Entity entity) {
-        if(PowerHolderComponent.hasPower(entity, SwimmingPower.class) && entity.isSwimming() && !(getFluidHeight(FluidTags.WATER) > 0)) {
-            return false;
+        if (entity instanceof LivingEntity livingEntity) {
+            if (PowerHolderComponent.hasPower(livingEntity, SwimmingPower.class) && entity.isSwimming() && !(getFluidHeight(FluidTags.WATER) > 0)) {
+                return false;
+            }
         }
         return entity.isWet();
     }
 
     @Inject(at = @At("HEAD"), method = "isInvisible", cancellable = true)
     private void phantomInvisibility(CallbackInfoReturnable<Boolean> info) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return;
+        }
         if(PowerHolderComponent.hasPower((Entity)(Object)this, InvisibilityPower.class)) {
             info.setReturnValue(true);
         }
@@ -106,6 +120,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;ofFloored(DDD)Lnet/minecraft/util/math/BlockPos;"), method = "pushOutOfBlocks", cancellable = true)
     protected void pushOutOfBlocks(double x, double y, double z, CallbackInfo info) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return;
+        }
         List<PhasingPower> powers = PowerHolderComponent.getPowers((Entity)(Object)this, PhasingPower.class);
         if(powers.size() > 0) {
             if(powers.stream().anyMatch(phasingPower -> phasingPower.doesApply(BlockPos.ofFloored(x, y, z)))) {
@@ -116,6 +133,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "isInsideWall", at = @At(value = "RETURN"), cancellable = true)
     private void preventPhasingSuffocation(CallbackInfoReturnable<Boolean> cir) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return;
+        }
         PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
         if(component.getPowers(PhasingPower.class).stream().anyMatch(PhasingPower::isActive)) {
             cir.setReturnValue(false);
@@ -140,6 +160,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @ModifyVariable(method = "move", at = @At("HEAD"), argsOnly = true)
     private Vec3d modifyMovementVelocity(Vec3d original, MovementType movementType) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return original;
+        }
         if(movementType != MovementType.SELF) {
             return original;
         }
@@ -153,6 +176,9 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLandingPos()Lnet/minecraft/util/math/BlockPos;"))
     private void forceGrounded(MovementType movementType, Vec3d movement, CallbackInfo ci) {
+        if (!((Entity)(Object)this instanceof LivingEntity)) {
+            return;
+        }
         if(PowerHolderComponent.hasPower((Entity)(Object)this, GroundedPower.class)) {
             this.onGround = true;
         }
