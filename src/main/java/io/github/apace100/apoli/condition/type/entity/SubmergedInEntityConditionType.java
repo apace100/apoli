@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.context.EntityConditionContext;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -32,8 +31,7 @@ public class SubmergedInEntityConditionType extends EntityConditionType {
 
     @Override
     public boolean test(EntityConditionContext context) {
-        return context.entity() instanceof SubmergableEntity submergableEntity
-            && submergableEntity.apoli$isSubmergedInLoosely(fluid);
+        return context.entity().isSubmergedIn(fluid);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package io.github.apace100.apoli.condition.type.entity;
 
-import io.github.apace100.apoli.access.SubmergableEntity;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.context.EntityConditionContext;
 import io.github.apace100.apoli.condition.type.EntityConditionType;
@@ -45,8 +44,7 @@ public class FluidHeightEntityConditionType extends EntityConditionType {
 
     @Override
     public boolean test(EntityConditionContext context) {
-        return context.entity() instanceof SubmergableEntity submergableEntity
-            && comparison.compare(submergableEntity.apoli$getFluidHeightLoosely(fluidTag), compareTo);
+        return comparison.compare(context.entity().getFluidHeight(fluidTag), compareTo);
     }
 
     @Override
