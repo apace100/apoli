@@ -48,14 +48,10 @@ public class AttributePowerType extends PowerType implements AttributeModifying 
         return PowerTypes.ATTRIBUTE;
     }
 
+    //  Add/overwrite persistent modifiers when the entity is loaded in a world to ensure the entity
+    //  keeps the modifiers in certain scenarios (e.g: respawning normally or when seeing the end credits for the first time)
     @Override
-    public void onGained() {
-        addPersistentModifiers(getHolder());
-    }
-
-    @Override
-    public void onRespawn() {
-        //  Re-add the attribute modifiers as apparently, persistent attribute modifiers do not persist on respawn
+    public void onAdded() {
         addPersistentModifiers(getHolder());
     }
 
