@@ -21,25 +21,26 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ReplaceLootTablePowerType extends PowerType implements Prioritized<ReplaceLootTablePowerType> {
 
     public static final RegistryKey<LootTable> REPLACED_TABLE_KEY = RegistryKey.of(RegistryKeys.LOOT_TABLE, Apoli.identifier("replaced_loot_table"));
-    public static Identifier LAST_REPLACED_TABLE_ID;
 
     private static final Stack<LootTable> REPLACEMENT_STACK = new Stack<>();
     private static final Stack<LootTable> BACKTRACK_STACK = new Stack<>();
 
     public static final TypedDataObjectFactory<ReplaceLootTablePowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
         new SerializableData()
-            .add("replace", ApoliDataTypes.REGEX_MAP, null)
-            .addFunctionedDefault("replacements", ApoliDataTypes.REGEX_MAP, data -> data.get("replace"))
+            .add("replace", ApoliDataTypes.REGEX_REPLACEMENT_MAP, null)
+            .addFunctionedDefault("replacements", ApoliDataTypes.REGEX_REPLACEMENT_MAP, data -> data.get("replace"))
             .add("bientity_condition", BiEntityCondition.DATA_TYPE.optional(), Optional.empty())
             .add("block_condition", BlockCondition.DATA_TYPE.optional(), Optional.empty())
             .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
@@ -61,7 +62,7 @@ public class ReplaceLootTablePowerType extends PowerType implements Prioritized<
             .set("priority", powerType.getPriority())
     );
 
-    private final Map<Pattern, Identifier> replacements;
+    private final Map<Pattern, String> replacements;
     private final Optional<BiEntityCondition> biEntityCondition;
 
     private final Optional<BlockCondition> blockCondition;
@@ -69,7 +70,7 @@ public class ReplaceLootTablePowerType extends PowerType implements Prioritized<
 
     private final int priority;
 
-    public ReplaceLootTablePowerType(Map<Pattern, Identifier> replacements, Optional<BiEntityCondition> biEntityCondition, Optional<BlockCondition> blockCondition, Optional<ItemCondition> itemCondition, int priority, Optional<EntityCondition> condition) {
+    public ReplaceLootTablePowerType(Map<Pattern, String> replacements, Optional<BiEntityCondition> biEntityCondition, Optional<BlockCondition> blockCondition, Optional<ItemCondition> itemCondition, int priority, Optional<EntityCondition> condition) {
         super(condition);
         this.replacements = replacements;
         this.biEntityCondition = biEntityCondition;
@@ -93,9 +94,15 @@ public class ReplaceLootTablePowerType extends PowerType implements Prioritized<
         Identifier id = lootTableKey.getValue();
         String idString = id.toString();
 
-        return replacements.keySet()
-            .stream()
-            .anyMatch(regex -> regex.pattern().equals(idString) || regex.matcher(idString).matches());
+        for (var replacement : replacements.keySet()) {
+
+            if (replacement.matcher(idString).matches()) {
+                return true;
+            }
+
+        }
+
+        return false;
 
     }
 
@@ -114,22 +121,44 @@ public class ReplaceLootTablePowerType extends PowerType implements Prioritized<
             && biEntityCondition.map(condition -> condition.test(getHolder(), contextEntity)).orElse(true);
     }
 
-    public Optional<RegistryKey<LootTable>> getReplacement(RegistryKey<LootTable> lootTableKey) {
-        String lootTableId = lootTableKey.getValue().toString();
-        return replacements.entrySet()
-            .stream()
-            .filter(entry -> entry.getKey().pattern().equals(lootTableId) || entry.getKey().matcher(lootTableId).matches())
-            .map(Map.Entry::getValue)
-            .findFirst()
-            .map(replacementId -> RegistryKey.of(RegistryKeys.LOOT_TABLE, replacementId));
+    public Optional<RegistryKey<LootTable>> getReplacement(RegistryKey<LootTable> key) {
+
+        String id = key.getValue().toString();
+        for (var entry : replacements.entrySet()) {
+
+            Pattern regex = entry.getKey();
+            String replacement = entry.getValue();
+
+            Matcher matcher = regex.matcher(id);
+            if (matcher.matches()) {
+
+                try {
+
+                    String replaced = matcher.replaceAll(replacement);
+                    RegistryKey<LootTable> replacedKey = RegistryKey.of(RegistryKeys.LOOT_TABLE, Identifier.of(replaced));
+
+                    return Optional.of(replacedKey);
+
+                }
+
+                catch (InvalidIdentifierException e) {
+                    Apoli.LOGGER.warn("Error trying to parse replacement string \"{}\" in power \"{}\": {}", replacement, this.getPower().getId(), e.getMessage());
+                }
+
+            }
+
+        }
+
+        return Optional.empty();
+
     }
 
-    public static void clearStack() {
+    public static void clear() {
         REPLACEMENT_STACK.clear();
         BACKTRACK_STACK.clear();
     }
 
-    public static void addToStack(LootTable lootTable) {
+    public static void push(LootTable lootTable) {
         REPLACEMENT_STACK.add(lootTable);
     }
 

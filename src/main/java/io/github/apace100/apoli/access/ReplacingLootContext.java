@@ -1,15 +1,11 @@
 package io.github.apace100.apoli.access;
 
 import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextType;
+import net.minecraft.registry.RegistryKey;
 
-public interface ReplacingLootContext {
+public interface ReplacingLootContext extends LootContextTypeHolder {
 
-    void apoli$setType(LootContextType type);
+    void apoli$setReplaced(RegistryKey<LootTable> key);
 
-    LootContextType apoli$getType();
-
-    void apoli$setReplaced(LootTable table);
-
-    boolean apoli$isReplaced(LootTable table);
+    boolean apoli$isReplaced(RegistryKey<LootTable> key);
 }

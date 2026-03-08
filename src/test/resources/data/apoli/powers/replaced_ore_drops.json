@@ -1,0 +1,9 @@
+{
+	"type": "apoli:replace_loot_table",
+	"replace": {
+		"([a-z0-9._-]+):blocks/([a-z0-9/._-]+)_ore": "apoli:blocks/replaced/$1/$2_ore"
+	},
+	"condition": {
+		"type": "apoli:sneaking"
+	}
+}
