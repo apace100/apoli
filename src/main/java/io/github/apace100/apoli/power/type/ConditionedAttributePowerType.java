@@ -53,13 +53,8 @@ public class ConditionedAttributePowerType extends AttributePowerType {
     }
 
     @Override
-    public void onGained() {
-
-    }
-
-    @Override
-    public void onRespawn() {
-
+    public void onAdded() {
+        //  Overridden to stop the modifiers from being added when the power is added to the holder
     }
 
     @Override
