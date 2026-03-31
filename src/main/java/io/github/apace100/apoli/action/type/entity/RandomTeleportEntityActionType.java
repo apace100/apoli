@@ -47,8 +47,8 @@ public class RandomTeleportEntityActionType extends EntityActionType {
             data.get("landing_block_condition"),
             data.get("heightmap"),
             data.get("landing_offset"),
-            data.getDouble("area_width") * 2,
-            data.getDouble("area_height") * 2,
+            data.getDouble("area_width"),
+            data.getDouble("area_height"),
             data.get("loaded_chunks_only"),
             data.get("attempts")
         ),
@@ -89,8 +89,8 @@ public class RandomTeleportEntityActionType extends EntityActionType {
         this.landingOffset = landingOffset;
         this.loadedChunksOnly = loadedChunksOnly;
         this.attempts = attempts;
-        this.areaWidth = areaWidth;
-        this.areaHeight = areaHeight;
+        this.areaWidth = areaWidth * 2;
+        this.areaHeight = areaHeight * 2;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class RandomTeleportEntityActionType extends EntityActionType {
             y = MathHelper.clamp(entity.getY() + (random.nextInt(Math.max((int) areaHeight, 1)) - (areaHeight / 2)), serverWorld.getBottomY(), serverWorld.getBottomY() + (serverWorld.getLogicalHeight() - 1));
             z = entity.getZ() + (random.nextDouble() - 0.5) * areaWidth;
 
-            if (attemptToTeleport(entity, serverWorld, x, y, z)) {
+            if (this.attemptToTeleport(entity, serverWorld, x, y, z)) {
 
                 successAction.ifPresent(action -> action.execute(entity));
                 entity.onLanding();
@@ -139,58 +139,54 @@ public class RandomTeleportEntityActionType extends EntityActionType {
 
     private boolean attemptToTeleport(Entity entity, ServerWorld serverWorld, double destX, double destY, double destZ) {
 
-        BlockPos.Mutable blockPos = BlockPos.ofFloored(destX, destY, destZ).mutableCopy();
+        BlockPos.Mutable destBlockPos = BlockPos.ofFloored(destX, destY, destZ).mutableCopy();
         boolean foundSurface = false;
 
         if (heightmapType.isPresent()) {
 
-            blockPos.set(serverWorld.getTopPosition(heightmapType.get(), blockPos).down());
-            foundSurface |= shouldLandOnBlock(serverWorld, blockPos);
+            destBlockPos.set(serverWorld.getTopPosition(heightmapType.get(), destBlockPos).down());
+            foundSurface = this.shouldLandOnBlock(serverWorld, destBlockPos);
 
             if (foundSurface) {
-                blockPos.set(blockPos.up());
+                destBlockPos.set(destBlockPos.up());
             }
 
         }
 
-        else {
+        for (double decrements = 0; !foundSurface && decrements < areaHeight / 2; ++decrements) {
 
-            for (double decrements = 0; decrements < areaHeight / 2 && !foundSurface; ++decrements) {
+            destBlockPos.set(destBlockPos.down());
+            foundSurface = this.shouldLandOnBlock(serverWorld, destBlockPos);
 
-                blockPos.set(blockPos.down());
-                foundSurface = shouldLandOnBlock(serverWorld, blockPos);
-
-                if (foundSurface) {
-                    blockPos.set(blockPos.up());
-                }
-
+            if (foundSurface) {
+                destBlockPos.set(destBlockPos.up());
             }
 
         }
-
-        destX = landingOffset.getX() == 0 ? destX : MathHelper.floor(destX) + landingOffset.getX();
-        destY = blockPos.getY() + landingOffset.getY();
-        destZ = landingOffset.getZ() == 0 ? destZ : MathHelper.floor(destZ) + landingOffset.getZ();
-
-        blockPos.set(destX, destY, destZ);
 
         if (!foundSurface) {
             return false;
         }
 
+        destX = landingOffset.getX() == 0 ? destX : MathHelper.floor(destX) + landingOffset.getX();
+        destY = destBlockPos.getY() + landingOffset.getY();
+        destZ = landingOffset.getZ() == 0 ? destZ : MathHelper.floor(destZ) + landingOffset.getZ();
+
+        destBlockPos.set(destX, destY, destZ);
+
         double prevX = entity.getX();
         double prevY = entity.getY();
         double prevZ = entity.getZ();
 
-        ChunkPos chunkPos = new ChunkPos(blockPos);
-        if (!loadedChunksOnly && !serverWorld.isChunkLoaded(chunkPos.x, chunkPos.z)) {
-            serverWorld.getChunkManager().addTicket(ChunkTicketType.POST_TELEPORT, chunkPos, 0, entity.getId());
-            serverWorld.getChunk(chunkPos.x, chunkPos.z);
+        ChunkPos destChunkPos = new ChunkPos(destBlockPos);
+        if (!loadedChunksOnly && !serverWorld.isChunkLoaded(destChunkPos.x, destChunkPos.z)) {
+            serverWorld.getChunkManager().addTicket(ChunkTicketType.POST_TELEPORT, destChunkPos, 0, entity.getId());
+            serverWorld.getChunk(destChunkPos.x, destChunkPos.z);
         }
 
         entity.requestTeleport(destX, destY, destZ);
 
-        if (shouldLand(entity)) {
+        if (!this.shouldLand(entity)) {
             entity.requestTeleport(prevX, prevY, prevZ);
             return false;
         }
