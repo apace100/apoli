@@ -20,6 +20,7 @@ import io.github.apace100.apoli.loot.function.ApoliLootFunctionTypes;
 import io.github.apace100.apoli.networking.ModPackets;
 import io.github.apace100.apoli.networking.ModPacketsC2S;
 import io.github.apace100.apoli.power.PowerManager;
+import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
 import io.github.apace100.apoli.power.type.PowerTypes;
 import io.github.apace100.apoli.recipe.ApoliRecipeSerializers;
 import io.github.apace100.apoli.registry.ApoliClassData;
@@ -85,8 +86,16 @@ public class Apoli implements ModInitializer, EntityComponentInitializer {
 		ModPacketsC2S.register();
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-			PowerCommand.register(dispatcher.getRoot());
-			ResourceCommand.register(dispatcher.getRoot());
+
+			var rootNode = dispatcher.getRoot();
+
+			PowerCommand.register(rootNode);
+			ResourceCommand.register(rootNode);
+
+			if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+				ModifyEnchantmentLevelPowerType.DebugCommand.register(rootNode);
+			}
+
 		});
 
 		ApoliLootFunctionTypes.register();

@@ -88,7 +88,7 @@ public class EnchantmentEntityConditionType extends EntityConditionType {
 
             @Override
             public int queryLevel(ItemStack stack, RegistryEntry<Enchantment> enchantmentEntry, boolean useModifications, int totalLevel) {
-                return ModifyEnchantmentLevelPowerType.getEnchantments(stack, stack.getEnchantments(), useModifications).getLevel(enchantmentEntry);
+                return ModifyEnchantmentLevelPowerType.getEnchantments(stack, useModifications).getLevel(enchantmentEntry);
             }
 
         },
@@ -98,7 +98,7 @@ public class EnchantmentEntityConditionType extends EntityConditionType {
             @Override
             public int queryLevel(ItemStack stack, RegistryEntry<Enchantment> enchantmentEntry, boolean useModifications, int totalLevel) {
 
-                int potentialLevel = ModifyEnchantmentLevelPowerType.getEnchantments(stack, stack.getEnchantments(), useModifications).getLevel(enchantmentEntry);
+                int potentialLevel = ModifyEnchantmentLevelPowerType.getEnchantments(stack, useModifications).getLevel(enchantmentEntry);
 
                 if (potentialLevel >= totalLevel) {
                     return potentialLevel;

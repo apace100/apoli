@@ -376,11 +376,15 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     }
 
     static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue, @NotNull Predicate<T> powerFilter, @NotNull Consumer<T> powerAction) {
+        return modify(entity, powerClass, baseValue, powerFilter, powerAction, true);
+    }
+
+    static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue, @NotNull Predicate<T> powerFilter, @NotNull Consumer<T> powerAction, boolean includeInactive) {
 
         PowerHolderComponent powerComponent = getNullable(entity);
         if (powerComponent != null) {
 
-            List<Modifier> modifiers = powerComponent.getPowerTypes(powerClass)
+            List<Modifier> modifiers = powerComponent.getPowerTypes(powerClass, includeInactive)
                 .stream()
                 .filter(powerFilter)
                 .peek(powerAction)

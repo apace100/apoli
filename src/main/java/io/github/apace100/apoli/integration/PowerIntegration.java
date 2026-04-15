@@ -13,7 +13,6 @@ public class PowerIntegration {
         ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> PowerHolderComponent.getPowerTypes(entity, PowerType.class, true).forEach(PowerType::onAdded));
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> PowerHolderComponent.getPowerTypes(entity, PowerType.class, true).forEach(PowerType::onRemoved));
 
-        ServerEntityEvents.ENTITY_UNLOAD.register(ModifyEnchantmentLevelPowerType::integrateCallback);
         ServerEntityEvents.ENTITY_UNLOAD.register(EntitySetPowerType::integrateUnloadCallback);
         ServerEntityEvents.ENTITY_LOAD.register(EntitySetPowerType::integrateLoadCallback);
 

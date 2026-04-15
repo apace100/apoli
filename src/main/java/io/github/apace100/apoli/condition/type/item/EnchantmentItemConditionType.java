@@ -60,7 +60,7 @@ public class EnchantmentItemConditionType extends ItemConditionType {
         ItemStack stack = context.stack();
         World world = context.world();
 
-        ItemEnchantmentsComponent enchantmentsComponent = ModifyEnchantmentLevelPowerType.getEnchantments(stack, stack.getEnchantments(), useModifications);
+        ItemEnchantmentsComponent enchantmentsComponent = ModifyEnchantmentLevelPowerType.getEnchantments(stack, useModifications);
         int levelOrEnchantments = enchantmentKey
             .map(key -> world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).entryOf(key))
             .map(enchantmentsComponent::getLevel)

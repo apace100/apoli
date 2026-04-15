@@ -1,43 +1,60 @@
 package io.github.apace100.apoli.power.type;
 
-import com.mojang.datafixers.util.Pair;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import com.mojang.brigadier.tree.RootCommandNode;
+import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.EntityLinkedItemStack;
+import io.github.apace100.apoli.command.argument.PowerHolderArgumentType;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
+import io.github.apace100.apoli.mixin.LivingEntityAccessor;
 import io.github.apace100.apoli.power.PowerConfiguration;
-import io.github.apace100.apoli.util.InventoryUtil;
+import io.github.apace100.apoli.util.WorkableEmptyStack;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
-import net.minecraft.component.DataComponentTypes;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.world.World;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
-//  TODO: Fix this power type unreliably modifying attribute modifier enchantment effects -eggohito
+import static net.minecraft.server.command.CommandManager.argument;
+import static net.minecraft.server.command.CommandManager.literal;
+
+//  FIXME:  Some enchantments, notably, those that apply attribute modifiers when equipped, do not work properly with
+//          this power type
 public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
 
-    @ApiStatus.Internal
-    public static final ConcurrentHashMap<UUID, WeakHashMap<ItemStack, ItemStack>> COPY_TO_ORIGINAL_STACK = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<UUID, WeakHashMap<ItemStack, ItemEnchantmentsComponent>> ITEM_ENCHANTMENTS = new ConcurrentHashMap<>();
-
-    private static final ConcurrentHashMap<UUID, ItemStack> MODIFIED_EMPTY_STACKS = new ConcurrentHashMap<>();
-    private static final WeakHashMap<Pair<UUID, ItemStack>, ConcurrentHashMap<ModifyEnchantmentLevelPowerType, Pair<Integer, Boolean>>> POWER_MODIFIER_CACHE = new WeakHashMap<>(256);
+    private static final Cache<UUID, Cache<ItemStack, ItemEnchantmentsComponent>> ENCHANTMENTS_CACHE = CacheBuilder.newBuilder()
+        .weakKeys()
+        .build();
 
     public static final TypedDataObjectFactory<ModifyEnchantmentLevelPowerType> DATA_FACTORY = createConditionedModifyingRequiredDataFactory(
         new SerializableData()
@@ -53,6 +70,10 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
             .set("enchantment", powerType.enchantmentKey)
             .set("item_condition", powerType.itemCondition)
     );
+
+    private final Cache<ItemStack, State> stateCache = CacheBuilder.newBuilder()
+        .weakKeys()
+        .build();
 
     private final RegistryKey<Enchantment> enchantmentKey;
     private final Optional<ItemCondition> itemCondition;
@@ -73,21 +94,22 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
     public void onRemoved() {
 
         LivingEntity holder = getHolder();
+        UUID uuid = holder.getUuid();
 
-        for (int slot : InventoryUtil.getAllSlots()) {
+        for (var equipmentSlot : EquipmentSlot.values()) {
 
-            StackReference stackReference = holder.getStackReference(slot);
+            ItemStack equippedStack = holder.getEquippedStack(equipmentSlot);
 
-            if (stackReference != StackReference.EMPTY && isWorkableEmptyStack(holder, stackReference)) {
-                stackReference.set(ItemStack.EMPTY);
+            if (WorkableEmptyStack.isOf(equippedStack)) {
+                holder.equipStack(equipmentSlot, ItemStack.EMPTY);
             }
 
         }
 
-        COPY_TO_ORIGINAL_STACK.remove(holder.getUuid());
-        ITEM_ENCHANTMENTS.remove(holder.getUuid());
+        WorkableEmptyStack.remove(uuid);
+        ENCHANTMENTS_CACHE.invalidate(uuid);
 
-        MODIFIED_EMPTY_STACKS.remove(holder.getUuid());
+        stateCache.invalidateAll();
 
     }
 
@@ -96,187 +118,260 @@ public class ModifyEnchantmentLevelPowerType extends ValueModifyingPowerType {
 
         LivingEntity holder = getHolder();
 
-        for (int slot : InventoryUtil.getAllSlots()) {
+        for (var equipmentSlot : EquipmentSlot.values()) {
 
-            StackReference stackReference = holder.getStackReference(slot);
+            StackReference stackReference = LivingEntityAccessor.callGetStackReference(holder, equipmentSlot);
             ItemStack stack = stackReference.get();
 
-            if (stackReference == StackReference.EMPTY) {
-                continue;
-            }
-
-            if (stack.isEmpty() && !isWorkableEmptyStack(holder, stackReference)) {
-                stackReference.set(getOrCreateWorkableEmptyStack(holder));
+            if (stackReference != StackReference.EMPTY && stack.isEmpty() && !WorkableEmptyStack.isOf(stack)) {
+                stackReference.set(WorkableEmptyStack.getOrCreate(holder));
             }
 
         }
 
     }
 
-    public static ItemEnchantmentsComponent getEnchantments(ItemStack stack, ItemEnchantmentsComponent original, boolean modified) {
-
-        Entity entity = ((EntityLinkedItemStack)stack).apoli$getEntity();
-        if (entity == null || !modified) {
-            return original;
-        }
-
-        UUID uuid = entity.getUuid();
-        ItemStack actualStack = COPY_TO_ORIGINAL_STACK.containsKey(uuid)
-            ? COPY_TO_ORIGINAL_STACK.get(uuid).getOrDefault(stack, stack)
-            : stack;
-
-        if (ITEM_ENCHANTMENTS.containsKey(uuid) && ITEM_ENCHANTMENTS.get(uuid).containsKey(actualStack)) {
-            return ITEM_ENCHANTMENTS.get(uuid).get(actualStack);
-        }
-
-        return original;
-
-    }
-
-    public static ItemEnchantmentsComponent getAndUpdateModifiedEnchantments(ItemStack stack, ItemEnchantmentsComponent original) {
-
-        Entity entity = ((EntityLinkedItemStack)stack).apoli$getEntity();
-
-        if (entity instanceof LivingEntity living) {
-            calculateLevels(living, stack);
-        }
-
-        return getEnchantments(stack, original, true);
-
-    }
-
-    private static void calculateLevels(LivingEntity entity, ItemStack stack) {
-
-        for (ModifyEnchantmentLevelPowerType power : PowerHolderComponent.getPowerTypes(entity, ModifyEnchantmentLevelPowerType.class)) {
-
-            Pair<UUID, ItemStack> uuidAndStack = Pair.of(entity.getUuid(), stack);
-            int baseModifiedLevel = (int) ModifierUtil.applyModifiers(entity, power.getModifiers(), 0);
-
-            if (POWER_MODIFIER_CACHE.containsKey(uuidAndStack) && !updateIfDifferent(POWER_MODIFIER_CACHE.get(uuidAndStack), power, stack, baseModifiedLevel, power.doesApply(power.enchantmentKey, stack))) {
-                continue;
-            }
-
-            //  If all modify enchantment powers are not active...
-            if (ITEM_ENCHANTMENTS.containsKey(entity.getUuid()) && POWER_MODIFIER_CACHE.containsKey(uuidAndStack) && POWER_MODIFIER_CACHE.get(uuidAndStack).entrySet().stream().filter(entry -> entry.getKey().enchantmentKey.equals(power.enchantmentKey)).noneMatch(entry -> entry.getValue().getSecond())) {
-                //  Remove the power's enchantments component
-                ITEM_ENCHANTMENTS.get(entity.getUuid()).remove(stack);
-                break;
-            }
-
-            ItemEnchantmentsComponent.Builder enchantmentsBuilder = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
-            Set<RegistryEntry<Enchantment>> processedEnchantments = new HashSet<>();
-
-            //  Iterate on all powers, because we found a match, and must set the item enchantments accordingly
-            for (ModifyEnchantmentLevelPowerType innerPower : PowerHolderComponent.getPowerTypes(entity, ModifyEnchantmentLevelPowerType.class)) {
-
-                RegistryEntry<Enchantment> innerEnchantment = entity.getRegistryManager()
-                    .get(RegistryKeys.ENCHANTMENT)
-                    .entryOf(innerPower.enchantmentKey);
-
-                //  If this enchantment has already been processed, continue
-                if (processedEnchantments.contains(innerEnchantment)) {
-                    continue;
-                }
-
-                //  Set the enchantment level from all modify enchantment powers that have the enchantment
-                int innerEnchantmentLevel = stack.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT).getLevel(innerEnchantment);
-                enchantmentsBuilder.set(innerEnchantment, (int) PowerHolderComponent.modify(entity, ModifyEnchantmentLevelPowerType.class, innerEnchantmentLevel, p -> innerPower.doesApply(innerPower.enchantmentKey, stack)));
-
-                //  Mark the enchantment as processed
-                processedEnchantments.add(innerEnchantment);
-
-            }
-
-            power.recalculateCache(entity, stack);
-            ITEM_ENCHANTMENTS
-                .computeIfAbsent(entity.getUuid(), uuid -> new WeakHashMap<>())
-                .put(stack, enchantmentsBuilder.build());
-
-            break;
-
-        }
-
-    }
-
-    public static ItemStack getOrCreateWorkableEmptyStack(Entity entity) {
-
-        if (!PowerHolderComponent.hasPowerType(entity, ModifyEnchantmentLevelPowerType.class)) {
-            return ItemStack.EMPTY;
-        }
-
-        UUID uuid = entity.getUuid();
-        if (MODIFIED_EMPTY_STACKS.containsKey(uuid)) {
-            return MODIFIED_EMPTY_STACKS.get(uuid);
-        }
-
-        ItemStack workableEmptyStack = new ItemStack((Void) null);
-        ((EntityLinkedItemStack) workableEmptyStack).apoli$setEntity(entity);
-
-        return MODIFIED_EMPTY_STACKS.compute(uuid, (prevUuid, prevStack) -> workableEmptyStack);
-
-    }
-
-    public static void integrateCallback(Entity entity, World world) {
-        MODIFIED_EMPTY_STACKS.remove(entity.getUuid());
-    }
-
-    public static boolean isWorkableEmptyStack(StackReference stackReference) {
-        Entity stackHolder = ((EntityLinkedItemStack) stackReference.get()).apoli$getEntity();
-        return stackHolder != null && isWorkableEmptyStack(stackHolder, stackReference);
-    }
-
-    public static boolean isWorkableEmptyStack(ItemStack stack) {
-        return stack.isEmpty() && MODIFIED_EMPTY_STACKS.contains(stack);
-    }
-
-    public static boolean isWorkableEmptyStack(@NotNull Entity entity, StackReference stackReference) {
-        return stackReference.get().isEmpty()
-            && MODIFIED_EMPTY_STACKS.containsKey(entity.getUuid())
-            && stackReference.get() == MODIFIED_EMPTY_STACKS.get(entity.getUuid());
-    }
-
-    public boolean doesApply(RegistryKey<Enchantment> enchantmentKey, ItemStack stack) {
+    public boolean doesApply(ItemStack stack) {
         return this.isActive()
-            && this.enchantmentKey.equals(enchantmentKey)
-            && this.checkItemCondition(stack);
+            && this.doesItemConditionApply(stack);
     }
 
-    private static boolean updateIfDifferent(ConcurrentHashMap<ModifyEnchantmentLevelPowerType, Pair<Integer, Boolean>> map, ModifyEnchantmentLevelPowerType power, ItemStack stack, int modifierValue, boolean conditionValue) {
-
-        map.computeIfAbsent(power, (p) -> new Pair<>(0, false));
-        boolean value = false;
-
-        if (map.get(power).getFirst() != modifierValue) {
-            map.put(power, Pair.of(modifierValue, map.get(power).getSecond()));
-            value = true;
-        }
-
-        if (map.get(power).getSecond() != conditionValue) {
-            map.put(power, Pair.of(map.get(power).getFirst(), conditionValue));
-            value = true;
-        }
-
-        return value;
-
-    }
-
-    public void recalculateCache(LivingEntity entity, ItemStack stack) {
-
-        for (ModifyEnchantmentLevelPowerType power : PowerHolderComponent.getPowerTypes(entity, ModifyEnchantmentLevelPowerType.class)) {
-
-            ConcurrentHashMap<ModifyEnchantmentLevelPowerType, Pair<Integer, Boolean>> cacheMap = new ConcurrentHashMap<>();
-            cacheMap.put(power, new Pair<>((int) ModifierUtil.applyModifiers(entity, power.getModifiers(), 0), power.doesApply(power.enchantmentKey, stack)));
-
-            POWER_MODIFIER_CACHE.put(Pair.of(entity.getUuid(), stack), cacheMap);
-
-        }
-
-    }
-
-    public boolean checkItemCondition(ItemStack stack) {
-        return itemCondition
+    public boolean doesItemConditionApply(ItemStack stack) {
+        return this.itemCondition
             .map(condition -> condition.test(getHolder().getWorld(), stack))
             .orElse(true);
+    }
+
+    public boolean hasAppliedToStack(ItemStack stack) {
+        var cache = stateCache.getIfPresent(stack);
+        return cache != null
+            && cache.applies;
+    }
+
+    public static ItemEnchantmentsComponent getEnchantments(ItemStack stack, boolean modified) {
+        return getEnchantmentsOrElse(stack, stack.getEnchantments(), modified);
+    }
+
+    @ApiStatus.Internal
+    public static ItemEnchantmentsComponent getEnchantmentsOrElse(ItemStack stack, ItemEnchantmentsComponent defaultEnchantments, boolean modified) {
+
+        if (!modified || !(stack instanceof EntityLinkedItemStack linkedStack) || linkedStack.apoli$getEntity() == null) {
+            return defaultEnchantments;
+        }
+
+        UUID uuid = linkedStack.apoli$getEntity().getUuid();
+        var enchantmentsCache = ENCHANTMENTS_CACHE.getIfPresent(uuid);
+
+        if (enchantmentsCache != null) {
+            return enchantmentsCache.asMap().getOrDefault(stack, defaultEnchantments);
+        }
+
+        else {
+            return defaultEnchantments;
+        }
+
+    }
+
+    @ApiStatus.Internal
+    public static ItemEnchantmentsComponent updateAndGetEnchantments(ItemStack stack, ItemEnchantmentsComponent original) {
+
+        if (stack instanceof EntityLinkedItemStack linkedStack && linkedStack.apoli$getEntity() instanceof LivingEntity livingEntity) {
+            recalculateCache(livingEntity, stack);
+        }
+
+        return getEnchantmentsOrElse(stack, original, true);
+
+    }
+
+    /**
+     *  Move the enchantments cache of an {@linkplain ItemStack item stack} to another, usually its copy.
+     *  @param fromStack the {@linkplain ItemStack item stack} whose enchantments cache will be taken from
+     *  @param toStack the {@linkplain ItemStack item stack} to move the enchantments cache to
+     *  @return {@code toStack} with the updated enchantments cache
+     */
+    @ApiStatus.Internal
+    public static ItemStack moveCache(ItemStack fromStack, ItemStack toStack) {
+
+        if (!(fromStack instanceof EntityLinkedItemStack linkedStack) || linkedStack.apoli$getEntity() == null) {
+            return toStack;
+        }
+
+        Entity entity = linkedStack.apoli$getEntity();
+        var enchantmentsMapCache = ENCHANTMENTS_CACHE.getIfPresent(entity.getUuid());
+
+        if (!PowerHolderComponent.getPowerTypes(entity, ModifyEnchantmentLevelPowerType.class, true).isEmpty()) {
+
+            if (toStack.isEmpty()) {
+                toStack = WorkableEmptyStack.getOrCreate(entity);
+            }
+
+            else {
+                ((EntityLinkedItemStack) toStack).apoli$setEntity(entity);
+            }
+
+        }
+
+        if (enchantmentsMapCache != null) {
+
+            var enchantmentsCache = enchantmentsMapCache.asMap().remove(fromStack);
+            var powerComponents = PowerHolderComponent.getNullable(entity);
+
+            if (enchantmentsCache != null) {
+                enchantmentsMapCache.put(toStack, enchantmentsCache);
+            }
+
+            if (powerComponents != null) {
+                powerComponents.getPowerTypes(ModifyEnchantmentLevelPowerType.class, true).forEach(powerType -> powerType.stateCache.invalidate(fromStack));
+            }
+
+        }
+
+        return toStack;
+
+    }
+
+    public static void recalculateCache(LivingEntity entity, ItemStack stack) {
+
+        UUID uuid = entity.getUuid();
+        boolean update = false;
+
+        //  Iterate through each power type without checking if it's active...
+        for (var powerType : PowerHolderComponent.getPowerTypes(entity, ModifyEnchantmentLevelPowerType.class, true)) {
+
+            //  ...to check if the power type no longer applies to the item stack, or if its modifiers have changed
+            var newCache = new State(powerType.doesApply(stack), (int) Math.round(ModifierUtil.applyModifiers(entity, powerType.getModifiers(), 0)));
+            var oldCache = powerType.stateCache.getIfPresent(stack);
+
+            //  If the power type doesn't have a cache of its previous state, or its previous and current state no longer match...
+            if (oldCache != null && oldCache.equals(newCache)) {
+                continue;
+            }
+
+            //  ...update the state cache and state that the enchantments cache has to be updated as well
+            powerType.stateCache.put(stack, newCache);
+            update = true;
+
+        }
+
+        //  If the enchantments cache should be updated...
+        if (!update) {
+            return;
+        }
+
+        Registry<Enchantment> enchantmentRegistry = entity.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+        ItemEnchantmentsComponent.Builder enchantmentsBuilder = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
+
+        IntSet processedEnchantmentIds = new IntOpenHashSet();
+        update = false;
+
+        //  ...iterate through every power type without checking if it's active again (to eliminate unnecessary checks)
+        for (var powerType : PowerHolderComponent.getPowerTypes(entity, ModifyEnchantmentLevelPowerType.class, true)) {
+
+            RegistryEntry.Reference<Enchantment> enchantmentReference = enchantmentRegistry.getEntry(powerType.enchantmentKey).orElseThrow();
+            int enchantmentId = enchantmentRegistry.getRawId(enchantmentReference.value());
+
+            //  If the specified enchantment in the power type hasn't been processed yet...
+            if (processedEnchantmentIds.contains(enchantmentId)) {
+                continue;
+            }
+
+            //  ...modify the level of the enchantment by checking if the power type's previously updated state applies
+            //  to the stack and if it matches the specified enchantment in the power type...
+            int level = enchantmentsBuilder.getLevel(enchantmentReference);
+            int modifiedLevel = (int) Math.round(PowerHolderComponent.modify(entity, ModifyEnchantmentLevelPowerType.class, level, innerPowerType -> innerPowerType.hasAppliedToStack(stack) && innerPowerType.enchantmentKey.equals(powerType.enchantmentKey), innerPowerType -> {}, true));
+
+            enchantmentsBuilder.set(enchantmentReference, modifiedLevel);
+            processedEnchantmentIds.add(enchantmentId);
+
+            //  ...and state that the enchantments cache has been updated
+            update = true;
+
+        }
+
+        if (update) {
+
+	        try {
+		        ENCHANTMENTS_CACHE
+		            .get(uuid, () -> CacheBuilder.newBuilder().weakKeys().build())
+		            .put(stack, enchantmentsBuilder.build());
+	        }
+
+            catch (ExecutionException e) {
+                //  This shouldn't happen as there isn't any exceptions thrown when loading new cache values
+                Apoli.LOGGER.warn("Failed to update enchantments cache!", e);
+	        }
+
+        }
+
+    }
+
+    public static final class DebugCommand {
+
+	    public static void register(RootCommandNode<ServerCommandSource> rootNode) {
+
+            var melNode = literal(PowerTypes.MODIFY_ENCHANTMENT_LEVEL.id().getPath())
+                .requires(source -> source.hasPermissionLevel(2))
+                .build();
+
+            melNode.addChild(CacheNode.builder().build());
+            rootNode.addChild(melNode);
+
+	    }
+
+        public static class CacheNode {
+
+            public static LiteralArgumentBuilder<ServerCommandSource> builder() {
+                return literal("cache")
+                    .then(argument("target", PowerHolderArgumentType.holder())
+                        .executes(CacheNode::execute));
+            }
+
+            public static int execute(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+
+                UUID uuid = PowerHolderArgumentType.getHolder(context, "target").getUuid();
+                var enchantmentsMapCache = ENCHANTMENTS_CACHE.getIfPresent(uuid);
+
+                if (enchantmentsMapCache == null) {
+                    throw new SimpleCommandExceptionType(() -> "Entity with UUID \"" + uuid + "\" didn't have a cache of enchantments!").create();
+                }
+
+                MutableText enchantmentsText = Text.empty();
+                var enchantmentsEntrySet = enchantmentsMapCache.asMap().entrySet();
+
+                for (var entry : enchantmentsEntrySet) {
+
+                    var stack = entry.getKey();
+                    var enchantments = entry.getValue();
+
+                    enchantmentsText
+                        .append("\n")
+                        .append(Text.literal(stack.toString() + " (identity hash: " + stack.hashCode() + ")"));
+
+                    for (var enchantmentWithLevel : enchantments.getEnchantmentEntries()) {
+
+                        var enchantment = enchantmentWithLevel.getKey();
+                        var level = enchantmentWithLevel.getIntValue();
+
+                        enchantmentsText
+                            .append("\n")
+                            .append(" - (").append(enchantment.value().description()).append("): ")
+                            .append(Text.of(Integer.toString(level)));
+
+                    }
+
+                }
+
+                context.getSource().sendFeedback(() -> enchantmentsText, false);
+                return (int) enchantmentsMapCache.size();
+
+            }
+
+        }
+
+    }
+
+    public record State(boolean applies, int level) {
+
     }
 
 }

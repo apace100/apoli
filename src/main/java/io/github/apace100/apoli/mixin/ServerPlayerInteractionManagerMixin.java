@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
@@ -40,7 +39,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.WeakHashMap;
 
 @Mixin(ServerPlayerInteractionManager.class)
 public class ServerPlayerInteractionManagerMixin {
@@ -299,18 +297,6 @@ public class ServerPlayerInteractionManagerMixin {
             ? newResult
             : original;
 
-    }
-
-    @Inject(method = "tryBreakBlock", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;", shift = At.Shift.AFTER))
-    private void apoli$cacheCopyAndOriginalStacks(BlockPos pos, CallbackInfoReturnable<Boolean> cir, @Local(ordinal = 0) ItemStack originalStack, @Local(ordinal = 1) ItemStack copyStack) {
-        ModifyEnchantmentLevelPowerType.COPY_TO_ORIGINAL_STACK
-            .computeIfAbsent(player.getUuid(), k -> new WeakHashMap<>())
-            .put(copyStack, originalStack);
-    }
-
-    @Inject(method = "tryBreakBlock", at = @At("RETURN"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;copy()Lnet/minecraft/item/ItemStack;")))
-    private void apoli$clearCachedCopyAndOriginalStacks(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        ModifyEnchantmentLevelPowerType.COPY_TO_ORIGINAL_STACK.remove(player.getUuid());
     }
 
 }

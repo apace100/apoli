@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.Condition;
 import io.github.apace100.apoli.condition.context.BlockConditionContext;
 import io.github.apace100.apoli.condition.type.ConditionType;
 import io.github.apace100.apoli.condition.type.meta.MultiMetaConditionType;
+import io.github.apace100.apoli.mixin.SlotRangesAccessor;
 import io.github.apace100.apoli.util.context.ConditionContext;
 import io.github.apace100.calio.data.SerializableData;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -13,10 +14,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
@@ -431,6 +429,29 @@ public final class MiscUtil {
         else {
             return validator.apply(conditionType);
         }
+
+    }
+
+    public static int getInventoryProperIndex(EquipmentSlot slot) {
+
+        for (var slotRange : SlotRangesAccessor.getSlotRanges()) {
+
+            String slotName = slotRange.asString();
+
+            if (slotName.contains(slot.getName())) {
+                return switch (slot.getType()) {
+                    case HAND ->
+                        slot.getOffsetEntitySlotId(98);
+                    case HUMANOID_ARMOR ->
+                        slot.getOffsetEntitySlotId(100);
+                    case ANIMAL_ARMOR ->
+                        slot.getOffsetEntitySlotId(105);
+                };
+            }
+
+        }
+
+        return -1;
 
     }
 

@@ -5,7 +5,7 @@ import io.github.apace100.apoli.action.type.ItemActionType;
 import io.github.apace100.apoli.action.type.ItemActionTypes;
 import io.github.apace100.apoli.action.type.item.meta.SequenceItemActionType;
 import io.github.apace100.apoli.data.ApoliDataTypes;
-import io.github.apace100.apoli.power.type.ModifyEnchantmentLevelPowerType;
+import io.github.apace100.apoli.util.WorkableEmptyStack;
 import io.github.apace100.calio.data.SerializableDataType;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
@@ -43,7 +43,7 @@ public final class ItemAction extends Action<ItemActionContext, ItemActionType> 
 		getType().accept(context);
 
 		//	Restore the empty stack instance of the stack reference afterward
-		if (!ModifyEnchantmentLevelPowerType.isWorkableEmptyStack(stackReference) && stackReference.get().isEmpty()) {
+		if (!WorkableEmptyStack.isOf(stackReference) && stackReference.get().isEmpty()) {
 			stackReference.set(ItemStack.EMPTY);
 		}
 
