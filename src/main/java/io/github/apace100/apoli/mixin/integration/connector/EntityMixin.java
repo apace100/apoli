@@ -116,8 +116,7 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
 
     @Inject(method = "isInsideWall", at = @At(value = "RETURN"), cancellable = true)
     private void preventPhasingSuffocation(CallbackInfoReturnable<Boolean> cir) {
-        PowerHolderComponent component = PowerHolderComponent.KEY.get(this);
-        if(component.getPowers(PhasingPower.class).stream().anyMatch(PhasingPower::isActive)) {
+        if (PowerHolderComponent.hasPower((Entity) (Object) this, PhasingPower.class)) {
             cir.setReturnValue(false);
         }
     }
