@@ -119,7 +119,6 @@ public abstract class EntityMixin implements MovingEntity, SubmergableEntity {
         if (PowerHolderComponent.hasPower((Entity) (Object) this, PhasingPower.class)) {
             cir.setReturnValue(false);
         }
-        }
     }
 
     private boolean isMoving;
