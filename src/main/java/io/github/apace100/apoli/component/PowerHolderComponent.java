@@ -376,7 +376,7 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     }
 
     static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue, @NotNull Predicate<T> powerFilter, @NotNull Consumer<T> powerAction) {
-        return modify(entity, powerClass, baseValue, powerFilter, powerAction, true);
+        return modify(entity, powerClass, baseValue, powerFilter, powerAction, false);
     }
 
     static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue, @NotNull Predicate<T> powerFilter, @NotNull Consumer<T> powerAction, boolean includeInactive) {
