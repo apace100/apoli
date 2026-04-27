@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.util;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.DataResult;
 import io.github.apace100.apoli.condition.Condition;
 import io.github.apace100.apoli.condition.context.BlockConditionContext;
@@ -11,6 +12,8 @@ import io.github.apace100.calio.data.SerializableData;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.pattern.CachedBlockPosition;
@@ -24,6 +27,7 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.SlotRange;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
@@ -452,6 +456,35 @@ public final class MiscUtil {
         }
 
         return -1;
+
+    }
+
+    public static Collection<ServerPlayerEntity> getTrackingSafely(Entity entity) {
+
+        if (entity.getWorld().isClient()) {
+            return Collections.emptySet();
+        }
+
+        ImmutableSet.Builder<ServerPlayerEntity> builder = ImmutableSet.builder();
+        builder.addAll(PlayerLookup.tracking(entity));
+
+        if (entity instanceof ServerPlayerEntity self) {
+            builder.add(self);
+        }
+
+        return builder.build();
+
+    }
+
+    public static void sendToTrackers(Entity target, CustomPayload payload) {
+
+        for (var recipient : getTrackingSafely(target)) {
+
+            if (ServerPlayNetworking.canSend(recipient, payload.getId())) {
+                ServerPlayNetworking.send(recipient, payload);
+            }
+
+        }
 
     }
 

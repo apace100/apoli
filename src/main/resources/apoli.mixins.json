@@ -75,6 +75,8 @@
 		"integration.appleskin.FoodHelperMixin",
 		"internal.DefaultAttributeContainerAccessor",
 		"internal.DefaultAttributeRegistryAccessor",
+		"misc.command_tags_sync.EntityMixin",
+		"misc.command_tags_sync.EntityTrackerEntryMixin",
 		"power.type.GameEventListenerPowerTypeMixin$CustomCallbackHandler",
 		"power.type.GameEventListenerPowerTypeMixin$EventHandlerUpdater",
 		"power.type.GameEventListenerPowerTypeMixin$ParticleAppearanceHandler",

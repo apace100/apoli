@@ -1,0 +1,10 @@
+{
+	"type": "apoli:entity_glow",
+	"bientity_condition": {
+		"type": "apoli:target_condition",
+		"condition": {
+			"type": "apoli:has_command_tag",
+			"tag": "apoli.i_be_glowing"
+		}
+	}
+}

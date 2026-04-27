@@ -23,6 +23,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.World;
 
 import java.util.Map;
 import java.util.Optional;
@@ -45,9 +46,26 @@ public class ModPacketsS2C {
             ClientPlayNetworking.registerReceiver(SyncStatusEffectS2CPacket.PACKET_ID, ModPacketsS2C::onStatusEffectSync);
             ClientPlayNetworking.registerReceiver(ShowToastS2CPacket.PACKET_ID, ModPacketsS2C::onShowToast);
             ClientPlayNetworking.registerReceiver(SyncEntityTypeTagCacheS2CPacket.PACKET_ID, ModifyTypeTagPowerType::receiveTagCache);
+            ClientPlayNetworking.registerReceiver(SyncCommandTagsS2CPacket.ID, ModPacketsS2C::onCommandTagsSynced);
         }));
 
     }
+
+	private static void onCommandTagsSynced(SyncCommandTagsS2CPacket payload, ClientPlayNetworking.Context context) {
+
+        World world = context.player().getWorld();
+        Entity entity = world.getEntityById(payload.entityId());
+
+        if (entity == null) {
+            Apoli.LOGGER.warn("Received packet for syncing {} command tag(s) of an entity unknown to the client!", payload.tags().size());
+        }
+
+        else {
+            entity.getCommandTags().clear();
+            payload.tags().forEach(entity::addCommandTag);
+        }
+
+	}
 
     private static void sendHandshakeReply(VersionHandshakePacket packet, ClientConfigurationNetworking.Context context) {
         context.responseSender().sendPacket(new VersionHandshakePacket(Apoli.SEMVER));

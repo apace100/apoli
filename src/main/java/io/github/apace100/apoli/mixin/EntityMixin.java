@@ -5,10 +5,8 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import io.github.apace100.apoli.Apoli;
 import io.github.apace100.apoli.access.*;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.data.ApoliDataHandlers;
 import io.github.apace100.apoli.power.type.*;
 import io.github.apace100.apoli.util.ArmPoseReference;
 import net.fabricmc.api.EnvType;
@@ -21,10 +19,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.text.Text;
@@ -35,7 +30,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -48,7 +42,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin implements MovingEntity, ModifiedPoseHolder, CustomLeashable {
@@ -66,13 +59,7 @@ public abstract class EntityMixin implements MovingEntity, ModifiedPoseHolder, C
 
     @Shadow public abstract World getWorld();
 
-    @Shadow @Final protected DataTracker dataTracker;
-
-    @Shadow @Final private Set<String> commandTags;
-
     @Shadow public abstract Text getName();
-
-    @Shadow public abstract DataTracker getDataTracker();
 
     @Shadow public abstract void setPose(EntityPose pose);
 
@@ -335,69 +322,6 @@ public abstract class EntityMixin implements MovingEntity, ModifiedPoseHolder, C
     }
 
     @Unique
-    private static final TrackedData<Set<String>> COMMAND_TAGS = DataTracker.registerData(Entity.class, ApoliDataHandlers.STRING_SET);
-
-    @Unique
-    private boolean apoli$hasCommandTagsTracker = true;
-
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker(Lnet/minecraft/entity/data/DataTracker$Builder;)V"))
-    private void apoli$registerCommandTagsDataTracker(EntityType<?> type, World world, CallbackInfo ci, @Local DataTracker.Builder builder) {
-
-        try {
-            builder.add(COMMAND_TAGS, Set.of());
-        }
-
-        catch (Exception e) {
-            Apoli.LOGGER.warn("Couldn't register data tracker for command tags for entity {}:", this.getName().getString(), e);
-            this.apoli$hasCommandTagsTracker = false;
-        }
-
-    }
-
-    @ModifyReturnValue(method = "addCommandTag", at = @At("RETURN"))
-    private boolean apoli$trackAddedCommandTag(boolean original) {
-
-        if (original && apoli$hasCommandTagsTracker) {
-            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
-        }
-
-        return original;
-
-    }
-
-    @ModifyReturnValue(method = "removeCommandTag", at = @At("RETURN"))
-    private boolean apoli$trackRemovedCommandTag(boolean original) {
-
-        if (original && apoli$hasCommandTagsTracker) {
-            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
-        }
-
-        return original;
-
-    }
-
-    @ModifyReturnValue(method = "getCommandTags", at = @At("RETURN"))
-    private Set<String> apoli$queryTrackedCommandTags(Set<String> original) {
-        return apoli$hasCommandTagsTracker
-            ? this.getDataTracker().get(COMMAND_TAGS)
-            : original;
-    }
-
-    @Inject(method = "readNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
-    private void apoli$trackCommandTagsFromNbt(NbtCompound nbt, CallbackInfo ci) {
-
-        if (apoli$hasCommandTagsTracker) {
-            this.getDataTracker().set(COMMAND_TAGS, Set.copyOf(this.commandTags));
-        }
-
-    }
-
-    @Redirect(method = "writeNbt", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;commandTags:Ljava/util/Set;"))
-    private Set<String> apoli$overrideCommandTagsFieldAccess(Entity entity) {
-        return entity.getCommandTags();
-    }
-
-    @Unique
     private EntityPose apoli$previousEntityPose;
 
     @Unique
@@ -472,6 +396,11 @@ public abstract class EntityMixin implements MovingEntity, ModifiedPoseHolder, C
     @Override
     public void apoli$setCustomLeashed(boolean customLeashed) {
         this.apoli$customLeashed = customLeashed;
+    }
+
+    @Unique
+    private Entity thisAsEntity() {
+        return (Entity) (Object) this;
     }
 
 }
