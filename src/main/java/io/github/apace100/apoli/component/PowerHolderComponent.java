@@ -8,11 +8,11 @@ import io.github.apace100.apoli.networking.packet.s2c.SyncPowerDataS2CPacket;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.type.AttributeModifyTransferPowerType;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.power.type.ValueModifyingPowerType;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
@@ -36,7 +36,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 //  TODO: Maybe use data attachments instead? -eggohito
 public interface PowerHolderComponent extends AutoSyncedComponent, CommonTickingComponent {
@@ -380,21 +379,29 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     }
 
     static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, double baseValue, @NotNull Predicate<T> powerFilter, @NotNull Consumer<T> powerAction, boolean includeInactive) {
+        return modify(entity, powerClass, ValueModifyingPowerType::getModifiers, baseValue, powerFilter, powerAction, includeInactive);
+    }
+
+    static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, Function<T, List<Modifier>> modifiersGetter, double baseValue, @NotNull Predicate<T> filter, @NotNull Consumer<T> action, boolean includeInactive) {
+        return modify(entity, powerClass, getPowerTypes(entity, powerClass, includeInactive), modifiersGetter, baseValue, filter, action);
+    }
+
+    static <T extends ValueModifyingPowerType> double modify(Entity entity, Class<T> powerClass, List<T> powerTypes, Function<T, List<Modifier>> modifiersGetter, double baseValue, @NotNull Predicate<T> filter, @NotNull Consumer<T> action) {
 
         PowerHolderComponent powerComponent = getNullable(entity);
         if (powerComponent != null) {
 
-            List<Modifier> modifiers = powerComponent.getPowerTypes(powerClass, includeInactive)
-                .stream()
-                .filter(powerFilter)
-                .peek(powerAction)
-                .flatMap(p -> p.getModifiers().stream())
-                .collect(Collectors.toCollection(ArrayList::new));
+            List<Modifier> modifiers = new ObjectArrayList<>();
+            for (var powerType : powerTypes) {
 
-            powerComponent.getPowerTypes(AttributeModifyTransferPowerType.class)
-                .stream()
-                .filter(p -> p.doesApply(powerClass))
-                .forEach(p -> p.addModifiers(modifiers));
+                if (!filter.test(powerType)) {
+                    continue;
+                }
+
+                action.accept(powerType);
+                modifiers.addAll(modifiersGetter.apply(powerType));
+
+            }
 
             ModifyValueCallback.EVENT.invoker().collectModifiers(entity, powerClass, baseValue, modifiers);
             return ModifierUtil.applyModifiers(entity, modifiers, baseValue);

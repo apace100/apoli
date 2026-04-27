@@ -34,7 +34,7 @@ public class PowerTypes {
     public static final PowerConfiguration<ActionWhenDamageTakenPowerType> ACTION_WHEN_DAMAGE_TAKEN = register(PowerConfiguration.of(Apoli.identifier("action_when_damage_taken"), ActionWhenDamageTakenPowerType.DATA_FACTORY));
     public static final PowerConfiguration<ActionWhenHitPowerType> ACTION_WHEN_HIT = register(PowerConfiguration.of(Apoli.identifier("action_when_hit"), ActionWhenHitPowerType.DATA_FACTORY));
     public static final PowerConfiguration<AttackerActionWhenHitPowerType> ATTACKER_ACTION_WHEN_HIT = register(PowerConfiguration.of(Apoli.identifier("attacker_action_when_hit"), AttackerActionWhenHitPowerType.DATA_FACTORY));
-    public static final PowerConfiguration<AttributeModifyTransferPowerType> ATTRIBUTE_MODIFY_TRANSFER = register(PowerConfiguration.of(Apoli.identifier("attribute_modify_transfer"), AttributeModifyTransferPowerType.DATA_FACTORY));
+    public static final PowerConfiguration<AttributeModifyTransferPowerType> ATTRIBUTE_MODIFY_TRANSFER = register(PowerConfiguration.of(AttributeModifyTransferPowerType.ID, AttributeModifyTransferPowerType.DATA_FACTORY));
     public static final PowerConfiguration<AttributePowerType> ATTRIBUTE = register(PowerConfiguration.of(Apoli.identifier("attribute"), AttributePowerType.DATA_FACTORY));
     public static final PowerConfiguration<BurnPowerType> BURN = register(PowerConfiguration.of(Apoli.identifier("burn"), BurnPowerType.DATA_FACTORY));
     public static final PowerConfiguration<ClimbingPowerType> CLIMBING = register(PowerConfiguration.of(Apoli.identifier("climbing"), ClimbingPowerType.DATA_FACTORY));

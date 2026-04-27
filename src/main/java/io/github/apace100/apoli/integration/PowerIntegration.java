@@ -22,6 +22,8 @@ public class PowerIntegration {
         EntityElytraEvents.CUSTOM.register(ElytraFlightPowerType::integrateCustomCallback);
         EntityElytraEvents.ALLOW.register(PreventElytraFlightPowerType::integrateAllowCallback);
 
+        ModifyValueCallback.EVENT.register(AttributeModifyTransferPowerType.ID, AttributeModifyTransferPowerType::registerCollectModifiersCallback);
+
     }
 
 }

@@ -1,5 +1,7 @@
 package io.github.apace100.apoli.power.type;
 
+import io.github.apace100.apoli.Apoli;
+import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.condition.EntityCondition;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerConfiguration;
@@ -8,17 +10,22 @@ import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
 
 public class AttributeModifyTransferPowerType extends PowerType {
+
+    public static final Identifier ID = Apoli.identifier("attribute_modify_transfer");
 
     public static final TypedDataObjectFactory<AttributeModifyTransferPowerType> DATA_FACTORY = PowerType.createConditionedDataFactory(
         new SerializableData()
@@ -58,20 +65,27 @@ public class AttributeModifyTransferPowerType extends PowerType {
         return cls.equals(modifyClass);
     }
 
-    public void addModifiers(List<Modifier> modifiers) {
+    public static void registerCollectModifiersCallback(Entity entity, Class<? extends ValueModifyingPowerType> powerClass, double baseValue, List<Modifier> modifiers) {
 
-        AttributeContainer attributeContainer = getHolder().getAttributes();
-        EntityAttributeInstance attributeInstance = attributeContainer.getCustomInstance(attribute);
-
-        if (attributeInstance == null) {
+        if (!(entity instanceof LivingEntity livingEntity)) {
             return;
         }
 
-        attributeInstance.getModifiers()
-            .stream()
-            .map(mod -> new EntityAttributeModifier(mod.id(), mod.value() * valueMultiplier, mod.operation()))
-            .map(ModifierUtil::fromAttributeModifier)
-            .forEach(modifiers::add);
+        for (var transferPowerType : PowerHolderComponent.getPowerTypes(livingEntity, AttributeModifyTransferPowerType.class)) {
+
+            AttributeContainer attributeContainer = livingEntity.getAttributes();
+            EntityAttributeInstance attributeInstance = attributeContainer.getCustomInstance(transferPowerType.attribute);
+
+            if (attributeInstance == null || !transferPowerType.doesApply(powerClass)) {
+                continue;
+            }
+
+            for (var attributeModifier : attributeInstance.getModifiers()) {
+                var modifiedAttributeModifier = new EntityAttributeModifier(attributeModifier.id(), attributeModifier.value() * transferPowerType.valueMultiplier, attributeModifier.operation());
+                modifiers.add(ModifierUtil.fromAttributeModifier(modifiedAttributeModifier));
+            }
+
+        }
 
     }
 
