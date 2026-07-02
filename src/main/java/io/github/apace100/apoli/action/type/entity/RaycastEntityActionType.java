@@ -36,6 +36,7 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 public class RaycastEntityActionType extends EntityActionType {
 
@@ -162,67 +163,73 @@ public class RaycastEntityActionType extends EntityActionType {
     @Override
     public void accept(EntityActionContext context) {
 
+        beforeAction.ifPresent(self -> self.accept(context));
+
         Entity entity = context.entity();
-        double distance = getReach(entity);
+        boolean success = false;
 
-        beforeAction.ifPresent(action -> action.execute(entity));
-
-        Vec3d origin = MiscUtil.getPoseDependentEyePos(entity).add(context.offset());
-        Vec3d direction = this.direction
-            .map(dir -> transformDirection(entity, dir))
+        HitResult result = null;
+        Vec3d directionVec = direction
+            .map(self -> this.transformDirection(entity, self))
             .orElseGet(() -> entity.getRotationVec(1.0F));
 
-        Vec3d destination = origin.add(direction.multiply(distance));
-        HitResult hitResult = null;
+        Vec3d origin = MiscUtil.getPoseDependentEyePos(entity).add(context.offset());
+        Vec3d destination = distance.map(directionVec::multiply).orElse(null);
 
         if (this.entity) {
-            hitResult = entityRaycast(entity, origin, destination);
+            destination = origin.add(directionVec.multiply(this.getEntityReach(entity)));
+            result = this.entityRaycast(entity, origin, destination);
         }
 
         if (this.block) {
 
-            BlockHitResult blockResult = blockRaycast(entity, origin, destination);
+            Vec3d blockDestination = origin.add(directionVec.multiply(this.getBlockReach(entity)));
+            BlockHitResult blockResult = this.blockRaycast(entity, origin, blockDestination);
 
-            if (blockResult.getType() != HitResult.Type.MISS && overrideHitResult(entity, hitResult, blockResult)) {
-                hitResult = blockResult;
+            if (blockResult.getType() != HitResult.Type.MISS && overrideHitResult(entity, result, blockResult)) {
+                destination = blockDestination;
+                result = blockResult;
             }
 
         }
 
-        boolean hit = hitResult != null && hitResult.getType() != HitResult.Type.MISS;
+        if (result != null && result.getType() != HitResult.Type.MISS) {
 
-        if (hit && commandAtHit.isPresent()) {
+            success = true;
 
-            Vec3d hitPos = hitResult.getPos();
-            Offset offset = this.getOffset(entity, hitResult, direction);
+            if (commandAtHit.isPresent()) {
 
-            hitPos = hitPos.subtract(offset.direction().multiply(offset.amount()));
-            this.executeCommandAtHit(entity, hitPos);
+                Offset offset = this.getOffset(entity, result, directionVec);
+                Vec3d hitPos = offset.apply(result.getPos());
+
+                this.executeCommandAtHit(entity, hitPos);
+
+            }
 
         }
 
-        if (commandAlongRay.isPresent() && (!commandAlongRayOnlyOnHit || hit)) {
-            this.executeCommandAtSteps(entity, origin, hit ? hitResult.getPos() : destination);
+        if (destination != null && commandAlongRay.isPresent() && (!commandAlongRayOnlyOnHit || success)) {
+            this.executeCommandAtSteps(entity, origin, success ? result.getPos() : destination);
         }
 
-        if (hit) {
+        if (success) {
 
-            switch (hitResult) {
+            switch (result) {
                 case BlockHitResult blockResult ->
-                    blockAction.ifPresent(action -> action.execute(entity.getWorld(), blockResult.getBlockPos(), Optional.of(blockResult.getSide())));
+                    blockAction.ifPresent(self -> self.execute(entity.getWorld(), blockResult.getBlockPos(), Optional.of(blockResult.getSide())));
                 case EntityHitResult entityResult ->
-                    biEntityAction.ifPresent(action -> action.execute(entity, entityResult.getEntity()));
+                    biEntityAction.ifPresent(self -> self.execute(entity, entityResult.getEntity()));
                 default -> {
-
+                    //  No-op; unsupported
                 }
             }
 
-            hitAction.ifPresent(action -> action.execute(entity));
+            hitAction.ifPresent(self -> self.execute(entity));
 
         }
 
         else {
-            missAction.ifPresent(action -> action.execute(entity));
+            missAction.ifPresent(self -> self.execute(entity));
         }
 
     }
@@ -232,7 +239,12 @@ public class RaycastEntityActionType extends EntityActionType {
         return EntityActionTypes.RAYCAST;
     }
 
-    private record Offset(Vec3d direction, double amount) {
+    private record Offset(Vec3d direction, double amount) implements UnaryOperator<Vec3d> {
+
+        @Override
+        public Vec3d apply(Vec3d vec) {
+            return vec.subtract(direction().multiply(amount()));
+        }
 
     }
 
@@ -316,22 +328,6 @@ public class RaycastEntityActionType extends EntityActionType {
         return prev == null
             || prev.getType() == HitResult.Type.MISS
             || prev.squaredDistanceTo(caster) > next.squaredDistanceTo(caster);
-    }
-
-    private double getReach(Entity entity) {
-
-        if (this.entity) {
-            return getEntityReach(entity);
-        }
-
-        else if (this.block) {
-            return this.getBlockReach(entity);
-        }
-
-        else {
-            return distance.orElse(1.0D);
-        }
-
     }
 
     private double getEntityReach(Entity entity) {

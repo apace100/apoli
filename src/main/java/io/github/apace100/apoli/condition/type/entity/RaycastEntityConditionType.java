@@ -135,22 +135,24 @@ public class RaycastEntityConditionType extends EntityConditionType {
             destination = origin.add(direction.multiply(distance));
 
             BlockHitResult blockResult = blockRaycast(entity, origin, destination);
+
             if (blockResult.getType() != HitResult.Type.MISS && overrideHitResult(entity, hitResult, blockResult)) {
                 hitResult = blockResult;
             }
 
         }
 
+        if (hitResult == null || hitResult.getType() == HitResult.Type.MISS) {
+            return false;
+        }
+
         return switch (hitResult) {
             case BlockHitResult blockResult when blockCondition.isPresent() ->
-                blockResult.getType() != HitResult.Type.MISS
-                    && blockCondition.get().test(entity.getWorld(), blockResult.getBlockPos());
+                blockCondition.get().test(entity.getWorld(), blockResult.getBlockPos());
             case EntityHitResult entityResult when hitBiEntityCondition.isPresent() ->
-                entityResult.getType() != HitResult.Type.MISS
-                    && hitBiEntityCondition.get().test(entity, entityResult.getEntity());
-            case null, default ->
-                hitResult != null
-                    && hitResult.getType() != HitResult.Type.MISS;
+                hitBiEntityCondition.get().test(entity, entityResult.getEntity());
+            default ->
+                true;  // unsupported
         };
 
     }
