@@ -8,9 +8,11 @@ import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.calio.data.SerializableData;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Optional;
 
 public class PreventDeathPowerType extends PowerType {
@@ -53,17 +55,27 @@ public class PreventDeathPowerType extends PowerType {
         entityAction.ifPresent(action -> action.execute(getHolder()));
     }
 
-    public static boolean doesPrevent(Entity entity, DamageSource source, float amount) {
+    public static boolean doesPrevent(Entity holder, DamageSource source, float amount) {
 
+        if (!(holder instanceof LivingEntity livingHolder)) {
+            return false;
+        }
+
+        List<PreventDeathPowerType> types = PowerHolderComponent.getPowerTypes(livingHolder, PreventDeathPowerType.class);
         boolean prevented = false;
-        for (PreventDeathPowerType preventDeathPower : PowerHolderComponent.getPowerTypes(entity, PreventDeathPowerType.class)) {
 
-            if (!preventDeathPower.doesApply(source, amount)) {
-                continue;
+        for (var type : types) {
+
+            if (type.doesApply(source, amount)) {
+
+                if (!prevented) {
+                    livingHolder.setHealth(1.0F);
+                }
+
+                type.executeAction();
+                prevented = true;
+
             }
-
-            preventDeathPower.executeAction();
-            prevented = true;
 
         }
 

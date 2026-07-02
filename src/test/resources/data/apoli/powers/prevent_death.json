@@ -1,0 +1,12 @@
+{
+	"type": "apoli:prevent_death",
+	"entity_action": {
+		"type": "apoli:heal",
+		"amount": 10
+	},
+	"damage_condition": {
+		"type": "apoli:in_tag",
+		"tag": "minecraft:bypasses_invulnerability",
+		"inverted": true
+	}
+}

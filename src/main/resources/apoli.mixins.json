@@ -85,6 +85,7 @@
 		"power.type.ModifyEnchantmentLevelPowerTypeMixin$ItemStackMixin",
 		"power.type.ModifyHarvestPowerTypeMixin$BlockBreakingDeltaProxy",
 		"power.type.ModifyHarvestPowerTypeMixin$HarvestabilityProxy",
+		"power.type.PreventDeathPowerTypeMixin",
 		"power.type.ReplaceLootTablePowerTypeMixin$LootContextCache",
 		"power.type.ReplaceLootTablePowerTypeMixin$LootContextParametersCache",
 		"power.type.ReplaceLootTablePowerTypeMixin$LootContextParametersCacheInit",

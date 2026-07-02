@@ -399,18 +399,6 @@ public abstract class LivingEntityMixin extends Entity implements ModifiableFood
         return PowerHolderComponent.modify(this, ModifySlipperinessPowerType.class, original, p -> p.doesApply(getWorld(), getVelocityAffectingPos()));
     }
 
-    @ModifyExpressionValue(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isDead()Z", ordinal = 1))
-    private boolean apoli$preventDeath(boolean original, DamageSource source, float amount) {
-
-        if (original && PreventDeathPowerType.doesPrevent(this, source, amount)) {
-            this.setHealth(1.0F);
-            return false;
-        }
-
-        return original;
-
-    }
-
     @ModifyVariable(method = "eatFood", at = @At("HEAD"), argsOnly = true)
     private ItemStack apoli$modifyEatenStack(ItemStack original) {
 
