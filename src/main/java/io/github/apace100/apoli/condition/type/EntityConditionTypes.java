@@ -17,7 +17,7 @@ import net.minecraft.registry.Registry;
 public class EntityConditionTypes {
 
     public static final IdentifierAlias ALIASES = new IdentifierAlias();
-    public static final SerializableDataType<ConditionConfiguration<EntityConditionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.ENTITY_CONDITION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Entity condition type \"" + id + "\" is not undefined!");
+    public static final SerializableDataType<ConditionConfiguration<EntityConditionType>> DATA_TYPE = SerializableDataType.registry(ApoliRegistries.ENTITY_CONDITION_TYPE, Apoli.MODID, ALIASES, (configurations, id) -> "Entity condition type \"" + id + "\" is undefined!");
 
     public static final ConditionConfiguration<AllOfEntityConditionType> ALL_OF = register(AllOfMetaConditionType.createConfiguration(EntityCondition.DATA_TYPE, AllOfEntityConditionType::new));
     public static final ConditionConfiguration<AnyOfEntityConditionType> ANY_OF = register(AnyOfMetaConditionType.createConfiguration(EntityCondition.DATA_TYPE, AnyOfEntityConditionType::new));
