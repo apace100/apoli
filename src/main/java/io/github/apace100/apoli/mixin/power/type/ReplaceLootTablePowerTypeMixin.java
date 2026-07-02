@@ -1,7 +1,7 @@
 package io.github.apace100.apoli.mixin.power.type;
 
+import com.google.common.base.Predicates;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.datafixers.util.Either;
@@ -10,6 +10,7 @@ import io.github.apace100.apoli.access.LootContextTypeHolder;
 import io.github.apace100.apoli.access.ReplacingLootContext;
 import io.github.apace100.apoli.power.type.Prioritized;
 import io.github.apace100.apoli.power.type.ReplaceLootTablePowerType;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
@@ -31,12 +32,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 public abstract class ReplaceLootTablePowerTypeMixin {
 
@@ -148,46 +148,37 @@ public abstract class ReplaceLootTablePowerTypeMixin {
 
 			}
 
-			ReplaceLootTablePowerType.push((LootTable) (Object) this);
-			Prioritized.CallInstance<ReplaceLootTablePowerType> types = new Prioritized.CallInstance<>();
+			Prioritized.CallInstance<ReplaceLootTablePowerType> callInstance = new Prioritized.CallInstance<>(holder, ReplaceLootTablePowerType.class, Predicates.alwaysTrue());
+			List<LootTable> replacements = new ObjectArrayList<>();
 
-			Optional<LootTable> replacementTable = Optional.empty();
-			types.add(holder, ReplaceLootTablePowerType.class, type -> type.hasReplacement(key) && type.doesApply(context));
+			for (int priority = callInstance.getMaxPriority(); priority >= callInstance.getMinPriority(); priority--) {
 
-			for (int priority = types.getMaxPriority(); priority >= types.getMinPriority(); priority--) {
+				for (var type : callInstance.getPowerTypes(priority)) {
 
-				for (var type : types.getPowerTypes(priority)) {
-
-					replacementTable = type.getReplacement(key)
+					LootTable replacement = type.getReplacement(key)
 						.map(this.apoli$lookup::getLootTable)
-						.filter(Predicate.not(LootTable.EMPTY::equals));
+						.orElse(null);
+
+					if (replacement != null && replacement != LootTable.EMPTY) {
+						replacements.add(replacement);
+					}
 
 				}
 
 			}
 
-			if (replacementTable.isEmpty()) {
+			if (replacements.isEmpty()) {
 				return;
 			}
 
-			LootTable table = replacementTable.get();
+			ReplaceLootTablePowerType.push((LootTable) (Object) this);
+			replacements.forEach(ReplaceLootTablePowerType::push);
+
 			replacingContext.apoli$setReplaced(key);
+			ReplaceLootTablePowerType.peek().generateUnprocessedLoot(context, lootConsumer);
 
-			table.generateUnprocessedLoot(context, lootConsumer);
+			ReplaceLootTablePowerType.clear();
 			ci.cancel();
-
-		}
-
-		@WrapMethod(method = "generateUnprocessedLoot(Lnet/minecraft/loot/context/LootContext;Ljava/util/function/Consumer;)V")
-		private void wrapGenerateForReplacing(LootContext context, Consumer<ItemStack> lootConsumer, Operation<Void> original) {
-
-			try {
-				original.call(context, lootConsumer);
-			}
-
-			finally {
-				ReplaceLootTablePowerType.clear();
-			}
 
 		}
 
