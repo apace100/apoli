@@ -12,6 +12,7 @@ import io.github.apace100.apoli.power.PowerConfiguration;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.modifier.IModifierOperation;
 import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
+import net.fabricmc.fabric.api.event.registry.RegistryAttribute;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 
@@ -36,7 +37,9 @@ public class ApoliRegistries {
     public static final Registry<ContainerType> CONTAINER_TYPE = create(ApoliRegistryKeys.CONTAINER_TYPE);
 
     private static <T> Registry<T> create(RegistryKey<Registry<T>> registryKey) {
-        return FabricRegistryBuilder.createSimple(registryKey).buildAndRegister();
+        return FabricRegistryBuilder.createSimple(registryKey)
+            .attribute(RegistryAttribute.SYNCED)
+            .buildAndRegister();
     }
 
 }
