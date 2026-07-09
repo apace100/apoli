@@ -26,7 +26,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 @Mixin(AnimatedResultButton.class)
 public abstract class AnimatedResultButtonMixin {
@@ -75,18 +74,14 @@ public abstract class AnimatedResultButtonMixin {
             ? sharedOriginalEntry.get()
             : this.currentRecipe();
 
-        if (recipeEntry.value() instanceof PowerCraftingRecipe pcr && this.recipeBook instanceof PowerCraftingObject pco && pco.apoli$getPlayer() != null) {
+        if (recipeEntry.value() instanceof PowerCraftingRecipe pcr && this.recipeBook instanceof PowerCraftingObject pco) {
 
-            PowerHolderComponent component = PowerHolderComponent.KEY.get(pco.apoli$getPlayer());
-            Text powerTooltip = PowerManager.getOptional(pcr.powerId())
-                .filter(Predicate.not(component::hasPower))
-                .map(Power::getName)
-                .map(name -> Text.translatable("tooltip.apoli.power_recipe.required_power", name).formatted(Formatting.RED))
-                .orElse(null);
+            Power power = PowerManager.getNullable(pcr.powerId());
+            PowerHolderComponent component = PowerHolderComponent.getNullable(pco.apoli$getPlayer());
 
-            if (powerTooltip != null) {
+            if (power != null && component != null && !component.hasPower(power)) {
                 original.add(Text.empty());
-                original.add(powerTooltip);
+                original.add(Text.translatable("tooltip.apoli.power_recipe.required_power", power.getName()).formatted(Formatting.RED));
             }
 
         }

@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.apace100.apoli.access.PowerCraftingObject;
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.data.ApoliDataTypes;
+import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.type.RecipePowerType;
 import net.minecraft.item.ItemStack;
@@ -21,8 +22,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.world.World;
 
-import java.util.Objects;
-
 public record PowerCraftingRecipe(Identifier powerId, CraftingRecipe delegate) implements CraftingRecipe {
 
     @Override
@@ -37,15 +36,14 @@ public record PowerCraftingRecipe(Identifier powerId, CraftingRecipe delegate) i
             return false;
         }
 
-        boolean matchingPowerType = PowerHolderComponent.KEY.maybeGet(pco.apoli$getPlayer())
-            .flatMap(component -> PowerManager.getOptional(powerId()).map(component::getPowerType))
-            .map(RecipePowerType.class::isInstance)
-            .orElse(false);
+        Power power = PowerManager.getNullable(powerId());
+        PowerHolderComponent component = PowerHolderComponent.getNullable(pco.apoli$getPlayer());
 
-        return matchingPowerType && world.getRecipeManager().get(powerId())
-            .filter(entry -> Objects.equals(this, entry.value()))
-            .map(entry -> delegate().matches(input, world))
-            .orElse(false);
+        return power != null
+            && component != null
+            && component.hasPower(power)
+            && component.getPowerType(power) instanceof RecipePowerType
+            && delegate().matches(input, world);
 
     }
 
