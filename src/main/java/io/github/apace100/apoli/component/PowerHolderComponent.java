@@ -10,17 +10,16 @@ import io.github.apace100.apoli.power.PowerManager;
 import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.power.type.ValueModifyingPowerType;
+import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -114,17 +113,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
      *  @return         the power component, or {@link Optional#empty()} if the entity is either null, its component
      *                  container hasn't been initialized yet, or if the entity doesn't/can't have the power component
      */
-    @SuppressWarnings("ConstantValue")
 	static Optional<PowerHolderComponent> getOptional(@Nullable Entity entity) {
-
-        if (entity != null && entity.asComponentProvider().getComponentContainer() != null) {
-            return KEY.maybeGet(entity);
-        }
-
-        else {
-            return Optional.empty();
-        }
-
+        return Optional.ofNullable(getNullable(entity));
     }
 
     /**
@@ -137,7 +127,16 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
      */
     @Nullable
     static PowerHolderComponent getNullable(@Nullable Entity entity) {
-        return getOptional(entity).orElse(null);
+
+	    //noinspection ConstantValue
+	    if (entity != null && entity.asComponentProvider().getComponentContainer() != null) {
+            return KEY.getNullable(entity);
+        }
+
+        else {
+            return null;
+        }
+
     }
 
     static void sync(Entity entity) {
@@ -151,26 +150,25 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     static boolean grantPowers(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
         PowerHolderComponent powerComponent = getNullable(entity);
+        boolean granted = false;
+
         if (!entity.getWorld().isClient() && powerComponent != null) {
 
-            boolean granted = powersBySource.entrySet()
-                .stream()
-                .flatMap(e -> e.getValue()
-                    .stream()
-                    .map(power -> powerComponent.addPower(power, e.getKey())))
-                .reduce(false, Boolean::logicalOr);
+            for (var entry : powersBySource.entrySet()) {
 
-            if (granted && sync) {
+                for (var power : entry.getValue()) {
+                    granted |= powerComponent.addPower(power, entry.getKey());
+                }
+
+            }
+
+            if (sync && granted) {
                 PacketHandlers.GRANT_POWERS.sync(entity, powersBySource);
             }
 
-            return granted;
-
         }
 
-        else {
-            return false;
-        }
+        return granted;
 
     }
 
@@ -181,26 +179,25 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     static boolean revokePowers(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
         PowerHolderComponent powerComponent = getNullable(entity);
+        boolean revoked = false;
+
         if (!entity.getWorld().isClient() && powerComponent != null) {
 
-            boolean revoked = powersBySource.entrySet()
-                .stream()
-                .flatMap(e -> e.getValue()
-                    .stream()
-                    .map(power -> powerComponent.removePower(power, e.getKey())))
-                .reduce(false, Boolean::logicalOr);
+            for (var entry : powersBySource.entrySet()) {
 
-            if (revoked && sync) {
+                for (var power : entry.getValue()) {
+                    revoked |= powerComponent.removePower(power, entry.getKey());
+                }
+
+            }
+
+            if (sync && revoked) {
                 PacketHandlers.REVOKE_POWERS.sync(entity, powersBySource);
             }
 
-            return revoked;
-
         }
 
-        else {
-            return false;
-        }
+        return revoked;
 
     }
 
@@ -211,24 +208,21 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     static int revokeAllPowersFromAllSources(@NotNull Entity entity, Collection<Identifier> sources, boolean sync) {
 
         PowerHolderComponent powerComponent = getNullable(entity);
+        int revokedPowers = 0;
+
         if (!entity.getWorld().isClient() && powerComponent != null) {
 
-            int revokedPowers = sources
-                .stream()
-                .map(powerComponent::removeAllPowersFromSource)
-                .reduce(0, Integer::sum);
+            for (var source : sources) {
+                revokedPowers += powerComponent.removeAllPowersFromSource(source);
+            }
 
-            if (revokedPowers > 0 && sync) {
+            if (sync && revokedPowers > 0) {
                 PacketHandlers.REVOKE_ALL_POWERS.sync(entity, sources);
             }
 
-            return revokedPowers;
-
         }
 
-        else {
-            return 0;
-        }
+        return revokedPowers;
 
     }
 
@@ -257,12 +251,8 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
         powerData.put("Data", powerType.toTag());
         SyncPowerDataS2CPacket syncPowerDataPacket = new SyncPowerDataS2CPacket(entity.getId(), power.getId(), powerData);
 
-        for (ServerPlayerEntity trackingPlayer : PlayerLookup.tracking(entity)) {
-            ServerPlayNetworking.send(trackingPlayer, syncPowerDataPacket);
-        }
-
-        if (entity instanceof ServerPlayerEntity player) {
-            ServerPlayNetworking.send(player, syncPowerDataPacket);
+        for (var tracker : MiscUtil.getTrackingSafely(entity)) {
+            ServerPlayNetworking.send(tracker, syncPowerDataPacket);
         }
 
     }
@@ -295,41 +285,50 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
         }
 
         SyncBulkPowerDataS2CPacket syncBulkPowerDataPacket = new SyncBulkPowerDataS2CPacket(entity.getId(), powersToSync);
-        for (ServerPlayerEntity otherPlayer : PlayerLookup.tracking(entity)) {
-            ServerPlayNetworking.send(otherPlayer, syncBulkPowerDataPacket);
-        }
 
-        if (entity instanceof ServerPlayerEntity player) {
-            ServerPlayNetworking.send(player, syncBulkPowerDataPacket);
+        for (var tracker : MiscUtil.getTrackingSafely(entity)) {
+            ServerPlayNetworking.send(tracker, syncBulkPowerDataPacket);
         }
 
     }
 
     static <T extends PowerType> boolean withPowerType(@Nullable Entity entity, Class<T> powerClass, @NotNull Predicate<T> filter, Consumer<T> action) {
 
-        Optional<T> powerType = getOptional(entity)
-            .stream()
-            .map(powerComponent -> powerComponent.getPowerTypes(powerClass))
-            .flatMap(Collection::stream)
-            .filter(filter)
-            .findFirst();
+        List<T> types = getPowerTypes(entity, powerClass);
+        boolean found = false;
 
-        powerType.ifPresent(action);
-        return powerType.isPresent();
+        for (var type : types) {
+
+            if (filter.test(type)) {
+
+                action.accept(type);
+                found = true;
+
+                break;
+
+            }
+
+        }
+
+        return found;
 
     }
 
     static <T extends PowerType> boolean withPowerTypes(@Nullable Entity entity, Class<T> powerClass, @NotNull Predicate<T> filter, @NotNull Consumer<T> action) {
 
-        List<T> powerTypes = getOptional(entity)
-            .stream()
-            .map(pc -> pc.getPowerTypes(powerClass))
-            .flatMap(Collection::stream)
-            .filter(filter)
-            .toList();
+        List<T> types = getPowerTypes(entity, powerClass);
+        boolean found = false;
 
-        powerTypes.forEach(action);
-        return !powerTypes.isEmpty();
+        for (var type : types) {
+
+            if (filter.test(type)) {
+                action.accept(type);
+                found = true;
+            }
+
+        }
+
+        return found;
 
     }
 
@@ -348,14 +347,21 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     }
 
 	static <T extends PowerType> boolean hasPowerType(Entity entity, Class<T> typeClass, @NotNull Predicate<T> typeFilter) {
-        return getOptional(entity)
-            .stream()
-            .map(PowerHolderComponent::getPowerTypes)
-            .flatMap(Collection::stream)
-            .filter(typeClass::isInstance)
-            .map(typeClass::cast)
-            .filter(PowerType::isActive)
-            .anyMatch(typeFilter);
+        return hasPowerType(entity, typeClass, typeFilter, false);
+    }
+
+    static <T extends PowerType> boolean hasPowerType(Entity entity, Class<T> typeClass, @NotNull Predicate<T> typeFilter, boolean includeInactive) {
+
+        for (var type : getPowerTypes(entity, typeClass, includeInactive)) {
+
+            if (typeFilter.test(type)) {
+                return true;
+            }
+
+        }
+
+        return false;
+
     }
 
     static <T extends ValueModifyingPowerType> float modify(Entity entity, Class<T> powerClass, float baseValue) {

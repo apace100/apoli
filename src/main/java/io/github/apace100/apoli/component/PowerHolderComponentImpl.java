@@ -9,7 +9,7 @@ import io.github.apace100.apoli.power.PowerReference;
 import io.github.apace100.apoli.power.type.PowerType;
 import io.github.apace100.apoli.util.GainedPowerCriterion;
 import io.github.apace100.calio.data.SerializableData;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -21,17 +21,17 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class PowerHolderComponentImpl implements PowerHolderComponent {
 
-    private final ConcurrentHashMap<Power, PowerType> powers = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Power, Set<Identifier>> powerSources = new ConcurrentHashMap<>();
+    private final Map<Power, PowerType> powers = new Object2ObjectLinkedOpenHashMap<>();
+    private final Map<Power, Set<Identifier>> powerSources = new Object2ObjectLinkedOpenHashMap<>();
 
     private final LivingEntity owner;
 
@@ -61,10 +61,19 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public Set<Power> getPowers(boolean includeSubPowers) {
-        return powers.keySet()
-            .stream()
-            .filter(p -> includeSubPowers || !p.isSubPower())
-            .collect(Collectors.toCollection(HashSet::new));
+
+        Set<Power> result = new ObjectLinkedOpenHashSet<>();
+
+        for (var power : powers.keySet()) {
+
+            if (includeSubPowers || !power.isSubPower()) {
+                result.add(power);
+            }
+
+        }
+
+        return result;
+
     }
 
     @Override
@@ -74,12 +83,25 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public <T extends PowerType> List<T> getPowerTypes(Class<T> typeClass, boolean includeInactive) {
-        return powers.values()
-            .stream()
-            .filter(typeClass::isInstance)
-            .map(typeClass::cast)
-            .filter(type -> includeInactive || type.isActive())
-            .collect(Collectors.toCollection(LinkedList::new));
+
+        List<T> result = new ObjectArrayList<>();
+
+        for (var type : powers.values()) {
+
+            if (typeClass.isInstance(type)) {
+
+                T castedType = typeClass.cast(type);
+
+                if (includeInactive || castedType.isActive()) {
+                    result.add(castedType);
+                }
+
+            }
+
+        }
+
+        return result;
+
     }
 
     @Override
@@ -98,7 +120,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     @Override
     public boolean removePower(Power power, Identifier source) {
 
-        ConcurrentHashMap.KeySetView<Power, Boolean> powersToRemove = ConcurrentHashMap.newKeySet();
+        Set<Power> powersToRemove = new ObjectLinkedOpenHashSet<>();
         boolean result = this.removePower(power, source, powersToRemove::add);
 
         powers.keySet().removeAll(powersToRemove);
@@ -135,27 +157,43 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public int removeAllPowersFromSource(Identifier source) {
-        //noinspection MappingBeforeCount
-        return (int) this.getPowersFromSource(source)
-            .stream()
-            .filter(Predicate.not(Power::isSubPower))
-            .peek(pt -> this.removePower(pt, source))
-            .count();
+
+        List<Power> powersFromSource = this.getPowersFromSource(source);
+        int count = 0;
+
+        for (var power : powersFromSource) {
+
+            if (!power.isSubPower() && this.removePower(power, source)) {
+                count++;
+            }
+
+        }
+
+        return count;
+
     }
 
     @Override
     public List<Power> getPowersFromSource(Identifier source) {
-        return powerSources.entrySet()
-            .stream()
-            .filter(e -> e.getValue().contains(source))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toCollection(LinkedList::new));
+
+        List<Power> result = new ObjectArrayList<>();
+
+        for (var entry : powerSources.entrySet()) {
+
+            if (entry.getValue().contains(source)) {
+                result.add(entry.getKey());
+            }
+
+        }
+
+        return result;
+
     }
 
     @Override
     public boolean addPower(Power power, Identifier source) {
 
-        ConcurrentHashMap<Power, PowerType> powersToAdd = new ConcurrentHashMap<>();
+        Map<Power, PowerType> powersToAdd = new Object2ObjectArrayMap<>();
         boolean result = this.addPower(power, source, powersToAdd::put);
 
         powersToAdd.forEach((powerToAdd, powerTypeToAdd) -> {
@@ -201,22 +239,38 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
     @Override
     public void serverTick() {
-        powers.values()
-            .stream()
-            .filter(PowerType::shouldTick)
-            .filter(powerType -> powerType.shouldTickWhenInactive() || powerType.isActive())
-            .peek(PowerType::commonTick)
-            .forEach(PowerType::serverTick);
+
+        for (var type : powers.values()) {
+
+            if (type.shouldTick()) {
+
+                if (type.shouldTickWhenInactive() || type.isActive()) {
+                    type.commonTick();
+                    type.serverTick();
+                }
+
+            }
+
+        }
+
     }
 
     @Override
     public void clientTick() {
-        powers.values()
-            .stream()
-            .filter(PowerType::shouldTick)
-            .filter(powerType -> powerType.shouldTickWhenInactive() || powerType.isActive())
-            .peek(PowerType::commonTick)
-            .forEach(PowerType::clientTick);
+
+        for (var type : powers.values()) {
+
+            if (type.shouldTick()) {
+
+                if (type.shouldTickWhenInactive() || type.isActive()) {
+                    type.commonTick();
+                    type.serverTick();
+                }
+
+            }
+
+        }
+
     }
 
     @Override
