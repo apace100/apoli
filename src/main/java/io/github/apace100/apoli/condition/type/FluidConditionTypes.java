@@ -5,6 +5,7 @@ import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.FluidCondition;
 import io.github.apace100.apoli.condition.type.fluid.FluidFluidConditionType;
 import io.github.apace100.apoli.condition.type.fluid.InTagFluidConditionType;
+import io.github.apace100.apoli.condition.type.fluid.StillFluidConditionType;
 import io.github.apace100.apoli.condition.type.fluid.meta.AllOfFluidConditionType;
 import io.github.apace100.apoli.condition.type.fluid.meta.AnyOfFluidConditionType;
 import io.github.apace100.apoli.condition.type.fluid.meta.ConstantFluidConditionType;
@@ -30,8 +31,9 @@ public class FluidConditionTypes {
 
     public static final ConditionConfiguration<FluidFluidConditionType> FLUID = register(ConditionConfiguration.of(Apoli.identifier("fluid"), FluidFluidConditionType.DATA_FACTORY));
     public static final ConditionConfiguration<InTagFluidConditionType> IN_TAG = register(ConditionConfiguration.of(Apoli.identifier("in_tag"), InTagFluidConditionType.DATA_FACTORY));
+    public static final ConditionConfiguration<StillFluidConditionType> STILL = register(ConditionConfiguration.simple(Apoli.identifier("still"), StillFluidConditionType::new));
 
-    public static void register() {
+	public static void register() {
         ALIASES.addPathAlias("and", ALL_OF.id().getPath());
         ALIASES.addPathAlias("or", ANY_OF.id().getPath());
         ALIASES.addPathAlias("chance", RANDOM_CHANCE.id().getPath());
