@@ -264,7 +264,7 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
 
                 if (type.shouldTickWhenInactive() || type.isActive()) {
                     type.commonTick();
-                    type.serverTick();
+                    type.clientTick();
                 }
 
             }
