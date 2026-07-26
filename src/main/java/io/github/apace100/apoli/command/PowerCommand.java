@@ -14,9 +14,7 @@ import io.github.apace100.apoli.command.argument.suggestion.PowerSuggestionProvi
 import io.github.apace100.apoli.component.PowerHolderComponent;
 import io.github.apace100.apoli.power.Power;
 import io.github.apace100.apoli.util.JsonTextFormatter;
-import io.github.apace100.apoli.util.MiscUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -29,9 +27,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -411,11 +407,7 @@ public class PowerCommand {
 
 			for (LivingEntity target : targets) {
 
-				Map<Identifier, Collection<Power>> powers = PowerHolderComponent.KEY.get(target).getSources(power)
-					.stream()
-					.collect(Collectors.toMap(Function.identity(), id -> ObjectOpenHashSet.of(power), MiscUtil.mergeCollections()));
-
-				if (PowerHolderComponent.revokePowers(target, powers, true)) {
+				if (PowerHolderComponent.revokePower(target, power, true)) {
 					processedTargets.add(target);
 				}
 

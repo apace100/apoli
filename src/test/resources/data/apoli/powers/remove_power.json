@@ -1,0 +1,13 @@
+{
+	"type": "apoli:action_on_callback",
+	"entity_action_gained": [
+		{
+			"type": "apoli:execute_command",
+			"command": "say Hello world!"
+		},
+		{
+			"type": "apoli:remove_power",
+			"power": "*:*"
+		}
+	]
+}

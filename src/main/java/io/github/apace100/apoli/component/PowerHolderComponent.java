@@ -13,6 +13,7 @@ import io.github.apace100.apoli.power.type.ValueModifyingPowerType;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.apoli.util.modifier.Modifier;
 import io.github.apace100.apoli.util.modifier.ModifierUtil;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
@@ -172,6 +173,31 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
 
     }
 
+    static boolean revokePower(@NotNull Entity entity, Power power, boolean sync) {
+
+        PowerHolderComponent powerComponent = getNullable(entity);
+        Map<Identifier, Collection<Power>> revokedPowers = new Object2ObjectLinkedOpenHashMap<>();
+
+        if (!entity.getWorld().isClient() && powerComponent != null) {
+
+            for (var source : powerComponent.getSources(power)) {
+
+                if (powerComponent.removePower(power, source)) {
+                    revokedPowers.putIfAbsent(source, Set.of(power));
+                }
+
+            }
+
+            if (sync && !revokedPowers.isEmpty()) {
+                PacketHandlers.REVOKE_POWERS.sync(entity, revokedPowers);
+            }
+
+        }
+
+        return !revokedPowers.isEmpty();
+
+    }
+
     static boolean revokePower(@NotNull Entity entity, Power power, Identifier source, boolean sync) {
         return revokePowers(entity, Map.of(source, List.of(power)), sync);
     }
@@ -179,25 +205,32 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
     static boolean revokePowers(@NotNull Entity entity, Map<Identifier, Collection<Power>> powersBySource, boolean sync) {
 
         PowerHolderComponent powerComponent = getNullable(entity);
-        boolean revoked = false;
+        Map<Identifier, Collection<Power>> revokedPowers = new Object2ObjectLinkedOpenHashMap<>();
 
         if (!entity.getWorld().isClient() && powerComponent != null) {
 
-            for (var entry : powersBySource.entrySet()) {
+            for (var idAndPowers : powersBySource.entrySet()) {
 
-                for (var power : entry.getValue()) {
-                    revoked |= powerComponent.removePower(power, entry.getKey());
+                Identifier id = idAndPowers.getKey();
+                Collection<Power> powers = idAndPowers.getValue();
+
+                for (var power : powers) {
+
+                    if (powerComponent.removePower(power, id)) {
+                        revokedPowers.computeIfAbsent(id, k -> new ObjectArrayList<>()).add(power);
+                    }
+
                 }
 
             }
 
-            if (sync && revoked) {
-                PacketHandlers.REVOKE_POWERS.sync(entity, powersBySource);
+            if (sync && !revokedPowers.isEmpty()) {
+                PacketHandlers.REVOKE_POWERS.sync(entity, revokedPowers);
             }
 
         }
 
-        return revoked;
+        return !revokedPowers.isEmpty();
 
     }
 
