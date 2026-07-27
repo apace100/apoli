@@ -21,10 +21,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -238,43 +235,28 @@ public class PowerHolderComponentImpl implements PowerHolderComponent {
     }
 
     @Override
-    public void serverTick() {
+    public void tick() {
 
-        for (var type : powers.values()) {
+        Collection<PowerType> types = new ObjectArrayList<>(powers.values());
+        boolean client = owner.getWorld().isClient();
 
-            if (type.shouldTick()) {
+        for (var type : types) {
 
-                if (type.shouldTickWhenInactive() || type.isActive()) {
-                    type.commonTick();
+            if (type.shouldTick() && (type.shouldTickWhenInactive() || type.isActive())) {
+
+                type.commonTick();
+
+                if (client) {
+                    type.clientTick();
+                }
+
+                else {
                     type.serverTick();
                 }
 
             }
 
         }
-
-    }
-
-    @Override
-    public void clientTick() {
-
-        for (var type : powers.values()) {
-
-            if (type.shouldTick()) {
-
-                if (type.shouldTickWhenInactive() || type.isActive()) {
-                    type.commonTick();
-                    type.clientTick();
-                }
-
-            }
-
-        }
-
-    }
-
-    @Override
-    public void tick() {
 
     }
 
