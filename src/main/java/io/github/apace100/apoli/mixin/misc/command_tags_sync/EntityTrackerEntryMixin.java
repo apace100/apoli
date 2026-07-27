@@ -21,13 +21,7 @@ public abstract class EntityTrackerEntryMixin {
 
 	@Inject(method = "startTracking", at = @At("TAIL"))
 	private void syncCommandTagsAfterTracking(ServerPlayerEntity player, CallbackInfo ci) {
-
-		SyncCommandTagsS2CPacket packet = new SyncCommandTagsS2CPacket(this.entity);
-
-		if (ServerPlayNetworking.canSend(player, packet.getId())) {
-			ServerPlayNetworking.send(player, packet);
-		}
-
+		ServerPlayNetworking.send(player, new SyncCommandTagsS2CPacket(this.entity));
 	}
 
 }
