@@ -365,6 +365,12 @@ public interface PowerHolderComponent extends AutoSyncedComponent, CommonTicking
 
     }
 
+    static List<PowerType> getPowerTypes(Entity entity) {
+        return getOptional(entity)
+            .map(powerComponent -> powerComponent.getPowerTypes())
+            .orElse(new ObjectArrayList<>());
+    }
+
     static <T extends PowerType> List<T> getPowerTypes(Entity entity, Class<T> powerClass) {
         return getPowerTypes(entity, powerClass, false);
     }

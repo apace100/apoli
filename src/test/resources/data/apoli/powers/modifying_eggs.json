@@ -1,0 +1,33 @@
+{
+	"type": "apoli:action_on_key_press",
+	"entity_action": {
+		"type": "apoli:if_else",
+		"condition": {
+			"type": "apoli:sneaking"
+		},
+		"if_action": {
+			"type": "apoli:modify_inventory",
+			"process_mode": "items",
+			"item_action": {
+				"type": "apoli:consume",
+				"amount": 1
+			}
+		},
+		"else_action": {
+			"type": "apoli:modify_inventory",
+			"process_mode": "items",
+			"item_action": {
+				"type": "apoli:modify",
+				"modifier": "apoli:add_power"
+			},
+			"limit": 4
+		}
+	},
+	"hud_render": {
+		"should_render": false
+	},
+	"cooldown": 1,
+	"key": {
+		"id": "key.attack"
+	}
+}

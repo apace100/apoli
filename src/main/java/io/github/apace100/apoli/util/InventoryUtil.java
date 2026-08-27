@@ -1,38 +1,32 @@
 package io.github.apace100.apoli.util;
 
-import io.github.apace100.apoli.action.EntityAction;
-import io.github.apace100.apoli.action.ItemAction;
+import com.google.common.collect.AbstractIterator;
+import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.component.PowerHolderComponent;
-import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.mixin.SlotRangesAccessor;
-import io.github.apace100.apoli.power.type.InventoryPowerType;
-import it.unimi.dsi.fastutil.ints.IntCollection;
+import io.github.apace100.apoli.power.PowerReference;
+import io.github.apace100.apoli.power.type.PowerType;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SlotRange;
 import net.minecraft.inventory.SlotRanges;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
-import java.util.stream.IntStream;
 
 public class InventoryUtil {
 
@@ -47,7 +41,7 @@ public class InventoryUtil {
 
             @Override
             public int applyAsInt(ItemStack value) {
-                return 1;
+                return value.isEmpty() ? 0 : 1;
             }
 
         },
@@ -63,119 +57,17 @@ public class InventoryUtil {
 
     }
 
-    public static int checkInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<ItemCondition> itemCondition, ProcessMode processMode) {
-
-        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
-        int matches = 0;
-
-        for (int preppedSlot : preppedSlots) {
-
-            StackReference stackReference = getStackReference(entity, inventoryPowerType, preppedSlot);
-            ItemStack stack = stackReference.get();
-
-            if (itemCondition.map(condition -> condition.test(entity.getWorld(), stack)).orElse(true)) {
-                matches += processMode.applyAsInt(stack);
-            }
-
-        }
-
-        return matches;
-
-    }
-
-    public static void modifyInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, ItemAction itemAction, Optional<ItemCondition> itemCondition, Optional<Integer> limit, ProcessMode processMode) {
-
-        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
-        AtomicInteger processedItems = new AtomicInteger();
-
-        modifyingItemsLoop:
-        for (int preppedSlot : preppedSlots) {
-
-            StackReference stackReference = getStackReference(entity, inventoryPowerType, preppedSlot);
-            ItemStack stack = stackReference.get();
-
-            if (!itemCondition.map(condition -> condition.test(entity.getWorld(), stack)).orElse(true)) {
-                continue;
-            }
-
-            int amount = processMode.applyAsInt(stack);
-            for (int i = 0; i < amount; i++) {
-
-                entityAction.ifPresent(action -> action.execute(entity));
-                itemAction.execute(entity.getWorld(), stackReference);
-
-                if (limit.map(value -> processedItems.incrementAndGet() >= value).orElse(false)) {
-                    break modifyingItemsLoop;
-                }
-
-            }
-
-        }
-
-    }
-
-    public static void replaceInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, Optional<ItemAction> itemAction, Optional<ItemCondition> itemCondition, ItemStack replacementStack, boolean mergeNbt) {
-
-        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
-        for (int preppedSlot : preppedSlots) {
-
-            StackReference stackReference = getStackReference(entity, inventoryPowerType, preppedSlot);
-            ItemStack stack = stackReference.get();
-
-            if (!itemCondition.map(condition -> condition.test(entity.getWorld(), stack)).orElse(true)) {
-                continue;
-            }
-
-            ItemStack replacementStackCopy = replacementStack.copy();
-            entityAction.ifPresent(action -> action.execute(entity));
-
-            if (mergeNbt) {
-                //  TODO: Either keep this as is, or re-implement it to merge components in a possibly hacky way (I'd rather not)   -eggohito
-                NbtCompound originalStackNbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt();
-                NbtComponent.set(DataComponentTypes.CUSTOM_DATA, replacementStackCopy, replacementStackNbt -> replacementStackNbt.copyFrom(originalStackNbt));
-            }
-
-            stackReference.set(replacementStackCopy);
-            itemAction.ifPresent(action -> action.execute(entity.getWorld(), stackReference));
-
-        }
-
-    }
-
-    public static void dropInventory(Entity entity, IntCollection slots, Optional<InventoryPowerType> inventoryPowerType, Optional<EntityAction> entityAction, Optional<ItemAction> itemAction, Optional<ItemCondition> itemCondition, boolean throwRandomly, boolean retainOwnership, Optional<Integer> amount) {
-
-        IntSet preppedSlots = prepSlots(slots, entity, inventoryPowerType);
-        for (int preppedSlot : preppedSlots) {
-
-            StackReference stackReference = getStackReference(entity, inventoryPowerType, preppedSlot);
-            ItemStack stack = stackReference.get();
-
-            if (stack.isEmpty() || !itemCondition.map(condition -> condition.test(entity.getWorld(), stack)).orElse(true)) {
-                continue;
-            }
-
-            entityAction.ifPresent(action -> action.execute(entity));
-            itemAction.ifPresent(action -> action.execute(entity.getWorld(), stackReference));
-
-            ItemStack droppedStack = amount
-                .map(Math::abs)
-                .map(stack::split)
-                .orElse(ItemStack.EMPTY);
-
-            throwItem(entity, droppedStack.isEmpty() ? stack : droppedStack, throwRandomly, retainOwnership);
-            stackReference.set(droppedStack.isEmpty() ? ItemStack.EMPTY : stack);
-
-        }
-
-    }
-
     public static void throwItem(Entity thrower, ItemStack stack, boolean throwRandomly, boolean retainOwnership) {
         throwItem(thrower, stack, throwRandomly, retainOwnership, 40);
     }
 
-    public static void throwItem(Entity thrower, ItemStack itemStack, boolean throwRandomly, boolean retainOwnership, int pickupDelay) {
+    public static void throwItem(Entity thrower, ItemStack stack, boolean throwRandomly, boolean retainOwnership, int pickupDelay) {
+        throwItem(thrower, stack, throwRandomly, retainOwnership, item -> item.setPickupDelay(pickupDelay));
+    }
 
-        if (itemStack.isEmpty()) {
+    public static void throwItem(Entity thrower, ItemStack stack, boolean throwRandomly, boolean retainOwnership, Consumer<ItemEntity> postProcessor) {
+
+        if (stack.isEmpty()) {
             return;
         }
 
@@ -185,9 +77,7 @@ public class InventoryUtil {
 
         double yOffset = thrower.getEyeY() - 0.30000001192092896D;
 
-        ItemEntity itemEntity = new ItemEntity(thrower.getWorld(), thrower.getX(), yOffset, thrower.getZ(), itemStack);
-        itemEntity.setPickupDelay(pickupDelay);
-
+        ItemEntity itemEntity = new ItemEntity(thrower.getWorld(), thrower.getX(), yOffset, thrower.getZ(), stack);
         Random random = Random.create();
 
         float f;
@@ -227,12 +117,15 @@ public class InventoryUtil {
         }
 
         thrower.getWorld().spawnEntity(itemEntity);
+        postProcessor.accept(itemEntity);
 
     }
 
     public static void forEachStack(Entity entity, Consumer<ItemStack> stackConsumer) {
 
+        PowerHolderComponent powerComponent = PowerHolderComponent.getNullable(entity);
         OptionalInt slotToSkip = getSelectedHotBarSlot(entity);
+
         for (int slot : getAllSlots()) {
 
             if (slotToSkip.isPresent() && slotToSkip.getAsInt() == slot) {
@@ -248,17 +141,19 @@ public class InventoryUtil {
 
         }
 
-        List<InventoryPowerType> inventoryPowerTypes = PowerHolderComponent.getOptional(entity)
-            .stream()
-            .map(component -> component.getPowerTypes(InventoryPowerType.class))
-            .flatMap(Collection::stream)
-            .toList();
+        if (powerComponent == null) {
+            return;
+        }
 
-        for (InventoryPowerType inventoryPowerType : inventoryPowerTypes) {
+        for (var type : powerComponent.getPowerTypes()) {
 
-            for (int i = 0; i < inventoryPowerTypes.size(); i++) {
+	        if (!(type instanceof Inventory inventory)) {
+                continue;
+	        }
 
-                ItemStack stack = inventoryPowerType.getStack(i);
+            for (int i = 0; i < inventory.size(); i++) {
+
+                ItemStack stack = inventory.getStack(i);
 
                 if (!stack.isEmpty()) {
                     stackConsumer.accept(stack);
@@ -301,7 +196,7 @@ public class InventoryUtil {
      *      @param entity   The entity to get the slot ID of its selected hotbar slot
      *      @return         The slot ID of the hotbar slot or {@link Integer#MIN_VALUE} if the entity is not a player
      */
-    private static OptionalInt getSelectedHotBarSlot(Entity entity) {
+    public static OptionalInt getSelectedHotBarSlot(Entity entity) {
 
         SlotRange slotRange = entity instanceof PlayerEntity player
             ? SlotRanges.fromName("hotbar." + player.getInventory().selectedSlot)
@@ -313,25 +208,19 @@ public class InventoryUtil {
 
     }
 
-    /**
-     *  <p>Checks whether the specified {@code slot} index is within the bounds of the specified {@link InventoryPowerType},
-     *  or the entity's {@link StackReference}, in that order.</p>
-     *
-     *  @param entity               the entity to check the bounds of its {@link StackReference}
-     *  @param inventoryPowerType   the {@link InventoryPowerType} to check the bounds of (if present)
-     *  @param slot                 the slot index
-     *  @return                     {@code true} if the slot index is within the bounds
-     */
-    public static boolean slotWithinBounds(Entity entity, Optional<InventoryPowerType> inventoryPowerType, int slot) {
-        return inventoryPowerType
-            .map(powerType -> slot >= 0 && slot < powerType.size())
-            .orElseGet(() -> entity.getStackReference(slot) != StackReference.EMPTY);
+    public static boolean isSlotWithinInventoryBounds(Inventory inventory, int slot) {
+        return slot >= 0
+            && slot < inventory.size();
     }
 
-    public static StackReference getStackReference(@NotNull Entity entity, Optional<InventoryPowerType> inventoryPowerType, int slot) {
-        return inventoryPowerType
-            .map(powerType -> StackReference.of(powerType, slot))
-            .orElseGet(() -> entity.getStackReference(slot));
+    public static StackReference getStackReference(Either<Inventory, Entity> source, int slot) {
+        return source.map(inventory -> getInventoryStackReference(inventory, slot), entity -> entity.getStackReference(slot));
+    }
+
+    public static StackReference getInventoryStackReference(Inventory inventory, int slot) {
+        return isSlotWithinInventoryBounds(inventory, slot)
+            ? StackReference.of(inventory, slot)
+            : StackReference.EMPTY;
     }
 
     /**
@@ -378,18 +267,6 @@ public class InventoryUtil {
 
     }
 
-    public static IntSet prepSlots(IntCollection slots, Entity entity, Optional<InventoryPowerType> inventoryPowerType) {
-
-        IntStream slotStream = slots.isEmpty()
-            ? getAllSlots().intStream()
-            : slots.intStream();
-
-        return slotStream
-            .filter(slot -> slotWithinBounds(entity, inventoryPowerType, slot))
-            .collect(IntOpenHashSet::new, IntOpenHashSet::add, IntOpenHashSet::addAll);
-
-    }
-
     public static OptionalInt getSlotFromStackReference(Entity entity, StackReference stackReference) {
 
         for (int slot : getAllSlots()) {
@@ -403,6 +280,64 @@ public class InventoryUtil {
         }
 
         return OptionalInt.empty();
+
+    }
+
+    public static List<SlotRange> singleOrAllSlots(Optional<SlotRange> slot) {
+        return slot
+            .map(List::of)
+            .orElseGet(SlotRangesAccessor::getSlotRanges);
+    }
+
+    public static Iterable<Inventory> getPowerInventories(Entity entity, PowerReference reference) {
+
+        if (reference != null) {
+            return () -> new AbstractIterator<>() {
+
+                boolean done;
+
+	            @Override
+	            protected Inventory computeNext() {
+
+                    if (!done) {
+
+                        this.done = true;
+
+                        if (reference.getNullablePowerType(entity) instanceof Inventory inventory) {
+                            return inventory;
+                        }
+
+                    }
+
+                    return endOfData();
+
+	            }
+
+            };
+        }
+
+        else {
+            return () -> new AbstractIterator<>() {
+
+	            final Iterator<PowerType> types = PowerHolderComponent.getPowerTypes(entity).iterator();
+
+	            @Override
+	            protected Inventory computeNext() {
+
+		            while (types.hasNext()) {
+
+			            if (types.next() instanceof Inventory inventory) {
+				            return inventory;
+			            }
+
+		            }
+
+		            return endOfData();
+
+	            }
+
+            };
+        }
 
     }
 

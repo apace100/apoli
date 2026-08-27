@@ -1,0 +1,20 @@
+{
+	"type": "apoli:action_on_key_press",
+	"entity_action": {
+		"type": "apoli:drop_inventory",
+		"item_condition": {
+			"type": "apoli:ingredient",
+			"ingredient": {
+				"item": "minecraft:egg"
+			}
+		},
+		"amount": 1
+	},
+	"hud_render": {
+		"should_render": false
+	},
+	"cooldown": 1,
+	"key": {
+		"id": "key.attack"
+	}
+}

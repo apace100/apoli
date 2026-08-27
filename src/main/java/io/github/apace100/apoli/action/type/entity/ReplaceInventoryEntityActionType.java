@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.action.type.entity;
 
+import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.EntityAction;
 import io.github.apace100.apoli.action.ItemAction;
@@ -10,21 +11,25 @@ import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.type.InventoryPowerType;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SlotRange;
+import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-
-import static io.github.apace100.apoli.util.InventoryUtil.replaceInventory;
+import java.util.OptionalInt;
 
 public class ReplaceInventoryEntityActionType extends EntityActionType {
 
@@ -37,7 +42,7 @@ public class ReplaceInventoryEntityActionType extends EntityActionType {
             .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
             .add("stack", SerializableDataTypes.ITEM_STACK)
             .add("slot", ApoliDataTypes.SLOT_RANGE, null)
-            .addFunctionedDefault("slots", ApoliDataTypes.SLOT_RANGES, data -> MiscUtil.singletonListOrEmpty(data.get("slot")))
+            .addFunctionedDefault("slots", ApoliDataTypes.SLOT_RANGES, data -> InventoryUtil.singleOrAllSlots(data.getOptional("slot")))
             .add("merge_nbt", SerializableDataTypes.BOOLEAN, false),
         data -> new ReplaceInventoryEntityActionType(
             data.get("inventory_type"),
@@ -95,20 +100,61 @@ public class ReplaceInventoryEntityActionType extends EntityActionType {
     @Override
     public void accept(EntityActionContext context) {
 
-        Entity entity = context.entity();
-        Optional<InventoryPowerType> inventoryPowerType = power
-            .filter(p -> inventoryType == InventoryType.POWER)
-            .flatMap(p -> p.getOptionalPowerType(entity))
-            .filter(InventoryPowerType.class::isInstance)
-            .map(InventoryPowerType.class::cast);
+        if (context.world().isClient()) {
+            return;
+        }
 
-        replaceInventory(entity, slots, inventoryPowerType, entityAction, itemAction, itemCondition, stack, mergeNbt);
+        Entity entity = context.entity();
+
+        switch (inventoryType) {
+            case INVENTORY ->
+                this.replaceMatches(entity, Either.right(entity));
+            case POWER -> {
+
+                for (var inventory : InventoryUtil.getPowerInventories(entity, power.orElse(null))) {
+                    this.replaceMatches(entity, Either.left(inventory));
+                }
+
+            }
+        }
 
     }
 
     @Override
     public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.REPLACE_INVENTORY;
+    }
+
+    private void replaceMatches(Entity entity, Either<Inventory, Entity> source) {
+
+        OptionalInt slotToSkip = InventoryUtil.getSelectedHotBarSlot(entity);
+
+        for (int slot : slots) {
+
+            if (slotToSkip.isPresent() && slotToSkip.getAsInt() == slot) {
+                continue;
+            }
+
+            StackReference reference = InventoryUtil.getStackReference(source, slot);
+            ItemStack stack = reference.get();
+
+            if (reference == StackReference.EMPTY || !itemCondition.map(condition -> condition.test(entity.getWorld(), stack)).orElse(true)) {
+                continue;
+            }
+
+            ItemStack replacementStack = this.stack.copy();
+            entityAction.ifPresent(action -> action.execute(entity));
+
+            if (mergeNbt && stack.contains(DataComponentTypes.CUSTOM_DATA)) {
+                NbtComponent customData = Objects.requireNonNull(stack.get(DataComponentTypes.CUSTOM_DATA));
+                NbtComponent.set(DataComponentTypes.CUSTOM_DATA, replacementStack, nbt -> nbt.copyFrom(customData.copyNbt()));
+            }
+
+            reference.set(replacementStack);
+            itemAction.ifPresent(action -> action.execute(entity.getWorld(), reference));
+
+        }
+
     }
 
 }

@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.action.type.entity;
 
+import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.action.ActionConfiguration;
 import io.github.apace100.apoli.action.EntityAction;
 import io.github.apace100.apoli.action.ItemAction;
@@ -10,20 +11,22 @@ import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.type.InventoryPowerType;
+import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.InventoryUtil.InventoryType;
 import io.github.apace100.apoli.util.MiscUtil;
 import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.entity.Entity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SlotRange;
+import net.minecraft.inventory.StackReference;
+import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
-
-import static io.github.apace100.apoli.util.InventoryUtil.dropInventory;
+import java.util.OptionalInt;
 
 public class DropInventoryEntityActionType extends EntityActionType {
 
@@ -35,7 +38,7 @@ public class DropInventoryEntityActionType extends EntityActionType {
             .add("item_action", ItemAction.DATA_TYPE.optional(), Optional.empty())
             .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
             .add("slot", ApoliDataTypes.SLOT_RANGE, null)
-            .addFunctionedDefault("slots", ApoliDataTypes.SLOT_RANGES, data -> MiscUtil.singletonListOrEmpty(data.get("slot")))
+            .addFunctionedDefault("slots", ApoliDataTypes.SLOT_RANGES, data -> InventoryUtil.singleOrAllSlots(data.getOptional("slot")))
             .add("throw_randomly", SerializableDataTypes.BOOLEAN, false)
             .add("retain_ownership", SerializableDataTypes.BOOLEAN, false)
             .add("amount", SerializableDataTypes.POSITIVE_INT.optional(), Optional.empty()),
@@ -99,20 +102,63 @@ public class DropInventoryEntityActionType extends EntityActionType {
     @Override
     public void accept(EntityActionContext context) {
 
-        Entity entity = context.entity();
-        Optional<InventoryPowerType> inventoryPowerType = power
-            .filter(p -> inventoryType == InventoryType.POWER)
-            .flatMap(p -> p.getOptionalPowerType(entity))
-            .filter(InventoryPowerType.class::isInstance)
-            .map(InventoryPowerType.class::cast);
+        if (context.world().isClient()) {
+            return;
+        }
 
-        dropInventory(entity, slots, inventoryPowerType, entityAction, itemAction, itemCondition, throwRandomly, retainOwnership, amount);
+        Entity entity = context.entity();
+
+        switch (inventoryType) {
+            case INVENTORY ->
+                this.dropMatches(entity, Either.right(entity));
+            case POWER -> {
+
+                for (var inventory : InventoryUtil.getPowerInventories(entity, power.orElse(null))) {
+                    this.dropMatches(entity, Either.left(inventory));
+                }
+
+            }
+        }
 
     }
 
     @Override
     public @NotNull ActionConfiguration<?> getConfig() {
         return EntityActionTypes.DROP_INVENTORY;
+    }
+
+    private void dropMatches(Entity thrower, Either<Inventory, Entity> source) {
+
+        OptionalInt slotToSkip = InventoryUtil.getSelectedHotBarSlot(thrower);
+
+        for (int slot : slots) {
+
+            if (slotToSkip.isPresent() && slotToSkip.getAsInt() == slot) {
+                continue;
+            }
+
+            StackReference reference = InventoryUtil.getStackReference(source, slot);
+            ItemStack stack = reference.get();
+
+            if (reference == StackReference.EMPTY || !itemCondition.map(condition -> condition.test(thrower.getWorld(), stack)).orElse(true)) {
+                continue;
+            }
+
+            entityAction.ifPresent(action -> action.execute(thrower));
+            itemAction.ifPresent(action -> action.execute(thrower.getWorld(), reference));
+
+            Optional<ItemStack> splitStack = amount
+                .map(Math::abs)
+                .map(stack::split);
+
+            InventoryUtil.throwItem(thrower, splitStack.orElse(stack), throwRandomly, retainOwnership);
+
+            if (splitStack.isEmpty()) {
+                reference.set(ItemStack.EMPTY);
+            }
+
+        }
+
     }
 
 }

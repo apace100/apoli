@@ -1,5 +1,6 @@
 package io.github.apace100.apoli.condition.type.entity;
 
+import com.mojang.datafixers.util.Either;
 import io.github.apace100.apoli.condition.ConditionConfiguration;
 import io.github.apace100.apoli.condition.ItemCondition;
 import io.github.apace100.apoli.condition.context.EntityConditionContext;
@@ -8,7 +9,6 @@ import io.github.apace100.apoli.condition.type.EntityConditionTypes;
 import io.github.apace100.apoli.data.ApoliDataTypes;
 import io.github.apace100.apoli.data.TypedDataObjectFactory;
 import io.github.apace100.apoli.power.PowerReference;
-import io.github.apace100.apoli.power.type.InventoryPowerType;
 import io.github.apace100.apoli.util.Comparison;
 import io.github.apace100.apoli.util.InventoryUtil;
 import io.github.apace100.apoli.util.MiscUtil;
@@ -16,12 +16,16 @@ import io.github.apace100.calio.data.SerializableData;
 import io.github.apace100.calio.data.SerializableDataTypes;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.entity.Entity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SlotRange;
+import net.minecraft.inventory.StackReference;
+import net.minecraft.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public class InventoryEntityConditionType extends EntityConditionType {
 
@@ -32,7 +36,7 @@ public class InventoryEntityConditionType extends EntityConditionType {
             .add("power", ApoliDataTypes.POWER_REFERENCE.optional(), Optional.empty())
             .add("item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
             .add("slot", ApoliDataTypes.SLOT_RANGE, null)
-            .addFunctionedDefault("slots", ApoliDataTypes.SLOT_RANGES, data -> MiscUtil.singletonListOrEmpty(data.get("slot")))
+            .addFunctionedDefault("slots", ApoliDataTypes.SLOT_RANGES, data -> InventoryUtil.singleOrAllSlots(data.getOptional("slot")))
             .add("comparison", ApoliDataTypes.COMPARISON, Comparison.GREATER_THAN)
             .add("compare_to", SerializableDataTypes.INT, 0),
         data -> new InventoryEntityConditionType(
@@ -89,17 +93,14 @@ public class InventoryEntityConditionType extends EntityConditionType {
         int matches = 0;
 
         if (inventoryTypes.contains(InventoryUtil.InventoryType.INVENTORY)) {
-            matches += InventoryUtil.checkInventory(entity, slots, Optional.empty(), itemCondition, processMode);
+            matches += this.countMatches(entity, Either.right(entity));
         }
 
         if (inventoryTypes.contains(InventoryUtil.InventoryType.POWER)) {
 
-            Optional<InventoryPowerType> inventoryPowerType = power
-                .map(p -> p.getNullablePowerType(entity))
-                .filter(InventoryPowerType.class::isInstance)
-                .map(InventoryPowerType.class::cast);
-
-            matches += InventoryUtil.checkInventory(entity, slots, inventoryPowerType, itemCondition, processMode);
+            for (var inventory : InventoryUtil.getPowerInventories(entity, power.orElse(null))) {
+                matches += this.countMatches(entity, Either.left(inventory));
+            }
 
         }
 
@@ -110,6 +111,30 @@ public class InventoryEntityConditionType extends EntityConditionType {
     @Override
     public @NotNull ConditionConfiguration<?> getConfig() {
         return EntityConditionTypes.INVENTORY;
+    }
+
+    private int countMatches(Entity entity, Either<Inventory, Entity> source) {
+
+        OptionalInt slotToSkip = InventoryUtil.getSelectedHotBarSlot(entity);
+        int matches = 0;
+
+        for (int slot : slots) {
+
+            if (slotToSkip.isPresent() && slotToSkip.getAsInt() == slot) {
+                continue;
+            }
+
+            StackReference reference = InventoryUtil.getStackReference(source, slot);
+            ItemStack stack = reference.get();
+
+            if (reference != StackReference.EMPTY && itemCondition.map(condition -> condition.test(entity.getWorld(), stack)).orElse(false)) {
+                matches += processMode.applyAsInt(stack);
+            }
+
+        }
+
+        return matches;
+
     }
 
 }

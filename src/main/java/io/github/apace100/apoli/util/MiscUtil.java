@@ -28,6 +28,7 @@ import net.minecraft.inventory.SlotRange;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
@@ -461,7 +462,7 @@ public final class MiscUtil {
 
     public static Collection<ServerPlayerEntity> getTrackingSafely(Entity entity) {
 
-        if (entity.getWorld().isClient()) {
+        if (entity == null || entity.getWorld().isClient()) {
             return Collections.emptySet();
         }
 
@@ -484,6 +485,14 @@ public final class MiscUtil {
                 ServerPlayNetworking.send(recipient, payload);
             }
 
+        }
+
+    }
+
+    public static void sendToTrackers(Entity target, Packet<?> packet) {
+
+        for (var recipient : getTrackingSafely(target)) {
+            recipient.networkHandler.sendPacket(packet);
         }
 
     }

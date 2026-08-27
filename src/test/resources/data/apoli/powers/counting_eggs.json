@@ -1,0 +1,35 @@
+{
+	"type": "apoli:action_on_key_press",
+	"entity_action": {
+		"type": "apoli:if_else",
+		"condition": {
+			"type": "apoli:inventory",
+			"item_condition": {
+				"type": "apoli:ingredient",
+				"ingredient": {
+					"item": "minecraft:egg"
+				}
+			},
+			"comparison": ">=",
+			"compare_to": 2
+		},
+		"if_action": {
+			"type": "apoli:execute_command",
+			"command": "me has at least 2 eggs in their inventory!"
+		},
+		"else_action": {
+			"type": "apoli:execute_command",
+			"command": "me doesn't have any eggs in their inventory"
+		}
+	},
+	"hud_render": {
+		"should_render": false
+	},
+	"cooldown": 1,
+	"key": {
+		"id": "key.attack"
+	},
+	"condition": {
+		"type": "apoli:sneaking"
+	}
+}

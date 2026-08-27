@@ -1,0 +1,22 @@
+{
+	"type": "apoli:action_on_key_press",
+	"entity_action": {
+		"type": "apoli:replace_inventory",
+		"item_condition": {
+			"type": "apoli:ingredient",
+			"ingredient": {
+				"item": "minecraft:egg"
+			}
+		},
+		"stack": {
+			"id": "minecraft:dragon_egg"
+		}
+	},
+	"hud_render": {
+		"should_render": false
+	},
+	"cooldown": 1,
+	"key": {
+		"id": "key.attack"
+	}
+}
