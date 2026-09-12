@@ -174,7 +174,10 @@ public class RaycastEntityActionType extends EntityActionType {
             .orElseGet(() -> entity.getRotationVec(1.0F));
 
         Vec3d origin = MiscUtil.getPoseDependentEyePos(entity).add(context.offset());
-        Vec3d destination = distance.map(directionVec::multiply).orElse(null);
+        Vec3d destination = distance
+            .map(directionVec::multiply)
+            .map(origin::add)
+            .orElse(null);
 
         if (this.entity) {
             destination = origin.add(directionVec.multiply(this.getEntityReach(entity)));
