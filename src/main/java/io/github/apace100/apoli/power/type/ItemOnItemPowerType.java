@@ -34,7 +34,8 @@ public class ItemOnItemPowerType extends PowerType implements Prioritized<ItemOn
             .add("on_item_condition", ItemCondition.DATA_TYPE.optional(), Optional.empty())
             .add("click_types", ApoliDataTypes.CLICK_TYPE_SET, EnumSet.allOf(ClickType.class))
             .add("click_phases", ApoliDataTypes.STACK_CLICK_PHASE_SET, EnumSet.allOf(StackClickPhase.class))
-            .add("result_stack", SerializableDataTypes.ITEM_STACK.optional(), Optional.empty())
+            .add("result", SerializableDataTypes.ITEM_STACK.optional(), Optional.empty())
+            .addFunctionedDefault("result_stack", SerializableDataTypes.ITEM_STACK.optional(), data -> data.get("result"))
             .add("result_item_action", ItemAction.DATA_TYPE.optional(), Optional.empty())
             .add("result_from_on_stack", SerializableDataTypes.NON_NEGATIVE_INT, 0)
             .add("priority", SerializableDataTypes.INT, 0),
